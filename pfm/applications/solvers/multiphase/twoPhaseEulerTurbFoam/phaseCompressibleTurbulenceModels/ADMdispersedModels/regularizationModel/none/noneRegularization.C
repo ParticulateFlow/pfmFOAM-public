@@ -39,9 +39,13 @@ namespace ADMdispersedModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::ADMdispersedModels::noneRegularization::noneRegularization(const dictionary& dict)
+Foam::ADMdispersedModels::noneRegularization::noneRegularization
+(
+    const dictionary& dict,
+    const volScalarField& alpha
+)
 :
-    regularizationModel(dict)
+    regularizationModel(dict,alpha)
 {}
 
 

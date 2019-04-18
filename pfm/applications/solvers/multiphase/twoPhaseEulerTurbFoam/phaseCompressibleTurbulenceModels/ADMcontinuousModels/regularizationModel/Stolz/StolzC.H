@@ -35,7 +35,8 @@ SourceFiles
 #define StolzC_H
 
 #include "regularizationModelC.H"
-#include "simpleFilterADM.H"
+// h-files for LES filters
+#include "LESfilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -60,6 +61,11 @@ class Stolz
     
     //- length scale constant for turbulent time scale
     dimensionedScalar lengthConst_;
+    
+protected:
+    autoPtr<LESfilter> filterPtr_;
+    LESfilter& filter_;
+    
 public:
 
     //- Runtime type information
@@ -68,7 +74,11 @@ public:
     // Constructors
 
         //- Construct from components
-        Stolz(const dictionary& dict);
+        Stolz
+        (
+            const dictionary& dict,
+            const volScalarField& alpha
+         );
 
 
     //- Destructor

@@ -41,10 +41,12 @@ namespace ADMdispersedModels
 
 Foam::ADMdispersedModels::regularizationModel::regularizationModel
 (
-    const dictionary& dict
+    const dictionary& dict,
+    const volScalarField& alpha
 )
 :
-    dict_(dict)
+    dict_(dict),
+    alpha_(alpha)
 {}
 
 

@@ -94,7 +94,7 @@ SchneiderbauerEtAl::frictionalPressure
     const volScalarField& alpha1 = phase;
     // Equ. (32) 
     return
-        2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1000.))
+        2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),100.))
        /sqr(max(alphaMax - alpha, alphaDeltaMin_))
       +
        pos(alpha1 - alphaMax)
@@ -118,7 +118,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
 {
     const volScalarField& alpha1 = phase;
     return
-         4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1000.))
+         4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),100.))
        / (sqr(max(alphaMax - alpha, alphaDeltaMin_))*max(alphaMax - alpha1, alphaDeltaMin_))
       +
          pos(alpha1 - alphaMax)

@@ -30,7 +30,8 @@ License
 Foam::autoPtr<Foam::ADMdispersedModels::regularizationModel>
 Foam::ADMdispersedModels::regularizationModel::New
 (
-    const dictionary& dict
+    const dictionary& dict,
+    const volScalarField& alpha
 )
 {
     word regularizationModelType(dict.lookup("regularizationModel"));
@@ -52,7 +53,7 @@ Foam::ADMdispersedModels::regularizationModel::New
         Info<< dictionaryConstructorTablePtr_->sortedToc() << abort(FatalError);
     }
 
-    return autoPtr<regularizationModel>(cstrIter()(dict));
+    return autoPtr<regularizationModel>(cstrIter()(dict,alpha));
 }
 
 

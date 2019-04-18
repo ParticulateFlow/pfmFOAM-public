@@ -20,9 +20,9 @@ if (periodicBox) {
                 /fvc::domainIntegrate(alpha1*rho1+alpha2*rho2);
 }
 
-volVectorField KdUdrift(fluid.KdUdrift());
 {
     volScalarField Vm(fluid.Vm());
+    volVectorField KdUdrift(fluid.KdUdrift());
 
     fvVectorMatrix UgradU1
     (

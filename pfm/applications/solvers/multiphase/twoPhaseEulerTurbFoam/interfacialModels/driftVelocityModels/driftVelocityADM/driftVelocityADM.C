@@ -73,7 +73,8 @@ Foam::driftVelocityModels::driftVelocityADM::driftVelocityADM
 
     alphaMax_("alphaMax", dimless, dict),
 
-    filter_(pair_.dispersed().mesh())
+    filterPtr_(LESfilter::New(pair.dispersed().mesh(), dict)),
+    filter_(filterPtr_())
 {}
 
 
@@ -100,7 +101,8 @@ Foam::driftVelocityModels::driftVelocityADM::udrift() const
     alpha1f.min(alphaMax_.value());
     volScalarField alpha2f = scalar(1.0) - alpha1f;
     
-    return filter_(alpha1star*U2star)/max(alpha1f,residualAlpha_)
+    return pos(pair_.dispersed() - residualAlpha_)*
+           filter_(alpha1star*U2star)/max(alpha1f,1.0e-6)
          - filter_((scalar(1.0) - alpha1star)*U2star)/alpha2f;
 }
 

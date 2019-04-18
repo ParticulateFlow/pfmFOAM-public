@@ -57,7 +57,6 @@ SourceFiles
 #include "regularizationModel.H"
 // h-files for LES filters
 #include "LESfilter.H"
-#include "simpleFilterADM.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -153,6 +152,9 @@ class ADMdispersedModel
         //- Disallow default bitwise assignment
         void operator=(const ADMdispersedModel&);
 
+protected:
+    autoPtr<LESfilter> filterPtr_;
+    LESfilter& filter_;
 
 public:
 

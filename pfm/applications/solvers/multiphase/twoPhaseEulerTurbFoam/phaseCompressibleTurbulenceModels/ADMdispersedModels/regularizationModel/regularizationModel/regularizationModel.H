@@ -67,6 +67,7 @@ protected:
     // Protected data
 
         const dictionary& dict_;
+        const volScalarField& alpha_;
 
 
 public:
@@ -81,23 +82,29 @@ public:
         regularizationModel,
         dictionary,
         (
-            const dictionary& dict
+            const dictionary& dict,
+            const volScalarField& alpha
         ),
-        (dict)
+        (dict,alpha)
     );
 
 
     // Constructors
 
         //- Construct from components
-        regularizationModel(const dictionary& dict);
+        regularizationModel
+        (
+            const dictionary& dict,
+            const volScalarField& alpha
+         );
 
 
     // Selectors
 
         static autoPtr<regularizationModel> New
         (
-            const dictionary& dict
+            const dictionary& dict,
+            const volScalarField& alpha
         );
 
 

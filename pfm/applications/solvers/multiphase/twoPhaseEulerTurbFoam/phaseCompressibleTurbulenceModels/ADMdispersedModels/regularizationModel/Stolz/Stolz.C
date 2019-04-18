@@ -47,13 +47,16 @@ namespace regularizationModels
 
 Foam::ADMdispersedModels::regularizationModels::Stolz::Stolz
 (
-    const dictionary& dict
+    const dictionary& dict,
+    const volScalarField& alpha
 )
 :
-    regularizationModel(dict),
+    regularizationModel(dict,alpha),
     coeffDict_(dict.optionalSubDict(typeName + "Coeffs")),
     smagConst_("smagConst", dimless, coeffDict_),
-    lengthConst_("lengthConst", dimless, coeffDict_)
+    lengthConst_("lengthConst", dimless, coeffDict_),
+    filterPtr_(LESfilter::New(alpha.mesh(), coeffDict_)),
+    filter_(filterPtr_())
 {}
 
 
@@ -75,7 +78,6 @@ Foam::ADMdispersedModels::regularizationModels::Stolz::regTerm
      const volVectorField& Ustar
 ) const
 {
-    simpleFilterADM filter_(U.mesh());
     volScalarField V
     (
         IOobject

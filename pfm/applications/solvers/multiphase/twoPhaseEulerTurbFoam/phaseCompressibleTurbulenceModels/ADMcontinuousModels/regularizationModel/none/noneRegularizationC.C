@@ -39,9 +39,13 @@ namespace ADMcontinuousModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::ADMcontinuousModels::noneRegularization::noneRegularization(const dictionary& dict)
+Foam::ADMcontinuousModels::noneRegularization::noneRegularization
+(
+    const dictionary& dict,
+    const volScalarField& alpha
+)
 :
-    regularizationModel(dict)
+    regularizationModel(dict,alpha)
 {}
 
 

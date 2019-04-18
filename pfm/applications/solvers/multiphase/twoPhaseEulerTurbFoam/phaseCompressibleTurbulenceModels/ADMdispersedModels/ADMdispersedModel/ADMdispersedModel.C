@@ -65,7 +65,8 @@ Foam::RASModels::ADMdispersedModel::ADMdispersedModel
     (
         ADMdispersedModels::regularizationModel::New
         (
-            coeffDict_
+            coeffDict_,
+            alpha_
         )
     ),
     frictionalStressModel_
@@ -224,7 +225,11 @@ Foam::RASModels::ADMdispersedModel::ADMdispersedModel
         ),
         U.mesh(),
         dimensionedScalar("zero", dimensionSet(0, 2, -2, 0, 0), 0.0)
-     )
+     ),
+
+    filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
+    filter_(filterPtr_())
+
 {
     if (type == typeName)
     {
@@ -310,7 +315,6 @@ Foam::RASModels::ADMdispersedModel::pPrime() const
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
-    simpleFilterADM filter_(phase_.U().mesh());
     
     tmp<volScalarField> tpPrime
     (
@@ -388,7 +392,9 @@ Foam::RASModels::ADMdispersedModel::divDevRhoReff
         (
             // frictional stress
             (rho_*nut_)*dev2(T(fvc::grad(U)))
-            // Reynolds stress
+        )
+     - pos(alpha_ - residualAlpha_)*fvc::div
+        (// Reynolds stress
           - symm(R1ADM_)
         )
       //regularization
@@ -406,8 +412,6 @@ void Foam::RASModels::ADMdispersedModel::correct()
 
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
-
-    simpleFilterADM filter_(U.mesh());
     
     // ADM
     alpha1star_  = alpha;
@@ -418,28 +422,30 @@ void Foam::RASModels::ADMdispersedModel::correct()
     for (int i = 0; i < int(deconOrder_.value()); i++) {
         alpha1starT   = filter_(alpha1star_);
         alpha1starT.min(alphaMax_.value());
-        alpha1starT.max(residualAlpha_.value());
+        alpha1starT.max(1.0e-6);
         U1star_      += U - filter_(alpha1star_*U1star_)/alpha1starT;
         alpha1star_  += alpha - alpha1starT;
         alpha1star_.min(alphaMax_.value());
-        alpha1star_.max(residualAlpha_.value());
+        alpha1star_.max(1.0e-6);
     }
+    alpha1star_.correctBoundaryConditions();
+    U1star_.correctBoundaryConditions();
     
     volScalarField a1sF = filter_(alpha1star_);
     a1sF.min(alphaMax_.value());
-    a1sF.max(residualAlpha_.value());
+    a1sF.max(1.0e-6);
     volVectorField U1sF = filter_(alpha1star_*U1star_)/a1sF;
     
     // Compute alphaP2Mean for virutal mass model of de Wilde
     alphaP2Mean_ = filter_(sqr(alpha1star_)) - sqr(a1sF);
-    alphaP2Mean_.max(sqr(residualAlpha_.value()));
+    alphaP2Mean_.max(sqr(1.0e-6));
     
     // Compute Reynolds stress tensor
-    R1ADM_ = pos(alpha-residualAlpha_)*rho
-               *(
+    R1ADM_ = rho*(
                     filter_(alpha1star_ * U1star_ * U1star_)
                   - a1sF * U1sF * U1sF
                 );
+    
     // limit Reynolds stress
     forAll(U.mesh().cells(),cellI)
     {
@@ -452,50 +458,48 @@ void Foam::RASModels::ADMdispersedModel::correct()
         R1ADM_[cellI].component(4) = Foam::max(R1ADM_[cellI].component(4),1.0e-7);
         R1ADM_[cellI].component(8) = Foam::max(R1ADM_[cellI].component(8),1.0e-7);
     }
+    R1ADM_.correctBoundaryConditions();
     
     // compute turbulent kinetic energy
     k_ = tr(R1ADM_)/(rho*max(alpha,residualAlpha_));
-    k_.max(1.0e-7);
+
     // compute derivative of Ustar for frictional model
     tmp<volTensorField> tgradU(fvc::grad(U1star_));
     const volTensorField& gradU(tgradU());
     Dstar_ = symm(gradU);
 
-    {
-        // Frictional pressure
-        pf_ = frictionalStressModel_->frictionalPressure
-        (
-            phase_,
-            alpha1star_,
-            alphaMinFriction_,
-            alphaMax_,
-            da,
-            rho,
-            dev(Dstar_)
-        );
-        
-        // filter frictional pressure
-        pf_ = filter_(pf_);
-
-        nuFric_ = frictionalStressModel_->nu
-        (
-            phase_,
-            alpha1star_,
-            alphaMinFriction_,
-            alphaMax_,
-            pf_/rho,
-            da,
-            dev(Dstar_)
-        );
-        // filter frictional viscosity
-        nut_ = filter_(nuFric_)*pos(alpha - alphaMinFriction_);
-        // Limit viscosity and add frictional viscosity
-        nut_.min(maxNut_.value());
-
-        Info<< "ADM:" << nl
-        << "    max(nut) = " << max(nut_).value() << nl
-        << "    max(k)   = " << max(k_).value()   << endl;
-    }
+    // Frictional pressure
+    pf_ = frictionalStressModel_->frictionalPressure
+    (
+        phase_,
+        alpha1star_,
+        alphaMinFriction_,
+        alphaMax_,
+        da,
+        rho,
+        dev(Dstar_)
+    );
+    
+    nuFric_ = frictionalStressModel_->nu
+    (
+        phase_,
+        alpha1star_,
+        alphaMinFriction_,
+        alphaMax_,
+        pf_/rho,
+        da,
+        dev(Dstar_)
+    );
+    // filter frictional pressure and viscosity
+    pf_ = filter_(pf_);
+    nut_ = filter_(nuFric_)*pos(alpha - alphaMinFriction_);
+    // Limit viscosity and add frictional viscosity
+    nut_.min(maxNut_.value());
+    nut_.max(0.);
+    
+    Info<< "ADM:" << nl
+    << "    max(nut) = " << max(nut_).value() << nl
+    << "    max(k)   = " << max(k_).value()   << endl;
 
     if (debug)
     {

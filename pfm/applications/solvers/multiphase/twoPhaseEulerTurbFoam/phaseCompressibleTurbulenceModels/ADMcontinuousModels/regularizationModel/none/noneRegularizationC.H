@@ -61,7 +61,11 @@ public:
     // Constructors
 
         //- Construct from components
-        noneRegularization(const dictionary& dict);
+        noneRegularization
+        (
+            const dictionary& dict,
+            const volScalarField& alpha
+        );
 
 
     //- Destructor

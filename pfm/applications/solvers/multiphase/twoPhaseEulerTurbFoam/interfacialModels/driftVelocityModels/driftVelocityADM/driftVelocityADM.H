@@ -46,7 +46,6 @@ SourceFiles
 
 #include "driftVelocityModel.H"
 #include "LESfilter.H"
-#include "simpleFilterADM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -73,8 +72,9 @@ class driftVelocityADM
     //- max phase fraction
     const dimensionedScalar alphaMax_;
     
-    // filter
-    simpleFilterADM filter_;
+protected:
+    autoPtr<LESfilter> filterPtr_;
+    LESfilter& filter_;
 
 public:
 

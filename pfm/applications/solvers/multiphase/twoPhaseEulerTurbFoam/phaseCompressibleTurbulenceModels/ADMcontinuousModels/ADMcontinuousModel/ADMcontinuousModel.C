@@ -65,7 +65,8 @@ Foam::RASModels::ADMcontinuousModel::ADMcontinuousModel
     (
         ADMcontinuousModels::regularizationModel::New
         (
-            coeffDict_
+            coeffDict_,
+            alpha_
         )
     ),
 
@@ -153,7 +154,11 @@ Foam::RASModels::ADMcontinuousModel::ADMcontinuousModel
         ),
         U.mesh(),
         dimensionedScalar("zero", dimensionSet(0, 2, -2, 0, 0), 0.0)
-     )
+     ),
+
+    filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
+    filter_(filterPtr_())
+
 {
     if (type == typeName)
     {
@@ -279,8 +284,6 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     volScalarField alpha(max(alpha_, scalar(0)));
     const volScalarField& rho = phase_.rho();
     const volVectorField& U = U_;
-
-    simpleFilterADM filter_(U.mesh());
     
     // ADM
     volScalarField alpha1      = scalar(1.0) - alpha;
@@ -294,14 +297,16 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     for (int i = 0; i < int(deconOrder_.value()); i++) {
         alpha1starT   = filter_(alpha1star);
         alpha1starT.min(alphaMax_.value());
-        alpha1starT.max(residualAlpha_.value());
+        alpha1starT.max(1.0e-6);
         alpha2starT   = scalar(1.0)  - alpha1starT;
         U2star_      += U - filter_(alpha2star_*U2star_)/alpha2starT;
         alpha1star   += alpha1 - alpha1starT;
         alpha1star.min(alphaMax_.value());
-        alpha1star.max(residualAlpha_.value());
+        alpha1star.max(1.0e-6);
         alpha2star_  = scalar(1.0) - alpha1star;
     }
+    alpha2star_.correctBoundaryConditions();
+    U2star_.correctBoundaryConditions();
     
     volScalarField a2sF = filter_(alpha2star_);
     a2sF.min(1.0);
@@ -326,10 +331,10 @@ void Foam::RASModels::ADMcontinuousModel::correct()
         R2ADM_[cellI].component(4) = Foam::max(R2ADM_[cellI].component(4),1.0e-7);
         R2ADM_[cellI].component(8) = Foam::max(R2ADM_[cellI].component(8),1.0e-7);
     }
+    R2ADM_.correctBoundaryConditions();
     
     // compute turbulent kinetic energy
     k_ = tr(R2ADM_)/(rho*alpha);
-    k_.max(1.0e-7);
     
     nut_ = dimensionedScalar("zero",dimensionSet(0,2,-1,0,0),0.);
     
