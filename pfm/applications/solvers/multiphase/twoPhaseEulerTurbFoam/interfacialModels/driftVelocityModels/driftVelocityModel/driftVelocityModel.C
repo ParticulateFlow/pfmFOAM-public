@@ -47,7 +47,21 @@ Foam::driftVelocityModel::driftVelocityModel
     const phasePair& pair
 )
 :
-    pair_(pair)
+    pair_(pair),
+
+    dragCorr_
+    (
+        IOobject
+        (
+            "dragCorr",
+            pair.dispersed().time().timeName(),
+            pair.dispersed().mesh(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        pair.dispersed().mesh(),
+        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 0.0)
+    )
 {}
 
 
@@ -60,7 +74,7 @@ Foam::driftVelocityModel::~driftVelocityModel()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volVectorField>
-Foam::driftVelocityModel::KdUdrift() const
+Foam::driftVelocityModel::KdUdrift()
 {
     const fvMesh& mesh(pair_.phase1().mesh());
     const dragModel&
@@ -73,21 +87,18 @@ Foam::driftVelocityModel::KdUdrift() const
     );
     volVectorField ud(udrift());
 
-    volScalarField Re(pair_.Re());
-    volScalarField uslip = Re*pair_.continuous().nu()/(pair_.dispersed().d());
+    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
+    volScalarField uSlip(mag(uSlipV));
+    uSlip.max(SMALL);
      
     // limit turbulent dispersion force according to
     // Parmentier et al., AIChE J., 2012
     
     volScalarField magUd = mag(ud);
     magUd.max(SMALL);
-    ud *= min(0.9*uslip,mag(ud))/magUd;
-    volScalarField dragCorr = mag(ud)/uslip;
-    /*
-    Info << "Drift Velocity ADM:" << nl
-         << "max. drag correction: " << max(dragCorr).value() << nl
-         << "max. drift velocity:  " << max(mag(ud)).value()  << endl;
-    */
+    ud *= min(0.9*uSlip,magUd)/magUd;
+    dragCorr_ = -(ud&uSlipV)/uSlip;
+
     // multiply drift velocity by drag coefficient
     return
         0.75

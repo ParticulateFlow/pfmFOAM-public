@@ -172,7 +172,7 @@ public:
         tmp<volScalarField> D() const;
     
         //- Return drag correction due to drift velocity
-        tmp<volVectorField> KdUdrift() const;
+        tmp<volVectorField> KdUdrift();
     
         //- Solve for the two-phase-fractions
         void solve();

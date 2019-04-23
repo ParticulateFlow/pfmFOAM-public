@@ -58,6 +58,8 @@ protected:
 
         //- Phase pair
         const phasePair& pair_;
+    
+        volScalarField dragCorr_;
 
 public:
 
@@ -115,7 +117,7 @@ public:
         //- Turbulent drift velocity
         virtual tmp<volVectorField> udrift() const = 0;
         //- Turbulent dispersion force
-        virtual tmp<volVectorField> KdUdrift() const;
+        virtual tmp<volVectorField> KdUdrift();
 };
 
 

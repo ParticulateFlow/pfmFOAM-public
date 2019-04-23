@@ -221,7 +221,7 @@ Foam::RASModels::ADMdispersedModel::ADMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("zero", dimensionSet(0, 2, -2, 0, 0), 0.0)

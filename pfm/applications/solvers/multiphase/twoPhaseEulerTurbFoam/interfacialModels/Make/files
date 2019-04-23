@@ -1,7 +1,6 @@
 dragModels/dragModel/dragModel.C
 dragModels/dragModel/newDragModel.C
 dragModels/segregated/segregated.C
-dragModels/Beetstra/Beetstra.C
 dragModels/Ergun/Ergun.C
 dragModels/Gibilaro/Gibilaro.C
 dragModels/GidaspowErgunWenYu/GidaspowErgunWenYu.C
@@ -11,8 +10,9 @@ dragModels/SchillerNaumann/SchillerNaumann.C
 dragModels/SyamlalOBrien/SyamlalOBrien.C
 dragModels/TomiyamaCorrelated/TomiyamaCorrelated.C
 dragModels/TomiyamaAnalytic/TomiyamaAnalytic.C
-dragModels/WenYu/WenYu.C
 dragModels/IshiiZuber/IshiiZuber.C
+dragModels/WenYu/WenYu.C
+dragModels/Beetstra/Beetstra.C
 
 swarmCorrections/swarmCorrection/swarmCorrection.C
 swarmCorrections/swarmCorrection/newSwarmCorrection.C

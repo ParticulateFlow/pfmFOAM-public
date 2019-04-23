@@ -363,7 +363,7 @@ Foam::tmp<Foam::volScalarField> Foam::twoPhaseSystem::D() const
     return turbulentDispersion_->D();
 }
 
-Foam::tmp<Foam::volVectorField> Foam::twoPhaseSystem::KdUdrift() const
+Foam::tmp<Foam::volVectorField> Foam::twoPhaseSystem::KdUdrift()
 {
     return driftVelocity_->KdUdrift();
 }

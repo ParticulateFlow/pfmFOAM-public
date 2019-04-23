@@ -445,7 +445,7 @@ Foam::BlendedInterfacialModel<modelType>::D() const
 // Blending for drift velocity
 template<class modelType>
 Foam::tmp<Foam::volVectorField>
-Foam::BlendedInterfacialModel<modelType>::KdUdrift() const
+Foam::BlendedInterfacialModel<modelType>::KdUdrift()
 {
     tmp<volScalarField> f1, f2;
 

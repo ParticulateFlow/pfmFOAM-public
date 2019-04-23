@@ -137,7 +137,7 @@ public:
         tmp<volScalarField> D() const;
     
         //- Return the drift velocity correction
-        tmp<volVectorField> KdUdrift() const;
+        tmp<volVectorField> KdUdrift();
 };
 
 

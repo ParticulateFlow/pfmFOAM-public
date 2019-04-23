@@ -79,7 +79,7 @@ public:
         //- Turbulent drift velocity
         virtual tmp<volVectorField> udrift() const;
         //- Turbulent dispersion force
-        virtual tmp<volVectorField> KdUdrift() const;
+        virtual tmp<volVectorField> KdUdrift();
 };
 
 

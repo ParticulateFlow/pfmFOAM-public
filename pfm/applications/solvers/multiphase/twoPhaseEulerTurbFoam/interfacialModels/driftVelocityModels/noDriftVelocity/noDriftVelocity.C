@@ -89,7 +89,7 @@ Foam::driftVelocityModels::noDriftVelocity::udrift() const
 
 
 Foam::tmp<Foam::volVectorField>
-Foam::driftVelocityModels::noDriftVelocity::KdUdrift() const
+Foam::driftVelocityModels::noDriftVelocity::KdUdrift()
 {
     const fvMesh& mesh(pair_.phase1().mesh());
 
