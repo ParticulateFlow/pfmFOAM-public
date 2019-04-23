@@ -69,7 +69,7 @@ Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
     correctBoundaryConditions(unFilteredField);
 
     tmp<volScalarField> filteredField = 0.5*unFilteredField()
-    + (1.0/2.0)*fvc::surfaceSum
+    + 0.5*fvc::surfaceSum
     (
         mesh().magSf()*fvc::interpolate(unFilteredField())
     )/fvc::surfaceSum(mesh().magSf());
@@ -88,7 +88,7 @@ Foam::tmp<Foam::volVectorField> Foam::simpleFilterADM::operator()
     correctBoundaryConditions(unFilteredField);
 
     tmp<volVectorField> filteredField = 0.5*unFilteredField()
-    + (1.0/2.0)*fvc::surfaceSum
+    + 0.5*fvc::surfaceSum
     (
         mesh().magSf()*fvc::interpolate(unFilteredField())
     )/fvc::surfaceSum(mesh().magSf());
@@ -106,7 +106,7 @@ Foam::tmp<Foam::volSymmTensorField> Foam::simpleFilterADM::operator()
     correctBoundaryConditions(unFilteredField);
 
     tmp<volSymmTensorField> filteredField = 0.5*unFilteredField()
-    + (1.0/2.0)*fvc::surfaceSum
+    + 0.5*fvc::surfaceSum
     (
         mesh().magSf()*fvc::interpolate(unFilteredField())
     )/fvc::surfaceSum(mesh().magSf());
@@ -125,7 +125,7 @@ Foam::tmp<Foam::volTensorField> Foam::simpleFilterADM::operator()
     correctBoundaryConditions(unFilteredField);
 
     tmp<volTensorField> filteredField = 0.5*unFilteredField()
-    + (1.0/2.0)*fvc::surfaceSum
+    + 0.5*fvc::surfaceSum
     (
         mesh().magSf()*fvc::interpolate(unFilteredField())
     )/fvc::surfaceSum(mesh().magSf());
