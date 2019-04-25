@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
                      )
                    - (
                         fvc::domainIntegrate(alpha1*(U1&gN)).value()
-                      /fvc::domainIntegrate(alpha1*mag(gN)).value()
+                       /fvc::domainIntegrate(alpha1*mag(gN)).value()
                      ))
                 << endl;
         }

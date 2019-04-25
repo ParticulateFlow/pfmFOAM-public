@@ -109,11 +109,3 @@ volScalarField unity
      mesh,
      dimensionedScalar("unity", dimless, 1.0)
 );
-
-// autopointer
-/*
-autoPtr<compressible::LESModel> LES
-(
-    compressible::LESModel::New(rho2, U2, phi2, phase2.thermo())
-);
-*/
