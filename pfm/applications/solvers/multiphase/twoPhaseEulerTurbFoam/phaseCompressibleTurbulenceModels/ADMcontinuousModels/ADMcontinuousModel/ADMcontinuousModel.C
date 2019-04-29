@@ -186,6 +186,7 @@ bool Foam::RASModels::ADMcontinuousModel::read()
     )
     {
         alphaMax_.readIfPresent(coeffDict());
+        residualAlpha_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         deconOrder_.readIfPresent(coeffDict());
         regularizationModel_->read();

@@ -260,6 +260,7 @@ bool Foam::RASModels::ADMdispersedModel::read()
     {
         alphaMax_.readIfPresent(coeffDict());
         alphaMinFriction_.readIfPresent(coeffDict());
+        residualAlpha_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         deconOrder_.readIfPresent(coeffDict());
         regularizationModel_->read();

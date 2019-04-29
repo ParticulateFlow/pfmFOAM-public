@@ -96,7 +96,7 @@ Foam::driftVelocityModel::KdUdrift()
     
     volScalarField magUd = mag(ud);
     magUd.max(SMALL);
-    ud *= min(0.9*uSlip,magUd)/magUd;
+    ud *= min(0.97*uSlip,magUd)/magUd;
     dragCorr_ = -(ud&uSlipV)/sqr(uSlip);
 
     // multiply drift velocity by drag coefficient
