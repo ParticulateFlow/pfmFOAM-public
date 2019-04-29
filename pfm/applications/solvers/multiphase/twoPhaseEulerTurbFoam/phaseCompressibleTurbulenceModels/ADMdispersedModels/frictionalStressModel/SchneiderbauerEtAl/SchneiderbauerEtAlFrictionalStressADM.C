@@ -91,14 +91,14 @@ SchneiderbauerEtAl::frictionalPressure
     const volSymmTensorField& D
 ) const
 {
-    const volScalarField& alpha1 = phase;
-    // Equ. (32) 
+//    const volScalarField& alpha1 = phase;
+    // Equ. (32)
     return
-        2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),100.))
+        2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1000.))
        /sqr(max(alphaMax - alpha, alphaDeltaMin_))
-      +
-       pos(alpha1 - alphaMax)
-      *aQSk_*pow(max(alpha1 - alphaMax, scalar(0)), 0.66)/dp
+//      +
+//       pos(alpha1 - alphaMax)
+//      *aQSk_*pow(max(alpha1 - alphaMax, scalar(0)), 0.66)/dp
        ;
 }
 
@@ -116,13 +116,13 @@ SchneiderbauerEtAl::frictionalPressurePrime
     const volSymmTensorField& D
 ) const
 {
-    const volScalarField& alpha1 = phase;
+//    const volScalarField& alpha1 = phase;
     return
-         4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),100.))
-       / (sqr(max(alphaMax - alpha, alphaDeltaMin_))*max(alphaMax - alpha1, alphaDeltaMin_))
-      +
-         pos(alpha1 - alphaMax)
-       * 0.66*aQSk_/(pow(max(alpha1 - alphaMax, scalar(1e-8)), 0.33)*dp)
+         4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1000.))
+       / pow3(max(alphaMax - alpha, alphaDeltaMin_))
+//      +
+//         pos(alpha1 - alphaMax)
+//       * 0.66*aQSk_/(pow(max(alpha1 - alphaMax, scalar(1e-8)), 0.33)*dp)
     ;
 }
 
