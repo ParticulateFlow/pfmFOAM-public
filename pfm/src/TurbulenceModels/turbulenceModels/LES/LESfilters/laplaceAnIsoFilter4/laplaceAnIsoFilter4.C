@@ -114,7 +114,7 @@ Foam::laplaceAnIsoFilter4::laplaceAnIsoFilter4(const fvMesh& mesh, scalar widthC
         if (neg(wD[cellI])>0.5) {
             hmax[cellI] = 2.0*deltaMaxTmp;
         } else {
-            hmax[cellI] = Foam::min(2.0*deltaMaxTmp,wD[cellI]);
+            hmax[cellI] = 2.0*Foam::min(deltaMaxTmp,wD[cellI]);
         }
 	}
 	deltaF = hmax;
@@ -196,7 +196,7 @@ Foam::laplaceAnIsoFilter4::laplaceAnIsoFilter4(const fvMesh& mesh, const diction
         if (neg(wD[cellI])>0.5) {
             hmax[cellI] = 2.0*deltaMaxTmp;
         } else {
-            hmax[cellI] = Foam::min(2.0*deltaMaxTmp,wD[cellI]);
+            hmax[cellI] = 2.0*Foam::min(deltaMaxTmp,wD[cellI]);
         }
 	}
 	deltaF = hmax;
