@@ -121,14 +121,14 @@ makeTurbulenceModel
 (phaseModelPhaseCompressibleTurbulenceModel, RAS, ADMcontinuousModel);
 
 //SATFM dispersed model
-//#include "SATFMdispersedModel.H"
-//makeTurbulenceModel
-//(phaseModelPhaseCompressibleTurbulenceModel, RAS, SATFMdispersedModel);
+#include "SATFMdispersedModel.H"
+makeTurbulenceModel
+(phaseModelPhaseCompressibleTurbulenceModel, RAS, SATFMdispersedModel);
 
 //SATFM continuous model
-//#include "SATFMcontinuousModel.H"
-//makeTurbulenceModel
-//(phaseModelPhaseCompressibleTurbulenceModel, RAS, SATFMcontinuousModel);
+#include "SATFMcontinuousModel.H"
+makeTurbulenceModel
+(phaseModelPhaseCompressibleTurbulenceModel, RAS, SATFMcontinuousModel);
 
 #include "phasePressureModel.H"
 makeTurbulenceModel
