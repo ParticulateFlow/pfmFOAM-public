@@ -272,19 +272,19 @@ Foam::twoPhaseSystem::twoPhaseSystem
     //drift Velocity
     driftVelocity_.set
     (
-     new BlendedInterfacialModel<driftVelocityModel>
-     (
-      lookup("driftVelocity"),
-      (
-       blendingMethods_.found("driftVelocity")
-       ? blendingMethods_["driftVelocity"]
-       : blendingMethods_["default"]
-       ),
-      pair_,
-      pair1In2_,
-      pair2In1_
-      )
-     );
+        new BlendedInterfacialModel<driftVelocityModel>
+        (
+            lookup("driftVelocity"),
+            (
+                blendingMethods_.found("driftVelocity")
+              ? blendingMethods_["driftVelocity"]
+              : blendingMethods_["default"]
+            ),
+            pair_,
+            pair1In2_,
+            pair2In1_
+         )
+       );
 }
 
 

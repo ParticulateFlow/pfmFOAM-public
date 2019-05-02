@@ -57,5 +57,7 @@ ADMcontinuousModels/regularizationModel/regularizationModel/newRegularizationMod
 ADMcontinuousModels/regularizationModel/Stolz/StolzC.C
 ADMcontinuousModels/regularizationModel/none/noneRegularizationC.C
 
+SATFMdispersedModels/SATFMdispersedModel/SATFMdispersedModel.C
+SATFMcontinuousModels/SATFMcontinuousModel/SATFMcontinuousModel.C
 
 LIB = $(FOAM_USER_LIBBIN)/libphaseCompressibleTurbulenceModelsT

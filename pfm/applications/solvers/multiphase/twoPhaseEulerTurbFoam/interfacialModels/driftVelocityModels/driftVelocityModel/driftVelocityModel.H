@@ -51,6 +51,8 @@ class phasePair;
 \*---------------------------------------------------------------------------*/
 
 class driftVelocityModel
+:
+    public regIOobject
 {
 protected:
 
@@ -59,7 +61,7 @@ protected:
         //- Phase pair
         const phasePair& pair_;
     
-        volScalarField dragCorr_;
+        mutable volScalarField dragCorr_;
 
 public:
 
@@ -76,9 +78,10 @@ public:
             dictionary,
             (
                 const dictionary& dict,
-                const phasePair& pair
+                const phasePair& pair,
+                const bool registerObject
             ),
-            (dict, pair)
+            (dict, pair, registerObject)
         );
 
     // Static data members
@@ -95,7 +98,8 @@ public:
         driftVelocityModel
         (
             const dictionary& dict,
-            const phasePair& pair
+            const phasePair& pair,
+            const bool registerObject
         );
 
 
@@ -117,7 +121,10 @@ public:
         //- Turbulent drift velocity
         virtual tmp<volVectorField> udrift() const = 0;
         //- Turbulent dispersion force
-        virtual tmp<volVectorField> KdUdrift();
+        virtual tmp<volVectorField> KdUdrift() const;
+    
+        //- Dummy write for regIOobject
+        bool writeData(Ostream& os) const;
 };
 
 

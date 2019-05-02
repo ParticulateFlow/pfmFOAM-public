@@ -44,9 +44,23 @@ const Foam::dimensionSet Foam::driftVelocityModel::dimF(1, -2, -2, 0, 0);
 Foam::driftVelocityModel::driftVelocityModel
 (
     const dictionary& dict,
-    const phasePair& pair
+    const phasePair& pair,
+    const bool registerObject
 )
 :
+    regIOobject
+    (
+        IOobject
+        (
+            IOobject::groupName(typeName, pair.name()),
+            pair.phase1().mesh().time().timeName(),
+            pair.phase1().mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            registerObject
+        )
+    ),
+
     pair_(pair),
 
     dragCorr_
@@ -74,7 +88,7 @@ Foam::driftVelocityModel::~driftVelocityModel()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volVectorField>
-Foam::driftVelocityModel::KdUdrift()
+Foam::driftVelocityModel::KdUdrift() const
 {
     const fvMesh& mesh(pair_.phase1().mesh());
     const dragModel&
@@ -108,6 +122,11 @@ Foam::driftVelocityModel::KdUdrift()
         *pair_.continuous().rho()
         *ud
         /sqr(pair_.dispersed().d());
+}
+
+bool Foam::driftVelocityModel::writeData(Ostream& os) const
+{
+    return os.good();
 }
 
 // ************************************************************************* //

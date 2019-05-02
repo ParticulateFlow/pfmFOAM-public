@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::driftVelocityModels::driftVelocityADM
+    Foam::driftVelocityModels::driftVelocitySATFM
  
 (c) Simon Schneiderbauer 2019
     Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
@@ -33,16 +33,16 @@ Description
 
     References:
     \verbatim
-        Schneiderbauer, S., & Saeedipour, M. (2019). "Numerical simulation of turbulent gas-solid flow using an approximate deconvolution model." International Journal of Multiphase Flow, 114, 287–302.
+        Schneiderbauer, S., & Saeedipour, M. (2018). Approximate deconvolution model for the simulation of turbulent gas-solid flows: An a-priori analysis. Physics of Fluids, 30(2), 023301.
     \endverbatim
 
 SourceFiles
-    driftVelocityADM.C
+    driftVelocitySATFM.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef driftVelocityADM_H
-#define driftVelocityADM_H
+#ifndef driftVelocitySATFM_H
+#define driftVelocitySATFM_H
 
 #include "driftVelocityModel.H"
 #include "LESfilter.H"
@@ -58,35 +58,28 @@ namespace driftVelocityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                             Class driftVelocityADM Declaration
+                             Class driftVelocitySATFM Declaration
 \*---------------------------------------------------------------------------*/
 
-class driftVelocityADM
+class driftVelocitySATFM
 :
     public driftVelocityModel
 {
     
     //- Residual phase fraction
     const dimensionedScalar residualAlpha_;
-    
-    //- max phase fraction
-    const dimensionedScalar alphaMax_;
-    
-protected:
-    autoPtr<LESfilter> filterPtr_;
-    LESfilter& filter_;
 
 public:
 
     
     //- Runtime type information
-    TypeName("driftVelocityADM");
+    TypeName("driftVelocitySATFM");
 
 
     // Constructors
 
         //- Construct from a dictionary and a phase pair
-        driftVelocityADM
+        driftVelocitySATFM
         (
             const dictionary& dict,
             const phasePair& pair,
@@ -95,7 +88,7 @@ public:
 
 
     //- Destructor
-    virtual ~driftVelocityADM();
+    virtual ~driftVelocitySATFM();
 
 
     // Member Functions
@@ -110,7 +103,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace driftVelocityADM
+} // End namespace driftVelocitySATFM
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
