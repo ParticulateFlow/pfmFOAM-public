@@ -568,7 +568,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_   = CepsScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
-        xiPhiG_ = xiPhiContScalar_*(sign(uSlip&eX)*eX + sign(uSlip&eY)*eY + sign(uSlip&eY)*eY);
+        xiPhiG_ = xiPhiContScalar_*(sign(uSlip&eX)*eX + sign(uSlip&eY)*eY + sign(uSlip&eZ)*eZ);
         xiGS_   = xiGSScalar_;
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
