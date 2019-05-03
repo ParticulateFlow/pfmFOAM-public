@@ -1,0 +1,8 @@
+twoPhaseEulerTurbFoam compiling instructions:
+---------------------------------------------
+
+Before compiling "twoPhaseEulerTurbFoam" the user lib customLESfilters has to be compiled.
+Thus, execute "wmake libso" in
+pfm/src/TurbulenceModels/turbulenceModels
+
+Finally, use "./Allwmake" to compile the solver.
