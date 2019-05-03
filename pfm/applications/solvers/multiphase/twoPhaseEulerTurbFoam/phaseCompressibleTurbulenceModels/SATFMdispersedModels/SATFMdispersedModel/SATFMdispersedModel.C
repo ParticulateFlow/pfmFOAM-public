@@ -560,7 +560,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField xiPhiSt = (filter_(alpha*magU)-filter_(alpha)*filter_(magU))/
                     (
                         sqrt(max(mag(filter_(sqr(alpha))-sqr(filter_(alpha))),sqr(residualAlpha_)))*
-                        sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),sqr(uSmall)))+
+                        sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),kSmall))+
                         uSmall
                      );
         // smooth correlation coefficient

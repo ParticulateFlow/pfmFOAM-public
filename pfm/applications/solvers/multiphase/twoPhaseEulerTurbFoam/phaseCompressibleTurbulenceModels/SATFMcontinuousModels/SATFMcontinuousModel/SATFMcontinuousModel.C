@@ -514,7 +514,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       sqrt(max(mag(filter_(sqr(alpha)))-sqr(filter_(alpha)),sqr(residualAlpha_)))*
                       sqrt(max(
                           mag(filter_(sqr(U1))
-                        - sqr(filter_(U1))),uSmall)
+                        - sqr(filter_(U1))),kSmall)
                       )
                    );
         xiPhiGt2 = (
@@ -525,7 +525,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       sqrt(max(mag(filter_(sqr(alpha)))-sqr(filter_(alpha)),sqr(residualAlpha_)))*
                       sqrt(max(
                           mag(filter_(sqr(U2))
-                        - sqr(filter_(U2))),uSmall)
+                        - sqr(filter_(U2))),kSmall)
                       )
                    );
         xiPhiGt3 = (
@@ -536,7 +536,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       sqrt(max(mag(filter_(sqr(alpha)))-sqr(filter_(alpha)),sqr(residualAlpha_)))*
                       sqrt(max(
                           mag(filter_(sqr(U3))
-                        - sqr(filter_(U3))),uSmall)
+                        - sqr(filter_(U3))),kSmall)
                       )
                    );
         // smooth correlation coefficient
@@ -555,8 +555,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         volScalarField xiGSt = (filter_(magUc*magUd)-filter_(magUc)*filter_(magUd))/
                     (
-                        sqrt(max(mag(filter_(sqr(magUc))-sqr(filter_(magUc))),sqr(uSmall)))
-                      * sqrt(max(mag(filter_(sqr(magUd))-sqr(filter_(magUd))),sqr(uSmall)))
+                        sqrt(max(mag(filter_(sqr(magUc))-sqr(filter_(magUc))),kSmall))
+                      * sqrt(max(mag(filter_(sqr(magUd))-sqr(filter_(magUd))),kSmall))
                      );
         // smooth correlation coefficient
         xiGS_ = filter_(xiGSt);
