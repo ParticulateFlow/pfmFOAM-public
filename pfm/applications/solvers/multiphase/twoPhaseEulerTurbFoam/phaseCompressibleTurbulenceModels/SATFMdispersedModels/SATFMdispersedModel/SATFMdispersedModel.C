@@ -706,8 +706,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info<< "SA-TFM (dispersed Phase):" << nl
         << "    max(nut) = " << max(nut_).value() << nl
         << "    max(nutFric) = " << max(nuFric_).value() << nl
-        << "    max(k_) = " << max(k_ & eSum).value() << nl
-        << "    min(k_) = " << min(k_ & eSum).value() << endl;
+        << "    max(k_) = " << max(k_ & eSum).value() << endl;
 }
 
 
