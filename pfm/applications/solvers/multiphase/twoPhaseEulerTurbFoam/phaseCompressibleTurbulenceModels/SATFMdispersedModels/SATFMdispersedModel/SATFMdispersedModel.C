@@ -142,7 +142,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0)
+        dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     pf_
@@ -156,7 +157,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0)
+     dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0),
+     zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiPhiS_
