@@ -36,7 +36,7 @@ RAS
         Cmu                     0.40; // smagorinsky constant for turbulent viscosity   
         Ceps                    1.00; // constant for mixing length model of turbulent dissipation rate
 
-        maxK                    1.0; // Limits Reynolds stresses
+        maxK                    5.0; // Limits Reynolds stresses
         
 		filter                  simple; // test filter for dynamic adjustment of model constants    
 		laplaceAnIso2ndCoeffs   
