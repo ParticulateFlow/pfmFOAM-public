@@ -663,12 +663,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
-    alphaP2Mean_ =   8.0 * (xiPhiG_ & xiPhiG_) *
-                     sqr(
-                          sqrt(mag(k_ & eX))*(gradAlpha & eX)
-                        + sqrt(mag(k_ & eY))*(gradAlpha & eY)
-                        + sqrt(mag(k_ & eZ))*(gradAlpha & eZ)
-                      ) / sqr(denom) *  signDenom;
+    alphaP2Mean_ =   8.0 * (xiPhiG_ & xiPhiG_) * (k_&eSum) * magSqr(gradAlpha)
+                     / sqr(denom) *  signDenom;
     alphaP2Mean_.max(0);
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
