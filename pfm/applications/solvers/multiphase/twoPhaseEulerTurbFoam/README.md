@@ -20,8 +20,8 @@ Finally, use
 ```
 to compile the solver.
 
-## Compiling Instructions
-For both cases (ADM and SATFM) a simple fluidized bed tutorial is provided.
+## Tutorials
+For both cases (ADM and SATFM) a simple fluidized bed tutorial is provided (compare with Schneiderbauer & Saeedipour, 2019).
 
 ## References
 * Schneiderbauer, S. (2017). A spatially-averaged two-fluid model for dense large-scale gas-solid flows. AIChE Journal, 63(8), 3544–3562.
