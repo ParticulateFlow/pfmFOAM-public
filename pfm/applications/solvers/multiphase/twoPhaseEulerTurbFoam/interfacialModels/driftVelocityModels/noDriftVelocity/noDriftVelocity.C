@@ -49,10 +49,11 @@ namespace driftVelocityModels
 Foam::driftVelocityModels::noDriftVelocity::noDriftVelocity
 (
     const dictionary& dict,
-    const phasePair& pair
+    const phasePair& pair,
+    const bool registerObject
 )
 :
-    driftVelocityModel(dict, pair)
+    driftVelocityModel(dict, pair, registerObject)
 {}
 
 

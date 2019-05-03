@@ -19,29 +19,32 @@ License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/
  
- (c) Simon Schneiderbauer 2019
+  (c) Simon Schneiderbauer 2019
     Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
     Johannes Kepler University, Linz, Austria
 
 \*---------------------------------------------------------------------------*/
 
-#include "deWilde.H"
+#include "driftVelocitySATFM.H"
 #include "phasePair.H"
+#include "PhaseCompressibleTurbulenceModel.H"
 #include "addToRunTimeSelectionTable.H"
+
+#include "dragModel.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace virtualMassModels
+namespace driftVelocityModels
 {
-    defineTypeNameAndDebug(deWilde, 0);
+    defineTypeNameAndDebug(driftVelocitySATFM, 0);
     addToRunTimeSelectionTable
     (
-        virtualMassModel,
-        deWilde,
+        driftVelocityModel,
+        driftVelocitySATFM,
         dictionary
     );
 }
@@ -50,14 +53,14 @@ namespace virtualMassModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWilde::deWilde
+Foam::driftVelocityModels::driftVelocitySATFM::driftVelocitySATFM
 (
     const dictionary& dict,
     const phasePair& pair,
     const bool registerObject
 )
 :
-    virtualMassModel(dict, pair, registerObject),
+    driftVelocityModel(dict, pair, registerObject),
     residualAlpha_
     (
         "residualAlpha",
@@ -73,49 +76,59 @@ Foam::virtualMassModels::deWilde::deWilde
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWilde::~deWilde()
+Foam::driftVelocityModels::driftVelocitySATFM::~driftVelocitySATFM()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWilde::Cvm() const
+Foam::tmp<Foam::volVectorField>
+Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
 {
-    // get alphaP2Mean from Turbulence Model
     const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean_(mesh.lookupObject<volScalarField>
-                               ("alphaP2Mean"));
-    volScalarField alpha1
+    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
+                               ("alphaP2Mean." + pair_.dispersed().name()));
+    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
+                               ("alphaP2Mean." + pair_.continuous().name()));
+    
+    const volVectorField& xiPhiG(mesh.lookupObject<volVectorField>
+                               ("xiPhiG"));
+    const volVectorField& kC(mesh.lookupObject<volVectorField>
+                                 ("k." + pair_.continuous().name()));
+    
+    dimensionedVector eX
     (
-        max(pair_.dispersed(), residualAlpha_)
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
     );
-    volScalarField alpha2
+    dimensionedVector eY
     (
-        scalar(1.0) - alpha1
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
     );
-    volScalarField rho1
+    dimensionedVector eZ
     (
-        pair_.dispersed().rho()
-    );
-    volScalarField rho2
-    (
-        pair_.dispersed().rho()
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
     );
 
-    volScalarField rho
-    (
-        alpha1*rho1 + alpha2*rho2
-    );
-    volScalarField Vm0
-    (
-        (alphaP2Mean_/(alpha1*alpha2-alphaP2Mean_))*((alpha1*alpha2*rho1*rho2)/(rho*rho))
-    );
-    // Limit virtual mass coefficient
-    Vm0.min(100.0);
-    Vm0.max(0.0);
+    volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
     
-    return
-        Vm0*rho/(alpha1*rho2);
+    volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
+    
+    volVectorField kSqrt =  (xiPhiG & eX)*sqrt(mag(kC & eX))*eX
+                          + (xiPhiG & eY)*sqrt(mag(kC & eY))*eY
+                          + (xiPhiG & eZ)*sqrt(mag(kC & eZ))*eZ;
+    volScalarField alphaP2MeanN = sqrt(2.0 * alphaP2Mean)
+                                /(alpha1*(scalar(1.0)-alpha1));
+    
+    return pos(pair_.dispersed() - residualAlpha_)
+         * alphaP2MeanN
+         * kSqrt;
+
 }
 
 

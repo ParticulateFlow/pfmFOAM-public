@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2014-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,29 +22,30 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::virtualMassModels::deWilde
+    Foam::dragModels::WenYuC
 
-(c) Simon Schneiderbauer 2019
-    Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
-    Johannes Kepler University, Linz, Austria
- 
 Description
-    Virtual mass model of de Wilde.
+    Wen and Yu drag model
+    (This is a corrected version of the Wen and Yu drag model to
+     correctly implement the residual Re)
 
     Reference:
     \verbatim
-        De Wilde, J. (2005). Reformulating and quantifying the generalized added mass in filtered gas-solid flow models. Physics of Fluids, 17, 113304.
+        "Eulerian Two-Phase Flow Theory Applied to Fluidization"
+        Enwald, H., Peirano, E., Almstedt, A-E.,
+        Int. J. Multiphase Flow, Vol. 22, Suppl, 1996, pp. 21-66
+        Eq. 86-87, p. 40
     \endverbatim
 
 SourceFiles
-    deWilde.C
+    WenYuC.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef deWilde_H
-#define deWilde_H
+#ifndef WenYuC_H
+#define WenYuC_H
 
-#include "virtualMassModel.H"
+#include "dragModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,30 +54,33 @@ namespace Foam
 
 class phasePair;
 
-namespace virtualMassModels
+namespace dragModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class deWilde Declaration
+                           Class WenYuC Declaration
 \*---------------------------------------------------------------------------*/
 
-class deWilde
+class WenYuC
 :
-    public virtualMassModel
+    public dragModel
 {
-    //- Residual phase fraction
-    const dimensionedScalar residualAlpha_;
+    // Private data
+
+        //- Residual Reynolds Number
+        const dimensionedScalar residualRe_;
+
 
 public:
 
     //- Runtime type information
-    TypeName("deWilde");
+    TypeName("WenYuC");
 
 
     // Constructors
 
         //- Construct from a dictionary and a phase pair
-        deWilde
+        WenYuC
         (
             const dictionary& dict,
             const phasePair& pair,
@@ -85,19 +89,19 @@ public:
 
 
     //- Destructor
-    virtual ~deWilde();
+    virtual ~WenYuC();
 
 
     // Member Functions
 
-        //- Virtual mass coefficient
-        virtual tmp<volScalarField> Cvm() const;
+        //- Drag coefficient
+        virtual tmp<volScalarField> CdRe() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace virtualMassModels
+} // End namespace dragModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -1,0 +1,132 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties.particles;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  RAS;
+
+RAS
+{
+    RASModel SATFMdispersed;
+
+    turbulence      on;
+    printCoeffs     on;
+    
+    SATFMdispersedCoeffs
+    {
+        equilibrium             on;  // equilibrium assumption: production of k == dissipation
+        dynamicAdjustment       off;  // dynamic adjustment of model coefficient and correlation coefficients
+        
+        alphaMax                0.6;   // maximum dispersed phase volume fraction
+        alphaMinFriction        0.4; // friction stresses are solely computed for alpha > alphaMinFriction
+        residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
+        
+        xiPhiS                  0.10; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
+        Cmu                     0.40; // smagorinsky constant for turbulent viscosity   
+        Ceps                    1.00; // constant for mixing length model of turbulent dissipation rate
+
+        maxK                    0.1; // Limits Reynolds stresses
+        
+		filter                  simple; // test filter for dynamic adjustment of model constants    
+		laplaceAnIso2ndCoeffs   
+		{
+			widthCoeff		6.0;
+		}
+		
+		frictionalStressModel   SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
+        SchneiderbauerEtAlCoeffs
+        {
+            b                0.2;
+            muSt             0.38;
+            muC              0.64;
+            I0               0.279;
+            aQSk		   	 1000;
+	    	alphaDeltaMin    0.0025;
+        }		
+    }
+    ADMdispersedCoeffs
+    {
+        alphaMax                0.6;   // maximum dispersed phase volume fraction
+        alphaMinFriction        0.001; // friction stresses are solely computed for alpha > alphaMinFriction
+        residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
+        maxK                    0.04;  // Limits Reynolds stresses
+        deconOrder              2;     // deconvolution Order
+
+		filter                  laplaceAnIso2nd; // filter for ADM    
+		laplaceAnIso2ndCoeffs   
+		{
+			widthCoeff		24.0;
+		}
+		
+        regularizationModel     none;  // regularization model (e.g. Stolz)
+        StolzCoeffs
+        {
+        	smagConst       0.25;
+        	lengthConst     0.3;	
+        	filter          laplaceAnIso2nd; // filter for Stolz    
+        	laplaceAnIso2ndCoeffs   
+        	{
+        		widthCoeff		24.0;
+        	}
+        }
+        
+        frictionalStressModel   SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
+        SchneiderbauerEtAlCoeffs
+        {
+            b                0.2;
+            muSt             0.38;
+            muC              0.64;
+            I0               0.279;
+            aQSk		   	 1000;
+	    	alphaDeltaMin    0.0025;
+        }		
+    }
+    kineticTheoryCoeffs
+    {
+        equilibrium             on;
+        e                       0.85;
+        alphaMax                0.6;
+        alphaMinFriction        0.4;
+        residualAlpha           1e-6;
+
+        viscosityModel          Gidaspow;
+        conductivityModel       Gidaspow;
+        granularPressureModel   Lun;
+        frictionalStressModel   SchneiderbauerEtAl;
+        radialModel             CarnahanStarling;
+
+        SchneiderbauerEtAlCoeffs
+        {
+            b                0.2;
+            muSt             0.38;
+            muC              0.64;
+            I0               0.279;
+            aQSk		   	 1000;
+	    	alphaDeltaMin    0.0025;
+        }		
+    }
+
+
+    phasePressureCoeffs
+    {
+        preAlphaExp     500;
+        expMax          1000;
+        alphaMax        0.62;
+        g0              1000;
+    }
+}
+
+
+// ************************************************************************* //

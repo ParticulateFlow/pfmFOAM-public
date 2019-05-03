@@ -1,3 +1,6 @@
+/* library compressibleEulerianInterfacialModelsT contains additional models 
+   for filtered TFM --> extension of compressibleEulerianInterfacialModels */
+
 dragModels/dragModel/dragModel.C
 dragModels/dragModel/newDragModel.C
 dragModels/segregated/segregated.C
@@ -10,9 +13,8 @@ dragModels/SchillerNaumann/SchillerNaumann.C
 dragModels/SyamlalOBrien/SyamlalOBrien.C
 dragModels/TomiyamaCorrelated/TomiyamaCorrelated.C
 dragModels/TomiyamaAnalytic/TomiyamaAnalytic.C
-dragModels/IshiiZuber/IshiiZuber.C
 dragModels/WenYu/WenYu.C
-dragModels/Beetstra/Beetstra.C
+dragModels/IshiiZuber/IshiiZuber.C
 
 swarmCorrections/swarmCorrection/swarmCorrection.C
 swarmCorrections/swarmCorrection/newSwarmCorrection.C
@@ -37,7 +39,6 @@ virtualMassModels/virtualMassModel/newVirtualMassModel.C
 virtualMassModels/noVirtualMass/noVirtualMass.C
 virtualMassModels/constantVirtualMassCoefficient/constantVirtualMassCoefficient.C
 virtualMassModels/Lamb/Lamb.C
-virtualMassModels/deWilde/deWilde.C
 
 wallLubricationModels/wallLubricationModel/wallLubricationModel.C
 wallLubricationModels/wallLubricationModel/newWallLubricationModel.C
@@ -54,11 +55,6 @@ turbulentDispersionModels/Burns/Burns.C
 turbulentDispersionModels/Gosman/Gosman.C
 turbulentDispersionModels/LopezDeBertodano/LopezDeBertodano.C
 
-driftVelocityModels/driftVelocityModel/driftVelocityModel.C
-driftVelocityModels/driftVelocityModel/newDriftVelocityModel.C
-driftVelocityModels/noDriftVelocity/noDriftVelocity.C
-driftVelocityModels/driftVelocityADM/driftVelocityADM.C
-
 aspectRatioModels/aspectRatioModel/aspectRatioModel.C
 aspectRatioModels/aspectRatioModel/newAspectRatioModel.C
 aspectRatioModels/constantAspectRatio/constantAspectRatio.C
@@ -67,5 +63,21 @@ aspectRatioModels/VakhrushevEfremov/VakhrushevEfremov.C
 aspectRatioModels/Wellek/Wellek.C
 
 wallDependentModel/wallDependentModel.C
+
+/* additional drag models */
+dragModels/WenYuC/WenYuC.C
+dragModels/Beetstra/Beetstra.C
+
+
+/* virtual mass force appearing due to filtering --> unresolved part of pressure gradient */
+virtualMassModels/deWildeADM/deWildeADM.C
+virtualMassModels/deWildeSATFM/deWildeSATFM.C
+
+/* filtered drag force modeled by drift velocity */
+driftVelocityModels/driftVelocityModel/driftVelocityModel.C
+driftVelocityModels/driftVelocityModel/newDriftVelocityModel.C
+driftVelocityModels/noDriftVelocity/noDriftVelocity.C
+driftVelocityModels/driftVelocityADM/driftVelocityADM.C
+driftVelocityModels/driftVelocitySATFM/driftVelocitySATFM.C
 
 LIB = $(FOAM_USER_LIBBIN)/libcompressibleEulerianInterfacialModelsT

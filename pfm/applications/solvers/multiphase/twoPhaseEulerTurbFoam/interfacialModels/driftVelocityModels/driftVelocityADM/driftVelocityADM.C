@@ -56,10 +56,11 @@ namespace driftVelocityModels
 Foam::driftVelocityModels::driftVelocityADM::driftVelocityADM
 (
     const dictionary& dict,
-    const phasePair& pair
+    const phasePair& pair,
+    const bool registerObject
 )
 :
-    driftVelocityModel(dict, pair),
+    driftVelocityModel(dict, pair, registerObject),
     residualAlpha_
     (
         "residualAlpha",

@@ -94,7 +94,7 @@ SchneiderbauerEtAl::frictionalPressure
     // Equ. (32)
     return
         pos(alpha - alphaMinFriction)
-       *2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),100.))
+       *2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1000.))
        /sqr(max(alphaMax - alpha, alphaDeltaMin_))
 //      +
 //       pos(alpha - alphaMax)
@@ -119,7 +119,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
 
     return
          pos(alpha - alphaMinFriction)
-       * 4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),100.))
+       * 4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1000.))
        / pow3(max(alphaMax - alpha, alphaDeltaMin_))
 //       +
 //         pos(alpha - alphaMax)
