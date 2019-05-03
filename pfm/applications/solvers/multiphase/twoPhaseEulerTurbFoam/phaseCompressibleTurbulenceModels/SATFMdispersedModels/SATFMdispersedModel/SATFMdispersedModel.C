@@ -559,8 +559,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField magU    = mag(U);
         volScalarField xiPhiSt = (filter_(alpha*magU)-filter_(alpha)*filter_(magU))/
                     (
-                        sqrt(mag(filter_(sqr(alpha))-sqr(filter_(alpha))))*
-                        sqrt(mag(filter_(sqr(magU))-sqr(filter_(magU))))+
+                        sqrt(max(mag(filter_(sqr(alpha))-sqr(filter_(alpha))),sqr(residualAlpha_)))*
+                        sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),sqr(uSmall)))+
                         uSmall
                      );
         // smooth correlation coefficient
@@ -647,7 +647,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                             + 2.0 * lm[cellI]
                             * (
                                  lm[cellI]*SijSij[cellI].component(i)
-                               + xiGS[cellI]*betaA[cellI]*Foam::sqrt(kC[cellI].component(i))
+                               + xiGS[cellI]*betaA[cellI]*Foam::sqrt(mag(kC[cellI].component(i)))
                               )
                            )
                         ) / sqr(Ceps_[cellI]);
@@ -660,7 +660,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     }
     
     //- compute variance of solids volume fraction
-    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(k_ & eSum)/lm;
+    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(mag(k_ & eSum))/lm;
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
@@ -706,7 +706,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info<< "SA-TFM (dispersed Phase):" << nl
         << "    max(nut) = " << max(nut_).value() << nl
         << "    max(nutFric) = " << max(nuFric_).value() << nl
-        << "    max(k_) = " << max(k_ & eSum).value() << endl;
+        << "    max(k_) = " << max(k_ & eSum).value() << nl
+        << "    min(k_) = " << min(k_ & eSum).value() << endl;
 }
 
 

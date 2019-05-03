@@ -643,7 +643,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             + 2.0 * lm[cellI]
                             * Foam::max(
                                  lm[cellI]*SijSij[cellI].component(i)
-                               + betaA[cellI] * xiGS_[cellI]*Foam::sqrt(kD[cellI].component(i))
+                               + betaA[cellI] * xiGS_[cellI]*Foam::sqrt(mag(kD[cellI].component(i)))
                                - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
                                   /(alpha[cellI]*rho[cellI]*Foam::sqrt(kold[cellI].component(i)))
                                 , 0.
