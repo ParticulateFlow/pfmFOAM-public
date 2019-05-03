@@ -113,7 +113,8 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
     );
     volScalarField Vm0
     (
-        (alphaP2Mean/(alpha1*alpha2-alphaP2Mean))*((alpha1*alpha2*rho1*rho2)/(rho*rho))
+        alphaP2Mean/(max(alpha1*alpha2-alphaP2Mean,sqr(residualAlpha_)))
+       *((alpha1*alpha2*rho1*rho2)/(rho*rho))
     );
     // Limit virtual mass coefficient
     Vm0.min(100.0);
