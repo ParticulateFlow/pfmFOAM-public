@@ -464,7 +464,7 @@ void Foam::RASModels::ADMdispersedModel::correct()
     R1ADM_.correctBoundaryConditions();
     
     // compute turbulent kinetic energy
-    k_ = tr(R1ADM_)/(rho*max(alpha,residualAlpha_));
+    k_ = tr(R1ADM_)/(rho*max(a1sF,residualAlpha_));
 
     // compute derivative of Ustar for frictional model
     tmp<volTensorField> tgradU(fvc::grad(U1star_));
@@ -500,9 +500,9 @@ void Foam::RASModels::ADMdispersedModel::correct()
     nut_.min(maxNut_.value());
     nut_.max(0.);
     
-    Info<< "ADM:" << nl
-    << "    max(nut) = " << max(nut_).value() << nl
-    << "    max(k)   = " << max(k_).value()   << endl;
+    Info<< "ADM (dispersed):" << nl
+        << "    max(nut) = " << max(nut_).value() << nl
+        << "    max(k)   = " << max(k_).value()   << endl;
 
     if (debug)
     {

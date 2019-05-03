@@ -339,6 +339,10 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     
     nut_ = dimensionedScalar("zero",dimensionSet(0,2,-1,0,0),0.);
     
+    Info<< "ADM (continuous):" << nl
+        << "    max(nut) = " << max(nut_).value() << nl
+        << "    max(k)   = " << max(k_).value()   << endl;
+    
     if (debug)
     {
         Info<< typeName << ':' << nl
