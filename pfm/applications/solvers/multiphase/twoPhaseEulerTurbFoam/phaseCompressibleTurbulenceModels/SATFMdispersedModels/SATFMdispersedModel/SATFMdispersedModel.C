@@ -645,9 +645,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          + Foam::sqrt(
                               sqr(betaA[cellI]*lm[cellI])
                             + 2.0 * lm[cellI]
-                            * (
+                            * Foam::max(
                                  lm[cellI]*SijSij[cellI].component(i)
                                + xiGS[cellI]*betaA[cellI]*Foam::sqrt(mag(kC[cellI].component(i)))
+                                ,0.0
                               )
                            )
                         ) / sqr(Ceps_[cellI]);
