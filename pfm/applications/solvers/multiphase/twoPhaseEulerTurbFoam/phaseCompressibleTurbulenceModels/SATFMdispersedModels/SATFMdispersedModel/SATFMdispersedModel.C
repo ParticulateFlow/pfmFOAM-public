@@ -564,7 +564,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         uSmall
                      );
         // smooth correlation coefficient
-        xiPhiS_ = filter_(xiPhiSt);
+        xiPhiS_ = xiPhiSt; // filter_(xiPhiSt);
         xiPhiS_.max(-0.99);
         xiPhiS_.min(0.99);
         

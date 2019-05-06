@@ -547,7 +547,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiGt3.max(-0.99);
         xiPhiGt3.min(0.99);
         // negative sign since xiPhiG is computed from cont. phase volume fraction
-        xiPhiG_ = - filter_(xiPhiGt1*eX + xiPhiGt2*eY + xiPhiGt3*eZ);
+        xiPhiG_ = - (xiPhiGt1*eX + xiPhiGt2*eY + xiPhiGt3*eZ); //- filter_(xiPhiGt1*eX + xiPhiGt2*eY + xiPhiGt3*eZ);
 
         // compute correlation coefficient between
         volScalarField magUd = mag(Ud_);
@@ -559,7 +559,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       * sqrt(max(mag(filter_(sqr(magUd))-sqr(filter_(magUd))),kSmall))
                      );
         // smooth correlation coefficient
-        xiGS_ = filter_(xiGSt);
+        xiGS_ = xiGSt; //filter_(xiGSt);
         xiGS_.max(-0.99);
         xiGS_.min(0.99);
         
