@@ -631,7 +631,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_   = CepsScalar_;
         // Equilibrium => dissipation == production
         // Schneiderbauer (2017), equ. (56)
-        volVectorField kold = k_+ kSmall*eSum ;
+        volVectorField kold = k_;
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
@@ -643,9 +643,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             + 2.0 * lm[cellI]
                             * Foam::max(
                                  lm[cellI]*SijSij[cellI].component(i)
-                               + betaA[cellI] * xiGS_[cellI]*Foam::sqrt(mag(kD[cellI].component(i)))
+                               + betaA[cellI] * xiGS_[cellI]*Foam::sqrt(Foam::max(kD[cellI].component(i),kSmall.value()))
                                - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
-                                  /(alpha[cellI]*rho[cellI]*Foam::sqrt(mag(kold[cellI].component(i))))
+                                        /(alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(kold[cellI].component(i),kSmall.value())))
                                 , 0.
                               )
                            )
@@ -659,28 +659,30 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     }
     
     //- compute variance of solids volume fraction
-    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(mag(k_ & eSum))/lm;
+    volScalarField km = k_ & eSum;
+    km.max(kSmall.value());
+    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(km)/lm;
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
     alphaP2Mean_ =   4.0 * (xiPhiG_ & xiPhiG_) *
                      sqr(
-                            (sqrt(mag(k_&eX)) * mag(gradAlpha*eX))
-                          + (sqrt(mag(k_&eY)) * mag(gradAlpha*eY))
-                          + (sqrt(mag(k_&eZ)) * mag(gradAlpha*eZ))
+                            (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))
+                          + (sqrt(max(k_&eY,kSmall)) * mag(gradAlpha&eY))
+                          + (sqrt(max(k_&eZ,kSmall)) * mag(gradAlpha&eZ))
                      )
                      / sqr(denom) *  signDenom;
     alphaP2Mean_.max(0);
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(mag(k_ & eSum))*lm;
+    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(km)*lm;
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     
     Info<< "SA-TFM (continuous Phase):" << nl
     << "    max(nut) = " << max(nut_).value() << nl
-    << "    max(k_)  = " << max(k_ & eSum).value() << endl;
+    << "    max(k_)  = " << max(km).value() << endl;
 }
 
 

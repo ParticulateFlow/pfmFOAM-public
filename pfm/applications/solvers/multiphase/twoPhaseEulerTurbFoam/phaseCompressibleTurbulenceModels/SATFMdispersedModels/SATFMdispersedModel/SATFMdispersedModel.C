@@ -647,7 +647,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                             + 2.0 * lm[cellI]
                             * Foam::max(
                                  lm[cellI]*SijSij[cellI].component(i)
-                               + xiGS[cellI]*betaA[cellI]*Foam::sqrt(mag(kC[cellI].component(i)))
+                               + xiGS[cellI]*betaA[cellI]*Foam::sqrt(Foam::max(kC[cellI].component(i),kSmall.value()))
                                 ,0.0
                               )
                            )
@@ -661,22 +661,24 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     }
     
     //- compute variance of solids volume fraction
-    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(mag(k_ & eSum))/lm;
+    volScalarField km  = k_ & eSum;
+    km.max(kSmall.value());
+    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(km)/lm;
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
     alphaP2Mean_ =   4.0 * xiPhiS_ * xiPhiS_ *
                      sqr(
-                            (sqrt(mag(k_&eX)) * mag(gradAlpha*eX))
-                          + (sqrt(mag(k_&eY)) * mag(gradAlpha*eY))
-                          + (sqrt(mag(k_&eZ)) * mag(gradAlpha*eZ))
+                            (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))
+                          + (sqrt(max(k_&eY,kSmall)) * mag(gradAlpha&eY))
+                          + (sqrt(max(k_&eZ,kSmall)) * mag(gradAlpha&eZ))
                      )
                      / sqr(denom) *  signDenom;
     alphaP2Mean_.max(0);
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(mag(k_ & eSum))*lm;
+    nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm;
     
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
@@ -708,7 +710,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info<< "SA-TFM (dispersed Phase):" << nl
         << "    max(nut) = " << max(nut_).value() << nl
         << "    max(nutFric) = " << max(nuFric_).value() << nl
-        << "    max(k_) = " << max(k_ & eSum).value() << endl;
+        << "    max(k_) = " << max(km).value() << endl;
 }
 
 
