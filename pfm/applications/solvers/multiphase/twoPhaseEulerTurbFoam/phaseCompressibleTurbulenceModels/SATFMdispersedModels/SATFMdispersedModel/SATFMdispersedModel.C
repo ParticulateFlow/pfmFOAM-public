@@ -676,7 +676,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(k_ & eSum)*lm;
+    nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(mag(k_ & eSum))*lm;
     
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure

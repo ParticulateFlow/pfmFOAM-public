@@ -645,7 +645,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                  lm[cellI]*SijSij[cellI].component(i)
                                + betaA[cellI] * xiGS_[cellI]*Foam::sqrt(mag(kD[cellI].component(i)))
                                - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
-                                  /(alpha[cellI]*rho[cellI]*Foam::sqrt(kold[cellI].component(i)))
+                                  /(alpha[cellI]*rho[cellI]*Foam::sqrt(mag(kold[cellI].component(i))))
                                 , 0.
                               )
                            )
@@ -659,7 +659,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     }
     
     //- compute variance of solids volume fraction
-    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(k_ & eSum)/lm;
+    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(mag(k_ & eSum))/lm;
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
@@ -673,7 +673,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_.max(0);
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(k_ & eSum)*lm;
+    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(mag(k_ & eSum))*lm;
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
