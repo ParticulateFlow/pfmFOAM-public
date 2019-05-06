@@ -666,10 +666,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     denom.max(kSmall.value());
     
     alphaP2Mean_ =   8.0 * xiPhiS_ * xiPhiS_ *
-                     magSqr(
-                                (sqrt(mag(k_&eX)) * mag(gradAlpha*eX)) * eX
-                              + (sqrt(mag(k_&eY)) * mag(gradAlpha*eY)) * eY
-                              + (sqrt(mag(k_&eZ)) * mag(gradAlpha*eZ)) * eZ
+                     sqr(
+                            (sqrt(mag(k_&eX)) * mag(gradAlpha*eX))
+                          + (sqrt(mag(k_&eY)) * mag(gradAlpha*eY))
+                          + (sqrt(mag(k_&eZ)) * mag(gradAlpha*eZ))
                      )
                      / sqr(denom) *  signDenom;
     alphaP2Mean_.max(0);
