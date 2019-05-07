@@ -574,7 +574,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_   = CepsScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
-        xiPhiG_ = xiPhiContScalar_*(sign(uSlip&eX)*eX + sign(uSlip&eY)*eY + sign(uSlip&eZ)*eZ);
+        xiPhiG_ =   xiPhiContScalar_
+                  * (sign(uSlip&eX)*eX + sign(uSlip&eY)*eY + sign(uSlip&eZ)*eZ)
+                  * alpha;
         xiGS_   = xiGSScalar_;
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
@@ -669,7 +671,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
-    alphaP2Mean_ =   4.0 * (xiPhiG_ & xiPhiG_) *
+    alphaP2Mean_ =   8.0 * (xiPhiG_ & xiPhiG_) *
                      sqr(
                             (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))
                           + (sqrt(max(k_&eY,kSmall)) * mag(gradAlpha&eY))
