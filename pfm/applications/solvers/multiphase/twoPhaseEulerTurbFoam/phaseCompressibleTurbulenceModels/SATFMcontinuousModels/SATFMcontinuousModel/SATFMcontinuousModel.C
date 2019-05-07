@@ -622,11 +622,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        - filter_(alpha1*magUc)*filter_(alpha1*magUd)/sqr(alpha1f)
                     )
                   / (
-                        sqrt(max(mag(filter_(alpha1*magUc*magUc)/alpha1f)-sqr(filter_(alpha1*magUc)/alpha1f),kSmall))
+                        sqrt(max(mag(filter_(alpha*magUc*magUc)/alpha2f)-sqr(filter_(alpha2*magUc)/alpha2f),kSmall))
                       * sqrt(max(mag(filter_(alpha1*magUd*magUd)/alpha1f)-sqr(filter_(alpha1*magUd)/alpha1f),kSmall))
                      );
         // smooth correlation coefficient
         xiGS_ = filterS(xiGSt);
+        xiGS_.max(-0.99);
+        xiGS_.min(0.99);
         
         // Currently no dynamic procedure for Cmu and Ceps
         // Set Cmu
@@ -649,11 +651,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     xiGatS_.max(1.0e-7);
     xiGatS_.min(2.0);
-    
-    // correct xiGS
-    xiGS_ *= sqrt(xiGatS_);
-    xiGS_.max(-sqrt(2.0));
-    xiGS_.min(sqrt(2.0));
 
     // compute grid size
     forAll(cells,cellI)
