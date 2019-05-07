@@ -622,7 +622,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        - filter_(alpha1*magUc)*filter_(alpha1*magUd)/sqr(alpha1f)
                     )
                   / (
-                        sqrt(max(mag(filter_(alpha*magUc*magUc)/alpha2f)-sqr(filter_(alpha2*magUc)/alpha2f),kSmall))
+                        sqrt(max(mag(filter_(alpha*magUc*magUc)/alpha2f)-sqr(filter_(alpha*magUc)/alpha2f),kSmall))
                       * sqrt(max(mag(filter_(alpha1*magUd*magUd)/alpha1f)-sqr(filter_(alpha1*magUd)/alpha1f),kSmall))
                      );
         // smooth correlation coefficient
