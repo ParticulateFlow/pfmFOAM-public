@@ -121,9 +121,15 @@ class SATFMcontinuousModel
     
             //- correlation coefficient between solid volume fraction and cont. velocity
             volVectorField xiPhiG_;
+    
+            //- triple correlation coefficient between solid volume fraction and cont. velocity
+            volScalarField xiPhiGG_;
 
-            //- ccorrelation coefficient between cont. phase and solid velocity
+            //- correlation coefficient between cont. phase and solid velocity
             volScalarField xiGS_;
+    
+            //- correlation coefficient between cont. phase and solid velocity (seen by the gas phase)
+            volScalarField xiGatS_;
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
