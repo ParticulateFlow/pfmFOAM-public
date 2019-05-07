@@ -613,17 +613,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         // compute correlation coefficient between gas phase and solid phase velocity
-        volScalarField magUc = mag(U);
-        volScalarField magUd = mag(Ud_);
-        
         volScalarField xiGSt =
                     (
-                         filter_(alpha1*magUc*magUd)/alpha1f
-                       - filter_(alpha1*magUc)*filter_(alpha1*magUd)/sqr(alpha1f)
+                         filter_(alpha1*(U&Ud_))/alpha1f
+                       - (filter_(alpha1*U) & filter_(alpha1*Ud_))/sqr(alpha1f)
                     )
                   / (
-                        sqrt(max(mag(filter_(alpha*magUc*magUc)/alpha2f)-sqr(filter_(alpha*magUc)/alpha2f),kSmall))
-                      * sqrt(max(mag(filter_(alpha1*magUd*magUd)/alpha1f)-sqr(filter_(alpha1*magUd)/alpha1f),kSmall))
+                        sqrt(max(filter_(alpha*(U&U))/alpha2f-magSqr(filter_(alpha*U)/alpha2f),kSmall))
+                      * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                      );
         // smooth correlation coefficient
         xiGS_ = filterS(xiGSt);
