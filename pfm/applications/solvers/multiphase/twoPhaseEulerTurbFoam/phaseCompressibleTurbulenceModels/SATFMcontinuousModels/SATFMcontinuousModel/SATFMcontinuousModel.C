@@ -134,7 +134,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5))
@@ -148,7 +148,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
@@ -162,7 +162,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9)
@@ -176,7 +176,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
@@ -602,7 +602,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     (
                         filter_(alpha1*(U&U))
                       - alpha1f*filter_(U&U)
-                      - 2.0*(Ucf&(filter_(alpha*U) - alpha1f*filter_(U)))
+                      - 2.0*(Ucf&(filter_(alpha1*U) - alpha1f*filter_(U)))
                     )
                   / (
                         sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
@@ -610,6 +610,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
         // smooth triple correlation
         xiPhiGG_ = filterS(xiPhiGGt);
+        xiPhiGG_.max(-0.99);
+        xiPhiGG_.min(0.99);
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField magUc = mag(U);
         volScalarField magUd = mag(Ud_);
@@ -624,9 +626,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       * sqrt(max(mag(filter_(alpha1*magUd*magUd)/alpha1f)-sqr(filter_(alpha1*magUd)/alpha1f),kSmall))
                      );
         // smooth correlation coefficient
-        xiGS_ = filterS(xiGSt);
-        xiGS_.max(-0.99);
-        xiGS_.min(0.99);
+        xiGS_ = filterS(mag(xiGSt));
         
         // Currently no dynamic procedure for Cmu and Ceps
         // Set Cmu
@@ -648,9 +648,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             / max(alpha1*alpha*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha),residualAlpha_);
     
     xiGatS_.max(1.0e-7);
+    xiGatS_.min(2.0);
     
     // correct xiGS
     xiGS_ *= sqrt(xiGatS_);
+    xiGS_.max(1.0e-7);
+    xiGS_.min(sqrt(2.0));
 
     // compute grid size
     forAll(cells,cellI)
