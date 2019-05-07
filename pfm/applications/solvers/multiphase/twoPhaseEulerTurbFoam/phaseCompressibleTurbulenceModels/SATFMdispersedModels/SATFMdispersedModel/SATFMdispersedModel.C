@@ -26,6 +26,7 @@ License
 #include "SATFMdispersedModel.H"
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
+#include "simpleFilter.H"
 #include "wallDist.H"
 #include "fvOptions.H"
 
@@ -544,6 +545,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // get correlation coefficient between continuous and solid phase velocities
     const volScalarField& xiGS(mesh_.lookupObject<volScalarField>
                              ("xiGS"));
+    
+    // simple filter for smoothing of correlation coefficients
+    simpleFilter filterS(mesh_);
+    
     // get drag coefficient
     volScalarField beta
     (
@@ -564,7 +569,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         uSmall
                      );
         // smooth correlation coefficient
-        xiPhiS_ = xiPhiSt; // filter_(xiPhiSt);
+        xiPhiS_ = filterS(xiPhiSt);
         xiPhiS_.max(-0.99);
         xiPhiS_.min(0.99);
         
