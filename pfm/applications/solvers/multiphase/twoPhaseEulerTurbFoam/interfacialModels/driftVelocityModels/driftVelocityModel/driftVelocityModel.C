@@ -26,6 +26,7 @@ License
 #include "driftVelocityModel.H"
 #include "phasePair.H"
 #include "dragModel.H"
+#include "zeroGradientFvPatchField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -74,7 +75,10 @@ Foam::driftVelocityModel::driftVelocityModel
             IOobject::AUTO_WRITE
         ),
         pair.dispersed().mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 0.0)
+        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 0.0),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+        
     )
 {}
 

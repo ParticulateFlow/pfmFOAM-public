@@ -173,7 +173,9 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), -0.1)
+        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), -0.1),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     alphaP2Mean_
@@ -561,15 +563,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField betaA = beta/(rho*max(alpha,residualAlpha_));
     
     if (dynamicAdjustment_) {
-        volScalarField magU    = mag(U);
-        volScalarField xiPhiSt = (filter_(alpha*magU)-filter_(alpha)*filter_(magU))/
-                    (
-                        sqrt(max(mag(filter_(sqr(alpha))-sqr(filter_(alpha))),sqr(residualAlpha_)))*
-                        sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),kSmall))+
-                        uSmall
-                     );
+        volScalarField magU = mag(U);
+        xiPhiS_ = (filter_(alpha*magU)-filter_(alpha)*filter_(magU))
+                / (
+                     sqrt(max(mag(filter_(sqr(alpha))-sqr(filter_(alpha))),sqr(residualAlpha_)))*
+                     sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),kSmall))+
+                     uSmall
+                  );
         // smooth correlation coefficient
-        xiPhiS_ = filterS(xiPhiSt);
+        xiPhiS_ = filterS(xiPhiS_);
         xiPhiS_.max(-0.99);
         xiPhiS_.min(0.99);
         
