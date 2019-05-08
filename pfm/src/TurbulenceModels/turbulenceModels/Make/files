@@ -5,5 +5,6 @@ LESfiltersCustom = LES/LESfilters
 $(LESfiltersCustom)/laplaceAnIsoFilter/laplaceAnIsoFilter.C
 $(LESfiltersCustom)/laplaceAnIsoFilter4/laplaceAnIsoFilter4.C
 $(LESfiltersCustom)/simpleFilterADM/simpleFilterADM.C
+$(LESfiltersCustom)/simpleTestFilter/simpleTestFilter.C
 
 LIB = $(FOAM_USER_LIBBIN)/libcustomLESfilters
