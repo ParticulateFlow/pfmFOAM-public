@@ -26,7 +26,7 @@ License
 #include "SATFMdispersedModel.H"
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
-#include "simpleFilter.H"
+#include "simpleTestFilter.H"
 #include "wallDist.H"
 #include "fvOptions.H"
 
@@ -549,7 +549,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                              ("xiGS"));
     
     // simple filter for smoothing of correlation coefficients
-    simpleFilter filterS(mesh_);
+    simpleTestFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta

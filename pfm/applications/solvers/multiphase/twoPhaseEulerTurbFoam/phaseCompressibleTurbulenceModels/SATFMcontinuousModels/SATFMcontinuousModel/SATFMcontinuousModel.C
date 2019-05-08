@@ -27,7 +27,7 @@ License
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
 #include "wallDist.H"
-#include "simpleFilter.H"
+#include "simpleTestFilter.H"
 #include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -521,7 +521,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const cellList& cells = mesh_.cells();
     
     // simple filter for smoothing of correlation coefficients
-    simpleFilter filterS(mesh_);
+    simpleTestFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -578,7 +578,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                    )
                  / (
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
-                     * max(mag(filter_(U&U))-magSqr(filter_(U)),sqr(uSmall))
+                     * max(mag(filter_(alpha*U&U)/alpha2f)-magSqr(Ucf),sqr(uSmall))
                    );
         // smooth triple correlation
         xiPhiGG_ = filterS(xiPhiGG_);
@@ -616,7 +616,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha1*alpha*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha),residualAlpha_);
-    xiGatS_ = filterS(xiGatS_);
+    // xiGatS_ = filterS(xiGatS_);
     xiGatS_.max(1.0e-7);
     xiGatS_.min(2.0);
 
