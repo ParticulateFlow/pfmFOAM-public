@@ -27,7 +27,7 @@ License
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
 #include "wallDist.H"
-#include "simpleTestFilter.H"
+#include "simpleFilterADM.H"
 #include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -521,7 +521,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const cellList& cells = mesh_.cells();
     
     // simple filter for smoothing of correlation coefficients
-    simpleTestFilter filterS(mesh_);
+    simpleFilterADM filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
