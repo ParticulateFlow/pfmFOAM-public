@@ -566,7 +566,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                    );
         xiPhiG_ = filterS(xiPhiG_);
         // limit xiPhiG_
-        xiPhiG_ *=   min(mag(xiPhiG_),dimensionedScalar("limit",dimless,sqrt(3.0)))
+        xiPhiG_ *=   min(mag(xiPhiG_),dimensionedScalar("limit",dimless,1.0))
                    / max(mag(xiPhiG_),dimensionedScalar("small",dimless,1.0e-7));
 
         // compute triple correlation
