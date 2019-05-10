@@ -598,7 +598,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                    xiPhiContScalar_.value()
                                  * sign(UBf[patchi].component(i) - UdBf[patchi].component(i));
                 xiPhiGGBf[patchi] = scalar(0.);
-                xiGSBf[patchi] = xiGSScalar_.value();
+                xiGSBf[patchi] = sqrt(2.0);
             }
         }
         // limit and smooth correlation coefficients
@@ -613,7 +613,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        xiGS_ = filterS(mag(xiGS_));
+        xiGS_ = mag(filterS(xiGS_));
         xiGS_.max(0.1);
         xiGS_.min(sqrt(2.0));
         
