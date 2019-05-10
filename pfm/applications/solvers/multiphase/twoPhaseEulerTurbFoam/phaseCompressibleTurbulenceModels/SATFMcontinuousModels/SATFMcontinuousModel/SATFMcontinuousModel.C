@@ -612,10 +612,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
-        // xiGS_
-        xiGS_ = filterS(xiGS_);
-        xiGS_.max(-xiGSScalar_.value());
-        xiGS_.min(xiGSScalar_.value());
+        // xiGS_ (xiGS_ is positive)
+        xiGS_ = filterS(mag(xiGS_));
+        xiGS_.max(0.1);
+        xiGS_.min(sqrt(2.0));
         
         // Currently no dynamic procedure for Cmu and Ceps
         // Set Cmu
