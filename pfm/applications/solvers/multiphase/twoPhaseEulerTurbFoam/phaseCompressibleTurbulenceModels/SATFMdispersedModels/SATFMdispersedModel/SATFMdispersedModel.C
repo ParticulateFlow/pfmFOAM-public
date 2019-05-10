@@ -570,6 +570,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                      sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),kSmall))+
                      uSmall
                   );
+        // Apply boundary conditions for correlation coefficients
+        const fvPatchList& patches = phase_().mesh().boundary();
+        volScalarField::Boundary& xiPhiSBf   = xiPhiS_.boundaryFieldRef();
+
+        // loop over patches
+        forAll(patches, patchi)
+        {
+            if (!patches[patchi].coupled())
+            {
+                xiPhiSBf[patchi] = xiPhiSolidScalar_.value();
+            }
+        }
         // smooth correlation coefficient
         xiPhiS_ = filterS(xiPhiS_);
         xiPhiS_.max(-0.99);

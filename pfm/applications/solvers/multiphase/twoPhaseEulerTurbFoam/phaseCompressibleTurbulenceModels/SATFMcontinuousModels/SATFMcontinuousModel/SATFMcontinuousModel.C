@@ -137,9 +137,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5))
     ),
 
     xiPhiGG_
@@ -153,9 +151,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
     xiGS_
@@ -169,9 +165,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9)
     ),
 
     xiGatS_
@@ -564,11 +558,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         - magSqr(filter_(alpha*U)/alpha2f),kSmall)
                       )
                    );
-        xiPhiG_ = filterS(xiPhiG_);
-        // limit xiPhiG_
-        xiPhiG_ *=   min(mag(xiPhiG_),dimensionedScalar("limit",dimless,1.0))
-                   / max(mag(xiPhiG_),dimensionedScalar("small",dimless,1.0e-7));
-
+ 
         // compute triple correlation
         volVectorField Ucf = filter_(alpha*U)/alpha2f;
         xiPhiGG_ = (
@@ -580,10 +570,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
                      * max(mag(filter_(alpha*U&U)/alpha2f)-magSqr(Ucf),sqr(uSmall))
                    );
-        // smooth triple correlation
-        xiPhiGG_ = filterS(xiPhiGG_);
-        xiPhiGG_.max(-0.99);
-        xiPhiGG_.min(0.99);
+
         // compute correlation coefficient between gas phase and solid phase velocity
         xiGS_ = (
                      filter_(alpha1*(U&Ud_))/alpha1f
@@ -593,7 +580,39 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     sqrt(max(filter_(alpha*(U&U))/alpha2f-magSqr(filter_(alpha*U)/alpha2f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
-        // smooth correlation coefficient
+        
+        // Apply boundary conditions for correlation coefficients
+        const fvPatchList& patches = phase_().mesh().boundary();
+        volVectorField::Boundary& xiPhiGBf   = xiPhiG_.boundaryFieldRef();
+        volScalarField::Boundary& xiPhiGGBf  = xiPhiGG_.boundaryFieldRef();
+        volScalarField::Boundary& xiGSBf     = xiGS_.boundaryFieldRef();
+        const volVectorField::Boundary& UBf  = U.boundaryField();
+        const volVectorField::Boundary& UdBf = Ud_.boundaryField();
+        // loop over patches
+        forAll(patches, patchi)
+        {
+            if (!patches[patchi].coupled())
+            {
+                for (int i=0; i < 3; i++)
+                    xiPhiGBf[patchi].component(i) =
+                                   xiPhiContScalar_.value()
+                                 * sign(UBf[patchi].component(i) - UdBf[patchi].component(i));
+                xiPhiGGBf[patchi] = scalar(0.);
+                xiGSBf[patchi] = xiGSScalar_.value();
+            }
+        }
+        // limit and smooth correlation coefficients
+        // xiPhiG_
+        xiPhiG_ = filterS(xiPhiG_);
+        xiPhiG_ *=   min(mag(xiPhiG_),dimensionedScalar("limit",dimless,1.0))
+                   / max(mag(xiPhiG_),dimensionedScalar("small",dimless,1.0e-7));
+        
+        // xiPhiGG_
+        xiPhiGG_ = filterS(xiPhiGG_);
+        xiPhiGG_.max(-0.99);
+        xiPhiGG_.min(0.99);
+        
+        // xiGS_
         xiGS_ = filterS(xiGS_);
         xiGS_.max(-sqrt(2.0));
         xiGS_.min(sqrt(2.0));
