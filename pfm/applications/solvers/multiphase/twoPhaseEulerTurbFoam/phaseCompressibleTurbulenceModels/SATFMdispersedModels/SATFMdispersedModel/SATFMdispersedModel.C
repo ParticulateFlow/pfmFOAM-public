@@ -674,7 +674,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
-    /*
     alphaP2Mean_ =   8.0 * xiPhiS_ * xiPhiS_ *
                      sqr(
                             (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))
@@ -682,12 +681,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                           + (sqrt(max(k_&eZ,kSmall)) * mag(gradAlpha&eZ))
                      )
                      / sqr(denom) *  signDenom;
-    */
-    alphaP2Mean_ =   (8.0/3.0)
-                   * (xiPhiS_ * xiPhiS_)
-                   * km
-                   * magSqr(gradAlpha)
-                   / sqr(denom) *  signDenom;
+    
     // limti alphaP2Mean_
     alphaP2Mean_.max(0);
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
