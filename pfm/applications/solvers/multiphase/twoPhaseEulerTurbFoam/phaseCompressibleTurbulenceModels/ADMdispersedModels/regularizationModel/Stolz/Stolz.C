@@ -96,6 +96,7 @@ Foam::ADMdispersedModels::regularizationModels::Stolz::regTerm
     volScalarField delta(pow(V,1.0/3.0));
     
     volScalarField tau_1 = sqrt(k)/(lengthConst_*smagConst_*delta);
+    tau_1.min(10.0);
     
     return alpha*rho*(U - filter_(Ustar))*tau_1;
 }
