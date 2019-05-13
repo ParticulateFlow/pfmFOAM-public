@@ -27,7 +27,7 @@ License
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
 #include "wallDist.H"
-#include "simpleFilterADM.H"
+#include "simpleFilter.H"
 #include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -165,7 +165,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiGatS_
@@ -515,7 +517,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const cellList& cells = mesh_.cells();
     
     // simple filter for smoothing of correlation coefficients
-    simpleFilterADM filterS(mesh_);
+    simpleFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -585,7 +587,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         const fvPatchList& patches = phase_().mesh().boundary();
         volVectorField::Boundary& xiPhiGBf   = xiPhiG_.boundaryFieldRef();
         volScalarField::Boundary& xiPhiGGBf  = xiPhiGG_.boundaryFieldRef();
-        volScalarField::Boundary& xiGSBf     = xiGS_.boundaryFieldRef();
         const volVectorField::Boundary& UBf  = U.boundaryField();
         const volVectorField::Boundary& UdBf = Ud_.boundaryField();
         // loop over patches
@@ -598,7 +599,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                    xiPhiContScalar_.value()
                                  * sign(UBf[patchi].component(i) - UdBf[patchi].component(i));
                 xiPhiGGBf[patchi] = scalar(0.);
-                xiGSBf[patchi] = sqrt(2.0);
             }
         }
         // limit and smooth correlation coefficients
