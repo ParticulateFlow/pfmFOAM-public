@@ -137,7 +137,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5))
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiPhiGG_
@@ -151,7 +153,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiGS_
@@ -582,7 +586,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
-        
+        /*
         // Apply boundary conditions for correlation coefficients
         const fvPatchList& patches = phase_().mesh().boundary();
         volVectorField::Boundary& xiPhiGBf   = xiPhiG_.boundaryFieldRef();
@@ -601,19 +605,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 xiPhiGGBf[patchi] = scalar(0.);
             }
         }
+        */
         // limit and smooth correlation coefficients
         // xiPhiG_
-        xiPhiG_ = filterS(xiPhiG_);
+        // xiPhiG_ = filterS(xiPhiG_);
         xiPhiG_ *=   min(mag(xiPhiG_),dimensionedScalar("limit",dimless,1.0))
                    / max(mag(xiPhiG_),dimensionedScalar("small",dimless,1.0e-7));
         
         // xiPhiGG_
-        xiPhiGG_ = filterS(xiPhiGG_);
+        // xiPhiGG_ = filterS(xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        xiGS_ = filterS(xiGS_);
+        // xiGS_ = filterS(xiGS_);
         xiGS_.max(-sqrt(1.0));
         xiGS_.min(sqrt(1.0));
         

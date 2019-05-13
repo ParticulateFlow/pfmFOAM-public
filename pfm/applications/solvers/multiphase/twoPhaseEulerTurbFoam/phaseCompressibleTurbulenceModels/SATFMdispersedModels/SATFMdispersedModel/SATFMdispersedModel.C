@@ -571,6 +571,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                      uSmall
                   );
         // Apply boundary conditions for correlation coefficients
+        /*
         const fvPatchList& patches = phase_().mesh().boundary();
         volScalarField::Boundary& xiPhiSBf   = xiPhiS_.boundaryFieldRef();
 
@@ -582,8 +583,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 xiPhiSBf[patchi] = xiPhiSolidScalar_.value();
             }
         }
+        */
         // smooth correlation coefficient
-        xiPhiS_ = filterS(xiPhiS_);
+        // xiPhiS_ = filterS(xiPhiS_);
         xiPhiS_.max(-0.99);
         xiPhiS_.min(0.99);
         
