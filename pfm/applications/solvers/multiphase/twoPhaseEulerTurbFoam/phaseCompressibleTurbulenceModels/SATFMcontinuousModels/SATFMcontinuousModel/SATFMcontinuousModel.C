@@ -577,7 +577,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                    - (filter_(alpha1*U) & filter_(alpha1*Ud_))/sqr(alpha1f)
                 )
               / (
-                    sqrt(max(filter_(alpha*(U&U))/alpha2f-magSqr(filter_(alpha*U)/alpha2f),kSmall))
+                    sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
         
@@ -613,9 +613,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        xiGS_ = mag(filterS(xiGS_));
-        xiGS_.max(0.1);
-        xiGS_.min(sqrt(2.0));
+        xiGS_ = filterS(xiGS_);
+        xiGS_.max(-sqrt(1.0));
+        xiGS_.min(sqrt(1.0));
         
         // Currently no dynamic procedure for Cmu and Ceps
         // Set Cmu
@@ -638,6 +638,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // xiGatS_ = filterS(xiGatS_);
     xiGatS_.max(1.0e-7);
     xiGatS_.min(2.0);
+    // correct xiGS_
+    xiGS_ *= sqrt(xiGatS_);
 
     // compute grid size
     forAll(cells,cellI)
