@@ -184,39 +184,6 @@ SchneiderbauerEtAl::nu
         }
     }
 
-    const fvPatchList& patches = phase.mesh().boundary();
-    const volVectorField& U = phase.U();
-
-    volScalarField::Boundary& nufBf = nuf.boundaryFieldRef();
-
-    forAll(patches, patchi)
-    {
-        if (!patches[patchi].coupled())
-        {
-            nufBf[patchi] = (
-                               muSt_.value()
-                             + (
-                                   muC_.value() - muSt_.value()
-                               )
-                              /(
-                                   I0_.value()
-                                 / (
-                                     (mag(U.boundaryField()[patchi].snGrad())
-                                          * dp.boundaryField()[patchi])
-                                     /(sqrt(pf.boundaryField()[patchi])+SMALL)
-                                    + SMALL
-                                   )
-                                 + 1.0
-                               )
-                             )
-                            * pf.boundaryField()[patchi]
-                            / (
-                                 mag(U.boundaryField()[patchi].snGrad())
-                               + SMALL
-                              );
-        }
-    }
-
     // Correct coupled BCs
     nuf.correctBoundaryConditions();
 
