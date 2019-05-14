@@ -109,6 +109,9 @@ class SATFMcontinuousModel
             //- "Smagorinsky constant"
             dimensionedScalar CepsScalar_;
     
+            //- turbulent schmidt number
+            dimensionedScalar sigma_;    
+    
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
 

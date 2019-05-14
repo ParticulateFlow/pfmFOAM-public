@@ -112,6 +112,14 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("Ceps",1.0)
     ),
 
+    sigma_
+    (
+        "sigmaD",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
+    ),
+
+
     maxK_
     (
         "maxK",
@@ -672,7 +680,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
-          - fvm::laplacian(alpha*rho*lm*sqrt(km), k_, "laplacian(kappa,k)")
+          - fvm::laplacian(alpha*rho*lm*sqrt(km)/sigma_, k_, "laplacian(kappa,k)")
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
