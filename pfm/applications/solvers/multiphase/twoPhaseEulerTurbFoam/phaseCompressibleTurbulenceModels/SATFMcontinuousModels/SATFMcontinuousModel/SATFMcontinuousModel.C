@@ -449,6 +449,82 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     );
 }
 
+void Foam::RASModels::SATFMcontinuousModel::boundNormalStress
+(
+    volVectorField& k
+) const
+{
+    scalar kMin = 1.e-7;
+    scalar kMax = maxK_.value();
+
+    k.max
+    (
+        dimensionedVector
+        (
+            "zero",
+            k.dimensions(),
+            vector
+            (
+                kMin,
+                kMin,
+                kMin
+            )
+        )
+    );
+    k.min
+    (
+        dimensionedVector
+        (
+            "maxvalue",
+            k.dimensions(),
+            vector
+            (
+                kMax,
+                kMax,
+                kMax
+            )
+        )
+    );
+}
+
+void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
+(
+    volVectorField& xi
+) const
+{
+    scalar xiMin = -1.0;
+    scalar xiMax = 1.0;
+
+    xi.max
+    (
+        dimensionedVector
+        (
+            "minXi",
+            xi.dimensions(),
+            vector
+            (
+                xiMin,
+                xiMin,
+                xiMin
+            )
+        )
+    );
+    xi.min
+    (
+        dimensionedVector
+        (
+            "maxXi",
+            xi.dimensions(),
+            vector
+            (
+                xiMax,
+                xiMax,
+                xiMax
+            )
+        )
+    );
+}
+
 
 void Foam::RASModels::SATFMcontinuousModel::correct()
 {
@@ -499,18 +575,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     tmp<volTensorField> tgradU(fvc::grad(U_));
     const volTensorField& gradU(tgradU());
-    volSymmTensorField D(symm(gradU));
-    
-    // compute S_{ij}S_{ij} (no summation over i!!)
-    volVectorField SijSij =  magSqr(gradU&eX)*eX
-                           + magSqr(gradU&eY)*eY
-                           + magSqr(gradU&eZ)*eZ;
+    volSymmTensorField D(dev(symm(gradU)));
+    // compute S_{ij}S_{ij} (no summation over j!!)
+    /*
+     volVectorField SijSij =  magSqr(gradU&eX)*eX
+     + magSqr(gradU&eY)*eY
+     + magSqr(gradU&eZ)*eZ;
+     */
+    volTensorField SijSij = D & gradU.T();
     
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
     // get turbulent kinetic energy of continuous-phase
-    const volVectorField& kD(mesh_.lookupObject<volVectorField>
+    const volVectorField& kD_(mesh_.lookupObject<volVectorField>
                                      ("k." + fluid.otherPhase(phase_).name()));
     
     // get alphaP2Mean
@@ -586,39 +664,19 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
-        /*
-        // Apply boundary conditions for correlation coefficients
-        const fvPatchList& patches = phase_().mesh().boundary();
-        volVectorField::Boundary& xiPhiGBf   = xiPhiG_.boundaryFieldRef();
-        volScalarField::Boundary& xiPhiGGBf  = xiPhiGG_.boundaryFieldRef();
-        const volVectorField::Boundary& UBf  = U.boundaryField();
-        const volVectorField::Boundary& UdBf = Ud_.boundaryField();
-        // loop over patches
-        forAll(patches, patchi)
-        {
-            if (!patches[patchi].coupled())
-            {
-                for (int i=0; i < 3; i++)
-                    xiPhiGBf[patchi].component(i) =
-                                   xiPhiContScalar_.value()
-                                 * sign(UBf[patchi].component(i) - UdBf[patchi].component(i));
-                xiPhiGGBf[patchi] = scalar(0.);
-            }
-        }
-        */
+
         // limit and smooth correlation coefficients
         // xiPhiG_
-        // xiPhiG_ = filterS(xiPhiG_);
-        xiPhiG_ *=   min(mag(xiPhiG_),dimensionedScalar("limit",dimless,1.0))
-                   / max(mag(xiPhiG_),dimensionedScalar("small",dimless,1.0e-7));
+        xiPhiG_ = filterS(xiPhiG_);
+        boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_
-        // xiPhiGG_ = filterS(xiPhiGG_);
+        xiPhiGG_ = filterS(xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        // xiGS_ = filterS(xiGS_);
+        xiGS_ = filterS(xiGS_);
         xiGS_.max(-sqrt(1.0));
         xiGS_.min(sqrt(1.0));
         
@@ -677,18 +735,52 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     lm.max(lSmall.value());
 
     // Compute k_
+    // ---------------------------
+    // compute total k
+    volScalarField km  = k_ & eSum;
+    km.max(kSmall.value());
     if (!equilibrium_) {
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
         // --> Stefanie
+        Info << "Solving k-equation (continuous phase) ... " << endl;
         fvVectorMatrix kEqn
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
+          - fvm::laplacian(alpha*rho*lm*sqrt(km), k_, "laplacian(kappa,k)")
          ==
-            fvOptions(alpha, rho, k_)
+          // some source terms are explicit since fvm::Sp()
+          // takes solely scalars as first argument.
+          // ----------------
+          // shear production
+            2.0*lm
+               *alpha
+               *rho
+               *(
+                    (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
+                  + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
+                  + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
+                )
+          // interfacial work (--> energy transfer)
+          + 2.0*beta
+               *(
+                    xiGS_
+                  * (
+                        sqrt((kD_&eX)*(k_&eX))*eX
+                      + sqrt((kD_&eY)*(k_&eY))*eY
+                      + sqrt((kD_&eZ)*(k_&eZ))*eZ
+                    )
+                )
+          - ((KdUdrift&eX)*(uSlip&eX))*eX
+          - ((KdUdrift&eY)*(uSlip&eY))*eY
+          - ((KdUdrift&eZ)*(uSlip&eZ))*eZ
+          + fvm::Sp(-2.0*beta*xiGatS_,k_)
+          // dissipation
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm,k_)
+          + fvOptions(alpha, rho, k_)
         );
 
         kEqn.relax();
@@ -697,6 +789,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         fvOptions.correct(k_);
     }
     else {
+        volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
+                                + ((SijSij&eY)&eSum)*eY
+                                + ((SijSij&eZ)&eSum)*eZ;
+        
         // no dynamic adjustment for Ceps in case of equilibrium
         Ceps_ = CepsScalar_;
         // Equilibrium => dissipation == production
@@ -712,8 +808,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                               sqr(xiGatS_[cellI]*betaA[cellI]*lm[cellI])
                             + 2.0 * lm[cellI]
                             * Foam::max(
-                                 lm[cellI]*SijSij[cellI].component(i)
-                               + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD[cellI].component(i),kSmall.value()))
+                                 lm[cellI]*SijSijV[cellI].component(i)
+                               + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
                                - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(kold[cellI].component(i),kSmall.value())))
                                 , 0.
@@ -722,19 +818,21 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         ) / sqr(Ceps_[cellI]);
             }
         }
-        // limit k_
-        k_ *= min(mag(k_),maxK_)/max(mag(k_),sqr(uSmall));
-        
-        k_.correctBoundaryConditions();
     }
+    // limit k
+    boundNormalStress(k_);
+    k_.correctBoundaryConditions();
     
     //- compute variance of solids volume fraction
-    volScalarField km = k_ & eSum;
+    //--------------------------------------------
+    // update km
+    km = k_ & eSum;
     km.max(kSmall.value());
     volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(km)/lm;
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
-
+    
+    Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
     alphaP2Mean_ =   8.0 * (xiPhiG_ & xiPhiG_) *
                      sqr(
                             (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))

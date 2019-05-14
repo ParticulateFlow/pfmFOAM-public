@@ -165,6 +165,9 @@ class SATFMdispersedModel
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
+    
+    //- bound k
+    void boundNormalStress(volVectorField& k) const;
 public:
 
     //- Runtime type information

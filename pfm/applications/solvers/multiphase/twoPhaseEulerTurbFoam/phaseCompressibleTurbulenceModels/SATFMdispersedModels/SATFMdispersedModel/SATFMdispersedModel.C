@@ -143,8 +143,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0),
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0)
     ),
 
     pf_
@@ -158,8 +157,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-     dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0),
-     zeroGradientFvPatchField<scalar>::typeName
+     dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0)
     ),
 
     xiPhiS_
@@ -485,6 +483,44 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     );
 }
 
+void Foam::RASModels::SATFMdispersedModel::boundNormalStress
+(
+    volVectorField& k
+) const
+{
+    scalar kMin = 1.e-7;
+    scalar kMax = maxK_.value();
+
+    k.max
+    (
+        dimensionedVector
+        (
+            "zero",
+            k.dimensions(),
+            vector
+            (
+                kMin,
+                kMin,
+                kMin
+            )
+        )
+    );
+    k.min
+    (
+        dimensionedVector
+        (
+            "maxvalue",
+            k.dimensions(),
+            vector
+            (
+                kMax,
+                kMax,
+                kMax
+            )
+        )
+    );
+}
+
 
 void Foam::RASModels::SATFMdispersedModel::correct()
 {
@@ -530,22 +566,23 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     tmp<volTensorField> tgradU(fvc::grad(U_));
     const volTensorField& gradU(tgradU());
-    volSymmTensorField D(symm(gradU));
-    
+    volSymmTensorField D(dev(symm(gradU)));
     // compute S_{ij}S_{ij} (no summation over j!!)
-    volVectorField SijSij =  magSqr(gradU&eX)*eX
+    /*
+     volVectorField SijSij =  magSqr(gradU&eX)*eX
                            + magSqr(gradU&eY)*eY
                            + magSqr(gradU&eZ)*eZ;
-    
+    */
+    volTensorField SijSij = D & gradU.T();
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
     // get turbulent kinetic energy of continuous-phase
-    const volVectorField& kC(mesh_.lookupObject<volVectorField>
+    const volVectorField& kC_(mesh_.lookupObject<volVectorField>
                                      ("k." + fluid.otherPhase(phase_).name()));
     
     // get correlation coefficient between continuous and solid phase velocities
-    const volScalarField& xiGS(mesh_.lookupObject<volScalarField>
+    const volScalarField& xiGS_(mesh_.lookupObject<volScalarField>
                              ("xiGS"));
     
     // simple filter for smoothing of correlation coefficients
@@ -564,28 +601,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     if (dynamicAdjustment_) {
         volScalarField magU = mag(U);
+        // compute xiPhiS
         xiPhiS_ = (filter_(alpha*magU)-filter_(alpha)*filter_(magU))
                 / (
                      sqrt(max(mag(filter_(sqr(alpha))-sqr(filter_(alpha))),sqr(residualAlpha_)))*
                      sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),kSmall))+
                      uSmall
                   );
-        // Apply boundary conditions for correlation coefficients
-        /*
-        const fvPatchList& patches = phase_().mesh().boundary();
-        volScalarField::Boundary& xiPhiSBf   = xiPhiS_.boundaryFieldRef();
-
-        // loop over patches
-        forAll(patches, patchi)
-        {
-            if (!patches[patchi].coupled())
-            {
-                xiPhiSBf[patchi] = xiPhiSolidScalar_.value();
-            }
-        }
-        */
         // smooth correlation coefficient
-        // xiPhiS_ = filterS(xiPhiS_);
+        xiPhiS_ = filterS(xiPhiS_);
         xiPhiS_.max(-0.99);
         xiPhiS_.min(0.99);
         
@@ -633,18 +657,49 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     lm.max(lSmall.value());
     
     // Compute k_
+    // ---------------------------
+    // compute total k
+    volScalarField km  = k_ & eSum;
+    km.max(kSmall.value());
     if (!equilibrium_) {
         fv::options& fvOptions(fv::options::New(mesh_));
-
+        
         // Construct the transport equation for k
         // --> Stefanie
+        Info << "Solving k-equation (dispersed phase) ... " << endl;
         fvVectorMatrix kEqn
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
+          - fvm::laplacian(alpha*rho*lm*sqrt(km), k_, "laplacian(kappa,k)")
          ==
-            fvOptions(alpha, rho, k_)
+          // some source terms are explicit since fvm::Sp()
+          // takes solely scalars as first argument.
+          // ----------------
+          // shear production
+            2.0*lm
+               *alpha
+               *rho
+               *(
+                    (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
+                  + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
+                  + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
+                )
+          // interfacial work (--> energy transfer)
+          + 2.0*beta
+               *(
+                    xiGS_
+                  * (
+                        sqrt((kC_&eX)*(k_&eX))*eX
+                      + sqrt((kC_&eY)*(k_&eY))*eY
+                      + sqrt((kC_&eZ)*(k_&eZ))*eZ
+                    )
+                )
+          + fvm::Sp(-2.0*beta,k_)
+          // dissipation
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm,k_)
+          + fvOptions(alpha, rho, k_)
         );
 
         kEqn.relax();
@@ -653,6 +708,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         fvOptions.correct(k_);
     }
     else {
+        volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
+                                + ((SijSij&eY)&eSum)*eY
+                                + ((SijSij&eZ)&eSum)*eZ;
+                                  
         // no dynamic adjustment for Ceps in case of equilibrium
         Ceps_   = CepsScalar_;
         // Equilibrium => dissipation == production
@@ -667,27 +726,30 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                               sqr(betaA[cellI]*lm[cellI])
                             + 2.0 * lm[cellI]
                             * Foam::max(
-                                 lm[cellI]*SijSij[cellI].component(i)
-                               + xiGS[cellI]*betaA[cellI]*Foam::sqrt(Foam::max(kC[cellI].component(i),kSmall.value()))
+                                 lm[cellI]*SijSijV[cellI].component(i)
+                               + xiGS_[cellI]*betaA[cellI]*Foam::sqrt(Foam::max(kC_[cellI].component(i),kSmall.value()))
                                 ,0.0
                               )
                            )
                         ) / sqr(Ceps_[cellI]);
             }
         }
-        // limit k_
-        k_ *= min(mag(k_),maxK_)/max(mag(k_),sqr(uSmall));
         
-        k_.correctBoundaryConditions();
+        
     }
+    // limit k
+    boundNormalStress(k_);
+    k_.correctBoundaryConditions();
     
     //- compute variance of solids volume fraction
-    volScalarField km  = k_ & eSum;
+    // update km
+    km  = k_ & eSum;
     km.max(kSmall.value());
     volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(km)/lm;
     volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
+    Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     alphaP2Mean_ =   8.0 * xiPhiS_ * xiPhiS_ *
                      sqr(
                             (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))

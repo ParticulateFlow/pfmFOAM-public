@@ -158,6 +158,11 @@ class SATFMcontinuousModel
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
+    
+    //- bound k
+    void boundNormalStress(volVectorField& R) const;
+    void boundxiPhiG(volVectorField& xi) const;
+    
 public:
 
     //- Runtime type information
