@@ -135,6 +135,9 @@ class ADMcontinuousModel
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
+    
+    //- bound k
+    void boundNormalStress(volTensorField& R) const;
 
 public:
 
