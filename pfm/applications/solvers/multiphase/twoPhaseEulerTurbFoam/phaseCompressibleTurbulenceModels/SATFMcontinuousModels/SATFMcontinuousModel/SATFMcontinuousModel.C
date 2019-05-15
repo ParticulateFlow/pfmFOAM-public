@@ -841,16 +841,31 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
-    alphaP2Mean_ =   8.0 * (xiPhiG_ & xiPhiG_) *
-                     sqr(
-                            (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))
-                          + (sqrt(max(k_&eY,kSmall)) * mag(gradAlpha&eY))
-                          + (sqrt(max(k_&eZ,kSmall)) * mag(gradAlpha&eZ))
-                     )
-                     / sqr(denom) *  signDenom;
-
+    if (dynamicAdjustment_) {
+        volScalarField xiKgradAlpha = (
+                                         (sqrt(k_&eX) * (gradAlpha&eX)) * eX
+                                       + (sqrt(k_&eY) * (gradAlpha&eY)) * eY
+                                       + (sqrt(k_&eZ) * (gradAlpha&eZ)) * eZ
+                                      )
+                                    & xiPhiG_;
+        alphaP2Mean_ =   8.0
+                       * sqr(xiKgradAlpha)
+                       / sqr(denom)
+                       * signDenom
+                       * neg(xiKgradAlpha);
+    } else {
+        alphaP2Mean_ =   8.0
+                       * (xiPhiG_ & xiPhiG_)
+                       * sqr(
+                                (sqrt(k_&eX) * mag(gradAlpha&eX))
+                              + (sqrt(k_&eY) * mag(gradAlpha&eY))
+                              + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
+                         )
+                       / sqr(denom)
+                       * signDenom;
+    }
     // limti alphaP2Mean_
-    alphaP2Mean_.max(0);
+    alphaP2Mean_.max(sqr(residualAlpha_.value()));
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(km)*lm;

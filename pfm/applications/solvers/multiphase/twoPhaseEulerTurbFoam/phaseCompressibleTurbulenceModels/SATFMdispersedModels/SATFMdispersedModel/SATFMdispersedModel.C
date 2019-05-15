@@ -179,7 +179,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), -0.1),
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
         // Set Boundary condition
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -529,6 +529,44 @@ void Foam::RASModels::SATFMdispersedModel::boundNormalStress
     );
 }
 
+void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
+(
+    volVectorField& xi
+) const
+{
+    scalar xiMin = -1.0;
+    scalar xiMax = 1.0;
+
+    xi.max
+    (
+        dimensionedVector
+        (
+            "minXi",
+            xi.dimensions(),
+            vector
+            (
+                xiMin,
+                xiMin,
+                xiMin
+            )
+        )
+    );
+    xi.min
+    (
+        dimensionedVector
+        (
+            "maxXi",
+            xi.dimensions(),
+            vector
+            (
+                xiMax,
+                xiMax,
+                xiMax
+            )
+        )
+    );
+}
+
 
 void Foam::RASModels::SATFMdispersedModel::correct()
 {
@@ -608,18 +646,22 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField betaA = beta/(rho*max(alpha,residualAlpha_));
     
     if (dynamicAdjustment_) {
-        volScalarField magU = mag(U);
+        volScalarField alphaf = filter_(alpha);
         // compute xiPhiS
-        xiPhiS_ = (filter_(alpha*magU)-filter_(alpha)*filter_(magU))
-                / (
-                     sqrt(max(mag(filter_(sqr(alpha))-sqr(filter_(alpha))),sqr(residualAlpha_)))*
-                     sqrt(max(mag(filter_(sqr(magU))-sqr(filter_(magU))),kSmall))+
-                     uSmall
-                  );
+        xiPhiS_ = (
+                      filter_(alpha*U)
+                    - alphaf*filter_(U)
+                   )
+                 / (
+                      sqrt(max(filter_(sqr(alpha))-sqr(alphaf),sqr(residualAlpha_)))*
+                      sqrt(0.33*max(
+                          filter_(alpha*(U&U))/alphaf
+                        - magSqr(filter_(alpha*U)/alphaf),kSmall)
+                      )
+                   );
         // smooth correlation coefficient
         xiPhiS_ = filterS(xiPhiS_);
-        xiPhiS_.max(-0.99);
-        xiPhiS_.min(0.99);
+        boundxiPhiS(xiPhiS_);
         
         // Currently no dynamic procedure for Cmu and Ceps
         // Set Cmu
@@ -627,7 +669,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Set Ceps
         Ceps_   = CepsScalar_;
     } else {
-        xiPhiS_ = xiPhiSolidScalar_;
+        xiPhiS_ = xiPhiSolidScalar_*eSum;
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
     }
@@ -758,16 +800,31 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
-    alphaP2Mean_ =   8.0 * xiPhiS_ * xiPhiS_ *
-                     sqr(
-                            (sqrt(max(k_&eX,kSmall)) * mag(gradAlpha&eX))
-                          + (sqrt(max(k_&eY,kSmall)) * mag(gradAlpha&eY))
-                          + (sqrt(max(k_&eZ,kSmall)) * mag(gradAlpha&eZ))
-                     )
-                     / sqr(denom) *  signDenom;
-    
+    if (dynamicAdjustment_) {
+        volScalarField xiKgradAlpha = (
+                                         (sqrt(k_&eX) * (gradAlpha&eX)) * eX
+                                       + (sqrt(k_&eY) * (gradAlpha&eY)) * eY
+                                       + (sqrt(k_&eZ) * (gradAlpha&eZ)) * eZ
+                                      )
+                                    & xiPhiS_;
+        alphaP2Mean_ =   8.0
+                       * sqr(xiKgradAlpha)
+                       / sqr(denom)
+                       * signDenom
+                       * neg(xiKgradAlpha);
+    } else {
+        alphaP2Mean_ =   8.0
+                       * (xiPhiS_ & xiPhiS_)
+                       * sqr(
+                                (sqrt(k_&eX) * mag(gradAlpha&eX))
+                              + (sqrt(k_&eY) * mag(gradAlpha&eY))
+                              + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
+                         )
+                       / sqr(denom)
+                       * signDenom;
+    }
     // limti alphaP2Mean_
-    alphaP2Mean_.max(0);
+    alphaP2Mean_.max(sqr(residualAlpha_.value()));
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))

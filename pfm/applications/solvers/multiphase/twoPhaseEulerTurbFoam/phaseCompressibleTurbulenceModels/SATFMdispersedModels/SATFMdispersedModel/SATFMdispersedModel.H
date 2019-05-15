@@ -139,7 +139,7 @@ class SATFMdispersedModel
             volScalarField pf_;
     
             //- correlation coefficient between solid volume fraction and solid velocity
-            volScalarField xiPhiS_;
+            volVectorField xiPhiS_;
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
@@ -171,6 +171,7 @@ protected:
     
     //- bound k
     void boundNormalStress(volVectorField& k) const;
+    void boundxiPhiS(volVectorField& xi) const;
 public:
 
     //- Runtime type information
