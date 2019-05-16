@@ -600,9 +600,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                      ("k." + fluid.otherPhase(phase_).name()));
     
     // get alphaP2Mean
-    const volScalarField& alphaP2Mean1(mesh_.lookupObject<volScalarField>
+    const volScalarField& alphaP2Mean1_(mesh_.lookupObject<volScalarField>
                              ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
-    volScalarField alphaP2MeanO = max(alphaP2Mean1,alphaP2Mean_);
+    volScalarField alphaP2MeanO = max(alphaP2Mean1_,alphaP2Mean_);
     
     const cellList& cells = mesh_.cells();
     
@@ -835,8 +835,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // update km
     km = k_ & eSum;
     km.max(kSmall.value());
-    volScalarField denom = fvc::div(U) + Cmu_ * Ceps_ * sqrt(km)/lm;
-    volScalarField signDenom = sign(denom);
+    volScalarField divU(fvc::div(U));
+    volScalarField denom = divU*neg(divU) + Cmu_ * Ceps_ * sqrt(km)/lm;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
@@ -849,7 +849,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                     & xiPhiG_;
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       * signDenom
                        * neg(xiKgradAlpha)
                        / sqr(denom);
     } else {
@@ -860,8 +859,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
                               + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
                          )
-                       / sqr(denom)
-                       * signDenom;
+                       / sqr(denom);
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
