@@ -176,7 +176,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
@@ -647,6 +647,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     if (dynamicAdjustment_) {
         volScalarField alphaf = filter_(alpha);
+        alphaf.max(residualAlpha_.value());
         // compute xiPhiS
         xiPhiS_ = (
                       filter_(alpha*U)
@@ -809,12 +810,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                     & xiPhiS_;
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       / sqr(denom)
                        * signDenom
-                       * neg(xiKgradAlpha);
+                       * neg(xiKgradAlpha)
+                       / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
-                       * (xiPhiS_ & xiPhiS_)
+                       * magSqr(xiPhiS_)
                        * sqr(
                                 (sqrt(k_&eX) * mag(gradAlpha&eX))
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))

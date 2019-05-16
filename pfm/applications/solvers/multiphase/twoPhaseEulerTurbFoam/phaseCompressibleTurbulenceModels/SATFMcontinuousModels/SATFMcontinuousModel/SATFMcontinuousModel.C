@@ -360,7 +360,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                 IOobject::NO_WRITE
             ),
           - (nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * pos((scalar(1.0) - alpha_) - residualAlpha_) * alpha_ * rho_ *
+          + 2.0 * alpha_ * rho_ *
             symm(
                      (k_&eX)*(eX*eX)
                    + (k_&eY)*(eY*eY)
@@ -404,7 +404,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                 IOobject::NO_WRITE
             ),
           - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * pos((scalar(1.0) - alpha_) - residualAlpha_) * alpha_ * rho_ *
+          + 2.0 * alpha_ * rho_ *
             symm(
                      (k_&eX)*(eX*eX)
                    + (k_&eY)*(eY*eY)
@@ -441,7 +441,6 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     );
     
     return
-    pos((scalar(1.0) - alpha_) - residualAlpha_)*
     (
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
@@ -633,10 +632,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     if (dynamicAdjustment_) {
         // precompute \bar phi
         volScalarField alpha1f = filter_(alpha1);
-        alpha1f.max(1.0e-7);
+        alpha1f.max(residualAlpha_.value());
         volScalarField alpha2f = scalar(1.0) - alpha1f;
         volScalarField alpha1fP2 = filter_(sqr(alpha1));
-        alpha1fP2.max(1.0e-14);
+        alpha1fP2.max(sqr(residualAlpha_.value()));
         
         // compute xiPhiG_
         xiPhiG_ = (
@@ -854,7 +853,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
-                       * (xiPhiG_ & xiPhiG_)
+                       * magSqr(xiPhiG_)
                        * sqr(
                                 (sqrt(k_&eX) * mag(gradAlpha&eX))
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
