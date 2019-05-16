@@ -293,6 +293,7 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         xiGSScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
+        sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
 
         return true;

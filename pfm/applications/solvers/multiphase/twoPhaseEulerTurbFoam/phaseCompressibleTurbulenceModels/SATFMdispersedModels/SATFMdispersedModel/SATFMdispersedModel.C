@@ -279,6 +279,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         xiPhiSolidScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
+        sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         frictionalStressModel_->read();
 
