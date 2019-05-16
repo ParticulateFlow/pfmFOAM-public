@@ -640,16 +640,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     if (dynamicAdjustment_) {
         // precompute \bar phi
-        volScalarField alpha1f = filter_(alpha1);
-        alpha1f.max(residualAlpha_.value());
-        volScalarField alpha2f = scalar(1.0) - alpha1f;
+        volScalarField alpha2f = filter_(alpha);
+        alpha2f.min(1.0);
+        volScalarField alpha1f = scalar(1.0) - alpha2f;
+        alpha1f.max(1.e-7);
         volScalarField alpha1fP2 = filter_(sqr(alpha1));
         alpha1fP2.max(sqr(residualAlpha_.value()));
         
+        volVectorField Uf = filter_(alpha*U)/alpha2f;
         // compute xiPhiG_
-        xiPhiG_ = (
-                      filter_(alpha1*U)
-                    - alpha1f*filter_(U)
+        xiPhiG_ = - (
+                      filter_(alpha*U)
+                    - alpha2f*filter_(U)
                    )
                  / (
                       sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))*
