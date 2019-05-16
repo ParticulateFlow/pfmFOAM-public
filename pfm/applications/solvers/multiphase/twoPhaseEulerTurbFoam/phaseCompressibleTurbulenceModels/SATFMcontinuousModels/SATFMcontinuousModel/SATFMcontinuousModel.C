@@ -99,6 +99,13 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("Cmu",0.4)
     ),
 
+    CphiGscalar_
+    (
+        "CphiGscalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("CphiG",0.4)
+    ),
+
     CepsScalar_
     (
         "CepsScalar",
@@ -292,6 +299,7 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         xiPhiContScalar_.readIfPresent(coeffDict());
         xiGSScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
+        CphiGscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
@@ -836,7 +844,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU*neg(divU) + Cmu_ * Ceps_ * sqrt(km)/lm;
+    volScalarField denom = divU*neg(divU) + CphiGscalar_ * Ceps_ * sqrt(km)/lm;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;

@@ -116,6 +116,9 @@ class SATFMdispersedModel
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
+            //- constant in alphaP2Mean equation
+            dimensionedScalar CphiSscalar_;    
+    
             //- "Smagorinsky constant"
             dimensionedScalar CepsScalar_;
     

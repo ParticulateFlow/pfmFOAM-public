@@ -104,7 +104,12 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Cmu",0.25)
     ),
-
+    CphiSscalar_
+    (
+        "CphiSscalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("CphiS",0.25)
+    ),
     CepsScalar_
     (
         "CepsScalar",
@@ -278,6 +283,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         alphaMinFriction_.readIfPresent(coeffDict());
         xiPhiSolidScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
+        CphiSscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
@@ -798,7 +804,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU*neg(divU) + Cmu_ * Ceps_ * sqrt(km)/lm;
+    volScalarField denom = divU*neg(divU) + CphiSscalar_ * Ceps_ * sqrt(km)/lm;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
