@@ -29,7 +29,7 @@ Class
     Johannes Kepler University, Linz, Austria
 
 Description
-    Approximate deconvolution model for  continuous phase
+    Approximate deconvolution model for continuous phase
 
     Reference:
     \verbatim

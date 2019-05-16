@@ -23,9 +23,19 @@ License
 
 Class
     Foam::ADMdispersedModels::regularizationModels::Stolz
+ 
+(c) Simon Schneiderbauer 2019
+    Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
+    Johannes Kepler University, Linz, Austria
 
 Description
+    Regularization model for Approximate deconvolution model
 
+    Reference:
+    \verbatim
+        Schneiderbauer, S., & Saeedipour, M. (2019). Numerical simulation of turbulent gas-solid flow using an approximate deconvolution model. International Journal of Multiphase Flow, 114, 287–302.
+    \endverbatim
+ 
 SourceFiles
     Stolz.C
 

@@ -23,6 +23,10 @@ License
 
 Class
     Foam::ADMdispersedModels::frictionalStressModels::SchneiderbauerEtAl
+ 
+(c) Simon Schneiderbauer 2019
+    Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
+    Johannes Kepler University, Linz, Austria
 
 Description
     Implementaton of mu(I)-rheology (Schneiderbauer et al., Chem. Eng.

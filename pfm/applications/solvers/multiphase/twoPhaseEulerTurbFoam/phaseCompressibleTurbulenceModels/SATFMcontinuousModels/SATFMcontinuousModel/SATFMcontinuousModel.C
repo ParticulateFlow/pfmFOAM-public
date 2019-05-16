@@ -805,7 +805,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_ = CepsScalar_;
         // Equilibrium => dissipation == production
         // Schneiderbauer (2017), equ. (56)
-        volVectorField kold = k_;
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
@@ -819,7 +818,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                  lm[cellI]*SijSijV[cellI].component(i)
                                + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
                                - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
-                                        /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(kold[cellI].component(i),kSmall.value())))
+                                        /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
                                 , 0.
                               )
                            )
@@ -850,9 +849,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                     & xiPhiG_;
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       / sqr(denom)
                        * signDenom
-                       * neg(xiKgradAlpha);
+                       * neg(xiKgradAlpha)
+                       / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
                        * (xiPhiG_ & xiPhiG_)
