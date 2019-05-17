@@ -28,6 +28,7 @@ License
 #include "twoPhaseSystem.H"
 #include "wallDist.H"
 #include "simpleFilter.H"
+#include "uniformDimensionedFields.H"
 #include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -111,6 +112,13 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         "CepsScalar",
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Ceps",1.0)
+    ),
+
+    CpScalar_
+    (
+        "CpScalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cp",0.4)
     ),
 
     sigma_
@@ -232,7 +240,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     Ceps_
@@ -246,7 +256,25 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
+    Cp_
+    (
+        IOobject
+        (
+            IOobject::groupName("Cp", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     deltaF_
@@ -301,6 +329,7 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         CmuScalar_.readIfPresent(coeffDict());
         CphiGscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
+        CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
 
@@ -550,6 +579,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // solid volume fraction
     volScalarField alpha1 = 1.0 - alpha;
     const volScalarField& rho = phase_.rho();
+    const volScalarField& rho1 = fluid.otherPhase(phase_).rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const volVectorField& U = U_;
     
@@ -558,6 +588,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // slip velocity
     volVectorField uSlip = U - Ud_;
+    
+    // gravity vector
+    const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
     
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
@@ -626,6 +659,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             phase_
         ).K()
     );
+    beta.max(1.0e-7);
+    
     volScalarField betaA = beta/(rho*alpha);
     
     // get drift velocity
@@ -703,6 +738,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_ = CmuScalar_;
         // Set Ceps
         Ceps_ = CepsScalar_;
+        // Set Cp
+        Cp_     = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
@@ -712,6 +749,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiGS_   = xiGSScalar_;
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
+        Cp_     = CpScalar_;
     }
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
@@ -758,6 +796,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volScalarField km  = k_ & eSum;
     km.max(kSmall.value());
     if (!equilibrium_) {
+        
+        volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*g/beta;
+        
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
@@ -792,9 +833,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       + sqrt((kD_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          - ((KdUdrift&eX)*(uSlip&eX))*eX
-          - ((KdUdrift&eY)*(uSlip&eY))*eY
-          - ((KdUdrift&eZ)*(uSlip&eZ))*eZ
+          // drag production and pressure dilation
+          - (KdUdrift&eX)*((uSlip&eX) - (pDil&eX))*eX
+          - (KdUdrift&eY)*((uSlip&eY) - (pDil&eY))*eY
+          - (KdUdrift&eZ)*((uSlip&eZ) - (pDil&eZ))*eZ
           + fvm::Sp(-2.0*beta*xiGatS_,k_)
           // dissipation
           - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm,k_)

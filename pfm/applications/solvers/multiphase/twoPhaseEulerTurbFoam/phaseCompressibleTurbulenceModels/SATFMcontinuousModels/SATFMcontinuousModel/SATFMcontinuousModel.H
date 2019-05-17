@@ -109,9 +109,11 @@ class SATFMcontinuousModel
             //- constant in alphaP2Mean equation
             dimensionedScalar CphiGscalar_;
     
-            //- "Smagorinsky constant"
+            //- "dissipation constant"
             dimensionedScalar CepsScalar_;
     
+            //- "pressure dilation constant"
+            dimensionedScalar CpScalar_;
             //- turbulent schmidt number
             dimensionedScalar sigma_;    
     
@@ -140,11 +142,14 @@ class SATFMcontinuousModel
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
     
-            //- phiPrimeSquared (Variance of solids volume fraction)
+            //- smagorinsky constant
             volScalarField Cmu_;
     
-            //- phiPrimeSquared (Variance of solids volume fraction)
+            //- turbulent dissipation constant
             volScalarField Ceps_;
+    
+            //- pressure dilation constant
+            volScalarField Cp_;
     
             //- grid size
             volScalarField deltaF_;
