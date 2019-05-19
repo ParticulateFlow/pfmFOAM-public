@@ -122,6 +122,9 @@ class SATFMdispersedModel
             //- "Smagorinsky constant"
             dimensionedScalar CepsScalar_;
     
+            //- "pressure dilation constant"
+            dimensionedScalar CpScalar_;
+    
             //- turbulent schmidt number
             dimensionedScalar sigma_;
     
@@ -152,6 +155,9 @@ class SATFMdispersedModel
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField Ceps_;
+    
+            //- pressure dilation constant
+            volScalarField Cp_;    
     
             //- grid size
             volScalarField deltaF_;

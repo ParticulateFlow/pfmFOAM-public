@@ -114,6 +114,7 @@ class SATFMcontinuousModel
     
             //- "pressure dilation constant"
             dimensionedScalar CpScalar_;
+    
             //- turbulent schmidt number
             dimensionedScalar sigma_;    
     

@@ -730,8 +730,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         // xiGS_ (xiGS_ is positive)
         xiGS_ = filterS(xiGS_);
-        xiGS_.max(-sqrt(1.0));
-        xiGS_.min(sqrt(1.0));
+        xiGS_.max(-1.0);
+        xiGS_.min(1.0);
         
         // Currently no dynamic procedure for Cmu and Ceps
         // Set Cmu
@@ -809,7 +809,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
-          - fvm::laplacian(alpha*rho*lm*sqrt(km)/sigma_, k_, "laplacian(kappa,k)")
+          // diffusion with anisotropic diffusivity
+          - fvm::laplacian(alpha*rho*lm
+                                * (
+                                     (sqrt(k_&eX)*(eX*eX))
+                                   + (sqrt(k_&eY)*(eY*eY))
+                                   + (sqrt(k_&eZ)*(eZ*eZ))
+                                   )
+                                 / sigma_
+                           , k_, "laplacian(kappa,k)")
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -901,7 +909,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                     & xiPhiG_;
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       * neg(xiKgradAlpha)
+                       * pos(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0

@@ -28,6 +28,7 @@ License
 #include "twoPhaseSystem.H"
 #include "simpleFilter.H"
 #include "wallDist.H"
+#include "uniformDimensionedFields.H"
 #include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -115,6 +116,13 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         "CepsScalar",
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Ceps",1.0)
+    ),
+
+    CpScalar_
+    (
+        "CpScalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cp",0.4)
     ),
 
     sigma_
@@ -233,6 +241,22 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
+    Cp_
+    (
+        IOobject
+        (
+            IOobject::groupName("Cp", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     deltaF_
     (
         IOobject
@@ -285,6 +309,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         CmuScalar_.readIfPresent(coeffDict());
         CphiSscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
+        CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         frictionalStressModel_->read();
@@ -584,6 +609,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const volVectorField& U = U_;
     
+    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
+    
+    // gravity vector
+    const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
+    
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
@@ -638,6 +668,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     const volScalarField& xiGS_(mesh_.lookupObject<volScalarField>
                              ("xiGS"));
     
+    // get alphaP2Mean
+    const volScalarField& alphaP2Mean2_(mesh_.lookupObject<volScalarField>
+                                        ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
+    volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
+    
     // simple filter for smoothing of correlation coefficients
     simpleFilter filterS(mesh_);
     
@@ -676,10 +711,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cmu_ = CmuScalar_;
         // Set Ceps
         Ceps_   = CepsScalar_;
+        // Set Cp
+        Cp_     = CpScalar_;
     } else {
-        xiPhiS_ = xiPhiSolidScalar_*eSum;
+        xiPhiS_ = - xiPhiSolidScalar_*eSum;
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
+        Cp_     = CpScalar_;
     }
     
     // compute grid size
@@ -720,6 +758,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField km  = k_ & eSum;
     km.max(kSmall.value());
     if (!equilibrium_) {
+        volVectorField pDil = Cp_*alpha*(rho-rho2)*g*sqrt(2.0*alphaP2MeanO);
+        
         fv::options& fvOptions(fv::options::New(mesh_));
         
         // Construct the transport equation for k
@@ -730,7 +770,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
-          - fvm::laplacian(alpha*rho*lm*sqrt(km)/sigma_, k_, "laplacian(kappa,k)")
+          // diffusion with anisotropic diffusivity
+          - fvm::laplacian(alpha*rho*lm
+                                * (
+                                     (sqrt(k_&eX)*(eX*eX))
+                                   + (sqrt(k_&eY)*(eY*eY))
+                                   + (sqrt(k_&eZ)*(eZ*eZ))
+                                   )
+                                 / sigma_
+                           , k_, "laplacian(kappa,k)")
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -755,6 +803,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
                 )
           + fvm::Sp(-2.0*beta,k_)
+          // pressure dilation
+          + ((pDil&eX)*(xiPhiS_&eX)*sqrt(k_&eX))*eX
+          + ((pDil&eZ)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
+          + ((pDil&eY)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
           // dissipation
           - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm,k_)
           + fvOptions(alpha, rho, k_)
