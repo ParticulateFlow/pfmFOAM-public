@@ -715,7 +715,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cp_     = CpScalar_;
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
-                   /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,0,0,0,0),1.e-7));
+                   /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
