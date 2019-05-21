@@ -626,12 +626,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(dev(symm(gradU)));
     // compute S_{ij}S_{ij} (no summation over j!!)
-    /*
-     volVectorField SijSij =  magSqr(gradU&eX)*eX
-     + magSqr(gradU&eY)*eY
-     + magSqr(gradU&eZ)*eZ;
-     */
-    volTensorField SijSij = D & gradU.T();
+    volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
+                           + magSqr(gradU&eY)*(eY*eY)
+                           + magSqr(gradU&eZ)*(eZ*eZ);
+    //volTensorField SijSij = D & gradU.T();
     
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
