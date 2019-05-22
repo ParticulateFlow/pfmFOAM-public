@@ -7,5 +7,6 @@ $(LESfiltersCustom)/laplaceAnIsoFilter4/laplaceAnIsoFilter4.C
 $(LESfiltersCustom)/simpleFilterADM/simpleFilterADM.C
 $(LESfiltersCustom)/simpleTestFilter/simpleTestFilter.C
 $(LESfiltersCustom)/ParmentierTestFilter/ParmentierTestFilter.C
+$(LESfiltersCustom)/ParmentierADMFilter/ParmentierADMFilter.C
 
 LIB = $(FOAM_USER_LIBBIN)/libcustomLESfilters
