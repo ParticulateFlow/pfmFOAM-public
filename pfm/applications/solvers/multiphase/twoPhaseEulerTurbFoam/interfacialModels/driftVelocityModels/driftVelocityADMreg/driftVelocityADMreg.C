@@ -27,7 +27,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "driftVelocitySATFM.H"
+#include "driftVelocityADMreg.H"
 #include "phasePair.H"
 #include "PhaseCompressibleTurbulenceModel.H"
 #include "addToRunTimeSelectionTable.H"
@@ -40,11 +40,11 @@ namespace Foam
 {
 namespace driftVelocityModels
 {
-    defineTypeNameAndDebug(driftVelocitySATFM, 0);
+    defineTypeNameAndDebug(driftVelocityADMreg, 0);
     addToRunTimeSelectionTable
     (
         driftVelocityModel,
-        driftVelocitySATFM,
+        driftVelocityADMreg,
         dictionary
     );
 }
@@ -53,7 +53,7 @@ namespace driftVelocityModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::driftVelocityModels::driftVelocitySATFM::driftVelocitySATFM
+Foam::driftVelocityModels::driftVelocityADMreg::driftVelocityADMreg
 (
     const dictionary& dict,
     const phasePair& pair,
@@ -70,65 +70,56 @@ Foam::driftVelocityModels::driftVelocitySATFM::driftVelocitySATFM
             "residualAlpha",
             pair_.dispersed().residualAlpha().value()
         )
-    )
+    ),
+
+    alphaMax_("alphaMax", dimless, dict),
+
+    filterPtr_(LESfilter::New(pair.dispersed().mesh(), dict)),
+    filter_(filterPtr_())
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::driftVelocityModels::driftVelocitySATFM::~driftVelocitySATFM()
+Foam::driftVelocityModels::driftVelocityADMreg::~driftVelocityADMreg()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volVectorField>
-Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
+Foam::driftVelocityModels::driftVelocityADMreg::udrift() const
 {
-    const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
-                               ("alphaP2Mean." + pair_.dispersed().name()));
-    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
-                               ("alphaP2Mean." + pair_.continuous().name()));
+    const fvMesh& mesh_(pair_.phase1().mesh());
+    const volScalarField& alpha1star(mesh_.lookupObject<volScalarField>
+                               ("alpha1star"));
     
-    const volVectorField& xiPhiG_(mesh.lookupObject<volVectorField>
-                               ("xiPhiG"));
-    const volVectorField& kC_(mesh.lookupObject<volVectorField>
-                                 ("k." + pair_.continuous().name()));
-    
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
+    const volVectorField& U2star(mesh_.lookupObject<volVectorField>
+                           ("U2star"));
+    const volScalarField& alphaP2Mean_(mesh_.lookupObject<volScalarField>
+                                       ("alphaP2Mean"));
 
-    volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
+    volScalarField alpha1f = filter_(alpha1star);
+    alpha1f.max(residualAlpha_.value());
+    alpha1f.min(alphaMax_.value());
+    volScalarField alpha2f = scalar(1.0) - alpha1f;
     
-    volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
+    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
+    volScalarField uSlip(mag(uSlipV));
+    uSlip.max(SMALL);
     
-    volVectorField kSqrt =  (xiPhiG_ & eX)*sqrt(mag(kC_ & eX))*eX
-                          + (xiPhiG_ & eY)*sqrt(mag(kC_ & eY))*eY
-                          + (xiPhiG_ & eZ)*sqrt(mag(kC_ & eZ))*eZ;
-    volScalarField alphaP2MeanN = sqrt(2.0 * alphaP2Mean)
-                                /(alpha1*(scalar(1.0)-alpha1));
-    
-    return pos(pair_.dispersed() - residualAlpha_)
-         * alphaP2MeanN
-         * kSqrt;
-
+    return pos(pair_.dispersed() - residualAlpha_)*
+           (
+                filter_(alpha1star*U2star)/alpha1f
+              - filter_((scalar(1.0) - alpha1star)*U2star)/alpha2f
+              - sqrt(2.0*alphaP2Mean_*pair_.continuous().turbulence().k())*uSlipV
+                    /(uSlip
+                        * (
+                             max(pair_.dispersed(),residualAlpha_)
+                           * (scalar(1.0) - pair_.dispersed())
+                          )
+                      )
+           );
 }
 
 

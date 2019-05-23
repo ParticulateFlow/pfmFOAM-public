@@ -26,6 +26,7 @@ License
 #include "driftVelocityModel.H"
 #include "phasePair.H"
 #include "dragModel.H"
+#include "zeroGradientFvPatchField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -74,7 +75,10 @@ Foam::driftVelocityModel::driftVelocityModel
             IOobject::AUTO_WRITE
         ),
         pair.dispersed().mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 0.0)
+        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 0.0),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+        
     )
 {}
 
@@ -110,7 +114,7 @@ Foam::driftVelocityModel::KdUdrift() const
     
     volScalarField magUd = mag(ud);
     magUd.max(SMALL);
-    ud *= min(0.97*uSlip,magUd)/magUd;
+    ud *= min(mag(uSlipV&ud)/uSlip,0.95*uSlip)/magUd;
     dragCorr_ = -(ud&uSlipV)/sqr(uSlip);
 
     // multiply drift velocity by drag coefficient

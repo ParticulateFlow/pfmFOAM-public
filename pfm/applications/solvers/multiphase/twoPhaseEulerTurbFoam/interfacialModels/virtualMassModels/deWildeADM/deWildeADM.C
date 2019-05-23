@@ -82,8 +82,8 @@ Foam::virtualMassModels::deWildeADM::~deWildeADM()
 Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeADM::Cvm() const
 {
     // get alphaP2Mean from Turbulence Model
-    const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean_(mesh.lookupObject<volScalarField>
+    const fvMesh& mesh_(pair_.phase1().mesh());
+    const volScalarField& alphaP2Mean_(mesh_.lookupObject<volScalarField>
                                ("alphaP2Mean"));
     volScalarField alpha1
     (

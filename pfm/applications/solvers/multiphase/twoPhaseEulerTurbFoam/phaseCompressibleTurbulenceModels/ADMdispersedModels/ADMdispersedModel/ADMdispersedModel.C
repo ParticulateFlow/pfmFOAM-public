@@ -405,6 +405,45 @@ Foam::RASModels::ADMdispersedModel::divDevRhoReff
     );
 }
 
+void Foam::RASModels::ADMdispersedModel::boundNormalStress
+(
+    volTensorField& R
+) const
+{
+    scalar kMin = 1.e-7;
+    scalar kMax = maxK_.value();
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  kMin, - kMax, - kMax,
+                - kMax,   kMin, - kMax,
+                - kMax, - kMax,   kMin
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  kMax, kMax, kMax,
+                  kMax, kMax, kMax,
+                  kMax, kMax, kMax
+            )
+        )
+    );
+}
+
 
 void Foam::RASModels::ADMdispersedModel::correct()
 {
@@ -450,21 +489,11 @@ void Foam::RASModels::ADMdispersedModel::correct()
                 );
     
     // limit Reynolds stress
-    forAll(U.mesh().cells(),cellI)
-    {
-        for (int i=0; i<9; i++) {
-            R1ADM_[cellI].component(i) = Foam::min(mag(R1ADM_[cellI].component(i))
-                                                   ,rho[cellI]*alpha[cellI]*maxK_.value())*
-                                         Foam::sign(R1ADM_[cellI].component(i));
-        }
-        R1ADM_[cellI].component(0) = Foam::max(R1ADM_[cellI].component(0),1.0e-7);
-        R1ADM_[cellI].component(4) = Foam::max(R1ADM_[cellI].component(4),1.0e-7);
-        R1ADM_[cellI].component(8) = Foam::max(R1ADM_[cellI].component(8),1.0e-7);
-    }
+    boundNormalStress(R1ADM_);
     R1ADM_.correctBoundaryConditions();
     
     // compute turbulent kinetic energy
-    k_ = tr(R1ADM_)/(rho*max(alpha,residualAlpha_));
+    k_ = tr(R1ADM_)/(rho*max(a1sF,residualAlpha_));
 
     // compute derivative of Ustar for frictional model
     tmp<volTensorField> tgradU(fvc::grad(U1star_));
@@ -500,9 +529,9 @@ void Foam::RASModels::ADMdispersedModel::correct()
     nut_.min(maxNut_.value());
     nut_.max(0.);
     
-    Info<< "ADM:" << nl
-    << "    max(nut) = " << max(nut_).value() << nl
-    << "    max(k)   = " << max(k_).value()   << endl;
+    Info<< "ADM (dispersed):" << nl
+        << "    max(nut) = " << max(nut_).value() << nl
+        << "    max(k)   = " << max(k_).value()   << endl;
 
     if (debug)
     {

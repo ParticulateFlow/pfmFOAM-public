@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,97 +22,95 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::ADMdispersedModels::regularizationModels::Stolz
+    Foam::driftVelocityModels::driftVelocityADMreg
  
 (c) Simon Schneiderbauer 2019
     Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
     Johannes Kepler University, Linz, Austria
 
 Description
-    Regularization model for Approximate deconvolution model
+    Turbulent drift velocity model of Schneiderbauer & Saeedipour
 
-    Reference:
+    References:
     \verbatim
-        Schneiderbauer, S., & Saeedipour, M. (2019). Numerical simulation of turbulent gas-solid flow using an approximate deconvolution model. International Journal of Multiphase Flow, 114, 287–302.
+        Schneiderbauer, S., & Saeedipour, M. (2019). "Numerical simulation of turbulent gas-solid flow using an approximate deconvolution model." International Journal of Multiphase Flow, 114, 287–302.
     \endverbatim
- 
+
 SourceFiles
-    Stolz.C
+    driftVelocityADMreg.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Stolz_H
-#define Stolz_H
+#ifndef driftVelocityADMreg_H
+#define driftVelocityADMreg_H
 
-#include "regularizationModel.H"
-// h-files for LES filters
+#include "driftVelocityModel.H"
 #include "LESfilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace ADMdispersedModels
-{
-namespace regularizationModels
+
+class phasePair;
+
+namespace driftVelocityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class Stolz Declaration
+                             Class driftVelocityADMreg Declaration
 \*---------------------------------------------------------------------------*/
 
-class Stolz
+class driftVelocityADMreg
 :
-    public regularizationModel
+    public driftVelocityModel
 {
-    dictionary coeffDict_;
-    //- smagorinsky constant according to Schneiderbauer (2017)
-    dimensionedScalar smagConst_;
     
-    //- length scale constant for turbulent time scale
-    dimensionedScalar lengthConst_;
+    //- Residual phase fraction
+    const dimensionedScalar residualAlpha_;
+    
+    //- max phase fraction
+    const dimensionedScalar alphaMax_;
     
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
-    
+
 public:
 
+    
     //- Runtime type information
-    TypeName("Stolz");
+    TypeName("driftVelocityADMreg");
+
 
     // Constructors
 
-        Stolz
+        //- Construct from a dictionary and a phase pair
+        driftVelocityADMreg
         (
             const dictionary& dict,
-            const volScalarField& alpha
-         );
+            const phasePair& pair,
+            const bool registerObject
+        );
 
 
     //- Destructor
-    virtual ~Stolz();
+    virtual ~driftVelocityADMreg();
 
 
-    // Member functions
+    // Member Functions
 
-        virtual tmp<volVectorField> regTerm
-        (
-            const volScalarField& alpha,
-            const volScalarField& rho,
-            const volScalarField& k,
-            const volVectorField& U,
-            const volVectorField& Ustar
-        ) const;
+        //- Turbulent drift velocity
+        virtual tmp<volVectorField> udrift() const;
     
-        virtual bool read();
+        //- compute drift velocity
+        // virtual void computeDriftVel();
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace regularizationModels
-} // End namespace ADMdispersedModels
+} // End namespace driftVelocityADMreg
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "simpleFilterADM.H"
+#include "ParmentierADMFilter.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvc.H"
 
@@ -31,14 +31,14 @@ License
 
 namespace Foam
 {
-    defineTypeNameAndDebug(simpleFilterADM, 0);
-    addToRunTimeSelectionTable(LESfilter, simpleFilterADM, dictionary);
+    defineTypeNameAndDebug(ParmentierADMFilter, 0);
+    addToRunTimeSelectionTable(LESfilter, ParmentierADMFilter, dictionary);
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::simpleFilterADM::simpleFilterADM
+Foam::ParmentierADMFilter::ParmentierADMFilter
 (
     const fvMesh& mesh
 )
@@ -47,7 +47,7 @@ Foam::simpleFilterADM::simpleFilterADM
 {}
 
 
-Foam::simpleFilterADM::simpleFilterADM(const fvMesh& mesh, const dictionary&)
+Foam::ParmentierADMFilter::ParmentierADMFilter(const fvMesh& mesh, const dictionary&)
 :
     LESfilter(mesh)
 {}
@@ -55,13 +55,13 @@ Foam::simpleFilterADM::simpleFilterADM(const fvMesh& mesh, const dictionary&)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::simpleFilterADM::read(const dictionary&)
+void Foam::ParmentierADMFilter::read(const dictionary&)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volScalarField> Foam::ParmentierADMFilter::operator()
 (
     const tmp<volScalarField>& unFilteredField
 ) const
@@ -72,9 +72,9 @@ Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
           0.5*unFilteredField()
         + 0.5*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
     unFilteredField.clear();
 
@@ -82,40 +82,40 @@ Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
 }
 
 
-Foam::tmp<Foam::volVectorField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volVectorField> Foam::ParmentierADMFilter::operator()
 (
     const tmp<volVectorField>& unFilteredField
 ) const
 {
     correctBoundaryConditions(unFilteredField);
-
+    
     tmp<volVectorField> filteredField =
           0.5*unFilteredField()
         + 0.5*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
 
     return filteredField;
 }
 
 
-Foam::tmp<Foam::volSymmTensorField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volSymmTensorField> Foam::ParmentierADMFilter::operator()
 (
     const tmp<volSymmTensorField>& unFilteredField
 ) const
 {
     correctBoundaryConditions(unFilteredField);
-
+    
     tmp<volSymmTensorField> filteredField =
           0.5*unFilteredField()
         + 0.5*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
     unFilteredField.clear();
 
@@ -123,7 +123,7 @@ Foam::tmp<Foam::volSymmTensorField> Foam::simpleFilterADM::operator()
 }
 
 
-Foam::tmp<Foam::volTensorField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volTensorField> Foam::ParmentierADMFilter::operator()
 (
     const tmp<volTensorField>& unFilteredField
 ) const
@@ -134,9 +134,9 @@ Foam::tmp<Foam::volTensorField> Foam::simpleFilterADM::operator()
           0.5*unFilteredField()
         + 0.5*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
     unFilteredField.clear();
 

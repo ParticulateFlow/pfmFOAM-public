@@ -106,8 +106,17 @@ class SATFMcontinuousModel
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
-            //- "Smagorinsky constant"
+            //- constant in alphaP2Mean equation
+            dimensionedScalar CphiGscalar_;
+    
+            //- "dissipation constant"
             dimensionedScalar CepsScalar_;
+    
+            //- "pressure dilation constant"
+            dimensionedScalar CpScalar_;
+    
+            //- turbulent schmidt number
+            dimensionedScalar sigma_;    
     
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
@@ -121,18 +130,27 @@ class SATFMcontinuousModel
     
             //- correlation coefficient between solid volume fraction and cont. velocity
             volVectorField xiPhiG_;
+    
+            //- triple correlation coefficient between solid volume fraction and cont. velocity
+            volScalarField xiPhiGG_;
 
-            //- ccorrelation coefficient between cont. phase and solid velocity
+            //- correlation coefficient between cont. phase and solid velocity
             volScalarField xiGS_;
+    
+            //- correlation coefficient between cont. phase and solid velocity (seen by the gas phase)
+            volScalarField xiGatS_;
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
     
-            //- phiPrimeSquared (Variance of solids volume fraction)
+            //- smagorinsky constant
             volScalarField Cmu_;
     
-            //- phiPrimeSquared (Variance of solids volume fraction)
+            //- turbulent dissipation constant
             volScalarField Ceps_;
+    
+            //- pressure dilation constant
+            volScalarField Cp_;
     
             //- grid size
             volScalarField deltaF_;
@@ -152,6 +170,11 @@ class SATFMcontinuousModel
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
+    
+    //- bound k
+    void boundNormalStress(volVectorField& R) const;
+    void boundxiPhiG(volVectorField& xi) const;
+    
 public:
 
     //- Runtime type information

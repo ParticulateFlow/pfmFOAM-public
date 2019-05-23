@@ -116,8 +116,17 @@ class SATFMdispersedModel
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
+            //- constant in alphaP2Mean equation
+            dimensionedScalar CphiSscalar_;    
+    
             //- "Smagorinsky constant"
             dimensionedScalar CepsScalar_;
+    
+            //- "pressure dilation constant"
+            dimensionedScalar CpScalar_;
+    
+            //- turbulent schmidt number
+            dimensionedScalar sigma_;
     
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
@@ -136,7 +145,7 @@ class SATFMdispersedModel
             volScalarField pf_;
     
             //- correlation coefficient between solid volume fraction and solid velocity
-            volScalarField xiPhiS_;
+            volVectorField xiPhiS_;
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
@@ -146,6 +155,9 @@ class SATFMdispersedModel
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField Ceps_;
+    
+            //- pressure dilation constant
+            volScalarField Cp_;    
     
             //- grid size
             volScalarField deltaF_;
@@ -165,6 +177,10 @@ class SATFMdispersedModel
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
+    
+    //- bound k
+    void boundNormalStress(volVectorField& k) const;
+    void boundxiPhiS(volVectorField& xi) const;
 public:
 
     //- Runtime type information

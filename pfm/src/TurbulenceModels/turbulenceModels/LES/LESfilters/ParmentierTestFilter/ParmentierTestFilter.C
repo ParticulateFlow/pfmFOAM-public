@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "simpleFilterADM.H"
+#include "ParmentierTestFilter.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvc.H"
 
@@ -31,14 +31,14 @@ License
 
 namespace Foam
 {
-    defineTypeNameAndDebug(simpleFilterADM, 0);
-    addToRunTimeSelectionTable(LESfilter, simpleFilterADM, dictionary);
+    defineTypeNameAndDebug(ParmentierTestFilter, 0);
+    addToRunTimeSelectionTable(LESfilter, ParmentierTestFilter, dictionary);
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::simpleFilterADM::simpleFilterADM
+Foam::ParmentierTestFilter::ParmentierTestFilter
 (
     const fvMesh& mesh
 )
@@ -47,7 +47,7 @@ Foam::simpleFilterADM::simpleFilterADM
 {}
 
 
-Foam::simpleFilterADM::simpleFilterADM(const fvMesh& mesh, const dictionary&)
+Foam::ParmentierTestFilter::ParmentierTestFilter(const fvMesh& mesh, const dictionary&)
 :
     LESfilter(mesh)
 {}
@@ -55,13 +55,13 @@ Foam::simpleFilterADM::simpleFilterADM(const fvMesh& mesh, const dictionary&)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::simpleFilterADM::read(const dictionary&)
+void Foam::ParmentierTestFilter::read(const dictionary&)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volScalarField> Foam::ParmentierTestFilter::operator()
 (
     const tmp<volScalarField>& unFilteredField
 ) const
@@ -69,12 +69,12 @@ Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
     correctBoundaryConditions(unFilteredField);
 
     tmp<volScalarField> filteredField =
-          0.5*unFilteredField()
-        + 0.5*fvc::surfaceSum
+        - (5.0/7.0)*unFilteredField()
+        + (12.0/7.0)*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
     unFilteredField.clear();
 
@@ -82,40 +82,40 @@ Foam::tmp<Foam::volScalarField> Foam::simpleFilterADM::operator()
 }
 
 
-Foam::tmp<Foam::volVectorField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volVectorField> Foam::ParmentierTestFilter::operator()
 (
     const tmp<volVectorField>& unFilteredField
 ) const
 {
     correctBoundaryConditions(unFilteredField);
-
+    
     tmp<volVectorField> filteredField =
-          0.5*unFilteredField()
-        + 0.5*fvc::surfaceSum
+        - (5.0/7.0)*unFilteredField()
+        + (12.0/7.0)*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
 
     return filteredField;
 }
 
 
-Foam::tmp<Foam::volSymmTensorField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volSymmTensorField> Foam::ParmentierTestFilter::operator()
 (
     const tmp<volSymmTensorField>& unFilteredField
 ) const
 {
     correctBoundaryConditions(unFilteredField);
-
+    
     tmp<volSymmTensorField> filteredField =
-          0.5*unFilteredField()
-        + 0.5*fvc::surfaceSum
+        - (5.0/7.0)*unFilteredField()
+        + (12.0/7.0)*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
     unFilteredField.clear();
 
@@ -123,7 +123,7 @@ Foam::tmp<Foam::volSymmTensorField> Foam::simpleFilterADM::operator()
 }
 
 
-Foam::tmp<Foam::volTensorField> Foam::simpleFilterADM::operator()
+Foam::tmp<Foam::volTensorField> Foam::ParmentierTestFilter::operator()
 (
     const tmp<volTensorField>& unFilteredField
 ) const
@@ -131,12 +131,12 @@ Foam::tmp<Foam::volTensorField> Foam::simpleFilterADM::operator()
     correctBoundaryConditions(unFilteredField);
 
     tmp<volTensorField> filteredField =
-          0.5*unFilteredField()
-        + 0.5*fvc::surfaceSum
+        - (5.0/7.0)*unFilteredField()
+        + (12.0/7.0)*fvc::surfaceSum
           (
-              mesh().magSf()*fvc::interpolate(unFilteredField())
+              fvc::interpolate(unFilteredField())
           )
-        / fvc::surfaceSum(mesh().magSf());
+        / fvc::surfaceSum(mesh().magSf()/mesh().magSf());
 
     unFilteredField.clear();
 

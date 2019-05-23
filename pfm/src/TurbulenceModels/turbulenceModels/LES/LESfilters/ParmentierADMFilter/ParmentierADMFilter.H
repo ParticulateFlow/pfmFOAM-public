@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,97 +22,98 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::ADMdispersedModels::regularizationModels::Stolz
- 
-(c) Simon Schneiderbauer 2019
-    Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
-    Johannes Kepler University, Linz, Austria
+    Foam::ParmentierADMFilter
 
 Description
-    Regularization model for Approximate deconvolution model
+    Simple top-hat filter used in dynamic LES models with correct, which is
+    equivalent to Laplace filter with C = 1/7 in the case of an isotropic
+    grid.
 
-    Reference:
-    \verbatim
-        Schneiderbauer, S., & Saeedipour, M. (2019). Numerical simulation of turbulent gas-solid flow using an approximate deconvolution model. International Journal of Multiphase Flow, 114, 287–302.
-    \endverbatim
- 
+    Implemented as a surface integral of the face interpolate of the field.
+
 SourceFiles
-    Stolz.C
+    ParmentierADMFilter.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Stolz_H
-#define Stolz_H
+#ifndef ParmentierADMFilter_H
+#define ParmentierADMFilter_H
 
-#include "regularizationModel.H"
-// h-files for LES filters
 #include "LESfilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace ADMdispersedModels
-{
-namespace regularizationModels
-{
 
 /*---------------------------------------------------------------------------*\
-                           Class Stolz Declaration
+                           Class ParmentierADMFilter Declaration
 \*---------------------------------------------------------------------------*/
 
-class Stolz
+class ParmentierADMFilter
 :
-    public regularizationModel
+    public LESfilter
+
 {
-    dictionary coeffDict_;
-    //- smagorinsky constant according to Schneiderbauer (2017)
-    dimensionedScalar smagConst_;
-    
-    //- length scale constant for turbulent time scale
-    dimensionedScalar lengthConst_;
-    
-protected:
-    autoPtr<LESfilter> filterPtr_;
-    LESfilter& filter_;
-    
+    // Private Member Functions
+
+        //- Disallow default bitwise copy construct and assignment
+        ParmentierADMFilter(const ParmentierADMFilter&);
+        void operator=(const ParmentierADMFilter&);
+
+
 public:
 
     //- Runtime type information
-    TypeName("Stolz");
+    TypeName("ParmentierADM");
+
 
     // Constructors
 
-        Stolz
-        (
-            const dictionary& dict,
-            const volScalarField& alpha
-         );
+        //- Construct from components
+        ParmentierADMFilter(const fvMesh& mesh);
+
+        //- Construct from IOdictionary
+        ParmentierADMFilter(const fvMesh& mesh, const dictionary&);
 
 
     //- Destructor
-    virtual ~Stolz();
+    virtual ~ParmentierADMFilter()
+    {}
 
 
-    // Member functions
+    // Member Functions
 
-        virtual tmp<volVectorField> regTerm
+        //- Read the LESfilter dictionary
+        virtual void read(const dictionary&);
+
+
+    // Member Operators
+
+        virtual tmp<volScalarField> operator()
         (
-            const volScalarField& alpha,
-            const volScalarField& rho,
-            const volScalarField& k,
-            const volVectorField& U,
-            const volVectorField& Ustar
+            const tmp<volScalarField>&
         ) const;
-    
-        virtual bool read();
+
+        virtual tmp<volVectorField> operator()
+        (
+            const tmp<volVectorField>&
+        ) const;
+
+        virtual tmp<volSymmTensorField> operator()
+        (
+            const tmp<volSymmTensorField>&
+        ) const;
+
+        virtual tmp<volTensorField> operator()
+        (
+            const tmp<volTensorField>&
+        ) const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace regularizationModels
-} // End namespace ADMdispersedModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

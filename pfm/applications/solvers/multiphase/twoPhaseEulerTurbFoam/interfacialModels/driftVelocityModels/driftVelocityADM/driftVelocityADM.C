@@ -90,11 +90,11 @@ Foam::driftVelocityModels::driftVelocityADM::~driftVelocityADM()
 Foam::tmp<Foam::volVectorField>
 Foam::driftVelocityModels::driftVelocityADM::udrift() const
 {
-    const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alpha1star(mesh.lookupObject<volScalarField>
+    const fvMesh& mesh_(pair_.phase1().mesh());
+    const volScalarField& alpha1star(mesh_.lookupObject<volScalarField>
                                ("alpha1star"));
     
-    const volVectorField& U2star(mesh.lookupObject<volVectorField>
+    const volVectorField& U2star(mesh_.lookupObject<volVectorField>
                            ("U2star"));
 
     volScalarField alpha1f = filter_(alpha1star);
@@ -103,8 +103,10 @@ Foam::driftVelocityModels::driftVelocityADM::udrift() const
     volScalarField alpha2f = scalar(1.0) - alpha1f;
     
     return pos(pair_.dispersed() - residualAlpha_)*
-           filter_(alpha1star*U2star)/max(alpha1f,1.0e-6)
-         - filter_((scalar(1.0) - alpha1star)*U2star)/alpha2f;
+           (
+                filter_(alpha1star*U2star)/max(alpha1f,1.0e-6)
+              - filter_((scalar(1.0) - alpha1star)*U2star)/alpha2f
+           );
 }
 
 

@@ -29,7 +29,7 @@ Class
     Johannes Kepler University, Linz, Austria
 
 Description
-    Approximate deconvolution model for  continuous phase
+    Approximate deconvolution model for continuous phase
 
     Reference:
     \verbatim
@@ -155,6 +155,9 @@ class ADMdispersedModel
 protected:
     autoPtr<LESfilter> filterPtr_;
     LESfilter& filter_;
+    
+    //- bound k
+    void boundNormalStress(volTensorField& R) const;
 
 public:
 

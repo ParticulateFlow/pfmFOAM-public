@@ -278,6 +278,44 @@ Foam::RASModels::ADMcontinuousModel::divDevRhoReff
     );
 }
 
+void Foam::RASModels::ADMcontinuousModel::boundNormalStress
+(
+    volTensorField& R
+) const
+{
+    scalar kMin = 1.e-7;
+    scalar kMax = maxK_.value();
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  kMin, - kMax, - kMax,
+                - kMax,   kMin, - kMax,
+                - kMax, - kMax,   kMin
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  kMax, kMax, kMax,
+                  kMax, kMax, kMax,
+                  kMax, kMax, kMax
+            )
+        )
+    );
+}
 
 void Foam::RASModels::ADMcontinuousModel::correct()
 {
@@ -321,23 +359,17 @@ void Foam::RASModels::ADMcontinuousModel::correct()
                   - a2sF * U2sF * U2sF
                 );
     // limit Reynolds stress
-    forAll(U.mesh().cells(),cellI)
-    {
-        for (int i=0; i<9; i++) {
-            R2ADM_[cellI].component(i) = Foam::min(mag(R2ADM_[cellI].component(i))
-                                                   ,rho[cellI]*alpha[cellI]*maxK_.value())*
-                                         Foam::sign(R2ADM_[cellI].component(i));
-        }
-        R2ADM_[cellI].component(0) = Foam::max(R2ADM_[cellI].component(0),1.0e-7);
-        R2ADM_[cellI].component(4) = Foam::max(R2ADM_[cellI].component(4),1.0e-7);
-        R2ADM_[cellI].component(8) = Foam::max(R2ADM_[cellI].component(8),1.0e-7);
-    }
+    boundNormalStress(R2ADM_);
     R2ADM_.correctBoundaryConditions();
     
     // compute turbulent kinetic energy
     k_ = tr(R2ADM_)/(rho*alpha);
     
     nut_ = dimensionedScalar("zero",dimensionSet(0,2,-1,0,0),0.);
+    
+    Info<< "ADM (continuous):" << nl
+        << "    max(nut) = " << max(nut_).value() << nl
+        << "    max(k)   = " << max(k_).value()   << endl;
     
     if (debug)
     {

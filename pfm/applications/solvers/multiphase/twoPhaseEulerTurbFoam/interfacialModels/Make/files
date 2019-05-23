@@ -78,6 +78,7 @@ driftVelocityModels/driftVelocityModel/driftVelocityModel.C
 driftVelocityModels/driftVelocityModel/newDriftVelocityModel.C
 driftVelocityModels/noDriftVelocity/noDriftVelocity.C
 driftVelocityModels/driftVelocityADM/driftVelocityADM.C
+driftVelocityModels/driftVelocityADMreg/driftVelocityADMreg.C
 driftVelocityModels/driftVelocitySATFM/driftVelocitySATFM.C
 
 LIB = $(FOAM_USER_LIBBIN)/libcompressibleEulerianInterfacialModelsT
