@@ -23,6 +23,17 @@ if (periodicBox) {
 volScalarField Kd(fluid.Kd());
 volVectorField KdUdrift(fluid.KdUdrift());
 {
+
+    surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
+    surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
+    surfaceScalarField pPrimef
+    (
+        fvc::interpolate
+        (
+            phase1.turbulence().pPrime()
+        )
+    );
+
     volScalarField Vm(fluid.Vm());
 
     {
@@ -54,6 +65,25 @@ volVectorField KdUdrift(fluid.KdUdrift());
         U1Eqn += fvm::Sp(Kd, U1);
         fvOptions.constrain(U1Eqn);
         U1.correctBoundaryConditions();
+        // improved momentum predictor
+        if (pimple.momentumPredictor()) {
+            solve
+            (
+                U1Eqn
+             ==
+                fvc::reconstruct
+                (
+                    (
+                      - pPrimef*fvc::snGrad(alpha1)
+                      - alphaf1*fvc::snGrad(p)
+                    ) * mesh.magSf()
+                  + alphaf1*fvc::interpolate(rho1)*(g & mesh.Sf())
+                  + (fvc::interpolate(Kd*U2) & mesh.Sf())
+                )
+//              + Kd*U1
+            );
+
+        }
         fvOptions.correct(U1);
     }
 
@@ -86,6 +116,24 @@ volVectorField KdUdrift(fluid.KdUdrift());
         U2Eqn += fvm::Sp(Kd, U2);
         fvOptions.constrain(U2Eqn);
         U2.correctBoundaryConditions();
+        // improved momentum predictor
+        if (pimple.momentumPredictor()) {
+            solve
+            (
+                U2Eqn
+             ==
+                fvc::reconstruct
+                (
+                    (
+                      - alphaf2*fvc::snGrad(p)
+                    ) * mesh.magSf()
+                 + alphaf2*fvc::interpolate(rho2)*(g & mesh.Sf())
+                 + (fvc::interpolate(Kd*U1) & mesh.Sf())
+                )
+ //             + Kd*U1
+            );
+
+        }
         fvOptions.correct(U2);
     }
 }
