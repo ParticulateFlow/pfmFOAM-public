@@ -80,7 +80,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                   + alphaf1*fvc::interpolate(rho1)*(g & mesh.Sf())
 //                  + (fvc::interpolate(Kd*U2) & mesh.Sf())
                 )
-              + Kd*U1
+              + Kd*U2
             );
 
         }
