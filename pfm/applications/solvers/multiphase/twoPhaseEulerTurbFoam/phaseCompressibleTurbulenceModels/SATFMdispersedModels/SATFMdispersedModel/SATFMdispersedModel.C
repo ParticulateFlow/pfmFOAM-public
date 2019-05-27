@@ -862,9 +862,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     if (dynamicAdjustment_) {
         volScalarField xiKgradAlpha = (
-                                         (sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_*eX)) * eX
-                                       + (sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_*eY)) * eY
-                                       + (sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_*eZ)) * eZ
+                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)) * eX)
+                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)) * eY)
+                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)) * eZ)
                                        );
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
