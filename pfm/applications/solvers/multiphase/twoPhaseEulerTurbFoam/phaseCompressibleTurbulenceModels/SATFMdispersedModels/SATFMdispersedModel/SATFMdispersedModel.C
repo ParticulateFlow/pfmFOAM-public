@@ -869,7 +869,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                     & xiPhiS_;
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       * neg(xiKgradAlpha)
+ //                      * neg(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
