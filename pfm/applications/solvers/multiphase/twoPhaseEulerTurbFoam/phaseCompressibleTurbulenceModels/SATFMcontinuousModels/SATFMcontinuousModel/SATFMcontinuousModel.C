@@ -899,13 +899,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
     if (dynamicAdjustment_) {
-        volScalarField xiKgradAlpha = (
+        volVectorField xiKgradAlpha = (
                                          ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)) * eX)
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)) * eY)
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)) * eZ)
                                        );
         alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)
+                       * magSqr(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
