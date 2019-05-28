@@ -690,11 +690,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         // compute xiPhiS
-        xiPhiS_ = (
+        xiPhiS_ = filterS(
                       filter_(alpha*U)
                     - alphaf*filter_(U)
                    )
-                 / (
+                 / filterS(
                       sqrt(max(filter_(sqr(alpha))-sqr(alphaf),sqr(residualAlpha_)))*
                       sqrt(0.33*max(
                           filter_(alpha*(U&U))/alphaf
@@ -702,7 +702,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                       )
                    );
         // smooth correlation coefficient
-        xiPhiS_ = filterS(xiPhiS_);
+        // xiPhiS_ = filterS(xiPhiS_);
         boundxiPhiS(xiPhiS_);
         
         // Currently no dynamic procedure for Cmu and Ceps

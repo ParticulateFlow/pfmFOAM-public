@@ -682,11 +682,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         volVectorField Uf = filter_(alpha*U)/alpha2f;
         // compute xiPhiG_
-        xiPhiG_ = - (
+        xiPhiG_ = - filterS(
                       filter_(alpha*U)
                     - alpha2f*filter_(U)
                    )
-                 / (
+                 / filterS(
                       sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))*
                       sqrt(0.33*max(
                           filter_(alpha*(U&U))/alpha2f
@@ -696,38 +696,38 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
  
         // compute triple correlation
         volVectorField Ucf = filter_(alpha*U)/alpha2f;
-        xiPhiGG_ = (
+        xiPhiGG_ = filterS(
                        filter_(alpha1*(U&U))
                      - alpha1f*filter_(U&U)
                      - 2.0*(Ucf&(filter_(alpha1*U) - alpha1f*filter_(U)))
                    )
-                 / (
+                 / filterS(
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
                      * max(mag(filter_(alpha*U&U)/alpha2f)-magSqr(Ucf),sqr(uSmall))
                    );
 
         // compute correlation coefficient between gas phase and solid phase velocity
-        xiGS_ = (
+        xiGS_ = filterS(
                      filter_(alpha1*(U&Ud_))/alpha1f
                    - (filter_(alpha1*U) & filter_(alpha1*Ud_))/sqr(alpha1f)
                 )
-              / (
+              / filterS(
                     sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
 
         // limit and smooth correlation coefficients
         // xiPhiG_
-        xiPhiG_ = filterS(xiPhiG_);
+        // xiPhiG_ = filterS(xiPhiG_);
         boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_
-        xiPhiGG_ = filterS(xiPhiGG_);
+        // xiPhiGG_ = filterS(xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        xiGS_ = filterS(xiGS_);
+        // xiGS_ = filterS(xiGS_);
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
