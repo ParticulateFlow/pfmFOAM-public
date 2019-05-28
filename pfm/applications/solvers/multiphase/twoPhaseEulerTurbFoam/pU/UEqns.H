@@ -43,8 +43,8 @@ volVectorField KdUdrift(fluid.KdUdrift());
           - fvm::Sp(contErr1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
-         ==
-          - Vm
+          // Virtual mass force
+          + Vm
            *(
                 fvm::ddt(U1)
               + fvm::div(phi1, U1)
@@ -53,18 +53,19 @@ volVectorField KdUdrift(fluid.KdUdrift());
             )
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
-          + KdUdrift
+          - KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
-          + alpha1*(rho1-rhoMix)*gN
+          - alpha1*(rho1-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          - alpha1*rho1*totalMomentum/deltaT
-          + fvOptions(alpha1, rho1, U1)
+          + alpha1*rho1*totalMomentum/deltaT
+         ==
+            fvOptions(alpha1, rho1, U1)
         );
         U1Eqn.relax();
         U1Eqn += fvm::Sp(Kd, U1);
         fvOptions.constrain(U1Eqn);
-        U1.correctBoundaryConditions();
+        
         // improved momentum predictor
         if (pimple.momentumPredictor()) {
             solve
@@ -75,15 +76,18 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 (
                     (
                       - pPrimef*fvc::snGrad(alpha1)
-                      - alphaf1*fvc::snGrad(p)
+                      - alphaf1*ghf*fvc::snGrad(fluid.rho())
+                      - alphaf1*fvc::snGrad(p_rgh)
                     ) * mesh.magSf()
-                  + alphaf1*fvc::interpolate(rho1)*(g & mesh.Sf())
-//                  + (fvc::interpolate(Kd*U2) & mesh.Sf())
+                  + alphaf1*fvc::interpolate(rho1-fluid.rho())*(g&mesh.Sf())
                 )
               + Kd*U2
+             
             );
 
         }
+        
+        U1.correctBoundaryConditions();
         fvOptions.correct(U1);
     }
 
@@ -94,8 +98,8 @@ volVectorField KdUdrift(fluid.KdUdrift());
           - fvm::Sp(contErr2, U2)
           + MRF.DDt(alpha2*rho2 + Vm, U2)
           + phase2.turbulence().divDevRhoReff(U2)
-         ==
-          - Vm
+          // Virtual mass force
+          + Vm
            *(
                 fvm::ddt(U2)
               + fvm::div(phi2, U2)
@@ -104,18 +108,19 @@ volVectorField KdUdrift(fluid.KdUdrift());
             )
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
-          - KdUdrift
+          + KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
-          + alpha2*(rho2-rhoMix)*gN
+          - alpha2*(rho2-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          - alpha2*rho2*totalMomentum/deltaT
-          + fvOptions(alpha2, rho2, U2)
+          + alpha2*rho2*totalMomentum/deltaT
+         ==
+            fvOptions(alpha2, rho2, U2)
         );
         U2Eqn.relax();
         U2Eqn += fvm::Sp(Kd, U2);
         fvOptions.constrain(U2Eqn);
-        U2.correctBoundaryConditions();
+        
         // improved momentum predictor
         if (pimple.momentumPredictor()) {
             solve
@@ -125,15 +130,17 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 fvc::reconstruct
                 (
                     (
-                      - alphaf2*fvc::snGrad(p)
+                      - alphaf2*ghf*fvc::snGrad(fluid.rho())
+                      - alphaf2*fvc::snGrad(p_rgh)
                     ) * mesh.magSf()
-                 + alphaf2*fvc::interpolate(rho2)*(g & mesh.Sf())
- //                + (fvc::interpolate(Kd*U1) & mesh.Sf())
+                  + alphaf2*fvc::interpolate(rho2-fluid.rho())*(g&mesh.Sf())
                 )
               + Kd*U1
             );
 
         }
+        
+        U2.correctBoundaryConditions();
         fvOptions.correct(U2);
     }
 }
