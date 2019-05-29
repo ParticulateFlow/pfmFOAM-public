@@ -702,7 +702,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                       )
                    );
         // smooth correlation coefficient
-        // xiPhiS_ = filterS(xiPhiS_);
+        xiPhiS_ = 0.5*(mag(xiPhiS_)*gradAlpha
+                 /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
         
         // Currently no dynamic procedure for Cmu and Ceps

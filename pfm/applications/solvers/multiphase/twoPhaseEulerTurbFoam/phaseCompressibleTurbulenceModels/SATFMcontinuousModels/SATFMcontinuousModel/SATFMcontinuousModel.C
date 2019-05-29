@@ -718,16 +718,16 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         // limit and smooth correlation coefficients
         // xiPhiG_
-        // xiPhiG_ = filterS(xiPhiG_);
+        xiPhiG_ = 0.5*(-mag(xiPhiG_)*uSlip/(mag(uSlip)+uSmall) + xiPhiG_);
         boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_
-        // xiPhiGG_ = filterS(xiPhiGG_);
+        xiPhiGG_ = 0.5*(mag(xiPhiGG_) + xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        // xiGS_ = filterS(xiGS_);
+        xiGS_ = 0.5*(mag(xiGS_) + xiGS_);
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
