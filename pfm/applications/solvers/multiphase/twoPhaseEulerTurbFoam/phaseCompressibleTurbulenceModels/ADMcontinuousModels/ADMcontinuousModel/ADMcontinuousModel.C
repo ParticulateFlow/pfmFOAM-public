@@ -386,7 +386,7 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     k_ = tr(R2ADM_)/(rho*alpha);
     
     cellVolume.ref() = mesh_.V();
-    nut_ = Cmu_*sqrt(k_)*pow(cellVolume,0.33);
+    nut_ = Cmu_*sqrt(k_)*pow(cellVolume,1.0/3.0);
     nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl
