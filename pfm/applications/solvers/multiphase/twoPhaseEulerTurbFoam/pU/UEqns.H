@@ -70,6 +70,14 @@ volVectorField KdUdrift(fluid.KdUdrift());
         );
         surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
         
+        surfaceScalarField pPrimef
+        (
+            fvc::interpolate
+            (
+                phase1.turbulence().pPrime()*rAU1
+            )
+        );
+        
         if (pimple.momentumPredictor()) {
             solve
             (
@@ -78,7 +86,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 fvc::reconstruct
                 (
                     (
-                      - fvc::snGrad(phase1.turbulence().pPrime())
+                      - pPrimef*fvc::snGrad(alpha1)/rAU1f
                       - alphaf1*fvc::snGrad(p)
                     ) * mesh.magSf()
                   // drag
