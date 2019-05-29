@@ -67,6 +67,16 @@ volVectorField KdUdrift(fluid.KdUdrift());
         fvOptions.constrain(U1Eqn);
         
         // improved momentum predictor
+        volScalarField rAU1
+        (
+            IOobject::groupName("rAU", phase1.name()),
+            1.0
+           /(
+                U1Eqn.A()
+            )
+        );
+        surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
+        
         if (pimple.momentumPredictor()) {
             solve
             (
@@ -76,13 +86,12 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 (
                     (
                       - pPrimef*fvc::snGrad(alpha1)
-                      - alphaf1*ghf*fvc::snGrad(fluid.rho())
-                      - alphaf1*fvc::snGrad(p_rgh)
+                      - alphaf1*fvc::snGrad(p)
                     ) * mesh.magSf()
-                  + alphaf1*fvc::interpolate(rho1-fluid.rho())*(g&mesh.Sf())
+                  // drag
+                  + (fvc::interpolate(rAU1*Kd)*phi2)/rAU1f
+                  + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
                 )
-              + Kd*U2
-             
             );
 
         }
@@ -122,6 +131,15 @@ volVectorField KdUdrift(fluid.KdUdrift());
         fvOptions.constrain(U2Eqn);
         
         // improved momentum predictor
+        volScalarField rAU2
+        (
+            IOobject::groupName("rAU", phase2.name()),
+            1.0
+           /(
+                U2Eqn.A()
+            )
+        );
+        surfaceScalarField rAU2f("rAU2f", fvc::interpolate(rAU2));
         if (pimple.momentumPredictor()) {
             solve
             (
@@ -130,12 +148,12 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 fvc::reconstruct
                 (
                     (
-                      - alphaf2*ghf*fvc::snGrad(fluid.rho())
-                      - alphaf2*fvc::snGrad(p_rgh)
+                      - alphaf2*fvc::snGrad(p)
                     ) * mesh.magSf()
-                  + alphaf2*fvc::interpolate(rho2-fluid.rho())*(g&mesh.Sf())
+                  // drag
+                 + (fvc::interpolate(rAU2*Kd)*phi1)/rAU2f
+                 + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
                 )
-              + Kd*U1
             );
 
         }
