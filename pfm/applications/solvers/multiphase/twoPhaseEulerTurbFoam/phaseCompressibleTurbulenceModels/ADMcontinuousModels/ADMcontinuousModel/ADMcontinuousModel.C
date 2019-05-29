@@ -100,6 +100,13 @@ Foam::RASModels::ADMcontinuousModel::ADMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("maxNut",1000)
     ),
 
+    Cmu_
+    (
+        "Cmu",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cmu",0.4)
+    ),
+
     R2ADM_
     (
         IOobject
@@ -189,6 +196,7 @@ bool Foam::RASModels::ADMcontinuousModel::read()
         residualAlpha_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         deconOrder_.readIfPresent(coeffDict());
+        Cmu_.readIfPresent(coeffDict());
         regularizationModel_->read();
 
         return true;
@@ -265,11 +273,11 @@ Foam::RASModels::ADMcontinuousModel::divDevRhoReff
 {
     return
     (
-      - fvm::laplacian(rho_*nut_, U)
+      - fvm::laplacian(rho_*nut_*scalar(0), U)
       - fvc::div
         (
             // frictional stress
-            (rho_*nut_)*dev2(T(fvc::grad(U)))
+            (rho_*nut_*scalar(0))*dev2(T(fvc::grad(U)))
             // Reynolds stress
           - symm(R2ADM_)
         )
@@ -324,6 +332,18 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     const volScalarField& rho = phase_.rho();
     const volVectorField& U = U_;
     
+    volScalarField cellVolume
+    (
+        IOobject
+        (
+            "cellVolume",
+            mesh_.time().timeName(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
+    );
+    
     // ADM
     volScalarField alpha1      = scalar(1.0) - alpha;
     volScalarField alpha1star  = alpha1;
@@ -365,7 +385,9 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     // compute turbulent kinetic energy
     k_ = tr(R2ADM_)/(rho*alpha);
     
-    nut_ = dimensionedScalar("zero",dimensionSet(0,2,-1,0,0),0.);
+    cellVolume.ref() = mesh_.V();
+    nut_ = Cmu_*sqrt(k_)*pow(cellVolume,0.33);
+    nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl
         << "    max(nut) = " << max(nut_).value() << nl
