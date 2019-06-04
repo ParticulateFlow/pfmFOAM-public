@@ -720,6 +720,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // xiPhiG_
         xiPhiG_ = 0.5*(-mag(xiPhiG_)*gradAlpha
                        /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiG_);
+        // xiPhiG_ = 0.5*(-mag(xiPhiG_)*uSlip/(mag(uSlip)+uSmall) + xiPhiG_);
         boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_

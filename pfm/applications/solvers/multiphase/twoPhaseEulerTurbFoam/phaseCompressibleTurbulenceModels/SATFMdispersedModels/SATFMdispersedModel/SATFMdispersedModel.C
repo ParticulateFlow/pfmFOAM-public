@@ -611,6 +611,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
     
+    // cont. Phase velocity
+    const volVectorField& Uc_ = fluid.otherPhase(phase_).U();
+    
+    // slip velocity
+    volVectorField uSlip = Uc_ - U;
+    
     // gravity vector
     const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
     
@@ -704,6 +710,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth correlation coefficient
         xiPhiS_ = 0.5*(mag(xiPhiS_)*gradAlpha
                  /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiS_);
+        //  xiPhiS_ = 0.5*(-mag(xiPhiS_)*uSlip/(mag(uSlip)+uSmall) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
         
         // Currently no dynamic procedure for Cmu and Ceps
