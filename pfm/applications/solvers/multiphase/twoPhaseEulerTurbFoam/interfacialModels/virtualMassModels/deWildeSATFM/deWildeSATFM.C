@@ -104,7 +104,7 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
     );
     volScalarField rho2
     (
-        pair_.dispersed().rho()
+        pair_.continuous().rho()
     );
 
     volScalarField rho
