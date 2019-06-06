@@ -392,7 +392,7 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     cellVolume.ref() = mesh_.V();
     // regularized nut
     nut_ =  Cmu_*alpha*pow(cellVolume,1.0/3.0)
-          * (sqrt(k_) + pow(cellVolume,1.0/3.0)*sqrt(D&&D));
+          * sqrt(k_ + pow(cellVolume,2.0/3.0)*(D&&D));
     nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl
