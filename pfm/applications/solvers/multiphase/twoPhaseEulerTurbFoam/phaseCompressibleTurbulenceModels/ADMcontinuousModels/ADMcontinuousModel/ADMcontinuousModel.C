@@ -343,6 +343,10 @@ void Foam::RASModels::ADMcontinuousModel::correct()
         mesh_,
         dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
     );
+    // gradient of velocity
+    tmp<volTensorField> tgradU(fvc::grad(U_));
+    const volTensorField& gradU(tgradU());
+    volSymmTensorField D(dev(symm(gradU)));
     
     // ADM
     volScalarField alpha1      = scalar(1.0) - alpha;
@@ -386,7 +390,9 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     k_ = tr(R2ADM_)/(rho*alpha);
     
     cellVolume.ref() = mesh_.V();
-    nut_ = Cmu_*sqrt(k_)*pow(cellVolume,1.0/3.0);
+    // regularized nut
+    nut_ =  Cmu_*alpha*pow(cellVolume,1.0/3.0)
+          * (sqrt(k_) + pow(cellVolume,1.0/3.0)*sqrt(D&&D));
     nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl
