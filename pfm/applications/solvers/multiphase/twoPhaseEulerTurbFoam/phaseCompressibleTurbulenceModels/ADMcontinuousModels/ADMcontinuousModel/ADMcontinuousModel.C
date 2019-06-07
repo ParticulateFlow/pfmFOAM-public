@@ -415,7 +415,7 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     nut_ =  Cmu_*Cmu_*pow(cellVolume,2.0/3.0)
           * sqrt(
                     beta*mag(gradAlpha*uSlip)
-                     /((alpha*alpha)*max(scalar(1.0)-alpha,residualAlpha_))
+                     /(rho*(alpha*alpha)*max(scalar(1.0)-alpha,residualAlpha_))
                   + 2.0*(D&&D)
                 );
     nut_.min(100.);
