@@ -328,6 +328,7 @@ void Foam::RASModels::ADMcontinuousModel::boundNormalStress
 void Foam::RASModels::ADMcontinuousModel::correct()
 {
     // Local references
+    const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
     volScalarField alpha(max(alpha_, scalar(0)));
     const volScalarField& rho = phase_.rho();
     const volVectorField& U = U_;
@@ -347,6 +348,26 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     tmp<volTensorField> tgradU(fvc::grad(U_));
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(dev(symm(gradU)));
+    
+    // dispersed Phase velocity
+    const volVectorField& Ud_ = fluid.otherPhase(phase_).U();
+    
+    // slip velocity
+    volVectorField uSlip = U - Ud_;
+    
+    // get drag coefficient
+    volScalarField beta
+    (
+        fluid.lookupSubModel<dragModel>
+        (
+            fluid.otherPhase(phase_),
+            phase_
+        ).K()
+    );
+    beta.max(1.0e-7);
+    
+    // gradient of solids volume fraction
+    volVectorField gradAlpha  = fvc::grad(alpha);
     
     // ADM
     volScalarField alpha1      = scalar(1.0) - alpha;
@@ -391,7 +412,12 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     
     cellVolume.ref() = mesh_.V();
     // regularized nut
-    nut_ =  Cmu_*Cmu_*alpha*pow(cellVolume,2.0/3.0)*sqrt(D&&D);
+    nut_ =  Cmu_*Cmu_*pow(cellVolume,2.0/3.0)
+          * sqrt(
+                    beta*mag(gradAlpha*uSlip)
+                     /((alpha*alpha)*max(scalar(1.0)-alpha,residualAlpha_))
+                  + 2.0*(D&&D)
+                );
     nut_.min(100.);
     nut_.correctBoundaryConditions();
     

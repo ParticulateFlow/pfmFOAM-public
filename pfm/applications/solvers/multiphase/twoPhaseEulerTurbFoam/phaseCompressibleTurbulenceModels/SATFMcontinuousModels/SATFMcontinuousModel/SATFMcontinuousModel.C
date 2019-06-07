@@ -631,7 +631,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                            + magSqr(gradU&eZ)*(eZ*eZ);
     //volTensorField SijSij = D & gradU.T();
     
-    // gradient of solids volume fraction
+    // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
     // get turbulent kinetic energy of continuous-phase
