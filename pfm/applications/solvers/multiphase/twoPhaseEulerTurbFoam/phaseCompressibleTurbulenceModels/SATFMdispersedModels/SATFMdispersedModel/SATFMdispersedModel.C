@@ -864,7 +864,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU*neg(divU) + CphiSscalar_ * Ceps_ * sqrt(km)/lm;
+    volScalarField denom = divU + CphiSscalar_ * Ceps_ * sqrt(km)/lm;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
