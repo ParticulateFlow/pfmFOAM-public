@@ -90,7 +90,7 @@ PIMPLE
     nOuterCorrectors 3;
     nCorrectors      1;
     nNonOrthogonalCorrectors 0;
-    faceMomentum     no;
+    faceMomentum     yes;
 // switch for periodic box
     periodicBox       no;  
     energyEqn         no;  

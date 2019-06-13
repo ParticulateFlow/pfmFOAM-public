@@ -74,11 +74,11 @@ drag
 
 virtualMass
 (
-	(particles in air)
-    {
-        type            deWildeADM;
-        residualAlpha   1e-3;
-    }
+//	(particles in air)
+//    {
+//        type            deWildeADM;
+//        residualAlpha   1e-3;
+//    }
 );
 
 heatTransfer
@@ -110,8 +110,8 @@ driftVelocity
         type            driftVelocityADM;
 		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero 
 		alphaMax        0.6;
-		filter          laplaceAnIso2nd; // filter for drift Velocity    
-        laplaceAnIso2ndCoeffs   
+		filter          simpleADM; // filter for drift Velocity    
+        laplaceAnIso2ndCoeffs   // coeffs for laplaceAnIso2nd
         {
         	widthCoeff		24.0;
         }

@@ -35,6 +35,7 @@ RAS
         xiGS                    0.90; // correlation coefficient between dispersed phase velocity and continuous phase velocity
         Cmu                     0.40; // smagorinsky constant for turbulent viscosity   
         Ceps                    1.00; // constant for mixing length model of turbulent dissipation rate
+        CphiG                   0.40; // constant appearing in the equation for alphaP2Mean
 
         maxK                    5.0; // Limits Reynolds stresses
         

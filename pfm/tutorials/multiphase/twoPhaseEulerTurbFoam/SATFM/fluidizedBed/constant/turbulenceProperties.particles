@@ -34,8 +34,9 @@ RAS
         residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
         
         xiPhiS                  0.10; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
-        Cmu                     0.40; // smagorinsky constant for turbulent viscosity   
+        Cmu                     0.25; // smagorinsky constant for turbulent viscosity   
         Ceps                    1.00; // constant for mixing length model of turbulent dissipation rate
+        CphiS                   0.40; // constant appearing in the equation for alphaP2Mean
 
         maxK                    0.1; // Limits Reynolds stresses
         

@@ -32,8 +32,8 @@ RAS
         maxK                    0.04;  // Limits Reynolds stresses
         deconOrder              2;     // deconvolution Order
 
-		filter                  laplaceAnIso2nd; // filter for ADM    
-		laplaceAnIso2ndCoeffs   
+		filter                  simpleADM; // filter for ADM    
+		laplaceAnIso2ndCoeffs    // coeffs for laplaceAnIso2nd
 		{
 			widthCoeff		24.0;
 		}
@@ -43,8 +43,8 @@ RAS
         {
         	smagConst       0.25;
         	lengthConst     0.3;	
-        	filter          laplaceAnIso2nd; // filter for Stolz    
-        	laplaceAnIso2ndCoeffs   
+        	filter          simpleADM; // filter for Stolz    
+        	laplaceAnIso2ndCoeffs   // coeffs for laplaceAnIso2nd
         	{
         		widthCoeff		24.0;
         	}
