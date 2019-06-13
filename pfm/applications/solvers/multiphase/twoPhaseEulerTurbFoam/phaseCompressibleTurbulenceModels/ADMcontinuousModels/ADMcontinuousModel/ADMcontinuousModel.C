@@ -422,7 +422,7 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl
-        << "    max(nut) = " << max(nut_).value() << nl
+ //       << "    max(nut) = " << max(nut_).value() << nl
         << "    max(k)   = " << max(k_).value()   << endl;
     
     if (debug)
