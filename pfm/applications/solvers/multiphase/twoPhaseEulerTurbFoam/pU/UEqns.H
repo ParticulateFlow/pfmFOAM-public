@@ -132,6 +132,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
         fvOptions.constrain(U2Eqn);
         
         // improved momentum predictor
+        // (is currently experimental, deactivate with momentumPredictor "no" in PIMPLE dict)
         volScalarField rAU2
         (
             IOobject::groupName("rAU", phase2.name()),
