@@ -74,11 +74,11 @@ drag
 
 virtualMass
 (
-    (particles in air)
-    {
-        type            deWildeADM;
-        residualAlpha   1e-3;
-    }
+//    (particles in air)
+//    {
+//        type            deWildeADM; //de Wilde virtual mass force is currently experimental
+//        residualAlpha   1e-3;
+//    }
 );
 
 heatTransfer
