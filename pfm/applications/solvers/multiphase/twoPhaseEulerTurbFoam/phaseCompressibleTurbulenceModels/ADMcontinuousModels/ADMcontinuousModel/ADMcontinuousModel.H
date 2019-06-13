@@ -103,7 +103,10 @@ class ADMcontinuousModel
             dimensionedScalar deconOrder_;
     
             //- Maximum turbulent viscosity
-            dimensionedScalar maxNut_;    
+            dimensionedScalar maxNut_;
+    
+            //- Smagorinsky constant to compute nut_
+            dimensionedScalar Cmu_;
 
 
         // ADM Fields Fields

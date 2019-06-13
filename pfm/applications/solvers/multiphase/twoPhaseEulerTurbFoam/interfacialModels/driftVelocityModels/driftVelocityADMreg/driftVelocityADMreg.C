@@ -31,7 +31,7 @@ License
 #include "phasePair.H"
 #include "PhaseCompressibleTurbulenceModel.H"
 #include "addToRunTimeSelectionTable.H"
-
+#include "fvcGrad.H"
 #include "dragModel.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -96,29 +96,18 @@ Foam::driftVelocityModels::driftVelocityADMreg::udrift() const
     
     const volVectorField& U2star(mesh_.lookupObject<volVectorField>
                            ("U2star"));
-    const volScalarField& alphaP2Mean_(mesh_.lookupObject<volScalarField>
-                                       ("alphaP2Mean"));
 
     volScalarField alpha1f = filter_(alpha1star);
     alpha1f.max(residualAlpha_.value());
     alpha1f.min(alphaMax_.value());
     volScalarField alpha2f = scalar(1.0) - alpha1f;
     
-    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
-    volScalarField uSlip(mag(uSlipV));
-    uSlip.max(SMALL);
-    
     return pos(pair_.dispersed() - residualAlpha_)*
            (
                 filter_(alpha1star*U2star)/alpha1f
               - filter_((scalar(1.0) - alpha1star)*U2star)/alpha2f
-              - sqrt(2.0*alphaP2Mean_*pair_.continuous().turbulence().k())*uSlipV
-                    /(uSlip
-                        * (
-                             max(pair_.dispersed(),residualAlpha_)
-                           * (scalar(1.0) - pair_.dispersed())
-                          )
-                      )
+              + pair_.continuous().turbulence().nut()*(fvc::grad(pair_.dispersed()))
+                /((scalar(1.0) - pair_.dispersed())*max(pair_.dispersed(),residualAlpha_))
            );
 }
 

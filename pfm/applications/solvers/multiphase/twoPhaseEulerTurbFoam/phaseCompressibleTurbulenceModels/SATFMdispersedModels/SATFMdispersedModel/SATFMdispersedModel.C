@@ -189,7 +189,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
@@ -611,6 +611,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
     
+    // cont. Phase velocity
+    const volVectorField& Uc_ = fluid.otherPhase(phase_).U();
+    
+    // slip velocity
+    volVectorField uSlip = Uc_ - U;
+    
     // gravity vector
     const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
     
@@ -690,11 +696,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         // compute xiPhiS
-        xiPhiS_ = (
+        xiPhiS_ = filterS(
                       filter_(alpha*U)
                     - alphaf*filter_(U)
                    )
-                 / (
+                 / filterS(
                       sqrt(max(filter_(sqr(alpha))-sqr(alphaf),sqr(residualAlpha_)))*
                       sqrt(0.33*max(
                           filter_(alpha*(U&U))/alphaf
@@ -702,7 +708,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                       )
                    );
         // smooth correlation coefficient
-        xiPhiS_ = filterS(xiPhiS_);
+        xiPhiS_ = 0.5*(mag(xiPhiS_)*gradAlpha
+                 /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiS_);
+        //  xiPhiS_ = 0.5*(-mag(xiPhiS_)*uSlip/(mag(uSlip)+uSmall) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
         
         // Currently no dynamic procedure for Cmu and Ceps
@@ -856,20 +864,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU*neg(divU) + CphiSscalar_ * Ceps_ * sqrt(km)/lm;
+    volScalarField denom = divU + CphiSscalar_ * Ceps_ * sqrt(km)/lm;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     if (dynamicAdjustment_) {
-        volScalarField xiKgradAlpha = (
-                                         (sqrt(k_&eX) * (gradAlpha&eX)) * eX
-                                       + (sqrt(k_&eY) * (gradAlpha&eY)) * eY
-                                       + (sqrt(k_&eZ) * (gradAlpha&eZ)) * eZ
-                                      )
-                                    & xiPhiS_;
+        volVectorField xiKgradAlpha = (
+                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)) * eX)
+                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)) * eY)
+                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)) * eZ)
+                                       );
         alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)
-                       * neg(xiKgradAlpha)
+                       * magSqr(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0

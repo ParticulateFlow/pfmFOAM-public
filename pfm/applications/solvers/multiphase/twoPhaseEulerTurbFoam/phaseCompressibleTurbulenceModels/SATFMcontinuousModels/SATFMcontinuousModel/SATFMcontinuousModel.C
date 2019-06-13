@@ -157,7 +157,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
@@ -173,7 +173,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
@@ -189,7 +189,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9),
@@ -205,7 +205,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
@@ -631,7 +631,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                            + magSqr(gradU&eZ)*(eZ*eZ);
     //volTensorField SijSij = D & gradU.T();
     
-    // gradient of solids volume fraction
+    // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
     // get turbulent kinetic energy of continuous-phase
@@ -682,11 +682,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         volVectorField Uf = filter_(alpha*U)/alpha2f;
         // compute xiPhiG_
-        xiPhiG_ = - (
+        xiPhiG_ = - filterS(
                       filter_(alpha*U)
                     - alpha2f*filter_(U)
                    )
-                 / (
+                 / filterS(
                       sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))*
                       sqrt(0.33*max(
                           filter_(alpha*(U&U))/alpha2f
@@ -696,38 +696,40 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
  
         // compute triple correlation
         volVectorField Ucf = filter_(alpha*U)/alpha2f;
-        xiPhiGG_ = (
+        xiPhiGG_ = filterS(
                        filter_(alpha1*(U&U))
                      - alpha1f*filter_(U&U)
                      - 2.0*(Ucf&(filter_(alpha1*U) - alpha1f*filter_(U)))
                    )
-                 / (
+                 / filterS(
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
                      * max(mag(filter_(alpha*U&U)/alpha2f)-magSqr(Ucf),sqr(uSmall))
                    );
 
         // compute correlation coefficient between gas phase and solid phase velocity
-        xiGS_ = (
+        xiGS_ = filterS(
                      filter_(alpha1*(U&Ud_))/alpha1f
                    - (filter_(alpha1*U) & filter_(alpha1*Ud_))/sqr(alpha1f)
                 )
-              / (
+              / filterS(
                     sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
 
         // limit and smooth correlation coefficients
         // xiPhiG_
-        xiPhiG_ = filterS(xiPhiG_);
+        xiPhiG_ = 0.5*(-mag(xiPhiG_)*gradAlpha
+                       /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiG_);
+        // xiPhiG_ = 0.5*(-mag(xiPhiG_)*uSlip/(mag(uSlip)+uSmall) + xiPhiG_);
         boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_
-        xiPhiGG_ = filterS(xiPhiGG_);
+        xiPhiGG_ = 0.5*(mag(xiPhiGG_) + xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        xiGS_ = filterS(xiGS_);
+        xiGS_ = 0.5*(mag(xiGS_) + xiGS_);
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
@@ -894,20 +896,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU*neg(divU) + CphiGscalar_ * Ceps_ * sqrt(km)/lm;
+    volScalarField denom = divU + CphiGscalar_ * Ceps_ * sqrt(km)/lm;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
     if (dynamicAdjustment_) {
-        volScalarField xiKgradAlpha = (
-                                         (sqrt(k_&eX) * (gradAlpha&eX)) * eX
-                                       + (sqrt(k_&eY) * (gradAlpha&eY)) * eY
-                                       + (sqrt(k_&eZ) * (gradAlpha&eZ)) * eZ
-                                      )
-                                    & xiPhiG_;
+        volVectorField xiKgradAlpha = (
+                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)) * eX)
+                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)) * eY)
+                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)) * eZ)
+                                       );
         alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)
-                       * pos(xiKgradAlpha)
+                       * magSqr(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0

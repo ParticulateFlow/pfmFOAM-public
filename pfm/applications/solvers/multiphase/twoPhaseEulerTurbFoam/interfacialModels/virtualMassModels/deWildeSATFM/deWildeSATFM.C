@@ -98,13 +98,17 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
     (
         scalar(1.0) - alpha1
     );
+    
+    // limit alphaP2Mean to prevent unphysical values of Vm0
+    alphaP2Mean = min(0.5*alpha1*alpha2,alphaP2Mean);
+    
     volScalarField rho1
     (
         pair_.dispersed().rho()
     );
     volScalarField rho2
     (
-        pair_.dispersed().rho()
+        pair_.continuous().rho()
     );
 
     volScalarField rho
@@ -116,12 +120,9 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
         alphaP2Mean/(max(alpha1*alpha2-alphaP2Mean,sqr(residualAlpha_)))
        *((alpha1*alpha2*rho1*rho2)/(rho*rho))
     );
-    // Limit virtual mass coefficient
-    Vm0.min(100.0);
-    Vm0.max(0.0);
-    
+   
     return
-        Vm0*rho/(alpha1*rho2);
+        pos(pair_.dispersed() - residualAlpha_)*Vm0*rho/(alpha1*rho2);
 }
 
 

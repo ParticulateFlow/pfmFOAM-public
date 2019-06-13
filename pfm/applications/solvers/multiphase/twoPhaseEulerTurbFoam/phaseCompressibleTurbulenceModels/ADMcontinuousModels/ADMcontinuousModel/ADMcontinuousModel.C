@@ -100,6 +100,13 @@ Foam::RASModels::ADMcontinuousModel::ADMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("maxNut",1000)
     ),
 
+    Cmu_
+    (
+        "Cmu",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cmu",0.4)
+    ),
+
     R2ADM_
     (
         IOobject
@@ -189,6 +196,7 @@ bool Foam::RASModels::ADMcontinuousModel::read()
         residualAlpha_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         deconOrder_.readIfPresent(coeffDict());
+        Cmu_.readIfPresent(coeffDict());
         regularizationModel_->read();
 
         return true;
@@ -265,11 +273,11 @@ Foam::RASModels::ADMcontinuousModel::divDevRhoReff
 {
     return
     (
-      - fvm::laplacian(rho_*nut_, U)
+      - fvm::laplacian(rho_*nut_*scalar(0), U)
       - fvc::div
         (
             // frictional stress
-            (rho_*nut_)*dev2(T(fvc::grad(U)))
+            (rho_*nut_*scalar(0))*dev2(T(fvc::grad(U)))
             // Reynolds stress
           - symm(R2ADM_)
         )
@@ -320,9 +328,46 @@ void Foam::RASModels::ADMcontinuousModel::boundNormalStress
 void Foam::RASModels::ADMcontinuousModel::correct()
 {
     // Local references
+    const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
     volScalarField alpha(max(alpha_, scalar(0)));
     const volScalarField& rho = phase_.rho();
     const volVectorField& U = U_;
+    
+    volScalarField cellVolume
+    (
+        IOobject
+        (
+            "cellVolume",
+            mesh_.time().timeName(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
+    );
+    // gradient of velocity
+    tmp<volTensorField> tgradU(fvc::grad(U_));
+    const volTensorField& gradU(tgradU());
+    volSymmTensorField D(dev(symm(gradU)));
+    
+    // dispersed Phase velocity
+    const volVectorField& Ud_ = fluid.otherPhase(phase_).U();
+    
+    // slip velocity
+    volVectorField uSlip = U - Ud_;
+    
+    // get drag coefficient
+    volScalarField beta
+    (
+        fluid.lookupSubModel<dragModel>
+        (
+            fluid.otherPhase(phase_),
+            phase_
+        ).K()
+    );
+    beta.max(1.0e-7);
+    
+    // gradient of solids volume fraction
+    volVectorField gradAlpha  = fvc::grad(alpha);
     
     // ADM
     volScalarField alpha1      = scalar(1.0) - alpha;
@@ -365,10 +410,19 @@ void Foam::RASModels::ADMcontinuousModel::correct()
     // compute turbulent kinetic energy
     k_ = tr(R2ADM_)/(rho*alpha);
     
-    nut_ = dimensionedScalar("zero",dimensionSet(0,2,-1,0,0),0.);
+    cellVolume.ref() = mesh_.V();
+    // regularized nut
+    nut_ =  Cmu_*Cmu_*pow(cellVolume,2.0/3.0)
+          * sqrt(
+                    beta*mag(gradAlpha*uSlip)
+                     /(rho*(alpha*alpha)*max(scalar(1.0)-alpha,residualAlpha_))
+                  + 2.0*(D&&D)
+                );
+    nut_.min(100.);
+    nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl
-        << "    max(nut) = " << max(nut_).value() << nl
+ //       << "    max(nut) = " << max(nut_).value() << nl
         << "    max(k)   = " << max(k_).value()   << endl;
     
     if (debug)

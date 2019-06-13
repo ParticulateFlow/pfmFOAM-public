@@ -91,6 +91,7 @@ PIMPLE
     nCorrectors      1;
     nNonOrthogonalCorrectors 0;
     faceMomentum     no;
+    momentumPredictor no;
 // switch for periodic box
     periodicBox       no;  
     energyEqn         no;  
