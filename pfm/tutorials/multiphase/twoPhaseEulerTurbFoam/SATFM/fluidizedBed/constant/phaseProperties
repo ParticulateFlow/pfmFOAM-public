@@ -74,11 +74,11 @@ drag
 
 virtualMass
 (
-//	(particles in air)
-//    {
-//        type            deWildeSATFM;
-//        residualAlpha   1e-3;
-//    }
+	(particles in air)
+    {
+        type            deWildeSATFM;
+        residualAlpha   1e-3;
+    }
 );
 
 heatTransfer
