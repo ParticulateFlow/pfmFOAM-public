@@ -861,11 +861,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       + sqrt((kD_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          // drag production and pressure dilation
-          - (KdUdrift&eX)*((uSlip&eX) - (pDil&eX))*eX
-          - (KdUdrift&eY)*((uSlip&eY) - (pDil&eY))*eY
-          - (KdUdrift&eZ)*((uSlip&eZ) - (pDil&eZ))*eZ
           + fvm::Sp(-2.0*beta*xiGatS_,k_)
+          // drag production and pressure dilation
+          - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
+          - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
+          - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
           - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
