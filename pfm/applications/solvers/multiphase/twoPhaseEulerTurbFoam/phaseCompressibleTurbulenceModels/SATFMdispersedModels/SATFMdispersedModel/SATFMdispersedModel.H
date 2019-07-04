@@ -161,6 +161,9 @@ class SATFMdispersedModel
     
             //- grid size
             volScalarField deltaF_;
+    
+            //- mixing length
+            volScalarField lm_;
 
 
     // Private Member Functions

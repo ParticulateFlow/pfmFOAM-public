@@ -291,6 +291,20 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
+    lm_
+    (
+        IOobject
+        (
+            "lm",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
+    ),
+
 
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
@@ -629,7 +643,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
-    //volTensorField SijSij = D & gradU.T();
     
     // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
@@ -670,6 +683,36 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             phase_
         ).KdUdrift()
     );
+    
+    // compute total k
+    volScalarField km  = k_ & eSum;
+    km.max(kSmall.value());
+    
+    // compute grid size for mixing length
+    forAll(cells,cellI)
+    {
+        scalar deltaMaxTmp = 0.0;
+        const labelList& cFaces = mesh_.cells()[cellI];
+        const point& centrevector = mesh_.cellCentres()[cellI];
+        
+        forAll(cFaces, cFaceI)
+        {
+            label faceI = cFaces[cFaceI];
+            const point& facevector = mesh_.faceCentres()[faceI];
+            scalar tmp = mag(facevector - centrevector);
+            if (tmp > deltaMaxTmp)
+            {
+                deltaMaxTmp = tmp;
+            }
+        }
+        deltaF_[cellI] = 2*deltaMaxTmp;
+    }
+    
+    volScalarField wD = wallDist(mesh_).y();
+    
+    // correction for cases w/o walls
+    // (since wall distance is then negative)
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
     
     if (dynamicAdjustment_) {
         // precompute \bar phi
@@ -740,6 +783,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_ = CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
+        
+        // compute mixing length dynamically
+        lm_ = sqrt(km/((D&&D)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
+        lm_ = min(deltaF_,lm_);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
@@ -750,7 +797,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
+        
+        // compute mixing length
+        lm_ = Cmu_*deltaF_;
     }
+    // contrain mixing length
+    lm_.max(lSmall.value());
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha1*alpha*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha),residualAlpha_);
@@ -760,41 +812,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // correct xiGS_
     xiGS_ *= sqrt(xiGatS_);
 
-    // compute grid size
-    forAll(cells,cellI)
-    {
-        scalar deltaMaxTmp = 0.0;
-        const labelList& cFaces = mesh_.cells()[cellI];
-        const point& centrevector = mesh_.cellCentres()[cellI];
-        
-        forAll(cFaces, cFaceI)
-        {
-            label faceI = cFaces[cFaceI];
-            const point& facevector = mesh_.faceCentres()[faceI];
-            scalar tmp = mag(facevector - centrevector);
-            if (tmp > deltaMaxTmp)
-            {
-                deltaMaxTmp = tmp;
-            }
-        }
-        deltaF_[cellI] = 2*deltaMaxTmp;
-    }
-    
-    volScalarField wD = wallDist(mesh_).y();
-    
-    // correction for cases w/o walls
-    // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
-    
-    // compute mixing length
-    volScalarField lm = Cmu_*deltaF_;
-    lm.max(lSmall.value());
-
     // Compute k_
     // ---------------------------
-    // compute total k
-    volScalarField km  = k_ & eSum;
-    km.max(kSmall.value());
     if (!equilibrium_) {
         
         volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*g/beta;
@@ -810,27 +829,28 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
           // diffusion with anisotropic diffusivity
-          - fvm::laplacian(alpha*rho*lm
+          - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
                                    + (sqrt(k_&eY)*(eY*eY))
                                    + (sqrt(k_&eZ)*(eZ*eZ))
                                    )
-                                 / sigma_
+                                 / (2.0 * sigma_)
                            , k_, "laplacian(kappa,k)")
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
           // ----------------
           // shear production
-            2.0*lm
+            2.0*lm_
                *alpha
                *rho
                *(
-                    (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
-                  + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
-                  + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
+                    (((SijSij&eX)&eSum)*(k_&eX))*eX
+                  + (((SijSij&eY)&eSum)*(k_&eY))*eY
+                  + (((SijSij&eZ)&eSum)*(k_&eZ))*eZ
                 )
+               /sqrt(km)
           // interfacial work (--> energy transfer)
           + 2.0*beta
                *(
@@ -847,7 +867,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eZ)*((uSlip&eZ) - (pDil&eZ))*eZ
           + fvm::Sp(-2.0*beta*xiGatS_,k_)
           // dissipation
-          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm,k_)
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -870,12 +890,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             for (int i=0; i<3; i++) {
                 k_[cellI].component(i) =
                     sqr(
-                         - xiGatS_[cellI]*betaA[cellI]*lm[cellI]
+                         - xiGatS_[cellI]*betaA[cellI]*lm_[cellI]
                          + Foam::sqrt(
-                              sqr(xiGatS_[cellI]*betaA[cellI]*lm[cellI])
-                            + 2.0 * lm[cellI]
+                              sqr(xiGatS_[cellI]*betaA[cellI]*lm_[cellI])
+                            + 2.0 * lm_[cellI]
                             * Foam::max(
-                                 lm[cellI]*SijSijV[cellI].component(i)
+                                 lm_[cellI]*SijSijV[cellI].component(i)
                                + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
                                - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
@@ -896,7 +916,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU + CphiGscalar_ * Ceps_ * sqrt(km)/lm;
+    volScalarField denom = divU + CphiGscalar_ * Ceps_ * sqrt(km)/lm_;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
@@ -923,7 +943,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(km)*lm;
+    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(km)*lm_;
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
