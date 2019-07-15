@@ -22,7 +22,9 @@ if (periodicBox) {
 
 volScalarField Kd(fluid.Kd());
 volVectorField KdUdrift(fluid.KdUdrift());
-volScalarField H = - (KdUdrift&(U2-U1)/magSqr(U2-U1));
+volScalarField H = - (KdUdrift&(U2-U1))/(Kd*magSqr(U2-U1));
+H.min(1);
+H.max(-1);
 Kd *= scalar(1.0) - H;
 {
 
