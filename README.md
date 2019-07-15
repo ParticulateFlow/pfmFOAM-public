@@ -1,5 +1,5 @@
 # pfmFOAM
-OpenFOAM based developments made by the [Department of Particulate Flow Modelling at Johannes Kepler University in Linz, Austria.](www.jku.at/pfm)
+OpenFOAM based developments made by the [Department of Particulate Flow Modelling at Johannes Kepler University in Linz, Austria.](https://www.jku.at/pfm)
 
 ## Disclaimer
 
