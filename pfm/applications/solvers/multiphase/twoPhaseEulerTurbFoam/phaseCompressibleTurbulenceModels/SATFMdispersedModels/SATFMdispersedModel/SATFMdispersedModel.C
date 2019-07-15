@@ -854,6 +854,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Ceps_   = CepsScalar_;
         // Equilibrium => dissipation == production
         // Schneiderbauer (2017), equ. (55)
+        // pressure dilation is negligible in the solid phase
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {

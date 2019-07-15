@@ -705,7 +705,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 deltaMaxTmp = tmp;
             }
         }
-        deltaF_[cellI] = 2*deltaMaxTmp;
+        deltaF_[cellI] = 2.0*deltaMaxTmp;
     }
     
     volScalarField wD = wallDist(mesh_).y();
@@ -814,10 +814,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
     // Compute k_
     // ---------------------------
+    volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*g/beta;
     if (!equilibrium_) {
-        
-        volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*g/beta;
-        
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
@@ -897,7 +895,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             * Foam::max(
                                  lm_[cellI]*SijSijV[cellI].component(i)
                                + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
-                               - KdUdrift[cellI].component(i)*uSlip[cellI].component(i)
+                               - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i) + pDil[cellI].component(i))
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
                                 , 0.
                               )
