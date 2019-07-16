@@ -905,8 +905,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         nut_ *= 0.;
         volVectorField filterU = filter_(U);
         // compute correlation coefficients
-        volTensorField xiUU = filterS_(filter_(U*U) - filterU*filterU)
-                             /filterS_(max(filter_((U&U)) - (filterU&filterU),kSmall));
+        volTensorField xiUU = filterS(filter_(U*U) - filterU*filterU)
+                             /filterS(max(filter_((U&U)) - (filterU&filterU),kSmall));
         // limit correlation coefficients
         boundCorrTensor(xiUU);
         
