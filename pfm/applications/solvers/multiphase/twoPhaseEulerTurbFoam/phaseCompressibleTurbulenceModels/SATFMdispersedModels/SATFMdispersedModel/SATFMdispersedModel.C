@@ -198,6 +198,22 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         zeroGradientFvPatchField<scalar>::typeName
     ),
 
+    xiUU_
+    (
+        IOobject
+        (
+            "xiUU",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     alphaP2Mean_
     (
         IOobject
@@ -577,9 +593,9 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
             R.dimensions(),
             tensor
             (
-                  kMax, kMin, kMin,
-                  kMin, kMax, kMin,
-                  kMin, kMin, kMax
+                  0, kMin, kMin,
+                  kMin, 0, kMin,
+                  kMin, kMin, 0
             )
         )
     );
@@ -905,17 +921,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         nut_ *= 0.;
         volVectorField filterU = filter_(U);
         // compute correlation coefficients
-        volTensorField xiUU = filterS(filter_(U*U) - filterU*filterU)
-                             /filterS(max(filter_((U&U)) - (filterU&filterU),kSmall));
+        xiUU_ = filterS(filter_(U*U) - filterU*filterU)
+                /filterS(max(filter_((U&U)) - (filterU&filterU),kSmall));
         // limit correlation coefficients
-        boundCorrTensor(xiUU);
+        boundCorrTensor(xiUU_);
         
         // compute Reynolds-stress tensor
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
-                    R1_[cellI].component(j+i*3) =  xiUU[cellI].component(j+i*3)
+                    R1_[cellI].component(j+i*3) =  xiUU_[cellI].component(j+i*3)
                                     *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                 }
             }
