@@ -297,7 +297,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedTensor("zero", dimensionSet(0, 02, -2, 0, 0),
+        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
                            tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -908,7 +908,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField xiUU = (filter_(U*U) - filterU*filterU)
                              /(0.33*max(filter_((U&U)) - (filterU&filterU),kSmall));
         // limit correlation coefficients
-        boundCorrTensor(R1_);
+        boundCorrTensor(xiUU);
         
         // compute Reynolds-stress tensor
         for (int i=0; i<3; i++) {
