@@ -911,10 +911,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         boundCorrTensor(xiUU);
         
         // compute Reynolds-stress tensor
-        for (int i=0; i<3; i++) {
-            for (int j=0; j<3; j++) {
-                R1_.component(j+i*3) =  xiUU.component(j+i*3)
-                                       *sqrt(k_.component(i)*k_.component(j));
+        forAll(cells,cellI)
+        {
+            for (int i=0; i<3; i++) {
+                for (int j=0; j<3; j++) {
+                    R1_[cellI].component(j+i*3) =  xiUU[cellI].component(j+i*3)
+                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                }
             }
         }
         
