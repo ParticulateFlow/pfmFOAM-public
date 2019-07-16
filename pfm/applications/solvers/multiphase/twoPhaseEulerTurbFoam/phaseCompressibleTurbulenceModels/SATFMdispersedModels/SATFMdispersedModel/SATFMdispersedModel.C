@@ -71,6 +71,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
 
     equilibrium_(coeffDict_.lookup("equilibrium")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
+    aniIsoTropicNut_(coeffDict_.lookup("aniIsoTropicNut")),
     alphaMax_("alphaMax", dimless, coeffDict_),
     alphaMinFriction_
     (
@@ -285,6 +286,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
+    R1_
+    (
+        IOobject
+        (
+            IOobject::groupName("R", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("zero", dimensionSet(0, 02, -2, 0, 0),
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
 
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
@@ -317,6 +333,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
     {
         coeffDict().lookup("equilibrium") >> equilibrium_;
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
+        coeffDict().lookup("aniIsoTropicNut") >> aniIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
         alphaMinFriction_.readIfPresent(coeffDict());
         xiPhiSolidScalar_.readIfPresent(coeffDict());
@@ -361,25 +378,6 @@ Foam::RASModels::SATFMdispersedModel::epsilon() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::R() const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    
     return tmp<volSymmTensorField>
     (
         new volSymmTensorField
@@ -394,11 +392,7 @@ Foam::RASModels::SATFMdispersedModel::R() const
             ),
           - (nut_)*dev(twoSymm(fvc::grad(U_)))
           + 2.0 * pos(alpha_ - residualAlpha_) * alpha_ * rho_ *
-            symm(
-                     (k_&eX)*(eX*eX)
-                   + (k_&eY)*(eY*eY)
-                   + (k_&eZ)*(eZ*eZ)
-                 )
+            symm(R1_)
         )
     );
 }
@@ -453,24 +447,6 @@ Foam::RASModels::SATFMdispersedModel::pPrimef() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::devRhoReff() const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
     return tmp<volSymmTensorField>
     (
         new volSymmTensorField
@@ -485,11 +461,7 @@ Foam::RASModels::SATFMdispersedModel::devRhoReff() const
             ),
           - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
           + 2.0 * pos(alpha_ - residualAlpha_) * alpha_ * rho_ *
-            symm(
-                     (k_&eX)*(eX*eX)
-                   + (k_&eY)*(eY*eY)
-                   + (k_&eZ)*(eZ*eZ)
-                 )
+            symm(R1_)
         )
     );
 }
@@ -501,25 +473,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    
     return
     pos(alpha_ - residualAlpha_)*
     (
@@ -527,12 +480,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
       - fvc::div
         (
             (rho_*nut_)*dev2(T(fvc::grad(U)))
-          - 2.0 * alpha_ * rho_ *
-            (
-                (k_&eX)*(eX*eX)
-              + (k_&eY)*(eY*eY)
-              + (k_&eZ)*(eZ*eZ)
-            )
+          - 2.0 * alpha_ * rho_ * R1_
         )
     );
 }
@@ -608,6 +556,45 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
                 xiMax,
                 xiMax,
                 xiMax
+            )
+        )
+    );
+}
+
+void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
+(
+    volTensorField& R
+) const
+{
+    scalar kMin = -1.0;
+    scalar kMax = 1.0;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  kMax, kMin, kMin,
+                  kMin, kMax, kMin,
+                  kMin, kMin, kMax
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  kMax, kMax, kMax,
+                  kMax, kMax, kMax,
+                  kMax, kMax, kMax
             )
         )
     );
@@ -914,6 +901,26 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
+    if (aniIsoTropicNut_) {
+        nut_ *= 0.;
+        volVectorField filterU = filter_(U);
+        // compute correlation coefficients
+        volTensorField xiUU = (filter_(U*U) - filterU*filterU)
+                             /(0.33*max(filter_((U&U)) - (filterU&filterU),kSmall));
+        // limit correlation coefficients
+        boundCorrTensor(R1_);
+        
+        // compute Reynolds-stress tensor
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                R1_.component(j+i*3) =  xiUU.component(j+i*3)
+                                       *sqrt(k_.component(i)*k_.component(j));
+            }
+        }
+        
+    } else {
+        R1_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+    }
     
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure

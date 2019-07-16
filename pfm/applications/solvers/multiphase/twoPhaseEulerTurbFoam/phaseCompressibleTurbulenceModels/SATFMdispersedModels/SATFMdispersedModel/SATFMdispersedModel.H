@@ -98,6 +98,10 @@ class SATFMdispersedModel
             //  correlation coefficients
             Switch dynamicAdjustment_;
 
+            //- switch between isotropic and anisotropic treatment of
+            //  shear component of mesoscale stress tensor
+            Switch aniIsoTropicNut_;
+
             //- Maximum packing phase-fraction
             dimensionedScalar alphaMax_;
 
@@ -164,6 +168,9 @@ class SATFMdispersedModel
     
             //- mixing length
             volScalarField lm_;
+    
+            //- Reynolds stress tensor
+            volTensorField R1_;
 
 
     // Private Member Functions
@@ -184,6 +191,7 @@ protected:
     //- bound k
     void boundNormalStress(volVectorField& k) const;
     void boundxiPhiS(volVectorField& xi) const;
+    void boundCorrTensor(volTensorField& R) const;
 public:
 
     //- Runtime type information
