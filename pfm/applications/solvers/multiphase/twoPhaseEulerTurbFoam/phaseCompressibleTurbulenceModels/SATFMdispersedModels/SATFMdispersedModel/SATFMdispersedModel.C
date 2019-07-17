@@ -879,14 +879,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         
     }
-    // limit k
-    boundNormalStress(k_);
-    k_.correctBoundaryConditions();
-    
+
     //- compute variance of solids volume fraction
     // update km
     km  = k_ & eSum;
-    km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
     volScalarField denom = divU + CphiSscalar_ * Ceps_ * sqrt(km)/lm_;
     denom.max(kSmall.value());
@@ -914,6 +910,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
+    
+    // limit k before computing Reynolds-stresses
+    boundNormalStress(k_);
+    k_.correctBoundaryConditions();
+    km.max(kSmall.value());
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
