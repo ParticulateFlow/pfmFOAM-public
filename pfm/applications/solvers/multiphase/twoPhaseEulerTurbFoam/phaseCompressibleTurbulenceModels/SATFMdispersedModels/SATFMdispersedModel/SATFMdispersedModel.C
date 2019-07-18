@@ -715,7 +715,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         ).Ki()
     );
     volScalarField betaA = beta/(rho);
-    
+    beta *= alpha;
     // compute total k
     volScalarField km  = k_ & eSum;
     km.max(kSmall.value());
