@@ -476,7 +476,7 @@ Foam::RASModels::SATFMdispersedModel::devRhoReff() const
                 IOobject::NO_WRITE
             ),
           - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * pos(alpha_ - residualAlpha_) * alpha_ * rho_ *
+          + 2.0 * ) * alpha_ * rho_ *
             symm(R1_)
         )
     );
@@ -496,8 +496,13 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
       - fvc::div
         (
             (rho_*nut_)*dev2(T(fvc::grad(U)))
-          - 2.0 * alpha_ * rho_ * R1_
         )
+      + fvc::div
+        (
+             2.0 * alpha_ * rho_ * R1_
+        )
+       *pos(alpha_ - residualAlpha_)
+     
     );
 }
 
