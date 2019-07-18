@@ -501,13 +501,12 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     );
 }
 
-void Foam::RASModels::SATFMdispersedModel::boundNormalStress
+void Foam::RASModels::SATFMdispersedModel::boundNormalStressMax
 (
     volVectorField& k
 ) const
 {
     scalar kMin = 1.e-7;
-    scalar kMax = maxK_.value();
 
     k.max
     (
@@ -523,6 +522,15 @@ void Foam::RASModels::SATFMdispersedModel::boundNormalStress
             )
         )
     );
+}
+
+void Foam::RASModels::SATFMdispersedModel::boundNormalStressMin
+(
+    volVectorField& k
+) const
+{
+    scalar kMax = maxK_.value();
+
     k.min
     (
         dimensionedVector
@@ -593,9 +601,9 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
             R.dimensions(),
             tensor
             (
-                  0, kMin, kMin,
-                  kMin, 0, kMin,
-                  kMin, kMin, 0
+                  kMax, kMin, kMin,
+                  kMin, kMax, kMin,
+                  kMin, kMin, kMax
             )
         )
     );
@@ -626,7 +634,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const volVectorField& U = U_;
     
-    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
+    // const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
     
     // cont. Phase velocity
     const volVectorField& Uc_ = fluid.otherPhase(phase_).U();
@@ -635,7 +643,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volVectorField uSlip = Uc_ - U;
     
     // gravity vector
-    const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
+    // const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
     
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
@@ -788,7 +796,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // Compute k_
     // ---------------------------
     if (!equilibrium_) {
-        volVectorField pDil = Cp_*alpha*(rho-rho2)*g*sqrt(2.0*alphaP2MeanO);
+        // volVectorField pDil = Cp_*alpha*(rho-rho2)*g*sqrt(2.0*alphaP2MeanO);
         
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -835,9 +843,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
           + fvm::Sp(-2.0*beta,k_)
           // pressure dilation
-          - ((pDil&eX)*(xiPhiS_&eX)*sqrt(k_&eX))*eX
-          - ((pDil&eZ)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
-          - ((pDil&eY)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
+          // - ((pDil&eX)*(xiPhiS_&eX)*sqrt(k_&eX))*eX
+          // - ((pDil&eZ)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
+          // - ((pDil&eY)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
           // dissipation
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
@@ -881,7 +889,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     }
     
     // limit k before computing Reynolds-stresses
-    boundNormalStress(k_);
+    boundNormalStressMax(k_);
     k_.correctBoundaryConditions();
 
     //- compute variance of solids volume fraction
@@ -917,12 +925,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
 
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
+    volVectorField kBound = k_;
+    boundNormalStressMin(kBound);
+    // update km
+    km  = kBound & eSum;
+    km.max(kSmall.value());
+
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
     if (aniIsoTropicNut_) {
         nut_ *= 0.;
         volVectorField filterU = filter_(U);
         // compute correlation coefficients
-        xiUU_ = 3.0*filterS(filter_(U*U) - filterU*filterU)
+        xiUU_ = filterS(filter_(U*U) - filterU*filterU)
                 /filterS(max(filter_((U&U)) - (filterU&filterU),kSmall));
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
@@ -933,13 +947,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     R1_[cellI].component(j+i*3) =  xiUU_[cellI].component(j+i*3)
-                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                                    *sqrt(kBound[cellI].component(i)*kBound[cellI].component(j));
                 }
             }
         }
         
     } else {
-        R1_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+        R1_ = (kBound&eX)*(eX*eX) + (kBound&eY)*(eY*eY) + (kBound&eZ)*(eZ*eZ);
     }
     
     // Frictional pressure
