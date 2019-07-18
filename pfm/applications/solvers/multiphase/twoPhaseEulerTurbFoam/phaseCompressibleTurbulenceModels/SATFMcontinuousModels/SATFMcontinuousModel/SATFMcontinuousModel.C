@@ -584,6 +584,46 @@ void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
     );
 }
 
+void Foam::RASModels::SATFMcontinuousModel::boundS
+(
+    volTensorField& R
+) const
+{
+    scalar sMin = 1.0e-7;
+    scalar sMax = 100.;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  sMin, sMin, sMin,
+                  sMin, sMin, sMin,
+                  sMin, sMin, sMin
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  sMax, sMax, sMax,
+                  sMax, sMax, sMax,
+                  sMax, sMax, sMax
+            )
+        )
+    );
+}
+
+
 
 void Foam::RASModels::SATFMcontinuousModel::correct()
 {
@@ -643,7 +683,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
-    
+    boundS(SijSij);
     // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
