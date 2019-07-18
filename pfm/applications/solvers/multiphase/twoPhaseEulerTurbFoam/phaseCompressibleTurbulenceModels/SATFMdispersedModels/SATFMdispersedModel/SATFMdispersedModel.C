@@ -629,6 +629,45 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
     );
 }
 
+void Foam::RASModels::SATFMdispersedModel::boundS
+(
+    volTensorField& R
+) const
+{
+    scalar sMin = 1.0e-7;
+    scalar sMax = 100.;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  sMin, sMin, sMin,
+                  sMin, sMin, sMin,
+                  sMin, sMin, sMin
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  sMax, sMax, sMax,
+                  sMax, sMax, sMax,
+                  sMax, sMax, sMax
+            )
+        )
+    );
+}
+
 
 void Foam::RASModels::SATFMdispersedModel::correct()
 {
@@ -690,6 +729,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
+    boundS(SijSij);
     // Set SijSij to 0 in cell with low alpha
     SijSij *= pos(alpha - residualAlpha_);
     
@@ -993,10 +1033,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info<< "SA-TFM (dispersed Phase):" << nl
         << "    max(nut) = " << max(nut_).value() << nl
         << "    max(nutFric) = " << max(nuFric_).value() << nl
-        << "    max(rho) = " << max(rho).value() << nl
-        << "    max(k_) = " << max(k_&eSum).value() << nl
-        << "    max(kC_) = " << max(kC_&eSum).value() << nl
-        << "    max(Ceps_) = " << max(Ceps_).value() << endl;
+        << "    max(k_) = " << max(k_&eSum).value() << endl;
 }
 
 

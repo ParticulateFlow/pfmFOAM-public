@@ -196,6 +196,7 @@ protected:
     void boundNormalStressMin(volVectorField& k) const;
     void boundxiPhiS(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
+    void boundS(volTensorField& S) const;
 public:
 
     //- Runtime type information
