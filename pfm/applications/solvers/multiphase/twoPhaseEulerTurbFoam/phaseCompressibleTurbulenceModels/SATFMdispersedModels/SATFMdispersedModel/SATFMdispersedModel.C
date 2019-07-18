@@ -876,7 +876,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                               sqr(betaA[cellI]*lm_[cellI])
                             + 2.0 * lm_[cellI]
                             * Foam::max(
-                                 lm_[cellI]*SijSijV[cellI].component(i)
+                                 0*lm_[cellI]*SijSijV[cellI].component(i)
                                + xiGS_[cellI]*betaA[cellI]*Foam::sqrt(Foam::max(kC_[cellI].component(i),kSmall.value()))
                                 ,0.0
                               )
