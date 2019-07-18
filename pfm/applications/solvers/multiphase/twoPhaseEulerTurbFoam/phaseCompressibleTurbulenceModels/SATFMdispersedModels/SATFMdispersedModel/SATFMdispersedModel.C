@@ -685,6 +685,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
+    // Set SijSij to 0 in cell with low alpha
+    SijSij *= pos(alpha - residualAlpha_);
     
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
