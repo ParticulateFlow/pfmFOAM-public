@@ -785,8 +785,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        lm_ = sqrt(km/((D&&D)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
-        lm_ = min(2.0*deltaF_,lm_);
+        lm_ = sqrt(km/((SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
+        lm_ = min(Cmu_*deltaF_,lm_);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
