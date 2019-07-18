@@ -712,9 +712,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             phase_,
             fluid.otherPhase(phase_)
-        ).K()
+        ).Ki()
     );
-    volScalarField betaA = beta/(rho*max(alpha,residualAlpha_));
+    volScalarField betaA = beta/(rho);
     
     // compute total k
     volScalarField km  = k_ & eSum;
@@ -988,7 +988,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         << "    max(nutFric) = " << max(nuFric_).value() << nl
         << "    max(rho) = " << max(rho).value() << nl
         << "    max(k_) = " << max(k_&eSum).value() << nl
-        << "    max(kC_) = " << max(kC_&eSum).value() << endl;
+        << "    max(kC_) = " << max(kC_&eSum).value() << nl
+        << "    max(Ceps_) = " << max(Ceps_).value() << endl;
 }
 
 
