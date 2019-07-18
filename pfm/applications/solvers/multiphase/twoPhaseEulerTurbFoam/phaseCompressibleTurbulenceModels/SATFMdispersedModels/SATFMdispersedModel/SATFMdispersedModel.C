@@ -778,7 +778,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        lm_ = sqrt(km/((SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
+        lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
         lm_ = min(Cmu_*deltaF_,lm_);
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
