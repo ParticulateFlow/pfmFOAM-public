@@ -192,8 +192,7 @@ protected:
     LESfilter& filter_;
     
     //- bound k
-    void boundNormalStressMax(volVectorField& k) const;
-    void boundNormalStressMin(volVectorField& k) const;
+    void boundNormalStress(volVectorField& k) const;
     void boundxiPhiS(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
     void boundS(volTensorField& S) const;

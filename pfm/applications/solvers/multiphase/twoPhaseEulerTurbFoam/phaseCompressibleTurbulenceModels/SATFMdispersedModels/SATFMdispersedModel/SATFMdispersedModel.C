@@ -506,12 +506,13 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     );
 }
 
-void Foam::RASModels::SATFMdispersedModel::boundNormalStressMax
+void Foam::RASModels::SATFMdispersedModel::boundNormalStress
 (
     volVectorField& k
 ) const
 {
     scalar kMin = 1.e-7;
+    scalar kMax = maxK_.value();
 
     k.max
     (
@@ -526,15 +527,7 @@ void Foam::RASModels::SATFMdispersedModel::boundNormalStressMax
                 kMin
             )
         )
-    );
-}
-
-void Foam::RASModels::SATFMdispersedModel::boundNormalStressMin
-(
-    volVectorField& k
-) const
-{
-    scalar kMax = maxK_.value();
+     );
 
     k.min
     (
@@ -936,7 +929,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     }
     
     // limit k before computing Reynolds-stresses
-    boundNormalStressMax(k_);
+    boundNormalStress(k_);
     k_.correctBoundaryConditions();
 
     //- compute variance of solids volume fraction
@@ -972,12 +965,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
 
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    volVectorField kBound = k_;
-    boundNormalStressMin(kBound);
-    // update km
-    km  = kBound & eSum;
-    km.max(kSmall.value());
-
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
     if (aniIsoTropicNut_) {
         nut_ *= 0.;
@@ -994,13 +981,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     R1_[cellI].component(j+i*3) =  xiUU_[cellI].component(j+i*3)
-                                    *sqrt(kBound[cellI].component(i)*kBound[cellI].component(j));
+                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                 }
             }
         }
         
     } else {
-        R1_ = (kBound&eX)*(eX*eX) + (kBound&eY)*(eY*eY) + (kBound&eZ)*(eZ*eZ);
+        R1_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
     
     // Frictional pressure
