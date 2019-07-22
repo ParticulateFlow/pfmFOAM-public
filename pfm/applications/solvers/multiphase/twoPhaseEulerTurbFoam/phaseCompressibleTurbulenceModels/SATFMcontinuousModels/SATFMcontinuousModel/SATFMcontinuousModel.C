@@ -768,15 +768,28 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiG_ = - filterS(
                       filter_(alpha*U)
                     - alpha2f*filter_(U)
-                   )
-                 / filterS(
-                      sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))*
-                      sqrt(0.33*max(
-                          filter_(alpha*(U&U))/alpha2f
-                        - magSqr(filter_(alpha*U)/alpha2f),kSmall)
-                      )
-                   );
- 
+                  );
+        volVectorField xiPhiGDenomSqr =
+                  filterS(
+                      (alpha1fP2-sqr(alpha1f))
+                    * (
+                          filter_(
+                                     magSqr(U&eX)*eX
+                                   + magSqr(U&eY)*eY
+                                   + magSqr(U&eZ)*eZ
+                                 )
+                               / alpha2f
+                        - magSqr(Uf&eX)*eX
+                        - magSqr(Uf&eY)*eY
+                        - magSqr(Uf&eZ)*eZ
+                       )
+                      );
+        forAll(cells,cellI)
+        {
+            for (int i=0; i< 3; i++) {
+                xiPhiG_[cellI].component(i) /= Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),1.0e-14));
+            }
+        }
         // compute triple correlation
         volVectorField Ucf = filter_(alpha*U)/alpha2f;
         xiPhiGG_ = filterS(
