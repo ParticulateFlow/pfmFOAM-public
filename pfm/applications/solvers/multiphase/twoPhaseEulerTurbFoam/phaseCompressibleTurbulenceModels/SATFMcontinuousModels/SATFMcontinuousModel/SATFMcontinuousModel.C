@@ -840,8 +840,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
-        lm_ = min(Cmu_*deltaF_,lm_);
+        //lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
+        //lm_ = min(Cmu_*deltaF_,lm_);
+        lm_ = Cmu_*deltaF_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
@@ -971,6 +972,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
     volScalarField denom = divU + CphiGscalar_ * Ceps_ * sqrt(km)/lm_;
+    volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
@@ -982,7 +984,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                        );
         alphaP2Mean_ =   8.0
                        * magSqr(xiKgradAlpha)
-                       / sqr(denom);
+                       / sqr(denom)*pos(signDenom);
     } else {
         alphaP2Mean_ =   8.0
                        * magSqr(xiPhiG_)
@@ -991,7 +993,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
                               + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
                          )
-                       / sqr(denom);
+                       / sqr(denom)*pos(signDenom);;
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));

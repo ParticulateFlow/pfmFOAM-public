@@ -938,6 +938,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
     volScalarField denom = divU + CphiSscalar_ * Ceps_ * sqrt(km)/lm_;
+    volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
@@ -949,7 +950,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        );
         alphaP2Mean_ =   8.0
                        * magSqr(xiKgradAlpha)
-                       / sqr(denom);
+                       / sqr(denom)*pos(signDenom);
     } else {
         alphaP2Mean_ =   8.0
                        * magSqr(xiPhiS_)
@@ -958,7 +959,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
                               + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
                          )
-                       / sqr(denom);
+                       / sqr(denom)*pos(signDenom);
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
