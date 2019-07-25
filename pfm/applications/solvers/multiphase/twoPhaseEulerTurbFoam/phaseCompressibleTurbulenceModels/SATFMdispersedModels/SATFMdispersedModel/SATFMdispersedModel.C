@@ -292,11 +292,11 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     (
         IOobject
         (
-            "lm",
+            IOobject::groupName("lm", phase.name()),
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
@@ -792,15 +792,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         // compute xiPhiS
+        volVectorField Uf = filter_(alpha*U)/alphaf;
+        volScalarField aUU = filter_(alpha*(U&U))/alphaf - magSqr(Uf);
         xiPhiS_ = filterS(
                       filter_(alpha*U)
                     - alphaf*filter_(U)
                    )
                  / filterS(
                       sqrt(max(filter_(sqr(alpha))-sqr(alphaf),sqr(residualAlpha_)))*
-                      sqrt(0.33*max(
-                          filter_(alpha*(U&U))/alphaf
-                        - magSqr(filter_(alpha*U)/alphaf),kSmall)
+                      sqrt(0.33*max(aUU,kSmall)
                       )
                    );
         // smooth correlation coefficient
@@ -818,8 +818,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
-        lm_ = min(Cmu_*deltaF_,lm_);
+        lm_ = sqrt(max(aUU,kSmall)/(4.0*magSqr(fvc::grad(Uf))+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
+        //lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
+        lm_ = min(2.0*Cmu_*deltaF_,lm_);
+        //lm_ = Cmu_*deltaF_;
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
                    /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));

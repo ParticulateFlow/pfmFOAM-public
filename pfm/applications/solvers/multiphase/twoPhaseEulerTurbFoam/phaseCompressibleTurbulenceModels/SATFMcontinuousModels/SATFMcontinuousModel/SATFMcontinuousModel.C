@@ -295,11 +295,11 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     (
         IOobject
         (
-            "lm",
+            IOobject::groupName("lm", phase.name()),
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
@@ -794,6 +794,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         // compute triple correlation
         volVectorField Ucf = filter_(alpha*U)/alpha2f;
+        volScalarField aUU = filter_(alpha*U&U)/alpha2f-magSqr(Ucf);
         xiPhiGG_ = filterS(
                        filter_(alpha1*(U&U))
                      - alpha1f*filter_(U&U)
@@ -801,7 +802,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                    )
                  / filterS(
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
-                     * max(mag(filter_(alpha*U&U)/alpha2f)-magSqr(Ucf),sqr(uSmall))
+                     * max(aUU,sqr(uSmall))
                    );
 
         // compute correlation coefficient between gas phase and solid phase velocity
@@ -840,9 +841,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
+        lm_ = sqrt(max(aUU,kSmall)/(4.0*magSqr(fvc::grad(Ucf))+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
         //lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
-        //lm_ = min(Cmu_*deltaF_,lm_);
-        lm_ = Cmu_*deltaF_;
+        lm_ = min(2.0*Cmu_*deltaF_,lm_);
+        //lm_ = Cmu_*deltaF_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
