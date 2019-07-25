@@ -787,6 +787,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
+    deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
         volScalarField alphaf = filter_(alpha);
@@ -818,11 +819,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        lm_ = sqrt(max(aUU,kSmall)/(4.0*magSqr(fvc::grad(Uf))+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
-        //lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
-        lm_ = min(2.0*Cmu_*deltaF_,lm_);
-        lm_ = max(0.1*Cmu_*deltaF_,lm_);
-        //lm_ = Cmu_*deltaF_;
+        volScalarField CmuT = sqrt(
+                                   max(aUU,kSmall)
+                                 / (
+                                        4.0*magSqr(fvc::grad(Uf))
+                                      + dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)
+                                    )
+                                )
+                              / deltaF_;
+        Cmu_ = filterS(CmuT);
+        Cmu_.min(2.0*CmuScalar_.value());
+        Cmu_.max(0.01*CmuScalar_.value());
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
                    /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
@@ -830,11 +837,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
         
-        // compute mixing length
-        lm_ = Cmu_*deltaF_;
+
     }
-    // constrain mixing length
-    lm_.max(lSmall.value());
+    // compute mixing length
+    lm_ = Cmu_*deltaF_;
     
     // Compute k_
     // ---------------------------
