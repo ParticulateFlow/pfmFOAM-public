@@ -844,6 +844,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         lm_ = sqrt(max(aUU,kSmall)/(4.0*magSqr(fvc::grad(Ucf))+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
         //lm_ = sqrt(km/(sqrt(SijSij&&SijSij)+dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)));
         lm_ = min(2.0*Cmu_*deltaF_,lm_);
+        lm_ = max(0.1*Cmu_*deltaF_,lm_);
         //lm_ = Cmu_*deltaF_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
@@ -986,7 +987,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                        );
         alphaP2Mean_ =   8.0
                        * magSqr(xiKgradAlpha)
-                       / sqr(denom)*pos(signDenom);
+                       / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
                        * magSqr(xiPhiG_)
@@ -995,7 +996,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
                               + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
                          )
-                       / sqr(denom)*pos(signDenom);;
+                       / sqr(denom);
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
