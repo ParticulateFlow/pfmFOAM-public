@@ -854,7 +854,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_ = 0.5*filterS(CmuT);
         */
         volSymmTensorField Lij = symm(filter_(alpha*(U*U))/alpha2f - Ucf*Ucf);
-        volSymmTensorField Mij = 2.0*filter_(sqrt(km))*filter_(D) - filter_(sqrt(km)*D);
+        volSymmTensorField Mij = 2.0*filter_(sqrt(D&&D))*filter_(D) - filter_(sqrt(D&&D)*D);
         Cmu_ = filterS(Lij&&Mij)/(2.0*deltaF_*filterS(Mij&&Mij));
         Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
