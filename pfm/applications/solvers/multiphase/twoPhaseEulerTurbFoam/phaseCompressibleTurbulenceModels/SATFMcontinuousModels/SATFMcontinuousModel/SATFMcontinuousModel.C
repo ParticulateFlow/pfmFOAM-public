@@ -850,7 +850,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                   )
                              )
                            / deltaF_;
-        Cmu_ = filterS(CmuT);
+        Cmu_ = 0.5*filterS(CmuT);
         Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
     } else {
