@@ -157,7 +157,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
@@ -173,7 +173,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
@@ -189,7 +189,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9),
@@ -205,7 +205,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
@@ -237,7 +237,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
@@ -299,7 +299,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
@@ -794,16 +794,16 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
         // compute triple correlation
-        volVectorField Ucf = filter_(alpha*U)/alpha2f;
-        volScalarField aUU = filter_(alpha*U&U)/alpha2f-magSqr(Ucf);
+        // volScalarField aUU = filter_(alpha*U&U)/alpha2f-magSqr(Uf);
         xiPhiGG_ = filterS(
                        filter_(alpha1*(U&U))
                      - alpha1f*filter_(U&U)
-                     - 2.0*(Ucf&(filter_(alpha1*U) - alpha1f*filter_(U)))
+                     - 2.0*(Uf&(filter_(alpha1*U) - alpha1f*filter_(U)))
                    )
                  / filterS(
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
-                     * max(aUU,sqr(uSmall))
+                   //  * max(aUU,sqr(uSmall))
+                     * max(filter_(U&U)-magSqr(filter_(U)),sqr(uSmall))
                    );
 
         // compute correlation coefficient between gas phase and solid phase velocity
@@ -824,7 +824,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_
-        xiPhiGG_ = 0.5*(mag(xiPhiGG_) + xiPhiGG_);
+        // xiPhiGG_ = 0.5*(mag(xiPhiGG_) + xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
@@ -833,31 +833,35 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
-        // Currently no dynamic procedure for Cmu and Ceps
-        // Set Cmu
-        Cmu_ = CmuScalar_;
+        // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
         Ceps_ = CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
+        /*
         volScalarField CmuT = sqrt(
                                    max(aUU,kSmall)
                                  /(
-                                       4.0*magSqr(fvc::grad(Ucf))
+                                       4.0*magSqr(fvc::grad(Uf))
                                      + dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)
                                   )
                              )
                            / deltaF_;
         Cmu_ = 0.5*filterS(CmuT);
-        /*
-        volSymmTensorField Lij = symm(filter_(alpha*(U*U))/alpha2f - Ucf*Ucf);
-        volSymmTensorField Mij = 4.0*filter_(sqrt(D&&D))*filter_(D) - filter_(sqrt(D&&D)*D);
-        Cmu_ = filterS(Lij&&Mij)/(2.0*(deltaF_*deltaF_)*filterS(Mij&&Mij));
         */
-        Cmu_.min(2.0*CmuScalar_.value());
-        Cmu_.max(0.01*CmuScalar_.value());
+        volSymmTensorField Lij = dev(symm(filter_(alpha*(U*U))/alpha2f - Uf*Uf));
+        volSymmTensorField Mij = sqr(deltaF_)*(4.0*mag(filter_(D))*filter_(D) - filter_(mag(D)*D));
+        volScalarField MijMij = fvc::average(Mij && Mij);
+        MijMij.max(SMALL);
+        volScalarField CmuT = - 0.5*fvc::average(Lij && Mij)/(MijMij);
+        CmuT = 0.5*(mag(CmuT) + CmuT);
+        
+        CmuT.min(sqr(2.0*CmuScalar_).value());
+        CmuT.max(sqr(0.01*CmuScalar_).value());
+        
+        Cmu_ = sqrt(CmuT);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_

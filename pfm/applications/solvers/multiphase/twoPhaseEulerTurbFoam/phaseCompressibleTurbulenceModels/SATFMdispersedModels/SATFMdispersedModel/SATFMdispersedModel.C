@@ -190,7 +190,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
@@ -238,7 +238,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.25)
@@ -296,7 +296,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
@@ -810,15 +810,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         //  xiPhiS_ = 0.5*(-mag(xiPhiS_)*uSlip/(mag(uSlip)+uSmall) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
         
-        // Currently no dynamic procedure for Cmu and Ceps
-        // Set Cmu
-        Cmu_ = CmuScalar_;
+        // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
         Ceps_   = CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
+        /*
         volScalarField CmuT = sqrt(
                                    max(aUU,kSmall)
                                  / (
@@ -828,13 +827,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                 )
                               / deltaF_;
         Cmu_ = 0.5*filterS(CmuT);
-        /*
-        volSymmTensorField Lij = symm(filter_(alpha*(U*U))/alphaf - Uf*Uf);
-        volSymmTensorField Mij = 4.0*filter_(sqrt(D&&D))*filter_(D) - filter_(sqrt(D&&D)*D);
-        Cmu_ = filterS(Lij&&Mij)/(2.0*(deltaF_*deltaF_)*filterS(Mij&&Mij));
         */
-        Cmu_.min(2.0*CmuScalar_.value());
-        Cmu_.max(0.01*CmuScalar_.value());
+        volSymmTensorField Lij = dev(symm(filter_(alpha*(U*U))/alphaf - Uf*Uf));
+        volSymmTensorField Mij = sqr(deltaF_)*(4.0*mag(filter_(D))*filter_(D) - filter_(mag(D)*D));
+        volScalarField MijMij = fvc::average(Mij && Mij);
+        MijMij.max(SMALL);
+        volScalarField CmuT = - 0.5*fvc::average(Lij && Mij)/(MijMij);
+        CmuT = 0.5*(mag(CmuT) + CmuT);
+        
+        CmuT.min(sqr(2.0*CmuScalar_).value());
+        CmuT.max(sqr(0.01*CmuScalar_).value());
+        
+        Cmu_ = sqrt(CmuT);
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
                    /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
