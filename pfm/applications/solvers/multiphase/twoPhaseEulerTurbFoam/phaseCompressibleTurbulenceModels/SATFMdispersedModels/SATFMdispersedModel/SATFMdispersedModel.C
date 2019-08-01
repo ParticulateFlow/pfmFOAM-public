@@ -26,7 +26,6 @@ License
 #include "SATFMdispersedModel.H"
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
-#include "simpleFilter.H"
 #include "wallDist.H"
 #include "uniformDimensionedFields.H"
 #include "fvOptions.H"
@@ -742,9 +741,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                         ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
     volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
     
-    // simple filter for smoothing of correlation coefficients
-    simpleFilter filterS(mesh_);
-    
     // get drag coefficient
     volScalarField beta
     (
@@ -795,17 +791,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute xiPhiS
         volVectorField Uf = filter_(alpha*U)/alphaf;
         volScalarField aUU = filter_(alpha*(U&U))/alphaf - magSqr(Uf);
-        xiPhiS_ = filterS(
+        xiPhiS_ = fvc::average(
                       filter_(alpha*U)
                     - alphaf*filter_(U)
                    )
-                 / filterS(
+                 / fvc::average(
                       sqrt(max(filter_(sqr(alpha))-sqr(alphaf),sqr(residualAlpha_)))*
                       sqrt(0.33*max(aUU,kSmall)
                       )
                    );
         // smooth correlation coefficient
-        xiPhiS_ = 0.5*(mag(xiPhiS_)*gradAlpha
+        xiPhiS_ = 0.5*fvc::average(mag(xiPhiS_)*gradAlpha
                  /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiS_);
         //  xiPhiS_ = 0.5*(-mag(xiPhiS_)*uSlip/(mag(uSlip)+uSmall) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
@@ -826,9 +822,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                     )
                                 )
                               / deltaF_;
-        Cmu_ = 0.5*filterS(CmuT);
+        Cmu_ = 0.5*fvc::average(CmuT);
         */
-        volScalarField Lij = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
+        //volScalarField Lij = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
+        volScalarField Lij = filter_(magSqr(U)) - magSqr(filter_(U));
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
         volScalarField MijMij = fvc::average(Mij * Mij);
         MijMij.max(SMALL);
@@ -838,7 +835,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CmuT.min(sqr(2.0*CmuScalar_).value());
         CmuT.max(sqr(0.01*CmuScalar_).value());
         
-        Cmu_ = sqrt(CmuT);
+        Cmu_ = fvc::average(sqrt(CmuT));
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
                    /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
@@ -989,8 +986,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         nut_ *= 0.;
         volVectorField filterU = filter_(U);
         // compute correlation coefficients
-        xiUU_ = filterS(filter_(U*U) - filterU*filterU)
-                /filterS(max(filter_((U&U)) - (filterU&filterU),kSmall));
+        xiUU_ = fvc::average(filter_(U*U) - filterU*filterU)
+                /fvc::average(max(filter_((U&U)) - (filterU&filterU),kSmall));
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
         
