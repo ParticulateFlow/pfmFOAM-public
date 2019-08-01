@@ -828,7 +828,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                               / deltaF_;
         Cmu_ = 0.5*filterS(CmuT);
         */
-        volSymmTensorField Lij = dev(symm(filter_(alpha*(U*U))/alphaf - Uf*Uf));
+        volSymmTensorField Lij = (symm(filter_(alpha*(U*U))/alphaf - Uf*Uf));
         volSymmTensorField Mij = sqr(deltaF_)*(4.0*mag(filter_(D))*filter_(D) - filter_(mag(D)*D));
         volScalarField MijMij = fvc::average(Mij && Mij);
         MijMij.max(SMALL);
