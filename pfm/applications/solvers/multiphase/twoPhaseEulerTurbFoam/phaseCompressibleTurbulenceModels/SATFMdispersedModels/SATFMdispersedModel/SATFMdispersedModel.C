@@ -801,7 +801,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                       )
                    );
         // smooth correlation coefficient
-        xiPhiS_ = 0.5*fvc::average(mag(xiPhiS_)*gradAlpha
+        xiPhiS_ = 0.5*(mag(xiPhiS_)*gradAlpha
                  /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiS_);
         //  xiPhiS_ = 0.5*(-mag(xiPhiS_)*uSlip/(mag(uSlip)+uSmall) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
@@ -813,17 +813,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        /*
-        volScalarField CmuT = sqrt(
-                                   max(aUU,kSmall)
-                                 / (
-                                        4.0*magSqr(fvc::grad(Uf))
-                                      + dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)
-                                    )
-                                )
-                              / deltaF_;
-        Cmu_ = 0.5*fvc::average(CmuT);
-        */
         //volScalarField Lij = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         volScalarField Lij = filter_(magSqr(U)) - magSqr(filter_(U));
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
@@ -835,7 +824,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CmuT.min(sqr(2.0*CmuScalar_).value());
         CmuT.max(sqr(0.01*CmuScalar_).value());
         
-        Cmu_ = fvc::average(sqrt(CmuT));
+        Cmu_ = sqrt(CmuT);
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
                    /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));

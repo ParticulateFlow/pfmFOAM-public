@@ -814,7 +814,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         // limit and smooth correlation coefficients
         // xiPhiG_
-        xiPhiG_ = 0.5*fvc::average(-mag(xiPhiG_)*gradAlpha
+        xiPhiG_ = 0.5*(-mag(xiPhiG_)*gradAlpha
                        /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiG_);
         // xiPhiG_ = 0.5*(-mag(xiPhiG_)*uSlip/(mag(uSlip)+uSmall) + xiPhiG_);
         boundxiPhiG(xiPhiG_);
@@ -824,7 +824,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
-        xiGS_ = 0.5*fvc::average(mag(xiGS_) + xiGS_);
+        xiGS_ = 0.5*(mag(xiGS_) + xiGS_);
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
@@ -835,18 +835,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
-        /*
-        volScalarField CmuT = sqrt(
-                                   max(aUU,kSmall)
-                                 /(
-                                       4.0*magSqr(fvc::grad(Uf))
-                                     + dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.e-7)
-                                  )
-                             )
-                           / deltaF_;
-        Cmu_ = 0.5*fvc::average(CmuT);
-        */
-        //volScalarField Lij = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
+        // volScalarField Lij = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField Lij = filter_(magSqr(U)) - magSqr(filter_(U));
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
         volScalarField MijMij = fvc::average(Mij * Mij);
@@ -857,7 +846,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         CmuT.min(sqr(2.0*CmuScalar_).value());
         CmuT.max(sqr(0.01*CmuScalar_).value());
         
-        Cmu_ = fvc::average(sqrt(CmuT));
+        Cmu_ = sqrt(CmuT);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
@@ -875,7 +864,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha1*alpha*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha),residualAlpha_);
-    xiGatS_ = fvc::average(xiGatS_);
     xiGatS_.max(1.0e-7);
     xiGatS_.min(2.0);
     // correct xiGS_
