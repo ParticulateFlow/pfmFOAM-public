@@ -1001,7 +1001,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
-    nut_ = pos((scalar(1.0) - alpha) - residualAlpha_)*alpha*sqrt(km)*lm_;
+    nut_ = alpha*sqrt(km)*lm_;
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
