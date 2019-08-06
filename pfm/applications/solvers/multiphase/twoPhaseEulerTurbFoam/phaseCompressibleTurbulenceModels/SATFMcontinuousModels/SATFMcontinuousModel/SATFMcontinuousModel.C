@@ -841,10 +841,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField MijMij = fvc::average(Mij * Mij);
         MijMij.max(VSMALL);
         volScalarField CmuT = 0.5*fvc::average(Lij * Mij)/(MijMij);
-        CmuT = 0.5*(mag(CmuT) + CmuT);
+        //CmuT = 0.5*(mag(CmuT) + CmuT);
+        CmuT = fvc::average(mag(CmuT));
         
-        CmuT.min(sqr(10.0*CmuScalar_).value());
-        CmuT.max(sqr(0.01*CmuScalar_).value());
+        CmuT.min(sqr(2.0*CmuScalar_).value());
+        CmuT.max(sqr(0.1*CmuScalar_).value());
         
         Cmu_ = sqrt(CmuT);
     } else {
