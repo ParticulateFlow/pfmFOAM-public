@@ -240,7 +240,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.e-2),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
         // Set Boundary condition
         fixedValueFvPatchField<scalar>::typeName
     ),
@@ -822,14 +822,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         MijMij.max(VSMALL);
         volScalarField CmuT = 0.5*fvc::average(Lij * Mij)/(MijMij);
         
-        CmuT = 0.5*max(mag(CmuT) + CmuT);
-        CmuT.max(SMALL);
+        CmuT = 0.5*(mag(CmuT) + CmuT);
+        CmuT.max(0);
         
         Cmu_ = sqrt(CmuT);
         Cmu_ = fvc::average(Cmu_);
         
-        Cmu_.min(sqr(2.0*CmuScalar_).value());
-        Cmu_.max(sqr(0.1*CmuScalar_).value());
+        Cmu_.min(2.0*CmuScalar_.value());
+        Cmu_.max(0.01*CmuScalar_.value());
         
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
