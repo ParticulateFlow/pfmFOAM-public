@@ -239,9 +239,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.0e-5),
         // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        fixedValueFvPatchField<scalar>::typeName
     ),
 
     Ceps_
@@ -841,13 +841,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField MijMij = fvc::average(Mij * Mij);
         MijMij.max(VSMALL);
         volScalarField CmuT = 0.5*fvc::average(Lij * Mij)/(MijMij);
-        //CmuT = 0.5*(mag(CmuT) + CmuT);
-        CmuT = fvc::average(mag(CmuT));
+        
+        CmuT = 0.5*(mag(CmuT) + CmuT);
         
         CmuT.min(sqr(2.0*CmuScalar_).value());
         CmuT.max(sqr(0.1*CmuScalar_).value());
-        
         Cmu_ = sqrt(CmuT);
+        Cmu_ = fvc::average(Cmu_);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_

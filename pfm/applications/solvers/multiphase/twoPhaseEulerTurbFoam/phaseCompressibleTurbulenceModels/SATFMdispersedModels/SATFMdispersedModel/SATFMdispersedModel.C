@@ -240,7 +240,9 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.25)
+        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.0e-5),
+        // Set Boundary condition
+        fixedValueFvPatchField<scalar>::typeName
     ),
 
     Ceps_
@@ -819,13 +821,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField MijMij = fvc::average(Mij * Mij);
         MijMij.max(VSMALL);
         volScalarField CmuT = 0.5*fvc::average(Lij * Mij)/(MijMij);
-        // CmuT = 0.5*(mag(CmuT) + CmuT);
-        CmuT = fvc::average(mag(CmuT));
+        
+        CmuT = 0.5*(mag(CmuT) + CmuT);
         
         CmuT.min(sqr(2.0*CmuScalar_).value());
         CmuT.max(sqr(0.1*CmuScalar_).value());
         
         Cmu_ = sqrt(CmuT);
+        Cmu_ = fvc::average(Cmu_);
     } else {
         xiPhiS_ = - xiPhiSolidScalar_*gradAlpha
                    /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
@@ -974,10 +977,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
     if (aniIsoTropicNut_) {
         nut_ *= 0.;
-        volVectorField filterU = filter_(U);
+        volScalarField alphaf = filter_(alpha);
+        alphaf.max(residualAlpha_.value());
+        volVectorField Uf = filter_(alpha*U)/alphaf;
         // compute correlation coefficients
-        xiUU_ = fvc::average(filter_(U*U) - filterU*filterU)
-                /fvc::average(max(filter_((U&U)) - (filterU&filterU),kSmall));
+        xiUU_ = 3.0*fvc::average(filter_(alpha*(U*U))/alphaf - Uf*Uf)
+                /fvc::average(max(filter_(alpha*(U&U))/alphaf - (Uf&Uf),kSmall));
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
         
@@ -986,8 +991,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         {
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
-                    R1_[cellI].component(j+i*3) =  xiUU_[cellI].component(j+i*3)
-                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    if (i!=j) {
+                        R1_[cellI].component(j+i*3) =  -mag(xiUU_[cellI].component(j+i*3))
+                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j))
+                                    *sign(D[cellI].component(j+i*3));
+                    } else {
+                        R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    }
                 }
             }
         }
