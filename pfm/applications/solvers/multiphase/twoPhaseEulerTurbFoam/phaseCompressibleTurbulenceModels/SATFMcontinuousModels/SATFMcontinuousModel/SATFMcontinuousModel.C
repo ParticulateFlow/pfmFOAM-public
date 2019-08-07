@@ -239,7 +239,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.0e-5),
+        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
         // Set Boundary condition
         fixedValueFvPatchField<scalar>::typeName
     ),
