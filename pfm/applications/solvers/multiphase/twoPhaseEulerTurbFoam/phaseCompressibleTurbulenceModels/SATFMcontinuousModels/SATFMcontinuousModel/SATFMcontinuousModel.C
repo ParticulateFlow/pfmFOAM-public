@@ -239,9 +239,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-     dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
+     dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
      // Set Boundary condition
-     fixedValueFvPatchField<scalar>::typeName
+     zeroGradientFvPatchField<scalar>::typeName
     ),
 
     Ceps_
@@ -837,9 +837,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute mixing length dynamically
         volScalarField Lij = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         // volScalarField Lij = filter_(magSqr(U)) - magSqr(filter_(U));
-        volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(alpha*magSqr(D))/alpha2f);
+        volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(mag(alpha*D))/alpha2f) - filter_(alpha*magSqr(D))/alpha2f);
         volScalarField MijMij = fvc::average(Mij * Mij);
-        MijMij.max(VSMALL);
+        MijMij.max(SMALL);
         volScalarField CmuT = 0.5*fvc::average(Lij * Mij)/(MijMij);
         
         CmuT = 0.5*(mag(CmuT) + CmuT);
@@ -976,7 +976,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
     volScalarField denom = divU + CphiGscalar_ * Ceps_ * sqrt(km)/lm_;
-    volScalarField signDenom = sign(denom);
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
