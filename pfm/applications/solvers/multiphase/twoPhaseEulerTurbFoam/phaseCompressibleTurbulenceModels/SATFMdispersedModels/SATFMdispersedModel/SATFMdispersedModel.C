@@ -984,7 +984,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volVectorField Uf = filter_(alpha*U)/alphaf;
         // compute correlation coefficients
         xiUU_ = 3.0*fvc::average(filter_(alpha*(U*U))/alphaf - Uf*Uf)
-                /fvc::average(max(filter_(alpha*(U&U))/alphaf - (Uf&Uf),kSmall));
+                /max(fvc::average(filter_(alpha*(U&U))/alphaf - (Uf&Uf)),kSmall);
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
         
@@ -994,9 +994,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
-                        R1_[cellI].component(j+i*3) =  -mag(xiUU_[cellI].component(j+i*3))
-                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j))
-                                    *sign(D[cellI].component(j+i*3));
+                        R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                                *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     }
