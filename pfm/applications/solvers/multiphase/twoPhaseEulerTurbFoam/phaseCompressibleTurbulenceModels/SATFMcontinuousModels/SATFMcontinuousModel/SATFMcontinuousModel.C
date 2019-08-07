@@ -239,9 +239,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
         // Set Boundary condition
-        fixedValueFvPatchField<scalar>::typeName
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     Ceps_

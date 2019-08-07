@@ -240,9 +240,9 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
+        dimensionedScalar("small", dimensionSet(0, 0, 0, 0, 0), 0.25),
         // Set Boundary condition
-        fixedValueFvPatchField<scalar>::typeName
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     Ceps_
