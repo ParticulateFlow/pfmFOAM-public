@@ -794,11 +794,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         */
         volScalarField xiPhiGDenomSqr =   (alpha1fP2-sqr(alpha1f))
-                                        * (filter_(alpha*magSqr(U&g)/magSqr(g))/alpha2f - magSqr(Uf&g)/magSqr(g));
+                                        * (filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf));
         xiPhiGDenomSqr.max(VSMALL);
-        xiPhiG_ = xiPhiGNom/sqrt(xiPhiGDenomSqr);
+        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(xiPhiGDenomSqr);
         // compute triple correlation
-        // volScalarField aUU = filter_(alpha*U&U)/alpha2f-magSqr(Uf);
         xiPhiGG_ = (
                        filter_(alpha1*(U&U))
                      - alpha1f*filter_(U&U)
