@@ -239,9 +239,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-     dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
-     // Set Boundary condition
-     fixedValueFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     Ceps_
@@ -794,9 +794,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         */
         volScalarField xiPhiGDenomSqr =   (alpha1fP2-sqr(alpha1f))
-                                        * (filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf));
+                                        * (filter_(alpha*magSqr(U&g)/magSqr(g))/alpha2f - magSqr(Uf&g)/magSqr(g));
         xiPhiGDenomSqr.max(VSMALL);
-        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(xiPhiGDenomSqr);
+        xiPhiG_ = xiPhiGNom/sqrt(xiPhiGDenomSqr);
         // compute triple correlation
         // volScalarField aUU = filter_(alpha*U&U)/alpha2f-magSqr(Uf);
         xiPhiGG_ = (
