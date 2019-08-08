@@ -56,6 +56,7 @@ SourceFiles
 #include "frictionalStressModel.H"
 // h-files for LES filters
 #include "LESfilter.H"
+#include "simpleFilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

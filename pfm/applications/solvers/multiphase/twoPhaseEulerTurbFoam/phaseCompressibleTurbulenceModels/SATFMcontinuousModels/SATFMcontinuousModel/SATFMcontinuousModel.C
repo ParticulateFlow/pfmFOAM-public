@@ -697,6 +697,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     const cellList& cells = mesh_.cells();
     
+    // simple filter for local smoothing
+    simpleFilter filterS(mesh_);
+    
     // get drag coefficient
     volScalarField beta
     (
@@ -762,69 +765,79 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         volVectorField Uf = filter_(alpha*U)/alpha2f;
         // compute xiPhiG_
-        volVectorField xiPhiGNom = - fvc::average(
+        volVectorField xiPhiGNom = -  (
                                           filter_(alpha*U)
                                         - alpha2f*filter_(U)
                                       );
+        /*
         volVectorField xiPhiGDenomSqr =
-                  fvc::average(
                       (alpha1fP2-sqr(alpha1f))
                     * (
                           filter_(
-                                     magSqr(U&eX)*eX
-                                   + magSqr(U&eY)*eY
-                                   + magSqr(U&eZ)*eZ
+                                     magSqr(alpha*(U&eX))*eX
+                                   + magSqr(alpha*(U&eY))*eY
+                                   + magSqr(alpha*(U&eZ))*eZ
                                  )
                                / alpha2f
                         - magSqr(Uf&eX)*eX
                         - magSqr(Uf&eY)*eY
                         - magSqr(Uf&eZ)*eZ
-                       )
-                      );
+                       );
+
         forAll(cells,cellI)
         {
             for (int i=0; i< 3; i++) {
                 xiPhiG_[cellI].component(i) =
                     xiPhiGNom[cellI].component(i)
-                  / Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),1.0e-14));
+                  / Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),VSMALL));
             }
         }
+        */
+        volScalarField xiPhiGDenomSqr =   (alpha1fP2-sqr(alpha1f))
+                                        * (filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf));
+        xiPhiGDenomSqr.max(VSMALL);
+        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(xiPhiGDenomSqr);
         // compute triple correlation
         // volScalarField aUU = filter_(alpha*U&U)/alpha2f-magSqr(Uf);
-        xiPhiGG_ = fvc::average(
+        xiPhiGG_ = (
                        filter_(alpha1*(U&U))
                      - alpha1f*filter_(U&U)
                      - 2.0*(Uf&(filter_(alpha1*U) - alpha1f*filter_(U)))
                    )
-                 / fvc::average(
+                 / (
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
                    //  * max(aUU,sqr(uSmall))
                      * max(filter_(U&U)-magSqr(filter_(U)),sqr(uSmall))
                    );
 
         // compute correlation coefficient between gas phase and solid phase velocity
-        xiGS_ = fvc::average(
+        xiGS_ = (
                      filter_(alpha1*(U&Ud_))/alpha1f
                    - (filter_(alpha1*U) & filter_(alpha1*Ud_))/sqr(alpha1f)
                 )
-              / fvc::average(
+              /  (
                     sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
 
         // limit and smooth correlation coefficients
         // xiPhiG_
-        xiPhiG_ = 0.5*(-mag(xiPhiG_)*gradAlpha
-                       /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiG_);
-        // xiPhiG_ = 0.5*(-mag(xiPhiG_)*uSlip/(mag(uSlip)+uSmall) + xiPhiG_);
+        xiPhiG_ = filterS(xiPhiG_);
+        xiPhiG_ = 0.5*(
+                        - mag(xiPhiG_)*gradAlpha
+                              /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
+                        + xiPhiG_
+                      );
         boundxiPhiG(xiPhiG_);
         
         // xiPhiGG_
+        xiPhiGG_ = filterS(xiPhiGG_);
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
         
         // xiGS_ (xiGS_ is positive)
         xiGS_ = 0.5*(mag(xiGS_) + xiGS_);
+        xiGS_ = filterS(xiGS_);
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
@@ -836,19 +849,19 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         // compute mixing length dynamically
         volScalarField Lij = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
-        // volScalarField Lij = filter_(magSqr(U)) - magSqr(filter_(U));
-        volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(magSqr(D)));
-        volScalarField MijMij = fvc::average(Mij * Mij);
+        // volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(magSqr(D)));
+        volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alpha2f) - filter_(alpha*magSqr(D))/alpha2f);
+        volScalarField MijMij = filterS(Mij * Mij);
         MijMij.max(VSMALL);
-        volScalarField CmuT = 0.5*fvc::average(Lij * Mij)/(MijMij);
+        volScalarField CmuT = 0.5*filterS(Lij * Mij)/(MijMij);
         
         CmuT = 0.5*(mag(CmuT) + CmuT);
         CmuT.max(0);
         
         Cmu_ = sqrt(CmuT);
-        Cmu_ = fvc::average(Cmu_);
+        Cmu_ = filterS(Cmu_);
 
-        Cmu_.min(10.0*CmuScalar_.value());
+        Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
