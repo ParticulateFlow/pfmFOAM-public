@@ -411,7 +411,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                 IOobject::NO_WRITE
             ),
           - (nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * alpha_ * rho_ *
+          + 2.0 * alpha_ *
             symm(
                      (k_&eX)*(eX*eX)
                    + (k_&eY)*(eY*eY)
@@ -490,7 +490,35 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(0,0,1)
     );
-    
+
+    const fvMesh& mesh(U.mesh());
+    const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
+    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
+    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
+                                        ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
+
+    volScalarField alphaP2MeanP = max(alphaP2Mean_,alphaP2Mean2_);
+
+    const volScalarField& press(mesh.lookupObject<volScalarField>("p"));
+
+    //const volVectorField& g = mesh.lookupObject<volVectorField>("g");
+     const uniformDimensionedVectorField g = mesh.lookupObject<uniformDimensionedVectorField>("g");
+
+    volVectorField virtualAdded =max((alphaP2MeanP * rho2 * fvc::grad(press)&eZ)/(max(alpha_, residualAlpha_)*rho_ + (max((1 - alpha_), residualAlpha_)*rho2))*eZ,3.0 * (rho2 - rho_) * alphaP2MeanP *  g);
+            //(alphaP2MeanP * rho2 * max(fvc::grad(press),  (max(alpha_, residualAlpha_)*rho_ + (max((1 - alpha_), residualAlpha_)*rho2))* g)&eZ)/(max(alpha_, residualAlpha_)*rho_ + (max((1 - alpha_), residualAlpha_)*rho2))*eZ;
+
+    volVectorField virtualFox =  (rho2 - rho_) * alphaP2MeanP *  g;
+
+    Info<< "SA-TFM (divDeff):" << nl
+    << "    (max) = " << max(virtualAdded).value() <<nl
+     << "    (maxFox) = " << max(virtualFox).value() <<nl
+    << "    (alphaP2) = " << max(alphaP2MeanP).value() <<nl
+     << "    (gradP) = " << max(fvc::grad(press)).value() <<nl
+    << "    (gradPmin) = " << min(fvc::grad(press)).value() <<nl
+     << "    (in) = " << min(virtualAdded).value() <<nl
+    << "(minFox) =" << min(virtualFox).value() << endl;
+
+
     return
     (
       - fvm::laplacian(rho_*nut_, U)
@@ -504,8 +532,10 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
               + (k_&eZ)*(eZ*eZ)
             )
         )
+       - max((alphaP2MeanP * rho2 * fvc::grad(press)&eZ)/(max(alpha_, residualAlpha_)*rho_ + (max((1 - alpha_), residualAlpha_)*rho2))*eZ,3.0 * (rho2 - rho_) * alphaP2MeanP *  g)
     );
 }
+
 
 void Foam::RASModels::SATFMcontinuousModel::boundNormalStress
 (
@@ -628,7 +658,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, scalar(0)));
+    volScalarField alpha(max(alpha_, residualAlpha_));
     // solid volume fraction
     volScalarField alpha1 = 1.0 - alpha;
     const volScalarField& rho = phase_.rho();
@@ -796,7 +826,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField xiPhiGDenomSqr =   (alpha1fP2-sqr(alpha1f))
                                         * (filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf));
         xiPhiGDenomSqr.max(kSmall.value());
-        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(xiPhiGDenomSqr);
+        xiPhiG_ = xiPhiGNom/sqrt(xiPhiGDenomSqr);
         // compute triple correlation
         xiPhiGG_ = (
                        filter_(alpha1*(U&U))
@@ -806,7 +836,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  / (
                        sqrt(max(alpha1fP2-sqr(alpha1f),sqr(residualAlpha_)))
                    //  * max(aUU,sqr(uSmall))
-                     * max(filter_(U&U)-magSqr(filter_(U)),sqr(uSmall))
+                     * max(filter_(U&U)- 2.0*(Uf&filter_(U)) + magSqr(Uf),sqr(uSmall))
                    );
 
         // compute correlation coefficient between gas phase and solid phase velocity
@@ -815,7 +845,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                    - (filter_(alpha1*U) & filter_(alpha1*Ud_))/sqr(alpha1f)
                 )
               /  (
-                    sqrt(max(filter_(alpha1*(U&U))/alpha1f-magSqr(filter_(alpha1*U)/alpha1f),kSmall))
+                    sqrt(max(filter_(alpha1*(U&U))/alpha1f-2.0*((filter_(alpha1*U)/alpha1f)&Uf)+magSqr(Uf),kSmall))
                   * sqrt(max(filter_(alpha1*(Ud_&Ud_))/alpha1f-magSqr(filter_(alpha1*Ud_)/alpha1f),kSmall))
                  );
 
@@ -858,10 +888,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         CmuT.max(0);
         
         Cmu_ = sqrt(CmuT);
+
+        //Cmu_ = sqrt(km)/(2*deltaF_*(max(sqrt(((SijSij&eX)&eSum) + ((SijSij&eY)&eSum) + ((SijSij&eZ)&eSum)),dimensionedScalar("Sijsmall",dimensionSet(0,0,-1,0,0),1.e-7))));
+
         Cmu_ = filterS(Cmu_);
 
         Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
+
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
@@ -905,7 +939,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                    + (sqrt(k_&eY)*(eY*eY))
                                    + (sqrt(k_&eZ)*(eZ*eZ))
                                    )
-                                 / (2.0 * sigma_)
+                                 / (sigma_)
                            , k_, "laplacian(kappa,k)")
          ==
           // some source terms are explicit since fvm::Sp()
@@ -940,7 +974,59 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );
-
+        /*fvVectorMatrix kEqn
+        (
+            fvm::ddt(alpha, rho, k_)
+          + fvm::div(alphaRhoPhi, k_)
+          - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
+          // diffusion with anisotropic diffusivity
+        - fvm::laplacian(alpha*rho
+                    * (
+                         (((k_&eX)/max(sqrt((SijSij&eX)&eSum),dimensionedScalar("Sijsmall",dimensionSet(0,0,-1,0,0),1.e-7)))*(eX*eX))
+                       + (((k_&eY)/max(sqrt((SijSij&eY)&eSum),dimensionedScalar("Sijsmall",dimensionSet(0,0,-1,0,0),1.e-7)))*(eY*eY))
+                       + (((k_&eZ)/max(sqrt((SijSij&eZ)&eSum),dimensionedScalar("Sijsmall",dimensionSet(0,0,-1,0,0),1.e-7)))*(eZ*eZ))
+                       )
+                     / (2.0*sigma_)
+               , k_, "laplacian(kappa,k)")
+         ==
+          // some source terms are explicit since fvm::Sp()
+          // takes solely scalars as first argument.
+          // ----------------
+          // shear production
+            2.0
+               *alpha
+               *rho
+               *(
+                    (sqrt((SijSij&eX)&eSum)*(k_&eX))*eX
+                  + (sqrt((SijSij&eY)&eSum)*(k_&eY))*eY
+                  + (sqrt((SijSij&eZ)&eSum)*(k_&eZ))*eZ
+                )
+          // interfacial work (--> energy transfer)
+          + 2.0*beta
+               *(
+                    xiGS_
+                  * (
+                        sqrt((kD_&eX)*(k_&eX))*eX
+                      + sqrt((kD_&eY)*(k_&eY))*eY
+                      + sqrt((kD_&eZ)*(k_&eZ))*eZ
+                    )
+                )
+          + fvm::Sp(-2.0*beta*xiGatS_,k_)
+          // drag production and pressure dilation
+          - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
+          - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
+          - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
+          // dissipation
+          -Ceps_
+            *alpha
+            *rho
+                *(
+                     (sqrt((SijSij&eX)&eSum)*(k_&eX))*eX
+                   + (sqrt((SijSij&eY)&eSum)*(k_&eY))*eY
+                   + (sqrt((SijSij&eZ)&eSum)*(k_&eZ))*eZ
+                 )
+          + fvOptions(alpha, rho, k_)
+        );*/
         kEqn.relax();
         fvOptions.constrain(kEqn);
         kEqn.solve();
@@ -992,13 +1078,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
     if (dynamicAdjustment_) {
-        volVectorField xiKgradAlpha = (
-                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)) * eX)
-                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)) * eY)
-                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)) * eZ)
+        volScalarField xiKgradAlpha = (
+                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)))
+                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)))
+                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)))
                                        );
         alphaP2Mean_ =   8.0
-                       * magSqr(xiKgradAlpha)
+                       * sqr(xiKgradAlpha)*neg(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
