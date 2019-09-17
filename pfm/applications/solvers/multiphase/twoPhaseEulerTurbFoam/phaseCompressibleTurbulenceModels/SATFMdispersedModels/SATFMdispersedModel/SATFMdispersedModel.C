@@ -70,7 +70,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
 
     equilibrium_(coeffDict_.lookup("equilibrium")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
-    aniIsoTropicNut_(coeffDict_.lookup("aniIsoTropicNut")),
+    anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
     alphaMax_("alphaMax", dimless, coeffDict_),
     alphaMinFriction_
     (
@@ -350,7 +350,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
     {
         coeffDict().lookup("equilibrium") >> equilibrium_;
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
-        coeffDict().lookup("aniIsoTropicNut") >> aniIsoTropicNut_;
+        coeffDict().lookup("anIsoTropicNut") >> anIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
         alphaMinFriction_.readIfPresent(coeffDict());
         xiPhiSolidScalar_.readIfPresent(coeffDict());
@@ -996,7 +996,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
-    if (aniIsoTropicNut_) {
+    if (anIsoTropicNut_) {
         nut_ *= 0.;
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());

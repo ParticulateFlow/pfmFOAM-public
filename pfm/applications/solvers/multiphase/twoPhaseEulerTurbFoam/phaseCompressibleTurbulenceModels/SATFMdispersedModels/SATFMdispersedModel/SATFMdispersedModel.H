@@ -101,7 +101,7 @@ class SATFMdispersedModel
 
             //- switch between isotropic and anisotropic treatment of
             //  shear component of mesoscale stress tensor
-            Switch aniIsoTropicNut_;
+            Switch anIsoTropicNut_;
 
             //- Maximum packing phase-fraction
             dimensionedScalar alphaMax_;
