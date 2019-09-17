@@ -22,6 +22,7 @@ if (periodicBox) {
 
 {
     volScalarField Vm(fluid.Vm());
+    volScalarField CpIPh(fluid.CpIPh());
     volVectorField KdUdrift(fluid.KdUdrift());
 
     fvVectorMatrix UgradU1
@@ -43,6 +44,8 @@ if (periodicBox) {
           + MRF.DDt(alpha1*rho1, U1)
           + phase1.turbulence().divDevRhoReff(U1)
           + Vm*(UgradU1 - (UgradU2 & U2))
+          // meso-scale interPhase force
+          + CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           - KdUdrift 
@@ -66,6 +69,8 @@ if (periodicBox) {
           + MRF.DDt(alpha2*rho2, U2)
           + phase2.turbulence().divDevRhoReff(U2)
           + Vm*(UgradU2 - (UgradU1 & U1))
+          // meso-scale interPhase force
+          - CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           + KdUdrift         

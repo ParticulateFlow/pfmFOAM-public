@@ -34,6 +34,8 @@ Kd *= scalar(1.0) - H;
     surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
 
     volScalarField Vm(fluid.Vm());
+    volScalarField CpIPh(fluid.CpIPh());
+    surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(CpIPh));
 
     {
         U1Eqn =
@@ -50,6 +52,8 @@ Kd *= scalar(1.0) - H;
               - fvm::Sp(fvc::div(phi1), U1)
               - DDtU2
             )
+          // meso-scale interPhase force
+          + CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           - KdUdrift
@@ -93,7 +97,7 @@ Kd *= scalar(1.0) - H;
                 (
                     (
                       - pPrimef*fvc::snGrad(alpha1)/rAU1f
-                      - alphaf1*fvc::snGrad(p)
+                      - (alphaf1 + CpIPhf)*fvc::snGrad(p)
                     ) * mesh.magSf()
                   // drag
                   + (fvc::interpolate(rAU1*Kd)*phi2)/rAU1f
@@ -122,6 +126,8 @@ Kd *= scalar(1.0) - H;
               - fvm::Sp(fvc::div(phi2), U2)
               - DDtU1
             )
+          // meso-scale interPhase force
+          - CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           + KdUdrift
@@ -156,7 +162,7 @@ Kd *= scalar(1.0) - H;
                 fvc::reconstruct
                 (
                     (
-                      - alphaf2*fvc::snGrad(p)
+                      - (alphaf2 - CpIPhf)*fvc::snGrad(p)
                     ) * mesh.magSf()
                   // drag
                  + (fvc::interpolate(rAU2*Kd)*phi1)/rAU2f
