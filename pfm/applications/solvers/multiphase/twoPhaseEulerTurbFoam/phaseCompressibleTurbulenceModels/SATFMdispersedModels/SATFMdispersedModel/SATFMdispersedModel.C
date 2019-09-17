@@ -408,7 +408,7 @@ Foam::RASModels::SATFMdispersedModel::R() const
                 IOobject::NO_WRITE
             ),
           - (nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * pos(alpha_ - residualAlpha_) * alpha_ * rho_ *
+          + 2.0 * pos(alpha_ - residualAlpha_) * alpha_ *
             symm(R1_)
         )
     );
@@ -667,7 +667,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, scalar(0)));
+    volScalarField alpha(max(alpha_, residualAlpha_));
     const volScalarField& rho = phase_.rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const volVectorField& U = U_;
@@ -796,19 +796,27 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute xiPhiS
         volVectorField Uf = filter_(alpha*U)/alphaf;
         volScalarField aUU = filter_(alpha*(U&U))/alphaf - magSqr(Uf);
-        xiPhiS_ = (
-                      filter_(alpha*U)
-                    - alphaf*filter_(U)
-                   )
-                 / (
-                      sqrt(max(filter_(sqr(alpha))-sqr(alphaf),sqr(residualAlpha_)))*
-                      sqrt(0.33*max(aUU,kSmall)
-                      )
-                   );
+
+
+        volVectorField xiPhiSNom =   (
+                                          filter_(alpha*U)
+                                        - alphaf*filter_(U)
+                                      );
+
+        volScalarField xiPhiSDenomSqr =   (filter_(sqr(alpha))-sqr(alphaf))
+                                        * (filter_(alpha*magSqr(U))/alphaf - magSqr(Uf));
+        xiPhiSDenomSqr.max(kSmall.value());
+        xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(xiPhiSDenomSqr);
+       
+
+
         // smooth correlation coefficient
         xiPhiS_ = filterS(xiPhiS_);
-        xiPhiS_ = 0.5*(mag(xiPhiS_)*gradAlpha
-                 /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7)) + xiPhiS_);
+        xiPhiS_ = 0.5*(
+                        - mag(xiPhiS_)*gradAlpha
+                              /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
+                        + xiPhiS_
+                      );
         //  xiPhiS_ = 0.5*(-mag(xiPhiS_)*uSlip/(mag(uSlip)+uSmall) + xiPhiS_);
         boundxiPhiS(xiPhiS_);
         
@@ -826,8 +834,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volVectorField Ucf = filter_(alpha2*Uc_)/alpha2f;
         volScalarField Lijc = filter_(alpha2*magSqr(Uc_))/alpha2f - magSqr(Ucf);
         Lijc.max(0);
-        Lij -= max(xiGS_*(sqrt(Lij*Lijc) - Lij),kSmall);
-        Lij.max(0);
+        //Lij -= max(xiGS_*(sqrt(Lij*Lijc) - Lij),kSmall);
+        //Lij.max(0);
         // volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(magSqr(D)));
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
         volScalarField MijMij = filterS(Mij * Mij);
@@ -877,7 +885,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    + (sqrt(k_&eY)*(eY*eY))
                                    + (sqrt(k_&eZ)*(eZ*eZ))
                                    )
-                                 / (2.0*sigma_)
+                                 / (sigma_)
                            , k_, "laplacian(kappa,k)")
          ==
           // some source terms are explicit since fvm::Sp()
@@ -964,13 +972,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     if (dynamicAdjustment_) {
-        volVectorField xiKgradAlpha = (
-                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)) * eX)
-                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)) * eY)
-                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)) * eZ)
+        volScalarField xiKgradAlpha = (
+                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
+                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
+                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                        );
         alphaP2Mean_ =   8.0
-                       * magSqr(xiKgradAlpha)
+                       * sqr(xiKgradAlpha)*neg(xiKgradAlpha)
                        / sqr(denom);
     } else {
         alphaP2Mean_ =   8.0
