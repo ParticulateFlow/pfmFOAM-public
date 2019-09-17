@@ -27,7 +27,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "deWildeSATFM.H"
+#include "deWildeIPhSATFM.H"
 #include "phasePair.H"
 #include "addToRunTimeSelectionTable.H"
 
@@ -35,28 +35,29 @@ License
 
 namespace Foam
 {
-namespace virtualMassModels
+namespace interPhaseForceModels
 {
-    defineTypeNameAndDebug(deWildeSATFM, 0);
+    defineTypeNameAndDebug(deWildeIPhSATFM, 0);
     addToRunTimeSelectionTable
     (
-        virtualMassModel,
-        deWildeSATFM,
+        interPhaseForceModel,
+        deWildeIPhSATFM,
         dictionary
     );
 }
 }
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWildeSATFM::deWildeSATFM
+Foam::interPhaseForceModels::deWildeIPhSATFM::deWildeIPhSATFM
 (
     const dictionary& dict,
     const phasePair& pair,
     const bool registerObject
 )
 :
-    virtualMassModel(dict, pair, registerObject),
+    interPhaseForceModel(dict, pair, registerObject),
     residualAlpha_
     (
         "residualAlpha",
@@ -72,13 +73,13 @@ Foam::virtualMassModels::deWildeSATFM::deWildeSATFM
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWildeSATFM::~deWildeSATFM()
+Foam::interPhaseForceModels::deWildeIPhSATFM::~deWildeIPhSATFM()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() const
+Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp() const
 {
     // get alphaP2Mean from Turbulence Model
     const fvMesh& mesh(pair_.phase1().mesh());
@@ -98,9 +99,6 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
         scalar(1.0) - alpha1
     );
     
-    // limit alphaP2Mean to prevent unphysical values of Vm0
-    alphaP2Mean = min(0.5*alpha1*alpha2,alphaP2Mean);
-    
     volScalarField rho1
     (
         pair_.dispersed().rho()
@@ -114,14 +112,16 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
     (
         alpha1*rho1 + alpha2*rho2
     );
-    volScalarField Vm0
+    
+    volScalarField Cp
     (
-        alphaP2Mean/(max(alpha1*alpha2-alphaP2Mean,sqr(residualAlpha_)))
-       *((alpha1*alpha2*rho1*rho2)/(rho*rho))
+        alphaP2Mean*rho1/rho
     );
+    // limit Cp to prevent negative pre-factor in gas-phase momentum equation
+    Cp = min(Cp,alpha2);
    
     return
-        pos(pair_.dispersed() - residualAlpha_)*Vm0*rho/(alpha1*rho2);
+        pos(pair_.dispersed() - residualAlpha_)*Cp/alpha1;
 }
 
 

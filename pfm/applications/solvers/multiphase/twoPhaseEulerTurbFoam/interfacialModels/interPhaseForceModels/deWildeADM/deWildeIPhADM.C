@@ -27,7 +27,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "deWildeSATFM.H"
+#include "deWildeADM.H"
 #include "phasePair.H"
 #include "addToRunTimeSelectionTable.H"
 
@@ -37,19 +37,20 @@ namespace Foam
 {
 namespace virtualMassModels
 {
-    defineTypeNameAndDebug(deWildeSATFM, 0);
+    defineTypeNameAndDebug(deWildeADM, 0);
     addToRunTimeSelectionTable
     (
         virtualMassModel,
-        deWildeSATFM,
+        deWildeADM,
         dictionary
     );
 }
 }
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWildeSATFM::deWildeSATFM
+Foam::virtualMassModels::deWildeADM::deWildeADM
 (
     const dictionary& dict,
     const phasePair& pair,
@@ -72,23 +73,18 @@ Foam::virtualMassModels::deWildeSATFM::deWildeSATFM
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWildeSATFM::~deWildeSATFM()
+Foam::virtualMassModels::deWildeADM::~deWildeADM()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() const
+Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeADM::Cvm() const
 {
     // get alphaP2Mean from Turbulence Model
-    const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
-                                        ("alphaP2Mean." + pair_.dispersed().name()));
-    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
-                                        ("alphaP2Mean." + pair_.continuous().name()));
-    
-    volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
-    
+    const fvMesh& mesh_(pair_.phase1().mesh());
+    const volScalarField& alphaP2Mean_(mesh_.lookupObject<volScalarField>
+                               ("alphaP2Mean"));
     volScalarField alpha1
     (
         max(pair_.dispersed(), residualAlpha_)
@@ -99,7 +95,7 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
     );
     
     // limit alphaP2Mean to prevent unphysical values of Vm0
-    alphaP2Mean = min(0.5*alpha1*alpha2,alphaP2Mean);
+    volScalarField alphaP2Mean = min(0.5*alpha1*alpha2,alphaP2Mean_);
     
     volScalarField rho1
     (
