@@ -992,7 +992,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
-    alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
+    volScalarField alphaM = alphaMax_ - alpha;
+    alphaM.max(0.0);
+    alphaP2Mean_ = min(
+                         alphaP2Mean_,
+                         alpha*alpha*neg(alpha - 0.5*alphaMax_)
+                       + alphaM*alphaM*pos(alpha - 0.5*alphaMax_)
+                      );
 
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;

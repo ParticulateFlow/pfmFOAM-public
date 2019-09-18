@@ -91,6 +91,9 @@ class SATFMcontinuousModel
             //- Use dynamic adjustment of several model parameters and
             //  correlation coefficients
             Switch dynamicAdjustment_;
+    
+            //- Maximum packing phase-fraction
+            dimensionedScalar alphaMax_;    
 
             //- Residual phase fraction
             dimensionedScalar residualAlpha_;

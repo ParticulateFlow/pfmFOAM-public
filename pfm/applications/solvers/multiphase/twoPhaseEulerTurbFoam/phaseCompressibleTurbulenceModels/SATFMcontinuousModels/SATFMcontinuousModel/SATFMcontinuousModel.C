@@ -64,6 +64,8 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     equilibrium_(coeffDict_.lookup("equilibrium")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
 
+    alphaMax_("alphaMax", dimless, coeffDict_),
+
     residualAlpha_
     (
         "residualAlpha",
@@ -336,7 +338,8 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
     {
         coeffDict().lookup("equilibrium") >> equilibrium_;
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
-
+        
+        alphaMax_.readIfPresent(coeffDict());
         xiPhiContScalar_.readIfPresent(coeffDict());
         xiGSScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
@@ -967,7 +970,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             * Foam::max(
                                  lm_[cellI]*SijSijV[cellI].component(i)
                                + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
-                               - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i) + pDil[cellI].component(i))
+                               - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i))
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
                                 , 0.
                               )
@@ -1012,7 +1015,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
-    alphaP2Mean_ = min(alphaP2Mean_, alpha*(1.0 - alpha));
+    volScalarField alphaM = alphaMax_ - alpha1;
+    alphaM.max(0.0);
+    alphaP2Mean_ = min(
+                         alphaP2Mean_,
+                         alpha1*alpha1*neg(alpha1 - 0.5*alphaMax_)
+                       + alphaM*alphaM*pos(alpha1 - 0.5*alphaMax_)
+                      );
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = alpha*sqrt(km)*lm_;
