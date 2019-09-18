@@ -2,6 +2,12 @@
 OpenFOAM implementation of ADM and the SATFM model for the coarse grid simulation of gas-solid flows.
 "twoPhaseEulerTurbFoam" is based on the OpenFOAM solver "twoPhaseEulerFoam".
 
+## OpenFOAM compatibilty
+twoPhaseEulerTurbFoam is currently compatible with the OpenFOAM-6 version including the commit
+'thermophysicalModels: Added laminar thermal diffusivity for energy, alphahe
+Needed for laminar transport of he (h or e)
+Latest commit 1a0c91b on 5 Aug 2018'
+
 ## Compiling Instructions
 Before compiling "twoPhaseEulerTurbFoam" the user lib "customLESfilters" has to be compiled.
 Thus, execute 
