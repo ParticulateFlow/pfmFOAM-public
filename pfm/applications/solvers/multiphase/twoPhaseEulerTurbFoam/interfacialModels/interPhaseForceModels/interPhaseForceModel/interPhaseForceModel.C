@@ -73,7 +73,7 @@ Foam::interPhaseForceModel::~interPhaseForceModel()
 
 Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModel::CpIPh() const
 {
-    return pair_.dispersed()*Cp();
+    return Cp();
 }
 
 bool Foam::interPhaseForceModel::writeData(Ostream& os) const
