@@ -1,5 +1,6 @@
 surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
 surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
+surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(fluid.CpIPh()));
 
 volScalarField rAU1
 (
@@ -123,13 +124,20 @@ while (pimple.correct())
         "ghSnGradRho",
         ghf*fvc::snGrad(rho)*mesh.magSf()
     );
-
+    
+    surfaceScalarField snGradP
+    (
+        "snGradP",
+        fvc::snGrad(p)*mesh.magSf()
+    );
+    
     surfaceScalarField phig1
     (
         alpharAUf1
        *(
            ghSnGradRho
          - alphaf2*fvc::interpolate(rho1 - rho2)*(g & mesh.Sf())
+         - CpIPhf*snGradP
         )
     );
 
@@ -139,6 +147,7 @@ while (pimple.correct())
        *(
            ghSnGradRho
          - alphaf1*fvc::interpolate(rho2 - rho1)*(g & mesh.Sf())
+         + CpIPhf*snGradP
         )
     );
 

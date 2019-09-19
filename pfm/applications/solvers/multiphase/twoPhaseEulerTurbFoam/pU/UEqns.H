@@ -53,7 +53,7 @@ Kd *= scalar(1.0) - H;
               - DDtU2
             )
           // meso-scale interPhase force
-          + CpIPh*(fvc::grad(p))
+          // + CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           - KdUdrift
@@ -127,7 +127,7 @@ Kd *= scalar(1.0) - H;
               - DDtU1
             )
           // meso-scale interPhase force
-          - CpIPh*(fvc::grad(p))
+          // - CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           + KdUdrift
