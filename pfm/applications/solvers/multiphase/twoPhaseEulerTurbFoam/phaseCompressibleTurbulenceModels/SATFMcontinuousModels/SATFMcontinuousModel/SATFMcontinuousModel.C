@@ -254,7 +254,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
@@ -843,10 +843,28 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
         
-        // Currently no dynamic procedure for Ceps and Cp
-        // Set Ceps
-        Ceps_ = CepsScalar_;
-        // Set Cp
+        // dynamic procedure for Ceps
+        {
+            volTensorField Sij = dev2(T(fvc::grad(U)));
+            volTensorField Sijf = filter_(alpha*dev2(T(fvc::grad(U))))/alpha2f;
+
+            volScalarField Sij2 = Sij&&Sij;
+            volScalarField Sijf2 = Sijf&&Sijf;
+            volScalarField SijSijf = Sij&&Sijf;
+
+            volScalarField kmfilt = filter_(alpha*(U&U))/alpha2f;
+            volScalarField kmfilt2 = Uf&Uf;
+
+            volScalarField mug = mesh_.lookupObject<volScalarField>("thermo:nu.air");
+
+            Ceps_ = 2.0 * mug * filter_(alpha*(Sij2 -  SijSijf))/
+               (max((kmfilt -kmfilt2) *alpha2f*sqrt(Sijf2), dimensionedScalar("small",dimensionSet(0,2,-3,0,0),1.e-4)));
+        }
+        Ceps_ = filterS(Ceps_);
+        Ceps_.min(10.0*CepsScalar_.value());
+        Ceps_.max(0.01*CepsScalar_.value());
+        
+        // Currently no dynamic procedure for Cp
         Cp_     = CpScalar_;
         
         // compute mixing length dynamically
