@@ -885,17 +885,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
         volScalarField MijEps = sqr(Cmu_*deltaF_)
                                *(
-                                    4.0*filter_(alpha2f)*magSqrDf*sqrt(magSqrDf)
-                                  - filter_(magSqrD*sqrt(magSqrD))
+                                    4.0*alpha2f*magSqrDf*sqrt(magSqrDf)
+                                  - filter_(alpha*magSqrD*sqrt(magSqrD))
                                 );
-        volScalarField MijMijEps = 2.0*filterS(MijEps * MijEps);
+        volScalarField MijMijEps = filterS(MijEps * MijEps);
         MijMijEps.max(VSMALL);
         
-        volScalarField CepsT = filterS(LijEps * MijEps)/(MijMijEps);
-        CepsT = 0.5*(mag(CepsT) + CepsT);
-        CepsT.max(0);
-                                                
-        Ceps_ = filterS(CepsT);
+        volScalarField CepsT = 2.0*filterS(LijEps * MijEps)/(MijMijEps);
+        
+        Ceps_ = 0.5*(mag(CepsT) + CepsT);
         Ceps_.min(10.0*CepsScalar_.value());
         Ceps_.max(0.01*CepsScalar_.value());
         CphiG_ = CphiGscalar_/Ceps_;
@@ -1057,7 +1055,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaM.max(0.0);
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         alpha1*alphaM/(alphaMax_*alphaMax_)
+                         alpha1*alphaM
                       );
     
     // compute nut_ (Schneiderbauer, 2017; equ. (34))

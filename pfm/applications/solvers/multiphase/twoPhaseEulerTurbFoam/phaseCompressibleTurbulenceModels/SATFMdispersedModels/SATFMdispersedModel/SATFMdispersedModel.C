@@ -1008,7 +1008,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaM.max(0.0);
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         alpha*alphaM/(alphaMax_*alphaMax_)
+                         alpha*alphaM
                       );
 
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
