@@ -874,7 +874,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
             volScalarField mug = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name());
 
-            Ceps_ = 2.0 * mug * filter_(alpha*(Sij2 -  SijSijf))*Cmu_*deltaF_/
+            Ceps_ = 4.0 * mug * filter_(alpha*(Sij2 -  SijSijf))*Cmu_*deltaF_/
                (rho_*pow(max(kmfilt -kmfilt2,kSmall),1.5) *alpha2f);
         }
         Ceps_ = filterS(Ceps_);
