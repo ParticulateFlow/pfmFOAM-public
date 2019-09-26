@@ -109,7 +109,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     (
         "CphiSscalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("CphiS",0.25)
+        coeffDict_.lookupOrDefault<scalar>("CphiS",0.3)
     ),
     CepsScalar_
     (
@@ -271,6 +271,22 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
+    CphiS_
+    (
+        IOobject
+        (
+            IOobject::groupName("CphiS", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.3),
         // Set Boundary condition
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -823,6 +839,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
         Ceps_   = CepsScalar_;
+        // compute CphiS
+        CphiS_ = CphiSscalar_/CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
         
@@ -857,11 +875,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
-        
-
+        // compute CphiS
+        CphiS_ = CphiSscalar_/CepsScalar_;
     }
+    
     // compute mixing length
     lm_ = Cmu_*deltaF_;
+
     
     // Compute k_
     // ---------------------------
@@ -967,7 +987,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU + CphiSscalar_ * Ceps_ * sqrt(km)/lm_;
+    volScalarField denom = divU + CphiS_ * Ceps_ * sqrt(km)/lm_;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;

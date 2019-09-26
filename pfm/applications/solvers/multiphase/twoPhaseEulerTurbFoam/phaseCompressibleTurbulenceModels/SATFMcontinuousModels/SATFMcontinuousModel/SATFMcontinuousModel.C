@@ -105,7 +105,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     (
         "CphiGscalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("CphiG",0.4)
+        coeffDict_.lookupOrDefault<scalar>("CphiG",0.2)
     ),
 
     CepsScalar_
@@ -274,6 +274,22 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
+    CphiG_
+    (
+        IOobject
+        (
+            IOobject::groupName("CphiG", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.2),
         // Set Boundary condition
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -880,6 +896,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_ = filterS(Ceps_);
         Ceps_.min(10.0*CepsScalar_.value());
         Ceps_.max(0.01*CepsScalar_.value());
+        CphiG_ = CphiGscalar_/Ceps_;
         
         // Currently no dynamic procedure for Cp
         Cp_     = CpScalar_;
@@ -893,6 +910,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
+        CphiG_  = CphiGscalar_/CepsScalar_;
     }
     // compute mixing length
     lm_ = Cmu_*deltaF_;
@@ -1008,7 +1026,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km = k_ & eSum;
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU + CphiGscalar_ * Ceps_ * sqrt(km)/lm_;
+    volScalarField denom = divU + CphiG_ * Ceps_ * sqrt(km)/lm_;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;

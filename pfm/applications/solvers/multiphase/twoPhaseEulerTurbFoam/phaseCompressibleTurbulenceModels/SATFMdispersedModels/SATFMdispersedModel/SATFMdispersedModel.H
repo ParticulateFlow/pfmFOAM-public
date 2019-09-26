@@ -165,7 +165,10 @@ class SATFMdispersedModel
             volScalarField Ceps_;
     
             //- pressure dilation constant
-            volScalarField Cp_;    
+            volScalarField Cp_;
+    
+            //- constant for the computation of alphaP2Mean
+            volScalarField CphiS_;
     
             //- grid size
             volScalarField deltaF_;

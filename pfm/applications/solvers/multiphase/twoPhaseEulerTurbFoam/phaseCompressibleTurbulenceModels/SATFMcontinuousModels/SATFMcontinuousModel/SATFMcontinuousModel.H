@@ -156,6 +156,9 @@ class SATFMcontinuousModel
             //- pressure dilation constant
             volScalarField Cp_;
     
+            //- constant for alpha2PMean
+            volScalarField CphiG_;
+    
             //- grid size
             volScalarField deltaF_;
     
