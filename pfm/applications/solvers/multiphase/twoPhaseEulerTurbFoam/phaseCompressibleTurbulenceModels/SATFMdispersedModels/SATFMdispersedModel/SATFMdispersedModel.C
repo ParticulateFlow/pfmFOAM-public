@@ -847,14 +847,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute mixing length dynamically
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
-        volScalarField alpha2 = 1.0 - alpha;
-        volScalarField alpha2f = 1.0 - alphaf;
-        volVectorField Ucf = filter_(alpha2*Uc_)/alpha2f;
-        volScalarField Lijc = filter_(alpha2*magSqr(Uc_))/alpha2f - magSqr(Ucf);
-        Lijc.max(0);
-        //Lij -= max(xiGS_*(sqrt(Lij*Lijc) - Lij),kSmall);
-        //Lij.max(0);
-        // volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(magSqr(D)));
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
         volScalarField MijMij = filterS(Mij * Mij);
         MijMij.max(SMALL);

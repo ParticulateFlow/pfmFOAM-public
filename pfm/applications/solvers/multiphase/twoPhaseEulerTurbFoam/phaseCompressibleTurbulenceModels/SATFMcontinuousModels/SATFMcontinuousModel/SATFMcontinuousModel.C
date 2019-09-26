@@ -860,13 +860,16 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiGS_.min(1.0);
                
         // compute mixing length dynamically
-        volScalarField Lij = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
+        volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         // volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(magSqr(D)));
-        volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alpha2f) - filter_(alpha*magSqr(D))/alpha2f);
-        volScalarField MijMij = filterS(Mij * Mij);
+        volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
+        magSqrDf.max(VSMALL);
+        volSymmTensorField Df   = filter_(alpha*D)/alpha2f;
+        volScalarField Mij      = sqr(deltaF_)*(4.0*magSqr(Df) - filter_(magSqrDf));
+        volScalarField MijMij   = filterS(Mij * Mij);
         MijMij.max(VSMALL);
-        volScalarField CmuT = 0.5*filterS(Lij * Mij)/(MijMij);
         
+        volScalarField CmuT     = 0.5*filterS(Lij * Mij)/(MijMij);
         CmuT = 0.5*(mag(CmuT) + CmuT);
         CmuT.max(0);
         
@@ -875,25 +878,24 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
-        
+
         // dynamic procedure for Ceps
-        {
-            volTensorField Sij = dev2(T(fvc::grad(U)));
-            volTensorField Sijf = filter_(alpha*dev2(T(fvc::grad(U))))/alpha2f;
-
-            volScalarField Sij2 = Sij&&Sij;
-            volScalarField Sijf2 = Sijf&&Sijf;
-            volScalarField SijSijf = Sij&&Sijf;
-
-            volScalarField kmfilt = filter_(alpha*(U&U))/alpha2f;
-            volScalarField kmfilt2 = Uf&Uf;
-
-            volScalarField mug = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name());
-
-            Ceps_ = 4.0 * mug * filter_(alpha*(Sij2 -  SijSijf))*Cmu_*deltaF_/
-               (rho_*pow(max(kmfilt -kmfilt2,kSmall),1.5) *alpha2f);
-        }
-        Ceps_ = filterS(Ceps_);
+        volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
+        volScalarField magSqrD = magSqr(D);
+        volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
+        volScalarField MijEps = sqr(Cmu_*deltaF_)
+                               *(
+                                    4.0*filter_(alpha2f)*magSqrDf*sqrt(magSqrDf)
+                                  - filter_(magSqrD*sqrt(magSqrD))
+                                );
+        volScalarField MijMijEps = 2.0*filterS(MijEps * MijEps);
+        MijMijEps.max(VSMALL);
+        
+        volScalarField CepsT = filterS(LijEps * MijEps)/(MijMijEps);
+        CepsT = 0.5*(mag(CepsT) + CepsT);
+        CepsT.max(0);
+                                                
+        Ceps_ = filterS(CepsT);
         Ceps_.min(10.0*CepsScalar_.value());
         Ceps_.max(0.01*CepsScalar_.value());
         CphiG_ = CphiGscalar_/Ceps_;
