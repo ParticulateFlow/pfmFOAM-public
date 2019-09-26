@@ -118,8 +118,10 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
         alphaP2Mean*rho1/rho
     );
     // limit Cp to prevent negative pre-factor in gas-phase momentum equation
-    Cp = min(Cp,0.9*alpha2);
-    Cp = min(Cp,0.9*alpha1);
+    /*
+    Cp = min(Cp,0.99*alpha2);
+    Cp = min(Cp,0.99*alpha1);
+    */
     return
         pos(pair_.dispersed() - residualAlpha_)*Cp;
 }
