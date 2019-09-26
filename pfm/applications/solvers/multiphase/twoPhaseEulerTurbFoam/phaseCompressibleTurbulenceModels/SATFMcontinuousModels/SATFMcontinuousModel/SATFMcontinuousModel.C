@@ -842,31 +842,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiGS_ = filterS(xiGS_);
         xiGS_.max(-1.0);
         xiGS_.min(1.0);
-        
-        // dynamic procedure for Ceps
-        {
-            volTensorField Sij = dev2(T(fvc::grad(U)));
-            volTensorField Sijf = filter_(alpha*dev2(T(fvc::grad(U))))/alpha2f;
-
-            volScalarField Sij2 = Sij&&Sij;
-            volScalarField Sijf2 = Sijf&&Sijf;
-            volScalarField SijSijf = Sij&&Sijf;
-
-            volScalarField kmfilt = filter_(alpha*(U&U))/alpha2f;
-            volScalarField kmfilt2 = Uf&Uf;
-
-            volScalarField mug = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name());
-
-            Ceps_ = 2.0 * mug * filter_(alpha*(Sij2 -  SijSijf))/
-               (rho_*max((kmfilt -kmfilt2) *alpha2f*sqrt(Sijf2), dimensionedScalar("small",dimensionSet(0,2,-3,0,0),1.e-4)));
-        }
-        Ceps_ = filterS(Ceps_);
-        Ceps_.min(10.0*CepsScalar_.value());
-        Ceps_.max(0.01*CepsScalar_.value());
-        
-        // Currently no dynamic procedure for Cp
-        Cp_     = CpScalar_;
-        
+               
         // compute mixing length dynamically
         volScalarField Lij = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         // volScalarField Mij = sqr(deltaF_)*(2.0*magSqr(dev(symm(fvc::grad(Uf)))) - filter_(magSqr(D)));
@@ -883,6 +859,30 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
+        
+        // dynamic procedure for Ceps
+        {
+            volTensorField Sij = dev2(T(fvc::grad(U)));
+            volTensorField Sijf = filter_(alpha*dev2(T(fvc::grad(U))))/alpha2f;
+
+            volScalarField Sij2 = Sij&&Sij;
+            volScalarField Sijf2 = Sijf&&Sijf;
+            volScalarField SijSijf = Sij&&Sijf;
+
+            volScalarField kmfilt = filter_(alpha*(U&U))/alpha2f;
+            volScalarField kmfilt2 = Uf&Uf;
+
+            volScalarField mug = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name());
+
+            Ceps_ = 2.0 * mug * filter_(alpha*(Sij2 -  SijSijf))*Cmu_*deltaF_/
+               (rho_*max(pow(kmfilt -kmfilt2,1.5) *alpha2f, dimensionedScalar("small",dimensionSet(0,3,-3,0,0),1.e-7)));
+        }
+        Ceps_ = filterS(Ceps_);
+        Ceps_.min(10.0*CepsScalar_.value());
+        Ceps_.max(0.01*CepsScalar_.value());
+        
+        // Currently no dynamic procedure for Cp
+        Cp_     = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         xiPhiG_ =   xiPhiContScalar_
