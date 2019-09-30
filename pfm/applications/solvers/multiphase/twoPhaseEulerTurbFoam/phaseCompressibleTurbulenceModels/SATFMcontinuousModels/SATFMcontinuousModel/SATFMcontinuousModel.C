@@ -870,7 +870,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         MijMij.max(VSMALL);
         
         volScalarField CmuT     = 0.5*filterS(Lij * Mij)/(MijMij);
-        CmuT = 0.5*(mag(CmuT) + CmuT);
+        CmuT    = 0.5*(mag(CmuT) + CmuT);
         CmuT.max(0);
         
         Cmu_ = sqrt(CmuT);
@@ -878,25 +878,22 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_.min(10.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
         
-        Cmu_ = filterS(Cmu_);
+        //Cmu_ = filterS(Cmu_);
         // dynamic procedure for Ceps
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = sqr(Cmu_*deltaF_)
-                               *(
+        volScalarField MijEps = sqr(Cmu_*deltaF_)*(
                                     4.0*alpha2f*magSqrDf*sqrt(magSqrDf)
                                   - filter_(alpha*magSqrD*sqrt(magSqrD))
                                 );
-        volScalarField MijMijEps = sqr(MijEps);
+        volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
-        
-        volScalarField CepsT = 2.0*(LijEps * MijEps)/(MijMijEps);
-        
+        // use CmuScalar instead of Cmu to decouple Ceps from Cmu
+        volScalarField CepsT = 2.0*filterS(LijEps * MijEps)/(MijMijEps);
         Ceps_ = 0.5*(mag(CepsT) + CepsT);
-        Ceps_.min(10.0*CepsScalar_.value());
+        Ceps_.min(1.0);
         Ceps_.max(0.01*CepsScalar_.value());
-        Ceps_ = filterS(Ceps_);
         CphiG_ = CphiGscalar_/Ceps_;
         
         // Currently no dynamic procedure for Cp
@@ -1038,8 +1035,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)))
                                        );
         alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)*neg(xiKgradAlpha)
-                       / sqr(denom);
+                       * sqr(xiKgradAlpha)
+                       / sqr(denom)
+//                       * pos(denom)
+                       * neg(xiKgradAlpha);
     } else {
         alphaP2Mean_ =   8.0
                        * magSqr(xiPhiG_)
@@ -1048,6 +1047,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
                               + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
                          )
+//                      * pos(denom)
                        / sqr(denom);
     }
     // limti alphaP2Mean_

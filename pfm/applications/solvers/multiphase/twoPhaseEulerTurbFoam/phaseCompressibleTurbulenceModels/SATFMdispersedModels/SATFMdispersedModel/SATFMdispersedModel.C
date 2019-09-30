@@ -856,7 +856,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CmuT.max(0);
         
         Cmu_ = sqrt(CmuT);
-        Cmu_ = filterS(Cmu_);
+        //Cmu_ = filterS(Cmu_);
 
         Cmu_.min(2.0*CmuScalar_.value());
         Cmu_.max(0.01*CmuScalar_.value());
@@ -990,8 +990,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                        );
         alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)*neg(xiKgradAlpha)
-                       / sqr(denom);
+                       * sqr(xiKgradAlpha)
+                       / sqr(denom)
+//                       * pos(denom)
+                       * neg(xiKgradAlpha);
     } else {
         alphaP2Mean_ =   8.0
                        * magSqr(xiPhiS_)
@@ -1000,6 +1002,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                               + (sqrt(k_&eY) * mag(gradAlpha&eY))
                               + (sqrt(k_&eZ) * mag(gradAlpha&eZ))
                          )
+//                      * pos(denom)
                        / sqr(denom);
     }
     // limti alphaP2Mean_
