@@ -883,14 +883,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = sqr(Cmu_*deltaF_)*(
+        volScalarField MijEps = (
                                     4.0*alpha2f*magSqrDf*sqrt(magSqrDf)
                                   - filter_(alpha*magSqrD*sqrt(magSqrD))
                                 );
-        volScalarField MijMijEps = filterS(sqr(MijEps));
+        volScalarField MijMijEps = sqr(Cmu_*deltaF_)*(sqr(MijEps));
         MijMijEps.max(SMALL);
         // use CmuScalar instead of Cmu to decouple Ceps from Cmu
-        volScalarField CepsT = 2.0*filterS(LijEps * MijEps)/(MijMijEps);
+        volScalarField CepsT = 2.0*(LijEps * MijEps)/(MijMijEps);
         Ceps_ = 0.5*(mag(CepsT) + CepsT);
         Ceps_.min(1.0);
         Ceps_.max(0.01*CepsScalar_.value());
