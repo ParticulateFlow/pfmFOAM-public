@@ -884,10 +884,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
         volScalarField MijEps = (
-                                    4.0*alpha2f*magSqrDf*sqrt(magSqrDf)
-                                  - filter_(alpha*magSqrD*sqrt(magSqrD))
-                                );
-        volScalarField MijMijEps = sqr(Cmu_*deltaF_)*(sqr(MijEps));
+//                                    4.0*alpha2f*magSqrDf*sqrt(magSqrDf)
+//                                  - filter_(alpha*magSqrD*sqrt(magSqrD))
+                                    4.0*alpha2f*filter_(km)*sqrt(magSqrDf)
+                                  - filter_(alpha*km*sqrt(magSqrD))
+
+                                 );
+//        volScalarField MijMijEps = sqr(Cmu_*deltaF_)*(sqr(MijEps));
+        volScalarField MijMijEps = (sqr(MijEps));
         MijMijEps.max(SMALL);
         // use CmuScalar instead of Cmu to decouple Ceps from Cmu
         volScalarField CepsT = 2.0*(LijEps * MijEps)/(MijMijEps);
