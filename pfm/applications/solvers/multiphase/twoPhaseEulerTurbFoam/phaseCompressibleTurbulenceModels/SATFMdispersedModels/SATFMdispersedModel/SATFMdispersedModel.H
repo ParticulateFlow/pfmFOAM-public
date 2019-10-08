@@ -118,6 +118,9 @@ class SATFMdispersedModel
             //- correlation coefficient between solid volume fraction and solid velocity
             dimensionedScalar xiPhiSolidScalar_;
     
+            //- correlation coefficient between cont. phase and solid velocity
+            dimensionedScalar xiGSScalar_;
+    
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
@@ -154,6 +157,15 @@ class SATFMdispersedModel
     
             //- auto correlation coefficient of solids velocity
             volTensorField xiUU_;
+    
+            //- triple correlation coefficient between solid volume fraction and cont. velocity
+            volScalarField xiPhiGG_;
+
+            //- correlation coefficient between cont. phase and solid velocity
+            volScalarField xiGS_;
+    
+            //- correlation coefficient between cont. phase and solid velocity (seen by the gas phase)
+            volScalarField xiGatS_;    
     
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
@@ -197,6 +209,7 @@ protected:
     
     //- bound k
     void boundNormalStress(volVectorField& k) const;
+    void boundNormalStress2(volVectorField& k) const;
     void boundxiPhiS(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
     void boundS(volTensorField& S) const;
