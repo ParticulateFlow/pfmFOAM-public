@@ -498,6 +498,31 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
     tmp<volTensorField> tgradU(fvc::grad(phase_.U()));
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(symm(gradU));
+
+    dimensionedVector eX
+    (
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
+    );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
+
+    volScalarField tmp1 = R1_&&(eX*eX);
+    volScalarField tmp2 = R1_&&(eY*eY);
+    volScalarField tmp3 = R1_&&(eZ*eZ);
+
+    volScalarField minTrR1 = min(tmp1,min(tmp2,tmp3));
     
     tmp<volScalarField> tpPrime
     (
@@ -509,7 +534,12 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             da,
             rho,
             dev(D)
-        )*pos(alpha_-alphaMinFriction_)
+        )
+      * pos(alpha_-alphaMinFriction_)
+      + (2.0)
+      *	rho
+      * minTrR1
+      * pos(alpha_ - residualAlpha_)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -563,6 +593,31 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    dimensionedVector eX
+    (
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
+    );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
+
+    volScalarField tmp1 = R1_&&(eX*eX);
+    volScalarField tmp2 = R1_&&(eY*eY);
+    volScalarField tmp3 = R1_&&(eZ*eZ);
+
+    volScalarField minTrR1 = min(tmp1,min(tmp2,tmp3));
+      
     return
     pos(alpha_ - residualAlpha_)*
     (
@@ -573,10 +628,14 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         )
       + fvc::div
         (
-             2.0 * alpha_ * rho_ * R1_
+             2.0
+           * alpha_
+           * rho_
+           * (
+                 R1_
+               - minTrR1*dimensioned<symmTensor>("I", dimless, symmTensor::I)
+             )
         )
-       *pos(alpha_ - residualAlpha_)
-     
     );
 }
 
@@ -625,7 +684,7 @@ void Foam::RASModels::SATFMdispersedModel::boundNormalStress2
 ) const
 {
     scalar kMin = 1.e-7;
-    scalar kMax = 1.0;
+    scalar kMax = maxK_.value();
 
     k.max
     (
@@ -741,7 +800,7 @@ void Foam::RASModels::SATFMdispersedModel::boundS
 ) const
 {
     scalar sMin = 1.0e-7;
-    scalar sMax = 1.0e4;
+    scalar sMax = 1.0e3;
 
     R.max
     (
@@ -1026,11 +1085,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                *alpha
                *rho
                *(
-                    (((SijSij&eX)&eSum)*(k_&eX))*eX
-                  + (((SijSij&eY)&eSum)*(k_&eY))*eY
-                  + (((SijSij&eZ)&eSum)*(k_&eZ))*eZ
+                    (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
+                  + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
+                  + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
                 )
-               /sqrt(km)
           // interfacial work (--> energy transfer)
           + 2.0*beta
                *(
@@ -1044,8 +1102,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::Sp(-2.0*beta,k_)
           // pressure dilation
           - ((pDil&eX)*(xiPhiS_&eX)*sqrt(k_&eX))*eX
-          - ((pDil&eZ)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
-          - ((pDil&eY)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
+          - ((pDil&eY)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
+          - ((pDil&eZ)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
           // dissipation
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
@@ -1123,13 +1181,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 //                      * pos(denom)
                        / sqr(denom);
     }
-    // limti alphaP2Mean_
+    // limit alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
     volScalarField alphaM = alphaMax_ - alpha;
     alphaM.max(0.0);
+    volScalarField alphaL2 = sqr(min(alpha,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         alpha*alphaM
+                         0.99*alphaL2
                       );
 
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
@@ -1198,11 +1257,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     nuFric_.min(maxNut_);
     nut_ += nuFric_;
     
-    Info<< "SA-TFM (dispersed Phase):" << nl
-        << "    max(nut) = " << max(nut_).value() << nl
-        << "    max(nutFric) = " << max(nuFric_).value() << nl
-        << "    max(SijSij) = " << max(mag(SijSij)).value() << "   min(SijSij) = " << min(mag(SijSij)).value() << nl
-        << "    max(k_) = " << max(k_&eSum).value() << endl;
+    Info << "SA-TFM (dispersed Phase):" << nl
+         << "    max(nut)        = " << max(nut_).value() << nl
+         << "    max(nutFric)    = " << max(nuFric_).value() << nl
+         << "    max(SijSij)     = " << max(mag(SijSij)).value() << nl
+         << "    min(SijSij)     = " << min(mag(SijSij)).value() << nl
+         << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha)).value() << nl
+         << "    max(k_)         = " << max(k_&eSum).value() << endl;
 }
 
 
