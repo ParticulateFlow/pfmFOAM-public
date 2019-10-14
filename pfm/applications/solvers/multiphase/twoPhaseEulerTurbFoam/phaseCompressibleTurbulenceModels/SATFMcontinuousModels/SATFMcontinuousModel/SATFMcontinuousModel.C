@@ -868,11 +868,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                *alpha
                *rho
                *(
-                    (((SijSij&eX)&eSum)*(k_&eX))*eX
-                  + (((SijSij&eY)&eSum)*(k_&eY))*eY
-                  + (((SijSij&eZ)&eSum)*(k_&eZ))*eZ
+                    (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
+                  + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
+                  + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
                 )
-               /sqrt(km)
           // interfacial work (--> energy transfer)
           + 2.0*beta
                *(
@@ -967,23 +966,26 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     }
     // limti alphaP2Mean_
     alphaP2Mean_.max(sqr(residualAlpha_.value()));
-    volScalarField alphaM = alphaMax_ - alpha1;
+    volScalarField alphaM  = alphaMax_ - alpha1;
     alphaM.max(0.0);
+    volScalarField alphaL2 = sqr(min(alpha1,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         alpha1*alphaM
+                         0.99*alphaL2
                       );
-    
+
     // compute nut_ (Schneiderbauer, 2017; equ. (34))
     nut_ = alpha*sqrt(km)*lm_;
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     
-    Info<< "SA-TFM (continuous Phase):" << nl
-    << "    max(nut) = " << max(nut_).value() << nl
-    << "    max(SijSij) = " << max(mag(SijSij)).value() << "   min(SijSij) = " << min(mag(SijSij)).value() << nl
-    << "    max(k_)  = " << max(km).value() << endl;
+    Info << "SA-TFM (continuous Phase):" << nl
+         << "    max(nut)        = " << max(nut_).value() << nl
+         << "    max(SijSij)     = " << max(mag(SijSij)).value() << nl
+         << "    min(SijSij)     = " << min(mag(SijSij)).value() << nl
+         << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl
+         << "    max(k_)         = " << max(km).value() << endl;
 }
 
 
