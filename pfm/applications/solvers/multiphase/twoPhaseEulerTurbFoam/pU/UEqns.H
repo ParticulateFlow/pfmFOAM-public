@@ -22,12 +22,7 @@ if (periodicBox) {
 
 volScalarField Kd(fluid.Kd());
 volVectorField KdUdrift(fluid.KdUdrift()); 
-/*
-volScalarField H = - (KdUdrift&(U2-U1))/(Kd*magSqr(U2-U1)+dimensionedScalar("small",Kd.dimensions()*U1.dimensions()*U1.dimensions(),1.e-7));
-H.min(0.99);
-H.max(-0.99);
-Kd *= scalar(1.0) - H;
-*/
+
 {
 
     surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
@@ -52,8 +47,6 @@ Kd *= scalar(1.0) - H;
               - fvm::Sp(fvc::div(phi1), U1)
               - DDtU2
             )
-          // meso-scale interPhase force
-          // + CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           - KdUdrift
@@ -70,6 +63,7 @@ Kd *= scalar(1.0) - H;
         fvOptions.constrain(U1Eqn);
         
         // improved momentum predictor
+        // (is currently experimental, deactivate with momentumPredictor "no" in PIMPLE dict)
         volScalarField rAU1
         (
             IOobject::groupName("rAU", phase1.name()),
@@ -126,8 +120,6 @@ Kd *= scalar(1.0) - H;
               - fvm::Sp(fvc::div(phi2), U2)
               - DDtU1
             )
-          // meso-scale interPhase force
-          // - CpIPh*(fvc::grad(p))
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
           + KdUdrift
