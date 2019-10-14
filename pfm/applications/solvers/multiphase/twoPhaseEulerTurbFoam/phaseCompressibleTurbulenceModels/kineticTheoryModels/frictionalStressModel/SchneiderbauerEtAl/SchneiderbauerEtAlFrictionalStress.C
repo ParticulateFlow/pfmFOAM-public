@@ -118,7 +118,7 @@ SchneiderbauerEtAl::frictionalPressure
         {
             // Equ. (32)
             pf[celli] =   2.0*rho[celli]*sqr(b_.value()*dp[celli])
-                        * Foam::min(D[celli]&&D[celli],1000.)
+                        * Foam::min(D[celli]&&D[celli],3.0e3)
                         / sqr(Foam::max(alphaMax.value() - alpha[celli], alphaDeltaMin_.value()));
         }
     }
@@ -134,7 +134,7 @@ SchneiderbauerEtAl::frictionalPressure
         {
             // Equ. (32)
             pfBf[patchi] =   2.0*rho.boundaryField()[patchi]*sqr(b_.value()*dp.boundaryField()[patchi])
-                          * Foam::min(magSqr(U.boundaryField()[patchi].snGrad()),1000.)
+                          * Foam::min(magSqr(U.boundaryField()[patchi].snGrad()),3.0e3)
                           / sqr(Foam::max(alphaMax.value() - alpha.boundaryField()[patchi], alphaDeltaMin_.value()));
         }
     }
@@ -186,7 +186,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
         {
             // Equ. (32)
             pf[celli] =   4.0*rho[celli]*sqr(b_.value()*dp[celli])
-                        * Foam::min(D[celli]&&D[celli],1000.)
+                        * Foam::min(D[celli]&&D[celli],3.0e3)
                         / pow3(Foam::max(alphaMax.value() - alpha[celli], alphaDeltaMin_.value()));
         }
     }
@@ -202,7 +202,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
         {
             // Equ. (32)
             pfBf[patchi] =   4.0*rho.boundaryField()[patchi]*sqr(b_.value()*dp.boundaryField()[patchi])
-                          * Foam::min(magSqr(U.boundaryField()[patchi].snGrad()),1000.)
+                          * Foam::min(magSqr(U.boundaryField()[patchi].snGrad()),3.0e3)
                           / pow3(Foam::max(alphaMax.value() - alpha.boundaryField()[patchi], alphaDeltaMin_.value()));
         }
     }
