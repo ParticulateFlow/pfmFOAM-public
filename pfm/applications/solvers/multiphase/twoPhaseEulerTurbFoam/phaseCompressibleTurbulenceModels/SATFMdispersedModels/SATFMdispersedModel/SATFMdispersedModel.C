@@ -499,31 +499,6 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(symm(gradU));
 
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-
-    volScalarField tmp1 = R1_&&(eX*eX);
-    volScalarField tmp2 = R1_&&(eY*eY);
-    volScalarField tmp3 = R1_&&(eZ*eZ);
-
-    volScalarField minTrR1 = min(tmp1,min(tmp2,tmp3));
-    
     tmp<volScalarField> tpPrime
     (
         frictionalStressModel_->frictionalPressurePrime
@@ -536,10 +511,6 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             dev(D)
         )
       * pos(alpha_-alphaMinFriction_)
-      + (2.0)
-      *	rho
-      * minTrR1
-      * pos(alpha_ - residualAlpha_)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -593,31 +564,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-
-    volScalarField tmp1 = R1_&&(eX*eX);
-    volScalarField tmp2 = R1_&&(eY*eY);
-    volScalarField tmp3 = R1_&&(eZ*eZ);
-
-    volScalarField minTrR1 = min(tmp1,min(tmp2,tmp3));
-      
     return
     pos(alpha_ - residualAlpha_)*
     (
@@ -633,7 +579,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
            * rho_
            * (
                  R1_
-               - minTrR1*dimensioned<symmTensor>("I", dimless, symmTensor::I)
              )
         )
     );
