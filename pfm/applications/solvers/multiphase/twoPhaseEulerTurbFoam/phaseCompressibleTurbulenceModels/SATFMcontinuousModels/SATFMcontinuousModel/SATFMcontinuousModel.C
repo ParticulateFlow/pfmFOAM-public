@@ -787,15 +787,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField MijMij   = filterS(sqr(Mij));
         MijMij.max(VSMALL);
         
-        volScalarField CmuT     = 0.5*filterS(Lij * Mij)/(MijMij);
-        CmuT    = 0.5*(mag(CmuT) + CmuT);
-        CmuT.max(0);
+        volScalarField CmuT     = 0.5*mag(filterS(Lij * Mij)/(MijMij));
         
         Cmu_ = 0.5*pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
                  + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
         
         Cmu_.min(100.0*CmuScalar_.value());
-        Cmu_.max(0.001*CmuScalar_.value());
+        Cmu_.max(0.01*CmuScalar_.value());
         
         //Cmu_ = filterS(Cmu_);
         // dynamic procedure for Ceps

@@ -964,15 +964,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
         volScalarField MijMij = filterS(Mij * Mij);
         MijMij.max(VSMALL);
-        volScalarField CmuT = 0.5*filterS(Lij * Mij)/(MijMij);
-        
-        CmuT = 0.5*(mag(CmuT) + CmuT);
-        CmuT.max(0);
+        volScalarField CmuT = 0.5*mag(filterS(Lij * Mij)/(MijMij));
         
         Cmu_ = sqrt(CmuT);
 
         Cmu_.min(100.0*CmuScalar_.value());
-        Cmu_.max(0.001*CmuScalar_.value());
+        Cmu_.max(0.01*CmuScalar_.value());
     } else {
         volVectorField xiPhiSDir = gradAlpha
                                   /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
