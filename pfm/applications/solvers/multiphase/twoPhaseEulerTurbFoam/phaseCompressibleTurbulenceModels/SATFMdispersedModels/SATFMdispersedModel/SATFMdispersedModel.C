@@ -745,7 +745,7 @@ void Foam::RASModels::SATFMdispersedModel::boundS
 ) const
 {
     scalar sMin = 1.0e-7;
-    scalar sMax = 1.0e3;
+    scalar sMax = 1.0e4;
 
     R.max
     (
