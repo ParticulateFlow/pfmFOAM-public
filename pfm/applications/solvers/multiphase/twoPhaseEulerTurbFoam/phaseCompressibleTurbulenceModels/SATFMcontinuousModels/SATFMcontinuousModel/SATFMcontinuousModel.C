@@ -215,7 +215,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
@@ -759,7 +759,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             for (int i=0; i< 3; i++) {
                 xiPhiG_[cellI].component(i) =
                     xiPhiGNom[cellI].component(i)
-                  / Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),VSMALL));
+                  / Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),ROOTVSMALL));
             }
         }
         */
@@ -781,11 +781,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute mixing length dynamically
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
-        magSqrDf.max(VSMALL);
+        magSqrDf.max(ROOTVSMALL);
         volSymmTensorField Df   = filter_(alpha*D)/alpha2f;
         volScalarField Mij      = sqr(deltaF_)*(4.0*magSqr(Df) - magSqrDf);
         volScalarField MijMij   = filterS(sqr(Mij));
-        MijMij.max(VSMALL);
+        MijMij.max(ROOTVSMALL);
         
         volScalarField CmuT     = 0.5*mag(filterS(Lij * Mij)/(MijMij));
         
@@ -805,7 +805,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                   - filter_(alpha*magSqrD*sqrt(magSqrD))
                                 );
         volScalarField MijMijEps = filterS(sqr(MijEps));
-        MijMijEps.max(VSMALL);
+        MijMijEps.max(ROOTVSMALL);
         
         volScalarField CepsT = 2.0*filterS(LijEps * MijEps)/(MijMijEps);
         Ceps_ = 0.5*pos(scalar(1.0) - alpha_ - residualAlpha_)*(mag(CepsT) + CepsT)
@@ -817,7 +817,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         CphiG_ = CphiGscalar_/Ceps_;
         
         // Currently no dynamic procedure for Cp
-        Cp_     = CpScalar_;
+        Cp_     = CpScalar_;//min(0.01/alpha1+scalar(0.5),1.0);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));

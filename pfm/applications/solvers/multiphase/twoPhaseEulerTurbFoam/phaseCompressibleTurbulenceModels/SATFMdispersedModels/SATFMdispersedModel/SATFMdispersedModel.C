@@ -957,19 +957,25 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CphiS_ = CphiSscalar_/CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
-        
+        Cmu_    = CmuScalar_;
+        /*
         // compute mixing length dynamically
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
         volScalarField MijMij = filterS(Mij * Mij);
-        MijMij.max(VSMALL);
+        MijMij.max(ROOTVSMALL);
+        
         volScalarField CmuT = 0.5*mag(filterS(Lij * Mij)/(MijMij));
         
         Cmu_ = sqrt(CmuT);
+        volScalarField CmuT = 0.5*(filterS(Lij * Mij)/(MijMij));
+        
+        Cmu_ = sqrt(mag(CmuT));
 
-        Cmu_.min(100.0*CmuScalar_.value());
-        Cmu_.max(0.01*CmuScalar_.value());
+        Cmu_.min(2.0*CmuScalar_.value());
+        Cmu_.max(0.1*CmuScalar_.value());
+        */
     } else {
         volVectorField xiPhiSDir = gradAlpha
                                   /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
@@ -1010,7 +1016,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
           // diffusion with anisotropic diffusivity
-          - fvm::laplacian(alpha*rho*lm_
+          - fvm::laplacian(alpha*rho*mag(lm_)
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
                                    + (sqrt(k_&eY)*(eY*eY))
@@ -1047,7 +1053,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
           - ((pDil&eZ)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/mag(lm_),k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1097,7 +1103,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = (k_ & eSum);
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU + CphiS_ * Ceps_ * sqrt(km)/lm_;
+    volScalarField denom = divU + CphiS_ * Ceps_ * sqrt(km)/mag(lm_);
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
