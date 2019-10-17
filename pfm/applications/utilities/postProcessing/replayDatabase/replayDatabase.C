@@ -32,6 +32,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#include "functionObjectList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,10 +47,12 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
+    functionObjectList funcObs(runTime);
+
     scalar t;
 
 
-    runTime.functionObjects().start();
+    funcObs.start();
 
     for(int timeI = 0; timeI < timeDirs.size(); timeI += samplestep)
     {
@@ -99,7 +102,7 @@ int main(int argc, char *argv[])
             );
         }
 
-        runTime.functionObjects().execute();
+        funcObs.execute();
 
         distDataScalarFields_.clear();
         distDataVectorFields_.clear();
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
     }
-    runTime.functionObjects().end();
+    funcObs.end();
    
 
     Info<< "End\n" << endl;

@@ -94,7 +94,7 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
 )
 :
     functionObject(name),
-    distDataMeshName_(dict.lookup("distDataMesh")),
+    distDataMeshName_(dict.lookupOrDefault<word>("distDataMesh","region0")),
     distDataMesh_(refCast<const fvMesh>(runTime.lookupObject<objectRegistry>(distDataMeshName_))),
     cellSetNames_(),
     distDataScalarFieldNames_(),
