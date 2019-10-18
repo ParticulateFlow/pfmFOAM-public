@@ -12,6 +12,12 @@
 
     label samplestep(replayDatabaseProperties.lookupOrDefault<label>("sampleStep",1));
 
+    scalar startTime(replayDatabaseProperties.lookupOrDefault<scalar>("startTime",0.0));
+
+    scalar endTime(replayDatabaseProperties.lookupOrDefault<scalar>("endTime",0.0));
+
+    bool limitTime(replayDatabaseProperties.lookupOrDefault<bool>("limitTime",false));
+
     word databaseName(replayDatabaseProperties.lookupOrDefault<word>("databaseName","database"));
 
     wordList distDataScalarFieldNames_(replayDatabaseProperties.lookup("distDataScalarFields"));

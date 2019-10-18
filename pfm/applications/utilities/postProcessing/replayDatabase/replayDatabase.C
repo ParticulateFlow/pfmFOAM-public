@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
         dbTime.setTime(timeDirs[timeI], timeI);
         t = dbTime.value();
         runTime.setTime(t,timeI);
-  //      if(t < startTime) continue;
-  //      if(t > endTime) continue;
+        if(limitTime && t < startTime) continue;
+        if(limitTime && t > endTime) continue;
         Info << "time = " << t << ", time index = " << timeI << endl;
 
 

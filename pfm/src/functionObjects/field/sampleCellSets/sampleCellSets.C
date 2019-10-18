@@ -137,22 +137,73 @@ bool Foam::functionObjects::sampleCellSets::read(const dictionary& dict)
 
 bool Foam::functionObjects::sampleCellSets::execute()
 {
+    label nScalarFields = distDataScalarFieldNames_.size();
+    label nVectorFields = distDataVectorFieldNames_.size();
+
+    // if time directories do not exist yet, create them
+    mkDir(distDataMesh_.time().timeName());
+
     // if time to write fields values in cell set to textfiles, do it
     for (label cellset = 0; cellset < numCellSets_; cellset++)
     {
-        // first sample scalar fields
-        for (label fieldI = 0; fieldI < distDataScalarFieldNames_.size(); fieldI++)
-        {
-            fileName filename = distDataMesh_.time().timeName()+"/data_"+cellSetNames_[cellset]+"_"+distDataScalarFieldNames_[fieldI];
-            OFstream sampleFile(filename);
+        fileName filename = distDataMesh_.time().timeName()+"/data_"+cellSetNames_[cellset];
+        OFstream sampleFile(filename);
+        labelList cellsInSet = cellSets_[cellset].toc();
+        scalarRectangularMatrix dataInCellSet(cellsInSet.size(),nScalarFields+3*nVectorFields);
 
+        sampleFile << "# c_x\tc_y\tc_z\t";
+        // first sample scalar fields
+        for (label fieldI = 0; fieldI < nScalarFields; fieldI++)
+        {
+            sampleFile << distDataScalarFieldNames_[fieldI] << "\t";
+            const volScalarField& field = distDataMesh_.lookupObject<volScalarField>(distDataScalarFieldNames_[fieldI]);
+            forAll(cellsInSet, cellI)
+            {
+                label cellID = cellsInSet[cellI];
+                dataInCellSet(cellI,fieldI) = field[cellID];
+            }
         }
 
         // first sample vector fields
-        for (label fieldI = 0; fieldI < distDataVectorFieldNames_.size(); fieldI++)
+        for (label fieldI = 0; fieldI < nVectorFields; fieldI++)
         {
+            sampleFile << distDataVectorFieldNames_[fieldI] << "_x\t";
+            sampleFile << distDataVectorFieldNames_[fieldI] << "_y\t";
+            sampleFile << distDataVectorFieldNames_[fieldI] << "_z\t";
+            const volVectorField& field = distDataMesh_.lookupObject<volVectorField>(distDataVectorFieldNames_[fieldI]);
+            forAll(cellsInSet, cellI)
+            {
+                label cellID = cellsInSet[cellI];
+                dataInCellSet(cellI,nScalarFields+3*fieldI) = field[cellID].x();
+                dataInCellSet(cellI,nScalarFields+3*fieldI+1) = field[cellID].y();
+                dataInCellSet(cellI,nScalarFields+3*fieldI+2) = field[cellID].z();
+            }
 
         }
+
+        sampleFile << endl << "#";
+        for (label i=0; i<nScalarFields + 3*nVectorFields+3; i++)
+        {
+            sampleFile << "---------";
+        }
+        sampleFile << endl;
+
+        // now print data matrix
+        for (label row=0; row<dataInCellSet.m(); row++)
+        {
+            // first print cell coordinates, then field values
+            label cellID = cellsInSet[row];
+            scalar cx = distDataMesh_.C()[cellID].x();
+            scalar cy = distDataMesh_.C()[cellID].y();
+            scalar cz = distDataMesh_.C()[cellID].z();
+            sampleFile <<  cx << "\t" << cy << "\t" << cz << "\t";
+            for (label col=0; col<dataInCellSet.n(); col++)
+            {
+                sampleFile << dataInCellSet(row,col) << "\t";
+            }
+            sampleFile << endl;
+        }
+
     }
     return true;
 }
