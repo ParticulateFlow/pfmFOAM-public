@@ -1018,7 +1018,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // compute production term:
         if (anIsoTropicNut_) {
-            volTensorField gradUR1 = 0.5*R1_&(gradU + T(gradU));
+            //volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
+            volTensorField gradUR1 = (R1_.T()&gradU.T());
             shearProd_ =   (gradUR1&&(eX*eX))*(eX)
                          + (gradUR1&&(eY*eY))*(eY)
                          + (gradUR1&&(eZ*eZ))*(eZ);
@@ -1040,7 +1041,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
           // diffusion with anisotropic diffusivity
-          - fvm::laplacian(alpha*rho*mag(lm_)
+          - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
                                    + (sqrt(k_&eY)*(eY*eY))
@@ -1072,7 +1073,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
           - ((pDil&eZ)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/mag(lm_),k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1122,7 +1123,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = (k_ & eSum);
     km.max(kSmall.value());
     volScalarField divU(fvc::div(U));
-    volScalarField denom = divU + CphiS_ * Ceps_ * sqrt(km)/mag(lm_);
+    volScalarField denom = divU + CphiS_ * Ceps_ * sqrt(km)/lm_;
     denom.max(kSmall.value());
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
