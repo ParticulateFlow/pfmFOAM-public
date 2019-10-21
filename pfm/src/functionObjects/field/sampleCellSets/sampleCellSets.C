@@ -104,7 +104,7 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
 
     // get cell sets extensions and write them to file for later checks
     OFstream cellSetsFile("cellSetsExtensions");
-    cellSetsFile << "cellSetIndex\txmin\txmax\tymin\tymax\tzmin\tzmax" << endl;
+    cellSetsFile << "# cellSetIndex\txmin\txmax\tymin\tymax\tzmin\tzmax" << endl;
     for (label cellset = 0; cellset < numCellSets_; cellset++)
     {
         scalar xmin = 1e6;
@@ -173,7 +173,7 @@ bool Foam::functionObjects::sampleCellSets::execute()
     // if time to write fields values in cell set to textfiles, do it
     for (label cellset = 0; cellset < numCellSets_; cellset++)
     {
-        fileName filename = distDataMesh_.time().timeName()+"/data_"+cellSetNames_[cellset];
+        fileName filename = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset);
         OFstream sampleFile(filename);
         labelList cellsInSet = cellSets_[cellset].toc();
         scalarRectangularMatrix dataInCellSet(cellsInSet.size(),nScalarFields+3*nVectorFields);
