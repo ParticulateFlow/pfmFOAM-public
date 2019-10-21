@@ -989,8 +989,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
-         << "    max(SijSij)     = " << max(mag(SijSij)).value() << nl
-         << "    min(SijSij)     = " << min(mag(SijSij)).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl
          << "    max(k_)         = " << max(km).value() << endl;
 }
