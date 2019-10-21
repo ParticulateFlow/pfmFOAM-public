@@ -391,6 +391,22 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         zeroGradientFvPatchField<scalar>::typeName
     ),
 
+    shearProd_
+    (
+        IOobject
+        (
+            IOobject::groupName("shearProd", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedVector("zero", dimensionSet(0, 2, -3, 0, 0),
+                           vector(0.0,0.0,0.0)),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
 
@@ -957,25 +973,21 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CphiS_ = CphiSscalar_/CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
-        Cmu_    = CmuScalar_;
-        /*
+        //Cmu_    = CmuScalar_;
         // compute mixing length dynamically
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
         volScalarField MijMij = filterS(Mij * Mij);
-        MijMij.max(ROOTVSMALL);
+        MijMij.max(SMALL);
         
-        volScalarField CmuT = 0.5*mag(filterS(Lij * Mij)/(MijMij));
-        
-        Cmu_ = sqrt(CmuT);
         volScalarField CmuT = 0.5*(filterS(Lij * Mij)/(MijMij));
         
-        Cmu_ = sqrt(mag(CmuT));
+        Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(0.5*(CmuT + mag(CmuT)))
+             + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
 
-        Cmu_.min(2.0*CmuScalar_.value());
-        Cmu_.max(0.1*CmuScalar_.value());
-        */
+        Cmu_.min(1.0);
+        Cmu_.max(SMALL);
     } else {
         volVectorField xiPhiSDir = gradAlpha
                                   /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
@@ -1005,10 +1017,23 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibrium_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*g*sqrt(2.0*alphaP2MeanO);
         
+        // compute production term:
+        if (anIsoTropicNut_) {
+            volTensorField gradUR1 = 0.5*R1_&(gradU + T(gradU));
+            shearProd_ =   (gradUR1&&(eX*eX))*(eX)
+                         + (gradUR1&&(eY*eY))*(eY)
+                         + (gradUR1&&(eZ*eZ))*(eZ);
+        } else {
+            shearProd_ = lm_*(
+                                 (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
+                               + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
+                               + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
+                              );
+        }
+
         fv::options& fvOptions(fv::options::New(mesh_));
         
         // Construct the transport equation for k
-        // --> Stefanie
         Info << "Solving k-equation (dispersed phase) ... " << endl;
         fvVectorMatrix kEqn
         (
@@ -1029,14 +1054,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // shear production
-            2.0*lm_
-               *alpha
+          - 2.0*alpha
                *rho
-               *(
-                    (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
-                  + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
-                  + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
-                )
+               *shearProd_
           // interfacial work (--> energy transfer)
           + 2.0*beta
                *(

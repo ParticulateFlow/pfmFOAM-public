@@ -759,7 +759,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             for (int i=0; i< 3; i++) {
                 xiPhiG_[cellI].component(i) =
                     xiPhiGNom[cellI].component(i)
-                  / Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),ROOTVSMALL));
+                  / Foam::sqrt(Foam::max(xiPhiGDenomSqr[cellI].component(i),SMALL));
             }
         }
         */
@@ -781,19 +781,19 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute mixing length dynamically
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
-        magSqrDf.max(ROOTVSMALL);
+        magSqrDf.max(SMALL);
         volSymmTensorField Df   = filter_(alpha*D)/alpha2f;
         volScalarField Mij      = sqr(deltaF_)*(4.0*magSqr(Df) - magSqrDf);
         volScalarField MijMij   = filterS(sqr(Mij));
-        MijMij.max(ROOTVSMALL);
+        MijMij.max(SMALL);
         
-        volScalarField CmuT     = 0.5*mag(filterS(Lij * Mij)/(MijMij));
+        volScalarField CmuT     = 0.5*(filterS(Lij * Mij)/(MijMij));
         
-        Cmu_ = 0.5*pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
-                 + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
+        Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(0.5*(CmuT + mag(CmuT)))
+             + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
         
-        Cmu_.min(100.0*CmuScalar_.value());
-        Cmu_.max(0.01*CmuScalar_.value());
+        Cmu_.min(1.0);
+        Cmu_.max(SMALL);
         
         //Cmu_ = filterS(Cmu_);
         // dynamic procedure for Ceps
@@ -805,19 +805,29 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                   - filter_(alpha*magSqrD*sqrt(magSqrD))
                                 );
         volScalarField MijMijEps = filterS(sqr(MijEps));
-        MijMijEps.max(ROOTVSMALL);
+        MijMijEps.max(SMALL);
         
-        volScalarField CepsT = 2.0*filterS(LijEps * MijEps)/(MijMijEps);
-        Ceps_ = 0.5*pos(scalar(1.0) - alpha_ - residualAlpha_)*(mag(CepsT) + CepsT)
-                  + neg(scalar(1.0) - alpha_ - residualAlpha_);
+        volScalarField CepsT = 2.0*mag(filterS(LijEps * MijEps)/(MijMijEps));
+        
+        Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
+              + neg(scalar(1.0) - alpha_ - residualAlpha_);
+        
         Ceps_.min(1.0);
-        Ceps_.max(0.01*CepsScalar_.value());
+        Ceps_.max(SMALL);
         
         // Compute CphiG_
         CphiG_ = CphiGscalar_/Ceps_;
         
         // Currently no dynamic procedure for Cp
-        Cp_     = CpScalar_;//min(0.01/alpha1+scalar(0.5),1.0);
+        // Cp_     = CpScalar_;//min(0.01/alpha1+scalar(0.5),1.0);
+        const volScalarField p(mesh_.lookupObject<volScalarField>("p"));
+        volScalarField rhom = rho*alpha + alpha1*rho1;
+        volVectorField gradp = fvc::grad(p);
+
+        Cp_ = filterS((gradp&g)/(rhom*(g&g)));
+        Cp_.min(1.0);
+        Cp_.max(0.1*CpScalar_.value());
+        
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
@@ -841,7 +851,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
-        // --> Stefanie
         Info << "Solving k-equation (continuous phase) ... " << endl;
         fvVectorMatrix kEqn
         (
