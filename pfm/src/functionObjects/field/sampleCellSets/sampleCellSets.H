@@ -78,6 +78,7 @@ SourceFiles
 #include "vector.H"
 #include "cellSet.H"
 #include "fvCFD.H"
+#include "OFstream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -115,19 +116,7 @@ protected:
 
     wordList distDataVectorFieldNames_;
 
-
-
-
-
-
-        //- Switch to write location of min/max values
-        Switch location_;
-
-
-
-
-
-
+    OFstream timeListFile_;
 
     // Protected Member Functions
 

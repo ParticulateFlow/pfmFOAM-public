@@ -26,7 +26,6 @@ License
 #include "sampleCellSets.H"
 #include "fieldTypes.H"
 #include "addToRunTimeSelectionTable.H"
-#include "OFstream.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -99,9 +98,38 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
     cellSetNames_(),
     distDataScalarFieldNames_(),
     distDataVectorFieldNames_(),
-    location_(true)
+    timeListFile_("sampleTimes")
 {
     read(dict);
+
+    // get cell sets extensions and write them to file for later checks
+    OFstream cellSetsFile("cellSetsExtensions");
+    cellSetsFile << "cellSetIndex\txmin\txmax\tymin\tymax\tzmin\tzmax" << endl;
+    for (label cellset = 0; cellset < numCellSets_; cellset++)
+    {
+        scalar xmin = 1e6;
+        scalar xmax = -1e6;
+        scalar ymin = 1e6;
+        scalar ymax = -1e6;
+        scalar zmin = 1e6;
+        scalar zmax = -1e6;
+        labelList cellsInSet = cellSets_[cellset].toc();
+        forAll(cellsInSet, cellI)
+        {
+            label cellID = cellsInSet[cellI];
+            scalar cx = distDataMesh_.C()[cellID].x();
+            scalar cy = distDataMesh_.C()[cellID].y();
+            scalar cz = distDataMesh_.C()[cellID].z();
+            if (cx > xmax) xmax = cx;
+            else if (cx < xmin) xmin = cx;
+            if (cy > ymax) ymax = cy;
+            else if (cy < ymin) ymin = cy;
+            if (cz > zmax) zmax = cz;
+            else if (cz < zmin) zmin = cz;
+        }
+        cellSetsFile << cellset << "\t\t" << xmin << "\t" << xmax << "\t" << ymin << "\t" << ymax <<
+                        "\t" << zmin << "\t" << zmax << endl;
+    }
 }
 
 
@@ -115,9 +143,6 @@ Foam::functionObjects::sampleCellSets::~sampleCellSets()
 
 bool Foam::functionObjects::sampleCellSets::read(const dictionary& dict)
 {
-    location_ = dict.lookupOrDefault<Switch>("location", true);
-
-
     dict.lookup("distDataScalarFields") >> distDataScalarFieldNames_;
 
     dict.lookup("distDataVectorFields") >> distDataVectorFieldNames_;
@@ -142,6 +167,8 @@ bool Foam::functionObjects::sampleCellSets::execute()
 
     // if time directories do not exist yet, create them
     mkDir(distDataMesh_.time().timeName());
+
+    timeListFile_ << distDataMesh_.time().value() << endl;
 
     // if time to write fields values in cell set to textfiles, do it
     for (label cellset = 0; cellset < numCellSets_; cellset++)
@@ -211,7 +238,6 @@ bool Foam::functionObjects::sampleCellSets::execute()
 
 bool Foam::functionObjects::sampleCellSets::write()
 {
-
     return true;
 }
 
