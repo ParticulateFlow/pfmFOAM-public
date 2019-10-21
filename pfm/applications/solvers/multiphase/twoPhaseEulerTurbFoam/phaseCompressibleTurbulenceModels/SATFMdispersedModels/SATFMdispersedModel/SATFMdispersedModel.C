@@ -971,6 +971,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CphiS_ = CphiSscalar_/CepsScalar_;
         // Set Cp
         Cp_     = CpScalar_;
+        Cmu_    = CmuScalar_;
         // compute mixing length dynamically
         /*
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);

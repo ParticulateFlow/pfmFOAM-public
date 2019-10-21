@@ -169,7 +169,6 @@ int main(int argc, char *argv[])
                 nutSigma_.max(SMALL);
                 
                 // Dynamic adjustment of Cst
-                /*
                 volTensorField Dhat(filter_(D));
                 volScalarField sigmaKhat(filter_(mixture.sigmaK()));
                 
@@ -192,13 +191,13 @@ int main(int argc, char *argv[])
                 MijMij.max(ROOTVSMALL);
               
                 Cst = filterS_(Lij&Mij)/MijMij;
-                */
+
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
-                                           //  + Cst*sqrt(nutSigma_/nu)
+                                             + Cst*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.1);
                 corrSurfaceTensionForce_.min(100.0);
