@@ -755,13 +755,13 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
     );
 }
 
-void Foam::RASModels::SATFMdispersedModel::boundS
+void Foam::RASModels::SATFMdispersedModel::boundGradU
 (
     volTensorField& R
 ) const
 {
-    scalar sMin = 1.0e-7;
-    scalar sMax = 1.0e4;
+    scalar sMin = -1.0e2;
+    scalar sMax =  1.0e2;
 
     R.max
     (
@@ -849,14 +849,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         vector(1,1,1)
     );
     
-    tmp<volTensorField> tgradU(fvc::grad(U_));
-    const volTensorField& gradU(tgradU());
+    volTensorField gradU(fvc::grad(U_));
+    boundGradU(gradU);
     volSymmTensorField D(dev(symm(gradU)));
     // compute S_{ij}S_{ij} (no summation over j!!)
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
-    boundS(SijSij);
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
@@ -933,7 +932,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
         volScalarField xiPhiSDenomSqr =   (filter_(sqr(alpha))-sqr(alphaf))*(aUU);
         xiPhiSDenomSqr.max(kSmall.value());
-        xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(xiPhiSDenomSqr))/filterS(xiPhiSDenomSqr);
+        xiPhiS_ = filterS(xiPhiSNom*sqrt(xiPhiSDenomSqr))/filterS(xiPhiSDenomSqr);
 
         // smooth correlation coefficient
         xiPhiS_ = 0.5*(
@@ -1228,8 +1227,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info << "SA-TFM (dispersed Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
          << "    max(nutFric)    = " << max(nuFric_).value() << nl
-         << "    max(SijSij)     = " << max(mag(SijSij)).value() << nl
-         << "    min(SijSij)     = " << min(mag(SijSij)).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha)).value() << nl
          << "    max(k_)         = " << max(k_&eSum).value() << endl;
 }

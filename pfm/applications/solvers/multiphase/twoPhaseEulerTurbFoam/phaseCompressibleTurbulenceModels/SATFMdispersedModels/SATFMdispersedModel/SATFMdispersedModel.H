@@ -214,7 +214,7 @@ protected:
     void boundNormalStress2(volVectorField& k) const;
     void boundxiPhiS(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
-    void boundS(volTensorField& S) const;
+    void boundGradU(volTensorField& S) const;
 public:
 
     //- Runtime type information
