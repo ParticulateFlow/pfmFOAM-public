@@ -721,7 +721,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -788,13 +788,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         MijMij.max(SMALL);
         
         volScalarField CmuT     = 0.5*(filterS(Lij * Mij)/(MijMij));
+        CmuT.min(1.0);
+        CmuT.max(SMALL);
         
-        Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(0.5*(CmuT + mag(CmuT)))
+        Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
-        
-        Cmu_.min(1.0);
-        Cmu_.max(SMALL);
-        
+
         //Cmu_ = filterS(Cmu_);
         // dynamic procedure for Ceps
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
@@ -820,14 +819,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         // Currently no dynamic procedure for Cp
         // Cp_     = CpScalar_;//min(0.01/alpha1+scalar(0.5),1.0);
-        const volScalarField p(mesh_.lookupObject<volScalarField>("p"));
+        const volScalarField& p(mesh_.lookupObject<volScalarField>("p"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p);
 
         Cp_ = filterS((gradp&g)/(rhom*(g&g)));
         Cp_.min(1.0);
         Cp_.max(0.1*CpScalar_.value());
-        
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
