@@ -46,6 +46,8 @@ Description
 #include "CorrectPhi.H"
 #include "fvcSmooth.H"
 #include "wallDist.H"
+#include "simpleTestFilter.H"
+#include "simpleFilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -164,17 +166,42 @@ int main(int argc, char *argv[])
                 nutSigma_.correctBoundaryConditions();
                 // Limit nut
                 nutSigma_ = min(nutSigma_,1.0e5*nu);
-                nutSigma_.max(VSMALL);
-
+                nutSigma_.max(SMALL);
+                
+                // Dynamic adjustment of Cst
+                /*
+                volTensorField Dhat(filter_(D));
+                volScalarField sigmaKhat(filter_(mixture.sigmaK()));
+                
+                volScalarField nutSigmaHat =
+                             sqr(2.0*Cmu_*deltaF_)
+                           * sqrt(
+                                     2.0*(dev(Dhat)&&Dhat)
+                                   + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
+                                );
+                nutSigmaHat = min(nutSigmaHat,1.0e4*nu);
+                nutSigmaHat.max(SMALL);
+                
+                volVectorField gradAlpha = fvc::grad(alpha1);
+                volVectorField gradAlphaHat = filter_(gradAlpha);
+                
+                volVectorField Mij = sigmaKhat*gradAlphaHat*sqrt(nutSigmaHat/nu)
+                                   - filter_(mixture.sigmaK()*gradAlpha*sqrt(nutSigma_/nu));
+                volVectorField Lij = 2.0*(filter_(mixture.sigmaK()*gradAlpha) - sigmaKhat*gradAlphaHat);
+                volScalarField MijMij = filterS_(Mij&Mij);
+                MijMij.max(ROOTVSMALL);
+              
+                Cst = filterS_(Lij&Mij)/MijMij;
+                */
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
-
+                
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
-                      //                       + 0*Csigma_*sqrt(nutSigma_/nu)/Cmu_
-                                               + 1.5*sqrt(nutSigma_/nu)
+                                           //  + Cst*sqrt(nutSigma_/nu)
                                            );
-
+                corrSurfaceTensionForce_.max(0.1);
+                corrSurfaceTensionForce_.min(100.0);
                 turbulence->correct();
             }
         }

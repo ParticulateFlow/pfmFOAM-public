@@ -153,6 +153,20 @@ volScalarField nutSigma_
      mesh
 );
 
+volScalarField Cst
+(
+     IOobject
+     (
+          "Cst",
+          runTime.timeName(),
+          mesh,
+          IOobject::NO_READ,
+          IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("1", dimensionSet(0,0,0,0,0,0,0), 0.15)
+);
+
 volScalarField deltaF_
 (
      IOobject
@@ -203,3 +217,6 @@ volScalarField corrSurfaceTensionForce_
     mesh,
     dimensionedScalar("one", dimensionSet(0,0,0,0,0,0,0), 1)
 );
+
+simpleTestFilter filter_(mesh);
+simpleFilter filterS_(mesh);

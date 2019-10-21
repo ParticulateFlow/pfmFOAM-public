@@ -34,19 +34,28 @@
     );
 
     phiHbyA += phig;
+    
+    volScalarField preTauAlphaU(((rho2-rho1)*nutSigma_/rho));
+    surfaceScalarField sgsAlphaU(fvc::interpolate(preTauAlphaU)*fvc::snGrad(alpha1)*mesh.magSf());
+    
+    phiHbyA -= sgsAlphaU;
+    
+    volVectorField gradAlpha(fvc::grad(alpha1));
+    volVectorField gradPreTauAlphaU(fvc::grad(preTauAlphaU));
+    volScalarField correctGradient(gradAlpha&gradPreTauAlphaU);
+
 
     // Update the pressure BCs to ensure flux consistency
     constrainPressure(p_rgh, U, phiHbyA, rAUf, MRF);
 
     while (pimple.correctNonOrthogonal())
     {
-        volScalarField preTauAlphaU((rho2-rho1)*nutSigma_/rho);
         fvScalarMatrix p_rghEqn
         (
             fvm::laplacian(rAUf, p_rgh)
          ==
             fvc::div(phiHbyA)
-          - preTauAlphaU*fvc::laplacian(alpha1)
+          + correctGradient
         );
 
         p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
