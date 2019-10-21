@@ -1017,19 +1017,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volVectorField pDil = Cp_*alpha*(rho-rho2)*g*sqrt(2.0*alphaP2MeanO);
         
         // compute production term:
-        if (anIsoTropicNut_) {
-            //volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-            volTensorField gradUR1 = (R1_.T()&gradU.T());
-            shearProd_ =   (gradUR1&&(eX*eX))*(eX)
-                         + (gradUR1&&(eY*eY))*(eY)
-                         + (gradUR1&&(eZ*eZ))*(eZ);
-        } else {
+//        if (anIsoTropicNut_) {
+//            //volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
+ //           volTensorField gradUR1 = (R1_.T()&gradU.T());
+ //           shearProd_ =   (gradUR1&&(eX*eX))*(eX)
+ //                        + (gradUR1&&(eY*eY))*(eY)
+ //                        + (gradUR1&&(eZ*eZ))*(eZ);
+ //       } else {
             shearProd_ = lm_*(
-                                 (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
-                               + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
-                               + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
+                                 (((SijSij&eX)&eX)*sqrt(k_&eX))*eX
+                               + (((SijSij&eY)&eY)*sqrt(k_&eY))*eY
+                               + (((SijSij&eZ)&eZ)*sqrt(k_&eZ))*eZ
                               );
-        }
+   //     }
 
         fv::options& fvOptions(fv::options::New(mesh_));
         
