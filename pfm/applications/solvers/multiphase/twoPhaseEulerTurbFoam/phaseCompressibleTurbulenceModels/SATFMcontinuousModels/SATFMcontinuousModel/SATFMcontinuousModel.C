@@ -791,6 +791,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
                
         // compute mixing length dynamically
+        /*
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
         magSqrDf.max(SMALL);
@@ -805,7 +806,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
-        
+        */
+        Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
         /*
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
@@ -826,7 +828,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_.min(1.0);
         Ceps_.max(SMALL);
         */
-        //Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_/Ceps_;
