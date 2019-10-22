@@ -931,7 +931,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
         volScalarField xiPhiSDenomSqr =   (filter_(sqr(alpha))-sqr(alphaf))*(aUU);
         xiPhiSDenomSqr.max(kSmall.value());
-        xiPhiS_ = filterS(xiPhiSNom*sqrt(xiPhiSDenomSqr))/filterS(xiPhiSDenomSqr);
+        xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(xiPhiSDenomSqr))/filterS(xiPhiSDenomSqr);
 
         // smooth correlation coefficient
         xiPhiS_ = 0.5*(
@@ -947,7 +947,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
         volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
                                    * max(filter_(magSqr(Uc_))- 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = 3.0*filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
+        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
 
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
@@ -1026,6 +1026,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                + (((SijSij&eZ)&eZ)*sqrt(k_&eZ))*eZ
                               );
         }
+        // volScalarField sqrtDD = sqrt(D&&D);
 
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -1070,6 +1071,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eZ)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
           // dissipation
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrtDD,k_)
           + fvOptions(alpha, rho, k_)
         );
 

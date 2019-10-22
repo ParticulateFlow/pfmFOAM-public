@@ -875,6 +875,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                           + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
                                         );
         */
+        //volScalarField sqrtDD = sqrt(D&&D);
+        
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
@@ -918,6 +920,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrtDD,k_)
           + fvOptions(alpha, rho, k_)
         );
 
