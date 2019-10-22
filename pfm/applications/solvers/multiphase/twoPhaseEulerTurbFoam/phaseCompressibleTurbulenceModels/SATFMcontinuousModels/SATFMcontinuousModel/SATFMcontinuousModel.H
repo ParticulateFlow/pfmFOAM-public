@@ -172,7 +172,7 @@ protected:
     //- bound k
     void boundNormalStress(volVectorField& R) const;
     void boundxiPhiG(volVectorField& xi) const;
-    void boundS(volTensorField& S) const;
+    void boundGradU(volTensorField& S) const;
     
 public:
 
