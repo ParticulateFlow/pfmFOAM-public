@@ -92,6 +92,10 @@ class SATFMcontinuousModel
             //  correlation coefficients
             Switch dynamicAdjustment_;
     
+            //- switch between isotropic and anisotropic treatment of
+            //  shear component of mesoscale stress tensor
+            Switch anIsoTropicNut_;
+    
             //- Maximum packing phase-fraction
             dimensionedScalar alphaMax_;    
 
@@ -132,6 +136,9 @@ class SATFMcontinuousModel
             //- correlation coefficient between solid volume fraction and cont. velocity
             volVectorField xiPhiG_;
     
+            //- auto correlation coefficient of solids velocity
+            volTensorField xiUU_;
+    
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
     
@@ -152,6 +159,12 @@ class SATFMcontinuousModel
     
             //- mixing length
             volScalarField lm_;
+    
+            //- Reynolds stress tensor
+            volTensorField R2_;
+    
+            //- shear production
+            volVectorField shearProd_;
 
 
     // Private Member Functions
@@ -172,6 +185,7 @@ protected:
     //- bound k
     void boundNormalStress(volVectorField& R) const;
     void boundxiPhiG(volVectorField& xi) const;
+    void boundCorrTensor(volTensorField& R) const;
     void boundGradU(volTensorField& S) const;
     
 public:

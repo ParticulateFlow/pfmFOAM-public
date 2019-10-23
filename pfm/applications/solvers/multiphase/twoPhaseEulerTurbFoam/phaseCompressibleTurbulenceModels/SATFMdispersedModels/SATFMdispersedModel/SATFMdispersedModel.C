@@ -911,7 +911,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -1018,7 +1018,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute production term:
         if (anIsoTropicNut_) {
             volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-            //volTensorField gradUR1 = (R1_.T()&gradU.T());
             shearProd_ =   (gradUR1&&(eX*eX))*(eX)
                          + (gradUR1&&(eY*eY))*(eY)
                          + (gradUR1&&(eZ*eZ))*(eZ);
@@ -1160,7 +1159,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          0.99*alphaL2
                       );
 
-    // compute nut_ (Schneiderbauer, 2017; equ. (34))
     {
         volVectorField kt(k_);
         boundNormalStress2(kt);
@@ -1213,6 +1211,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         } else {
             volScalarField kmt  = (kt & eSum);
             kmt.max(kSmall.value());
+            // compute nut_ (Schneiderbauer, 2017; equ. (34))
             nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(kmt)*lm_;
             R1_ = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);
         }

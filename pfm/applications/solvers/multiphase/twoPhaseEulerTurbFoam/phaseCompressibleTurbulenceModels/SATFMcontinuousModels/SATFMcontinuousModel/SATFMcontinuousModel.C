@@ -63,6 +63,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
 
     equilibrium_(coeffDict_.lookup("equilibrium")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
+    anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
 
     alphaMax_("alphaMax", dimless, coeffDict_),
 
@@ -155,6 +156,22 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
+    xiUU_
+    (
+        IOobject
+        (
+            "xiUU",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
         // Set Boundary condition
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -268,6 +285,37 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     ),
 
 
+    R2_
+    (
+        IOobject
+        (
+            IOobject::groupName("R", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+    ),
+
+    shearProd_
+    (
+        IOobject
+        (
+            IOobject::groupName("shearProd", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedVector("zero", dimensionSet(0, 2, -3, 0, 0),
+                           vector(0.0,0.0,0.0)),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
 
@@ -299,7 +347,7 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
     {
         coeffDict().lookup("equilibrium") >> equilibrium_;
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
-        
+        coeffDict().lookup("anIsoTropicNut") >> anIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
         xiPhiContScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
@@ -374,12 +422,8 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                 IOobject::NO_WRITE
             ),
           - (nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * alpha_ *
-            symm(
-                     (k_&eX)*(eX*eX)
-                   + (k_&eY)*(eY*eY)
-                   + (k_&eZ)*(eZ*eZ)
-                 )
+          + 2.0 * pos(scalar(1.0) - alpha_ - residualAlpha_) * alpha_ *
+            symm(R2_)
         )
     );
 }
@@ -418,12 +462,8 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                 IOobject::NO_WRITE
             ),
           - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * alpha_ * rho_ *
-            symm(
-                     (k_&eX)*(eX*eX)
-                   + (k_&eY)*(eY*eY)
-                   + (k_&eZ)*(eZ*eZ)
-                 )
+          + 2.0 * pos(scalar(1.0) - alpha_ - residualAlpha_) * alpha_ *
+            symm(R2_)
         )
     );
 }
@@ -455,17 +495,21 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     );
     
     return
+    pos(scalar(1.0) - alpha_ - residualAlpha_)*
     (
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
             (rho_*nut_)*dev2(T(fvc::grad(U)))
-          - 2.0 * alpha_ * rho_ *
-            (
-                (k_&eX)*(eX*eX)
-              + (k_&eY)*(eY*eY)
-              + (k_&eZ)*(eZ*eZ)
-            )
+        )
+      + fvc::div
+        (
+             2.0
+           * alpha_
+           * rho_
+           * (
+                 R2_
+             )
         )
     );
 }
@@ -541,6 +585,45 @@ void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
                 xiMax,
                 xiMax,
                 xiMax
+            )
+        )
+    );
+}
+
+void Foam::RASModels::SATFMcontinuousModel::boundCorrTensor
+(
+    volTensorField& R
+) const
+{
+    scalar xiMin = -1.0;
+    scalar xiMax = 1.0;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  xiMax, xiMin, xiMin,
+                  xiMin, xiMax, xiMin,
+                  xiMin, xiMin, xiMax
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  xiMax, xiMax, xiMax,
+                  xiMax, xiMax, xiMax,
+                  xiMax, xiMax, xiMax
             )
         )
     );
@@ -662,11 +745,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const volScalarField& xiGatS_(mesh_.lookupObject<volScalarField>
                              ("xiGatS"));
     
-    // get alphaP2Mean
-    const volScalarField& alphaP2Mean1_(mesh_.lookupObject<volScalarField>
-                             ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
-    volScalarField alphaP2MeanO = max(alphaP2Mean1_,alphaP2Mean_);
-    
     const cellList& cells = mesh_.cells();
     
     // simple filter for local smoothing
@@ -723,7 +801,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -810,12 +888,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
         /*
+        volScalarField kmf(filter_(km));
+        kmf.max(kSmall.value());
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = sqr(Cmu_*deltaF_)*(
-                                    4.0*alpha2f*magSqrDf*sqrt(magSqrDf)
-                                  - filter_(alpha*magSqrD*sqrt(magSqrD))
+        volScalarField MijEps = (
+                                    alpha2f*kmf*sqrt(magSqrDf)
+                                  - filter_(alpha*km*sqrt(magSqrD))
                                 );
         volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
@@ -825,15 +905,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
         
-        Ceps_.min(1.0);
-        Ceps_.max(SMALL);
+        Ceps_.min(100.0);
+        Ceps_.max(0.1);
+        Ceps_ = Ceps_*Cmu_;
         */
         Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_/Ceps_;
         
         // Currently no dynamic procedure for Cp
-        /*
         const volScalarField& p(mesh_.lookupObject<volScalarField>("p"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p);
@@ -842,8 +922,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_ = filterS(Cp_);
         Cp_.min(1.0);
         Cp_.max(0.1);
-        */
-        Cp_     = CpScalar_;
+        //Cp_     = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
@@ -864,20 +943,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // ---------------------------
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*g/beta;
     if (!equilibrium_) {
-        volTensorField R2 = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ)
-                            - nut_*dev(gradU + gradU.T());
-        volTensorField gradUR2 = 0.5*((R2&gradU) + ((R2.T())&(gradU.T())));
-        volVectorField shearProd =   (gradUR2&&(eX*eX))*(eX)
-                                   + (gradUR2&&(eY*eY))*(eY)
-                                   + (gradUR2&&(eZ*eZ))*(eZ);
-        /*
-        volVectorField shearProd = -lm_*(
-                                            (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
-                                          + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
-                                          + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
-                                        );
-        */
-        //volScalarField sqrtDD = sqrt(D&&D);
+        if (anIsoTropicNut_) {
+            volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
+            volVectorField shearProd_ =   (gradUR2&&(eX*eX))*(eX)
+                                        + (gradUR2&&(eY*eY))*(eY)
+                                        + (gradUR2&&(eZ*eZ))*(eZ);
+        } else {
+            volVectorField shearProd_ = -lm_*(
+                                                 (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
+                                               + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
+                                               + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
+                                             );
+        }
         
         fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -904,7 +981,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // shear production
           - 2.0*alpha
                *rho
-               *shearProd
+               *shearProd_
           // interfacial work (--> energy transfer)
           + 2.0*beta
                *(
@@ -922,7 +999,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrtDD,k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1008,8 +1084,39 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                          0.99*alphaL2
                       );
 
-    // compute nut_ (Schneiderbauer, 2017; equ. (34))
+    
     nut_ = alpha*sqrt(km)*lm_;
+    if (anIsoTropicNut_) {
+        nut_ = dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0);
+        volScalarField alphaf = filter_(alpha);
+        alphaf.max(residualAlpha_.value());
+        volVectorField Uf = filter_(alpha*U)/alphaf;
+        // compute correlation coefficients
+        xiUU_ = 3.0*(filter_(alpha*(U*U))/alphaf - Uf*Uf)
+                /max(filter_(alpha*(U&U))/alphaf - (Uf&Uf),kSmall);
+        // limit and smooth correlation coefficients
+        xiUU_ = filterS(xiUU_);
+        boundCorrTensor(xiUU_);
+        
+        // compute Reynolds-stress tensor
+        forAll(cells,cellI)
+        {
+            for (int i=0; i<3; i++) {
+                for (int j=0; j<3; j++) {
+                    if (i!=j) {
+                        R2_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                                *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    } else {
+                        R2_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    }
+                }
+            }
+        }
+    } else {
+        // compute nut_ (Schneiderbauer, 2017; equ. (34))
+        nut_ = alpha*sqrt(km)*lm_;
+        R2_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+    }
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
