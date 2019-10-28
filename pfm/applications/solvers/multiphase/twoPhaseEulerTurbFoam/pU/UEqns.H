@@ -30,7 +30,6 @@ volVectorField KdUdrift(fluid.KdUdrift());
 
     volScalarField Vm(fluid.Vm());
     volScalarField CpIPh(fluid.CpIPh());
-    surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(CpIPh));
 
     {
         U1Eqn =
@@ -64,25 +63,32 @@ volVectorField KdUdrift(fluid.KdUdrift());
         
         // improved momentum predictor
         // (is currently experimental, deactivate with momentumPredictor "no" in PIMPLE dict)
-        volScalarField rAU1
-        (
-            IOobject::groupName("rAU", phase1.name()),
-            1.0
-           /(
-                U1Eqn.A()
-            )
-        );
-        surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
-        
-        surfaceScalarField pPrimef
-        (
-            fvc::interpolate
-            (
-                phase1.turbulence().pPrime()*rAU1
-            )
-        );
-        
         if (pimple.momentumPredictor()) {
+            volScalarField rAU1
+            (
+                IOobject::groupName("rAU", phase1.name()),
+                1.0
+               /(
+                    U1Eqn.A()
+                  + max(phase1.residualAlpha() - alpha1, scalar(0))
+                   *rho1/runTime.deltaT()
+                )
+            );
+            surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
+            
+            surfaceScalarField pPrimef
+            (
+                fvc::interpolate
+                (
+                    phase1.turbulence().pPrime()*rAU1
+                )
+            );
+            surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(CpIPh*rAU1));
+            surfaceScalarField alpharAUf1
+            (
+                fvc::interpolate(max(alpha1, phase1.residualAlpha())*rAU1)
+            );
+            
             solve
             (
                 U1Eqn
@@ -90,9 +96,9 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 fvc::reconstruct
                 (
                     (
-                      - pPrimef*fvc::snGrad(alpha1)/rAU1f
-                      - (alphaf1 + CpIPhf)*fvc::snGrad(p)
-                    ) * mesh.magSf()
+                      - pPrimef*fvc::snGrad(alpha1)
+                      - (alpharAUf1 + CpIPhf)*fvc::snGrad(p)
+                    ) * mesh.magSf() / rAU1f
                   // drag
                   + (fvc::interpolate(rAU1*Kd)*phi2)/rAU1f
                   + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
@@ -137,16 +143,23 @@ volVectorField KdUdrift(fluid.KdUdrift());
         
         // improved momentum predictor
         // (is currently experimental, deactivate with momentumPredictor "no" in PIMPLE dict)
-        volScalarField rAU2
-        (
-            IOobject::groupName("rAU", phase2.name()),
-            1.0
-           /(
-                U2Eqn.A()
-            )
-        );
-        surfaceScalarField rAU2f("rAU2f", fvc::interpolate(rAU2));
         if (pimple.momentumPredictor()) {
+            volScalarField rAU2
+            (
+                IOobject::groupName("rAU", phase2.name()),
+                1.0
+               /(
+                    U2Eqn.A()
+                  + max(phase2.residualAlpha() - alpha2, scalar(0))
+                   *rho2/runTime.deltaT()
+                )
+            );
+            surfaceScalarField rAU2f("rAU2f", fvc::interpolate(rAU2));
+            surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(CpIPh*rAU2));
+            surfaceScalarField alpharAUf2
+            (
+                fvc::interpolate(max(alpha2, phase2.residualAlpha())*rAU2)
+            );
             solve
             (
                 U2Eqn
@@ -154,8 +167,8 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 fvc::reconstruct
                 (
                     (
-                      - (alphaf2 - CpIPhf)*fvc::snGrad(p)
-                    ) * mesh.magSf()
+                      - (alpharAUf2 - CpIPhf)*fvc::snGrad(p)
+                    ) * mesh.magSf() / rAU2f
                   // drag
                  + (fvc::interpolate(rAU2*Kd)*phi1)/rAU2f
                  + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
