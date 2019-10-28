@@ -1013,8 +1013,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         MijMij.max(SMALL);
         
         volScalarField CmuT = 0.5*(filterS(Lij * Mij)/(MijMij));
-        CmuT.min(1.0);
-        CmuT.max(SMALL);
+        
+        CmuT.min(2.0*sqr(CmuScalar_.value()));
+        CmuT.max(0.01);
+        
         Cmu_ = pos(alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(alpha_- residualAlpha_)*CmuScalar_;
         // Cmu_    = CmuScalar_;

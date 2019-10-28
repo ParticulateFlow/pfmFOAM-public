@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
                 MijMij.max(SMALL);
         
                 volScalarField CmuT = 0.5*(filterS_(Lij * Mij)/(MijMij));
-                CmuT.min(2.0*CmuScalar_.value());
+                CmuT.min(1.0);
                 CmuT.max(0.1);
                 
                 Cmu_ = sqrt(CmuT);
