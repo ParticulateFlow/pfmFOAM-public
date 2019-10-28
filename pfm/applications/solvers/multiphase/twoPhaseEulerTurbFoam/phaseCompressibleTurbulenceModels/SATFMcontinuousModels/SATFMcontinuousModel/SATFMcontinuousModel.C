@@ -888,6 +888,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
         // Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
+        /*
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
@@ -906,6 +907,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Ceps_.min(1.0);
         Ceps_.max(0.01);
+        */
         // Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_/Ceps_;
