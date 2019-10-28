@@ -888,14 +888,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
         // Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
-        volScalarField kmf(filter_(km));
-        kmf.max(kSmall.value());
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = (
-                                    alpha2f*kmf*sqrt(magSqrDf)
-                                  - filter_(alpha*km*sqrt(magSqrD))
+        volScalarField MijEps = sqr(deltaF_*Cmu_)
+                              * (
+                                    alpha2f*magSqrDf*sqrt(magSqrDf)
+                                  - filter_(alpha*magSqrD*sqrt(magSqrD))
                                 );
         volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
@@ -905,9 +904,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
         
-        Ceps_.min(100.0);
-        Ceps_.max(0.1);
-        Ceps_ = Ceps_*Cmu_;
+        Ceps_.min(1.0);
+        Ceps_.max(0.01);
         // Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_/Ceps_;
