@@ -983,16 +983,16 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    * max(filter_(magSqr(Uc_))- 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
         xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
 
+        // smooth and limit xiPhiGG_
+        xiPhiGG_.max(-0.99);
+        xiPhiGG_.min(0.99);
+        
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                * sqrt(max(aUU,kSmall));
         
         xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden));
-
-        // smooth and limit xiPhiGG_
-        xiPhiGG_.max(-0.99);
-        xiPhiGG_.min(0.99);
         
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(-0.99);

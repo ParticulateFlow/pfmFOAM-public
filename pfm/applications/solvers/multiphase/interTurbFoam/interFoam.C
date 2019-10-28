@@ -166,8 +166,8 @@ int main(int argc, char *argv[])
                 MijMij.max(SMALL);
         
                 volScalarField CmuT = 0.5*(filterS_(Lij * Mij)/(MijMij));
-                CmuT.min(0.5);
-                CmuT.max(SMALL);
+                CmuT.min(2.0*CmuScalar_.value());
+                CmuT.max(0.1);
                 
                 Cmu_ = sqrt(CmuT);
                 volScalarField nutSigmaCorr = -filterL_(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho);
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
                                              + Cst_*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.1);
-                corrSurfaceTensionForce_.min(100.0);
+                corrSurfaceTensionForce_.min(10.0);
                 turbulence->correct();
             }
         }
