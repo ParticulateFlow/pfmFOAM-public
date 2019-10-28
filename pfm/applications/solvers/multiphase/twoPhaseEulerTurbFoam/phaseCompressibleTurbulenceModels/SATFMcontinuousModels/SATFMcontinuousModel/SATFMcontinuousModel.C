@@ -419,8 +419,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                 IOobject::NO_WRITE
             ),
           - (nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * pos(scalar(1.0) - alpha_ - residualAlpha_) * alpha_ *
-            symm(R2_)
+          + 2.0 * alpha_ * symm(R2_)
         )
     );
 }
@@ -459,8 +458,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                 IOobject::NO_WRITE
             ),
           - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * pos(scalar(1.0) - alpha_ - residualAlpha_) * alpha_ *
-            symm(R2_)
+          + 2.0 * alpha_ * symm(R2_)
         )
     );
 }
@@ -718,6 +716,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         "eSum",
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
+    );
+    dimensionedTensor zeroR
+    (
+        "eSum",
+        dimensionSet(0, 2, -2, 0, 0, 0, 0),
+        tensor(0,0,0,0,0,0,0,0,0)
     );
     
     volTensorField gradU(fvc::grad(U_));
@@ -1140,7 +1144,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
     } else {
         // compute R2_
-        R2_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+        R2_ = zeroR;
     }
     
     // Limit viscosity and add frictional viscosity
