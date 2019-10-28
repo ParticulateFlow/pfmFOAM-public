@@ -1103,7 +1103,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        * pos(xiKgradAlpha);
     }
     // limti alphaP2Mean_
-    alphaP2Mean_.max(SMALL);
     volScalarField alphaM  = alphaMax_ - alpha1;
     alphaM.max(0.0);
     volScalarField alphaL2 = sqr(min(alpha1,alphaM));
@@ -1111,6 +1110,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                          alphaP2Mean_,
                          0.99*alphaL2
                       );
+    alphaP2Mean_.max(SMALL);
     alphaP2Mean_.correctBoundaryConditions();
 
     

@@ -126,11 +126,19 @@ mesh.setFluxRequired(alpha1.name());
 
 // fields required to close SGS terms
 Info<< "Defining SGS extension\n" << endl;
-dimensionedScalar Cmu_
+
+volScalarField Cmu_
 (
-     "Cmu",
-     dimensionSet(0,0,0,0,0,0,0),
-     0.3
+     IOobject
+     (
+          "Cmu",
+          runTime.timeName(),
+          mesh,
+          IOobject::NO_READ,
+          IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 0.3)
 );
 
 dimensionedScalar Csigma_
@@ -153,7 +161,7 @@ volScalarField nutSigma_
      mesh
 );
 
-volScalarField Cst
+volScalarField Cst_
 (
      IOobject
      (
@@ -164,7 +172,7 @@ volScalarField Cst
           IOobject::AUTO_WRITE
      ),
      mesh,
-     dimensionedScalar("1", dimensionSet(0,0,0,0,0,0,0), 0.15)
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 1.0)
 );
 
 volScalarField deltaF_
@@ -201,7 +209,7 @@ cellVolume.ref() = mesh.V();
 deltaF_ = pow(cellVolume,1.0/3.0);
 
 volScalarField wD = wallDist(mesh).y();
-deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
+deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
 
 
 volScalarField corrSurfaceTensionForce_
@@ -220,3 +228,4 @@ volScalarField corrSurfaceTensionForce_
 
 simpleTestFilter filter_(mesh);
 simpleFilter filterS_(mesh);
+laplaceFilter filterL_(mesh,24.0);

@@ -48,6 +48,7 @@ Description
 #include "wallDist.H"
 #include "simpleTestFilter.H"
 #include "simpleFilter.H"
+#include "laplaceFilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -157,17 +158,30 @@ int main(int argc, char *argv[])
                 tmp<volTensorField> tgradU(fvc::grad(U));
                 const volTensorField& gradU(tgradU());
                 volTensorField D(0.5*(gradU+T(gradU)));
-
+                 // Dynamic adjustment of Cmu
+                volScalarField Lij  = filter_(magSqr(U)) - magSqr(filter_(U));
+                Lij.max(0);
+                volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
+                volScalarField MijMij = filterS_(sqr(Mij));
+                MijMij.max(SMALL);
+        
+                volScalarField CmuT = 0.5*(filterS_(Lij * Mij)/(MijMij));
+                CmuT.min(0.5);
+                CmuT.max(SMALL);
+                
+                Cmu_ = sqrt(CmuT);
+                volScalarField nutSigmaCorr = -filterL_(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho);
+                nutSigmaCorr.max(SMALL);
                 nutSigma_ =  sqr(Cmu_*deltaF_)
                            * sqrt(
                                      2.0*(dev(D)&&D)
-                                   + mag(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho)
+                                   + nutSigmaCorr
                                 );
                 nutSigma_.correctBoundaryConditions();
                 // Limit nut
                 nutSigma_ = min(nutSigma_,1.0e5*nu);
                 nutSigma_.max(SMALL);
-                
+ 
                 // Dynamic adjustment of Cst
                 volTensorField Dhat(filter_(D));
                 volScalarField sigmaKhat(filter_(mixture.sigmaK()));
@@ -184,20 +198,20 @@ int main(int argc, char *argv[])
                 volVectorField gradAlpha = fvc::grad(alpha1);
                 volVectorField gradAlphaHat = filter_(gradAlpha);
                 
-                volVectorField Mij = sigmaKhat*gradAlphaHat*sqrt(nutSigmaHat/nu)
-                                   - filter_(mixture.sigmaK()*gradAlpha*sqrt(nutSigma_/nu));
-                volVectorField Lij = 2.0*(filter_(mixture.sigmaK()*gradAlpha) - sigmaKhat*gradAlphaHat);
-                volScalarField MijMij = filterS_(Mij&Mij);
-                MijMij.max(ROOTVSMALL);
+                volVectorField MijS = sigmaKhat*gradAlphaHat*sqrt(nutSigmaHat/nu)
+                                    - filter_(mixture.sigmaK()*gradAlpha*sqrt(nutSigma_/nu));
+                volVectorField LijS = 2.0*(filter_(mixture.sigmaK()*gradAlpha) - sigmaKhat*gradAlphaHat);
+                volScalarField MijMijS = filterS_(MijS&MijS);
+                MijMijS.max(ROOTVSMALL);
               
-                Cst = filterS_(Lij&Mij)/MijMij;
+                Cst_ = (filterS_(LijS&MijS))/MijMijS;
 
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
-                                             + Cst*sqrt(nutSigma_/nu)
+                                             + Cst_*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.1);
                 corrSurfaceTensionForce_.min(100.0);
