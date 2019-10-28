@@ -909,7 +909,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
