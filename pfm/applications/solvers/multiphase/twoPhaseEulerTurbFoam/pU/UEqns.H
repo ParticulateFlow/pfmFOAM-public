@@ -78,10 +78,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
             
             surfaceScalarField pPrimef
             (
-                fvc::interpolate
-                (
-                    phase1.turbulence().pPrime()*rAU1
-                )
+                phase1.turbulence().pPrimef()*rAU1f
             );
             surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(CpIPh*rAU1));
             surfaceScalarField alpharAUf1
@@ -100,7 +97,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                       - (alpharAUf1 + CpIPhf)*fvc::snGrad(p)
                     ) * mesh.magSf() / rAU1f
                   // drag
-                  + (fvc::interpolate(rAU1*Kd)*phi2)/rAU1f
+                  + (fvc::interpolate(rAU1*Kd/(alpha2*rho2))*alphaRhoPhi2)/rAU1f
                   + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
                 )
             );
@@ -170,7 +167,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                       - (alpharAUf2 - CpIPhf)*fvc::snGrad(p)
                     ) * mesh.magSf() / rAU2f
                   // drag
-                 + (fvc::interpolate(rAU2*Kd)*phi1)/rAU2f
+                 + (fvc::interpolate(rAU2*Kd/(max(alpha1,phase1.residualAlpha())*rho1))*alphaRhoPhi1)/rAU2f
                  + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
                 )
             );
