@@ -869,6 +869,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         + xiPhiG_
                       );
         */
+        xiPhiG_ = 0.5*(
+                        - mag(xiPhiG_)*uSlip
+                              /(mag(uSlip)+uSmall)
+                        + xiPhiG_
+                      );
         boundxiPhiG(xiPhiG_);
                
         // compute mixing length dynamically
