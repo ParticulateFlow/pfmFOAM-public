@@ -1256,6 +1256,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
             // stress at patches
+            /*
             const fvPatchList& patches = mesh_.boundary();
             volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
             volVectorField::Boundary& kBf  = kt.boundaryFieldRef();
@@ -1273,7 +1274,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     }
                 }
             }
-            
+            */
         } else {
             volScalarField kmt  = (kt & eSum);
             kmt.max(kSmall.value());
