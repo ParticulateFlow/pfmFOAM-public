@@ -973,11 +973,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         + xiPhiS_
                       );
         */
-        xiPhiS_ = 0.5*(
-                        - mag(xiPhiS_)*uSlip
-                              /(mag(uSlip)+uSmall)
-                        + xiPhiS_
-                      );
         boundxiPhiS(xiPhiS_);
         
         // compute triple correlation
