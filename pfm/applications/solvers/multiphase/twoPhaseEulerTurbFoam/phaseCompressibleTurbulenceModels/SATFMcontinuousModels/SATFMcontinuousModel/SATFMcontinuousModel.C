@@ -821,7 +821,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                           filter_(alpha1*U)
                                         - alpha1f*filter_(U)
                                       );
-
+        /*
         volScalarField tmpA = alpha1fP2-sqr(alpha1f);
         volScalarField tmpDenX = tmpA
                               * (
@@ -855,7 +855,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
-        /*
+        */
         volScalarField xiPhiGDenomSqr =   (alpha1fP2-sqr(alpha1f))
                                         * (filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf));
         xiPhiGDenomSqr.max(ROOTVSMALL);
@@ -863,6 +863,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         // limit and smooth correlation coefficients
         // xiPhiG_
+        /*
         xiPhiG_ = 0.5*(
                         - mag(xiPhiG_)*gradAlpha
                               /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))

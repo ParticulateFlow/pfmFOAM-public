@@ -927,7 +927,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                           filter_(alpha*U)
                                         - alphaf*filter_(U)
                                       );
-
+        /*
         volScalarField tmpA = alphafP2-sqr(alphaf);
         volScalarField tmpDenX = tmpA
                               * (
@@ -962,11 +962,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
 
-        /*
+        */
         volScalarField xiPhiSDenomSqr =   (filter_(sqr(alpha))-sqr(alphaf))*(aUU);
         xiPhiSDenomSqr.max(kSmall.value());
         xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(xiPhiSDenomSqr))/filterS(xiPhiSDenomSqr);
         // smooth correlation coefficient
+        /*
         xiPhiS_ = 0.5*(
                         - mag(xiPhiS_)*gradAlpha
                               /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
