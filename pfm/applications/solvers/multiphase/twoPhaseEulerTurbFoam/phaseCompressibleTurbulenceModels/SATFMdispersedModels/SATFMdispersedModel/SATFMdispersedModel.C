@@ -1318,8 +1318,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          << "    max(k1)         = " << max(k_&eSum).value() << nl
          << "    mean(k1x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
                                         /fvc::domainIntegrate(alpha).value()
+                                     << nl
          << "    mean(k1y)       = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
                                         /fvc::domainIntegrate(alpha).value()
+                                     << nl
          << "    mean(k1z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
          << endl;
