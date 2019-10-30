@@ -131,6 +131,13 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("maxK",25.0)
     ),
 
+    gN_
+    (
+        "g",
+        dimensionSet(0,1,-2,0,0),
+        coeffDict_.lookupOrDefault<vector>("g",vector(0,0,-9.81))
+    ),
+
     k_
     (
         IOobject
@@ -353,7 +360,8 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
-
+        gN_.readIfPresent(coeffDict());
+        
         return true;
     }
     else
@@ -686,7 +694,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volVectorField uSlip = U - Ud_;
     
     // gravity vector
-    const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
+    //const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
     
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
@@ -919,7 +927,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p);
 
-        Cp_ = (gradp&g)/(rhom*(g&g));
+        Cp_ = (gradp&gN_)/(rhom*(gN_&gN_));
         Cp_ = filterS(Cp_);
         Cp_.min(1.0);
         Cp_.max(0.1);
@@ -942,7 +950,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
     // Compute k_
     // ---------------------------
-    volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*g/beta;
+    volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibrium_) {
         if (anIsoTropicNut_) {
             volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));

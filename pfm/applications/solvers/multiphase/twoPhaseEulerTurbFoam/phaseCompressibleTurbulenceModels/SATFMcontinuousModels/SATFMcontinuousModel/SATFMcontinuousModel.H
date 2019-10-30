@@ -126,7 +126,9 @@ class SATFMcontinuousModel
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
 
-
+            //- maximum turbulent kinetic energy
+            dimensionedVector gN_;
+    
         // SA-TFM fields
 
             //- normal components of Reynoldsstress tensor
