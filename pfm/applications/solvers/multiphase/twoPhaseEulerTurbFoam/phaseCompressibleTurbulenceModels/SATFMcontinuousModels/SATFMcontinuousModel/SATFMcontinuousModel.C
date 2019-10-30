@@ -1159,8 +1159,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          << "    max(k2)         = " << max(k_&eSum).value() << nl
          << "    mean(k2x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
                                         /fvc::domainIntegrate(alpha).value()
+                                     << nl
          << "    mean(k2y)       = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
                                         /fvc::domainIntegrate(alpha).value()
+                                     << nl
          << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
          << endl;
