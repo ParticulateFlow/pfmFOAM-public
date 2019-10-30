@@ -918,7 +918,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_.min(1.0);
         Ceps_.max(0.01);
         */
-        // Ceps_   = CepsScalar_;
+        Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_/Ceps_;
         
