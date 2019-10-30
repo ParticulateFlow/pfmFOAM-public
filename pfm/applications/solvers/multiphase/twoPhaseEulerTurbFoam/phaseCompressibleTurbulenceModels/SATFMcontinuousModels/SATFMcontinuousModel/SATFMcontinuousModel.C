@@ -1156,7 +1156,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl
-         << "    max(k_)         = " << max(km).value() << endl;
+         << "    max(k2)         = " << max(k_&eSum).value() << nl
+         << "    mean(k2x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
+                                        /fvc::domainIntegrate(alpha).value()
+         << "    mean(k2y)       = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
+                                        /fvc::domainIntegrate(alpha).value()
+         << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
+                                        /fvc::domainIntegrate(alpha).value()
+         << endl;
 }
 
 
