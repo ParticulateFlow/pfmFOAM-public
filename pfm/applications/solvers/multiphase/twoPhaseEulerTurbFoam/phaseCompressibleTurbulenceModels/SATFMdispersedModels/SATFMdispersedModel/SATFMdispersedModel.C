@@ -817,9 +817,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // slip velocity
     volVectorField uSlip = Uc_ - U;
     
-    // gravity vector
-    const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
-    
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
