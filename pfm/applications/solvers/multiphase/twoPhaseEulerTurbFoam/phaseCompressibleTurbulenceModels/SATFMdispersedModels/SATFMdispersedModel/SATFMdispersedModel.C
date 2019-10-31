@@ -139,6 +139,12 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
     ),
 
+    gN_
+    (
+        "g",
+        dimensionSet(0,1,-2,0,0),
+        coeffDict_.lookupOrDefault<vector>("g",vector(0,0,-9.81))
+    ),
 
     maxK_
     (
@@ -444,6 +450,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         CepsScalar_.readIfPresent(coeffDict());
         CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
+        gN_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         frictionalStressModel_->read();
 
@@ -1050,7 +1057,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // Compute k_
     // ---------------------------
     if (!equilibrium_) {
-        volVectorField pDil = Cp_*alpha*(rho-rho2)*g*sqrt(2.0*alphaP2MeanO);
+        volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2MeanO);
         
         // compute production term:
         if (anIsoTropicNut_) {

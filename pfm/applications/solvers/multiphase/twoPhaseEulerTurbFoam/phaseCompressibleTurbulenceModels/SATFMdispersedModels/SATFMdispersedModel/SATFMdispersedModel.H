@@ -136,6 +136,9 @@ class SATFMdispersedModel
             //- turbulent schmidt number
             dimensionedScalar sigma_;
     
+            //- gravity vector
+            dimensionedVector gN_;
+    
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
 

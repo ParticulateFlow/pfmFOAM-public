@@ -124,18 +124,18 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     ),
 
 
-    maxK_
-    (
-        "maxK",
-        dimensionSet(0,2,-2,0,0),
-        coeffDict_.lookupOrDefault<scalar>("maxK",25.0)
-    ),
-
     gN_
     (
         "g",
         dimensionSet(0,1,-2,0,0),
         coeffDict_.lookupOrDefault<vector>("g",vector(0,0,-9.81))
+    ),
+
+    maxK_
+    (
+        "maxK",
+        dimensionSet(0,2,-2,0,0),
+        coeffDict_.lookupOrDefault<scalar>("maxK",25.0)
     ),
 
     k_
@@ -359,8 +359,8 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         CepsScalar_.readIfPresent(coeffDict());
         CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
-        maxK_.readIfPresent(coeffDict());
         gN_.readIfPresent(coeffDict());
+        maxK_.readIfPresent(coeffDict());
         
         return true;
     }

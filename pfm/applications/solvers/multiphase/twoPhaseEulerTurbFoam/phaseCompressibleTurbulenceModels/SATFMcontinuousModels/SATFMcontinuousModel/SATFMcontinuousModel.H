@@ -121,13 +121,13 @@ class SATFMcontinuousModel
             dimensionedScalar CpScalar_;
     
             //- turbulent schmidt number
-            dimensionedScalar sigma_;    
+            dimensionedScalar sigma_;
+    
+            //- gravity vector
+            dimensionedVector gN_;
     
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
-
-            //- maximum turbulent kinetic energy
-            dimensionedVector gN_;
     
         // SA-TFM fields
 
