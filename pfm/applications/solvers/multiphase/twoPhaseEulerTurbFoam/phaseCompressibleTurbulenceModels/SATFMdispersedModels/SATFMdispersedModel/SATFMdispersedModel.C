@@ -1169,6 +1169,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField divU(fvc::div(U));
     volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/lm_;
     volScalarField denom = divU + dissPhiP2;
+    denom.max(SMALL);
     volScalarField xiKgradAlpha = (
                                  ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
                                + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
@@ -1214,8 +1215,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       / (sqr(denom) + dimensionedScalar("small",dimensionSet(0,0,-2,0,0), 1.0e-8))
-                       * pos(denom)
+                       / sqr(denom)
                        * neg(xiKgradAlpha);
     }
     // limit alphaP2Mean_
