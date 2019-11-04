@@ -53,7 +53,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha1*(rho1-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          // + alpha1*rho1*totalMomentum/deltaT
+          + alpha1*rho1*totalMomentum/deltaT
          ==
             fvOptions(alpha1, rho1, U1)
         );
@@ -130,7 +130,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha2*(rho2-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          // + alpha2*rho2*totalMomentum/deltaT
+          + alpha2*rho2*totalMomentum/deltaT
          ==
             fvOptions(alpha2, rho2, U2)
         );
