@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
                 const volTensorField& gradU(tgradU());
                 volTensorField D(0.5*(gradU+T(gradU)));
                  // Dynamic adjustment of Cmu
+                /*
                 volScalarField Lij  = filter_(magSqr(U)) - magSqr(filter_(U));
                 Lij.max(0);
                 volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
@@ -170,11 +171,33 @@ int main(int argc, char *argv[])
                 CmuT.max(0.1);
                 
                 Cmu_ = sqrt(CmuT);
+                */
                 volScalarField nutSigmaCorr = -filterL_(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho);
                 nutSigmaCorr.max(SMALL);
+                /*
                 nutSigma_ =  sqr(Cmu_*deltaF_)
                            * sqrt(
                                      2.0*(dev(D)&&D)
+                                   + nutSigmaCorr
+                                );
+                 */
+                // WALE
+                volSymmTensorField Sijd(dev(symm(gradU&gradU)));
+                volScalarField strain(pow3(magSqr(Sijd))
+                                    /sqr(
+                                        pow(magSqr(dev(D)),5.0/2.0)
+                                      + pow(magSqr(Sijd),5.0/4.0)
+                                      + dimensionedScalar
+                                           (
+                                               "small",
+                                               dimensionSet(0, 0, -5, 0, 0),
+                                               small
+                                           )
+                                      )
+                                    );
+                nutSigma_ =  sqr(Cmu_*deltaF_)
+                           * sqrt(
+                                     2.0*strain
                                    + nutSigmaCorr
                                 );
                 nutSigma_.correctBoundaryConditions();
@@ -183,28 +206,50 @@ int main(int argc, char *argv[])
                 nutSigma_.max(SMALL);
  
                 // Dynamic adjustment of Cst
+
                 volTensorField Dhat(filter_(D));
                 volScalarField sigmaKhat(filter_(mixture.sigmaK()));
-                
+/*
                 volScalarField nutSigmaHat =
                              sqr(2.0*Cmu_*deltaF_)
                            * sqrt(
                                      2.0*(dev(Dhat)&&Dhat)
                                    + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
                                 );
-                nutSigmaHat = min(nutSigmaHat,1.0e4*nu);
+*/
+                volSymmTensorField SijdHat(filter_(dev(symm(gradU&gradU))));
+                volScalarField strainHat(pow3(magSqr(SijdHat))
+                                    /sqr(
+                                        pow(magSqr(dev(Dhat)),5.0/2.0)
+                                      + pow(magSqr(SijdHat),5.0/4.0)
+                                      + dimensionedScalar
+                                           (
+                                               "small",
+                                               dimensionSet(0, 0, -5, 0, 0),
+                                               small
+                                           )
+                                      )
+                                    );
+                volScalarField nutSigmaHat =
+                             sqr(2.0*Cmu_*deltaF_)
+                           * sqrt(
+                                     2.0*(strainHat)
+                                   + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
+                                );
+                nutSigmaHat = min(nutSigmaHat,1.0e5*nu);
                 nutSigmaHat.max(SMALL);
                 
                 volVectorField gradAlpha = fvc::grad(alpha1);
                 volVectorField gradAlphaHat = filter_(gradAlpha);
-                
+ 
                 volVectorField MijS = sigmaKhat*gradAlphaHat*sqrt(nutSigmaHat/nu)
                                     - filter_(mixture.sigmaK()*gradAlpha*sqrt(nutSigma_/nu));
+ 
                 volVectorField LijS = 2.0*(filter_(mixture.sigmaK()*gradAlpha) - sigmaKhat*gradAlphaHat);
                 volScalarField MijMijS = filterS_(MijS&MijS);
                 MijMijS.max(ROOTVSMALL);
               
-                Cst_ = (filterS_(LijS&MijS))/MijMijS;
+                Cst_ = mag(filterS_(LijS&MijS))/MijMijS;
 
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
@@ -214,7 +259,7 @@ int main(int argc, char *argv[])
                                              + Cst_*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.1);
-                corrSurfaceTensionForce_.min(10.0);
+                corrSurfaceTensionForce_.min(100.0);
                 turbulence->correct();
             }
         }
