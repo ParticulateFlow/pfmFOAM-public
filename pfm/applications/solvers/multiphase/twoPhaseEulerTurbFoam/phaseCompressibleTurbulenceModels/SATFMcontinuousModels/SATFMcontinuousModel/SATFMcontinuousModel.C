@@ -1039,7 +1039,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             * Foam::max(
                                  lm_[cellI]*SijSijV[cellI].component(i)
                                + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
-                               - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i))
+                               - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i) + pDil[cellI].component(i))
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
                                 , 0.
                               )
@@ -1174,7 +1174,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                      << nl
          << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
-                                     << nl    
+                                     << nl
          << "    mean(phi2P2)    = " << fvc::domainIntegrate(alpha*(alphaP2Mean_)).value()
                                         /fvc::domainIntegrate(alpha).value()
          << endl;
