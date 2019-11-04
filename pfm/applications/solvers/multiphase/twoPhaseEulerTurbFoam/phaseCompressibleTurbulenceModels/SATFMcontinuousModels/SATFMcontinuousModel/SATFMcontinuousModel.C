@@ -1065,7 +1065,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
     volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(km)/lm_;
-    volScalarField denom = divU + dissPhiP2;
+    volScalarField denom = abs(divU) + dissPhiP2;
     denom.max(SMALL);
     volScalarField xiKgradAlpha = - (
                                        ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)))
