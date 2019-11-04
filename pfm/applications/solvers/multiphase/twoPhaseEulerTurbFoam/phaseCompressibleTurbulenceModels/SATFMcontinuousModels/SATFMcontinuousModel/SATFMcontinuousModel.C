@@ -1114,7 +1114,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        * sqr(xiKgradAlpha)
                        / (sqr(denom) + dimensionedScalar("small",dimensionSet(0,0,-2,0,0), 1.0e-8))
                        * pos(denom)
-                       * pos(xiKgradAlpha);
+                       * neg(xiKgradAlpha);
     }
     // limti alphaP2Mean_
     volScalarField alphaM  = alphaMax_ - alpha1;
