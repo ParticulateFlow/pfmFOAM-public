@@ -1174,6 +1174,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                      << nl
          << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
+                                     << nl    
          << "    mean(phi2P2)    = " << fvc::domainIntegrate(alpha*(alphaP2Mean_)).value()
                                         /fvc::domainIntegrate(alpha).value()
          << endl;
