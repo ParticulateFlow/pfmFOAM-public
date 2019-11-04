@@ -85,7 +85,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     (
         "xiPhiContScalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("xiPhiG",-0.5)
+        coeffDict_.lookupOrDefault<scalar>("xiPhiG",0.5)
     ),
 
     CmuScalar_
@@ -938,7 +938,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
         xiPhiG_ = - (xiPhiContScalar_)
-                  * (scalar(1.0) - 0.5*alpha1)
+                  * (scalar(1.0) - alpha1)
                   * xiPhiGDir;
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
@@ -1124,7 +1124,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                          alphaP2Mean_,
                          0.99*alphaL2
                       );
-    alphaP2Mean_.max(SMALL);
+    alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
 
     
