@@ -1134,7 +1134,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
         // compute correlation coefficients
-        xiUU_ = (filter_(alpha*(U*U))/alphaf - Uf*Uf)
+        xiUU_ = 3.0*(filter_(alpha*(U*U))/alphaf - Uf*Uf)
                 /max(filter_(alpha*(U&U))/alphaf - (Uf&Uf),kSmall);
         // limit and smooth correlation coefficients
         xiUU_ = filterS(xiUU_);
