@@ -925,7 +925,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
 
-        Cp_ = (gradp&gN_)/(rhom*(gN_&gN_))
+        Cp_ = (gradp&gN_)/(rhom*magSqr(gN_))
             + dimensionedScalar("unity",dimensionSet(0,0,0,0,0),1.0);
         Cp_ = filterS(Cp_);
         Cp_.min(1.0);
