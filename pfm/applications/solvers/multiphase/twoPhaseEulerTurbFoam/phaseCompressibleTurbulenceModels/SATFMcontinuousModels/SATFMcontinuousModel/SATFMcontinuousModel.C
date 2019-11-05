@@ -921,7 +921,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         CphiG_ = CphiGscalar_*Cmu_;
         
         // Currently no dynamic procedure for Cp
-        const volScalarField& p(mesh_.lookupObject<volScalarField>("p"));
+        const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
 
