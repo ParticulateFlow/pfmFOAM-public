@@ -38,8 +38,9 @@ volVectorField KdUdrift(fluid.KdUdrift());
           - fvm::Sp(contErr1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
+         ==
           // Virtual mass force
-          + Vm
+          - Vm
            *(
                 fvm::ddt(U1)
               + fvm::div(phi1, U1)
@@ -48,14 +49,13 @@ volVectorField KdUdrift(fluid.KdUdrift());
             )
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
-          - KdUdrift
+          + KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
-          - alpha1*(rho1-rhoMix)*gN
+          + alpha1*(rho1-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          + alpha1*rho1*totalMomentum/deltaT
-         ==
-            fvOptions(alpha1, rho1, U1)
+          - alpha1*rho1*totalMomentum/deltaT
+          + fvOptions(alpha1, rho1, U1)
         );
         U1Eqn.relax();
         U1Eqn += fvm::Sp(Kd, U1);
@@ -115,8 +115,9 @@ volVectorField KdUdrift(fluid.KdUdrift());
           - fvm::Sp(contErr2, U2)
           + MRF.DDt(alpha2*rho2 + Vm, U2)
           + phase2.turbulence().divDevRhoReff(U2)
+        ==
           // Virtual mass force
-          + Vm
+          - Vm
            *(
                 fvm::ddt(U2)
               + fvm::div(phi2, U2)
@@ -125,14 +126,13 @@ volVectorField KdUdrift(fluid.KdUdrift());
             )
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
-          + KdUdrift
+          - KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
-          - alpha2*(rho2-rhoMix)*gN
+          + alpha2*(rho2-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          + alpha2*rho2*totalMomentum/deltaT
-         ==
-            fvOptions(alpha2, rho2, U2)
+          - alpha2*rho2*totalMomentum/deltaT
+          + fvOptions(alpha2, rho2, U2)
         );
         U2Eqn.relax();
         U2Eqn += fvm::Sp(Kd, U2);
