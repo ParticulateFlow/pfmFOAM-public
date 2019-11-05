@@ -1007,9 +1007,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
-          - coeffDissipation*sqrt(k_&eX)*eX
-          - coeffDissipation*sqrt(k_&eY)*eY
-          - coeffDissipation*sqrt(k_&eZ)*eZ
+          - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
+          - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
+          - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );

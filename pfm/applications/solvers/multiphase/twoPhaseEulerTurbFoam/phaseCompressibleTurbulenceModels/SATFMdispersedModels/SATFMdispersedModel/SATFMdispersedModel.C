@@ -1109,9 +1109,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
           + fvm::Sp(-2.0*beta,k_)
           // pressure dilation & dissipation
-          - (coeffDissipation + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
-          - (coeffDissipation + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
-          - (coeffDissipation + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
+          - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
+          - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
+          - (coeffDissipation*(k_&eZ) + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
