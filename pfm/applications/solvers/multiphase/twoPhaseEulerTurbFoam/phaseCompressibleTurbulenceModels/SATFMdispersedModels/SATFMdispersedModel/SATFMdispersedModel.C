@@ -1068,7 +1068,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                + (((SijSij&eZ)&eZ)*sqrt(k_&eZ))*eZ
                               );
         }
-
+        
+        volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        
         fv::options& fvOptions(fv::options::New(mesh_));
         
         // Construct the transport equation for k
@@ -1106,12 +1108,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
                 )
           + fvm::Sp(-2.0*beta,k_)
-          // pressure dilation
-          - ((pDil&eX)*(xiPhiS_&eX)*sqrt(k_&eX))*eX
-          - ((pDil&eY)*(xiPhiS_&eY)*sqrt(k_&eY))*eY
-          - ((pDil&eZ)*(xiPhiS_&eZ)*sqrt(k_&eZ))*eZ
+          // pressure dilation & dissipation
+          - (coeffDissipation + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
+          - (coeffDissipation + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
+          - (coeffDissipation + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
