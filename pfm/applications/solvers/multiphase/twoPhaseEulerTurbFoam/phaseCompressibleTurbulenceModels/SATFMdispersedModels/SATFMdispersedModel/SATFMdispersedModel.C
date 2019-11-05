@@ -1002,14 +1002,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(-0.99);
         xiGS_.min(0.99);
-        
-        // Currently no dynamic procedure for Ceps and Cp
-        // Set Ceps
-        Ceps_   = CepsScalar_;
-        // compute CphiS
-        CphiS_ = CphiSscalar_/Ceps_;
-        // Set Cp
-        Cp_     = CpScalar_;
+    
         // compute mixing length dynamically
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
@@ -1025,6 +1018,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Cmu_ = pos(alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(alpha_- residualAlpha_)*CmuScalar_;
         // Cmu_    = CmuScalar_;
+        
+        // Currently no dynamic procedure for Ceps and Cp
+        // Set Ceps
+        Ceps_   = CepsScalar_;
+        // compute CphiS
+        CphiS_ = CphiSscalar_*Cmu_;
+        // Set Cp
+        Cp_     = CpScalar_;
     } else {
         volVectorField xiPhiSDir = gradAlpha
                                   /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
