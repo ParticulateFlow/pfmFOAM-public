@@ -88,10 +88,10 @@ Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
     const fvMesh& mesh(pair_.phase1().mesh());
     const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
                                ("alphaP2Mean." + pair_.dispersed().name()));
-    /*
+
     const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
                                ("alphaP2Mean." + pair_.continuous().name()));
-    */
+
     const volVectorField& xiPhiG_(mesh.lookupObject<volVectorField>
                                ("xiPhiG"));
     const volVectorField& kC_(mesh.lookupObject<volVectorField>
@@ -115,15 +115,15 @@ Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(0,0,1)
     );
-    /*
+
     volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
-    */
+
     volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
     
     volVectorField kSqrt =  (xiPhiG_ & eX)*sqrt(mag(kC_ & eX))*eX
                           + (xiPhiG_ & eY)*sqrt(mag(kC_ & eY))*eY
                           + (xiPhiG_ & eZ)*sqrt(mag(kC_ & eZ))*eZ;
-    volScalarField alphaP2MeanN = sqrt(2.0 * alphaP2Mean1_)
+    volScalarField alphaP2MeanN = sqrt(2.0 * alphaP2Mean)
                                 /(alpha1*(scalar(1.0)-alpha1));
     
     return pos(pair_.dispersed() - residualAlpha_)
