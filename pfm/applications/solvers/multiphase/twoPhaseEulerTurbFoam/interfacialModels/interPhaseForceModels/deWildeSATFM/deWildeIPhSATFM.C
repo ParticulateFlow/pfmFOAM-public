@@ -85,11 +85,12 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
     const fvMesh& mesh(pair_.phase1().mesh());
     const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
                                         ("alphaP2Mean." + pair_.dispersed().name()));
+    /*
     const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
                                         ("alphaP2Mean." + pair_.continuous().name()));
     
     volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
-    
+    */
     volScalarField alpha1
     (
         max(pair_.dispersed(), residualAlpha_)
@@ -112,16 +113,16 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
     (
         alpha1*rho1 + alpha2*rho2
     );
-    
+    /*
     volScalarField Cp
     (
         alphaP2Mean*rho1/rho
     );
-    // limit Cp to prevent negative pre-factor in gas-phase momentum equation
-    /*
-    Cp = min(Cp,0.99*alpha2);
-    Cp = min(Cp,0.99*alpha1);
     */
+    volScalarField Cp
+    (
+        alphaP2Mean1_*rho1/rho
+    );
     return
         pos(pair_.dispersed() - residualAlpha_)*Cp;
 }

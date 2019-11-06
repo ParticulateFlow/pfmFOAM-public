@@ -865,10 +865,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                      ("k." + fluid.otherPhase(phase_).name()));
     
     // get alphaP2Mean
-    const volScalarField& alphaP2Mean2_(mesh_.lookupObject<volScalarField>
-                                        ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
-    volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
-    
+    // const volScalarField& alphaP2Mean2_(mesh_.lookupObject<volScalarField>
+    //                                    ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
+    //volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
+    const volScalarField& alphaP2MeanO = alphaP2Mean_;
     // simple filter for local smoothing
     simpleFilter filterS(mesh_);
     
