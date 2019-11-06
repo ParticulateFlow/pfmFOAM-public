@@ -163,7 +163,8 @@ int main(int argc, char *argv[])
             << endl;
         
         Info<< "mean gas density: "
-            << mean(rho2).value()
+            << fvc::domainIntegrate(alpha2*rho2).value()
+              /fvc::domainIntegrate(alpha2).value()
             << endl;
         
         #include "write.H"
