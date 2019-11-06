@@ -161,7 +161,11 @@ int main(int argc, char *argv[])
         Info<< "total solids mass: "
             << mag(fvc::domainIntegrate(alpha1*rho1).value())
             << endl;
-
+        
+        Info<< "mean gas density: "
+            << mean(rho2).value()
+            << endl;
+        
         #include "write.H"
 
         Info<< "ExecutionTime = "
