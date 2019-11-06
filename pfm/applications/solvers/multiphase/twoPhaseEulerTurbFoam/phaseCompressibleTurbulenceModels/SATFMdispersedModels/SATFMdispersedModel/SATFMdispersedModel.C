@@ -865,10 +865,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                      ("k." + fluid.otherPhase(phase_).name()));
     
     // get alphaP2Mean
-    // const volScalarField& alphaP2Mean2_(mesh_.lookupObject<volScalarField>
-    //                                    ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
-    //volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
-    const volScalarField& alphaP2MeanO = alphaP2Mean_;
+    const volScalarField& alphaP2Mean2_(mesh_.lookupObject<volScalarField>
+                                        ("alphaP2Mean." + fluid.otherPhase(phase_).name()));
+    volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
+
     // simple filter for local smoothing
     simpleFilter filterS(mesh_);
     
@@ -1004,6 +1004,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_.min(0.99);
     
         // compute mixing length dynamically
+        /*
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
@@ -1017,7 +1018,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         Cmu_ = pos(alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(alpha_- residualAlpha_)*CmuScalar_;
-        // Cmu_    = CmuScalar_;
+        */
+        Cmu_    = CmuScalar_;
         
         // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
