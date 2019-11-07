@@ -1241,11 +1241,26 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             volScalarField alphaf = filter_(alpha);
             alphaf.max(residualAlpha_.value());
             volVectorField Uf = filter_(alpha*U)/alphaf;
+            
             // compute correlation coefficients
-            xiUU_ = (filter_(alpha*(U*U))/alphaf - Uf*Uf)
-                    /max(filter_(alpha*(U&U))/alphaf - (Uf&Uf),kSmall);
-            // limit and smooth correlation coefficients
-            xiUU_ = filterS(xiUU_);
+            volTensorField xiUUnom = filterS(filter_(alpha*(U*U))/alphaf - Uf*Uf);
+            volVectorField xiUUden = filterS
+                                     (
+                                        sqrt(max(filter_(alpha*magSqr(U&eX))/alphaf - magSqr(Uf&eX),kSmall))*eX
+                                      + sqrt(max(filter_(alpha*magSqr(U&eY))/alphaf - magSqr(Uf&eY),kSmall))*eY
+                                      + sqrt(max(filter_(alpha*magSqr(U&eZ))/alphaf - magSqr(Uf&eZ),kSmall))*eZ
+                                     );
+            
+            forAll(cells,cellI)
+            {
+                for (int i=0; i<3; i++) {
+                    for (int j=0; j<3; j++) {
+                        xiUU_[cellI].component(j+i*3) = xiUUnom[cellI].component(j+i*3)
+                                                      / (xiUUden[cellI].component(i)*xiUUden[cellI].component(j));
+                    }
+                }
+            }
+            // limit correlation coefficients
             boundCorrTensor(xiUU_);
             
             // compute Reynolds-stress tensor
