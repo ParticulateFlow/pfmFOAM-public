@@ -583,24 +583,42 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    return
-    pos(alpha_ - residualAlpha_)*
-    (
-      - fvm::laplacian(rho_*nut_, U)
-      - fvc::div
+    if (!anIsoTropicNut_) {
+        return
+        pos(alpha_ - residualAlpha_)*
         (
-            (rho_*nut_)*dev2(T(fvc::grad(U)))
-        )
-      + fvc::div
+          - fvm::laplacian(rho_*nut_, U)
+          - fvc::div
+            (
+                (rho_*nut_)*dev2(T(fvc::grad(U)))
+            )
+          + fvc::div
+            (
+                 2.0
+               * alpha_
+               * rho_
+               * (
+                     R1_
+                 )
+            )
+        );
+    } else {
+        return
+        pos(alpha_ - residualAlpha_)*
         (
-             2.0
-           * alpha_
-           * rho_
-           * (
-                 R1_
-             )
-        )
-    );
+            fvc::laplacian(rho_*nut_, U)
+          + fvc::div
+            (
+                 2.0
+               * alpha_
+               * rho_
+               * (
+                     R1_
+                 )
+            )
+          - fvm::laplacian(rho_*nut_, U)
+        );
+    }
 }
 
 void Foam::RASModels::SATFMdispersedModel::boundNormalStress
@@ -964,20 +982,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
-
-        /*
-        volScalarField xiPhiSDenomSqr =   (filter_(sqr(alpha))-sqr(alphaf))*(aUU);
-        xiPhiSDenomSqr.max(kSmall.value());
-        xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(xiPhiSDenomSqr))/filterS(xiPhiSDenomSqr);
-         */
-        // smooth correlation coefficient
-        /*
-        xiPhiS_ = 0.5*(
-                        - mag(xiPhiS_)*gradAlpha
-                              /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
-                        + xiPhiS_
-                      );
-        */
+        // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         
         // compute triple correlation
@@ -1057,21 +1062,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibrium_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2MeanO);
         
-        // compute production term:
-        if (anIsoTropicNut_) {
-            volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-            shearProd_ =   (gradUR1&&(eX*eX))*(eX)
-                         + (gradUR1&&(eY*eY))*(eY)
-                         + (gradUR1&&(eZ*eZ))*(eZ);
-        } else {
-            shearProd_ = - lm_*(
-                                 (((SijSij&eX)&eX)*sqrt(k_&eX))*eX
-                               + (((SijSij&eY)&eY)*sqrt(k_&eY))*eY
-                               + (((SijSij&eZ)&eZ)*sqrt(k_&eZ))*eZ
-                              );
-        }
+        // compute production term according to Reynolds-stres model
+        volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
+        shearProd_ =   (gradUR1&&(eX*eX))*(eX)
+                     + (gradUR1&&(eY*eY))*(eY)
+                     + (gradUR1&&(eZ*eZ))*(eZ);
         
-        volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        // compute prefactor for dissipation term
+        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -1111,11 +1109,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
           + fvm::Sp(-2.0*beta,k_)
           // pressure dilation & dissipation
-          - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
-          - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
-          - (coeffDissipation*(k_&eZ) + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
+          //- (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
+          //- (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
+          //- (coeffDissipation*(k_&eZ) + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
+          - ((pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
+          - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
+          - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1208,7 +1209,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        / sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8))
                      ,alphaP2Mean_)
           - fvm::SuSp(divU,alphaP2Mean_)
-          //+ 2.0*nut_*magSqr(gradAlpha)
           // production/dissipation
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
@@ -1231,10 +1231,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                       );
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
-
+    
     {
         volVectorField kt(k_);
         boundNormalStress2(kt);
+        
+        volScalarField kmt  = (kt & eSum);
+        kmt.max(kSmall.value());
+        //compute nut_ (Schneiderbauer, 2017; equ. (34))
+        nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(kmt)*lm_;
 
         if (anIsoTropicNut_) {
             nut_ = dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0);
@@ -1277,31 +1282,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     }
                 }
             }
-            // stress at patches
-            /*
-            const fvPatchList& patches = mesh_.boundary();
-            volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-            volVectorField::Boundary& kBf  = kt.boundaryFieldRef();
-            volTensorField::Boundary& xiUUBf  = xiUU_.boundaryFieldRef();
-            forAll(patches, patchi)
-            {
-                if (!patches[patchi].coupled())
-                {
-                    R1Bf[patchi] =  (kBf[patchi]-(kBf[patchi]&patches[patchi].nf())*patches[patchi].nf())
-                                    *(kBf[patchi]-(kBf[patchi]&patches[patchi].nf())*patches[patchi].nf());
-                    for (int i=0; i<3; i++) {
-                        for (int j=0; j<3; j++) {
-                            R1Bf[patchi].component(j+i*3) = xiUUBf[patchi].component(j+i*3)*R1Bf[patchi].component(j+i*3);
-                        }
-                    }
-                }
-            }
-            */
         } else {
-            volScalarField kmt  = (kt & eSum);
-            kmt.max(kSmall.value());
-            // compute nut_ (Schneiderbauer, 2017; equ. (34))
-            nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(kmt)*lm_;
             R1_ = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);
         }
     }

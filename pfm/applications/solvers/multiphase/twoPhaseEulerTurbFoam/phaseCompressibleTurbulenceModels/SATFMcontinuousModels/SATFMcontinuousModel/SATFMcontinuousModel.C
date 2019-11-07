@@ -478,43 +478,42 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    
-    return
-    pos(scalar(1.0) - alpha_ - residualAlpha_)*
-    (
-      - fvm::laplacian(rho_*nut_, U)
-      - fvc::div
+    if (!anIsoTropicNut_) {
+        return
+        pos(scalar(1.0) - alpha_ - residualAlpha_)*
         (
-            (rho_*nut_)*dev2(T(fvc::grad(U)))
-        )
-      + fvc::div
+          - fvm::laplacian(rho_*nut_, U)
+          - fvc::div
+            (
+                (rho_*nut_)*dev2(T(fvc::grad(U)))
+            )
+          + fvc::div
+            (
+                 2.0
+               * alpha_
+               * rho_
+               * (
+                     R2_
+                 )
+            )
+        );
+    } else {
+        return
+        pos(scalar(1.0) - alpha_ - residualAlpha_)*
         (
-             2.0
-           * alpha_
-           * rho_
-           * (
-                 R2_
-             )
-        )
-    );
+            fvc::laplacian(rho_*nut_, U)
+          + fvc::div
+            (
+                 2.0
+               * alpha_
+               * rho_
+               * (
+                     R2_
+                 )
+            )
+          - fvm::laplacian(rho_*nut_, U)
+        );
+    }
 }
 
 void Foam::RASModels::SATFMcontinuousModel::boundNormalStress
@@ -862,21 +861,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
-        /*
-        volScalarField xiPhiGDenomSqr =   (alpha1fP2-sqr(alpha1f))
-                                        * (filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf));
-        xiPhiGDenomSqr.max(ROOTVSMALL);
-        xiPhiG_ = 3.0*filterS(xiPhiGNom*sqrt(xiPhiGDenomSqr))/filterS(xiPhiGDenomSqr);
-        */
-        // limit and smooth correlation coefficients
-        // xiPhiG_
-        /*
-        xiPhiG_ = 0.5*(
-                        - mag(xiPhiG_)*gradAlpha
-                              /(mag(gradAlpha)+dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
-                        + xiPhiG_
-                      );
-        */
+
+        // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
                
         // compute mixing length dynamically
@@ -955,20 +941,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // ---------------------------
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibrium_) {
-        if (anIsoTropicNut_) {
-            volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
-            volVectorField shearProd_ =   (gradUR2&&(eX*eX))*(eX)
-                                        + (gradUR2&&(eY*eY))*(eY)
-                                        + (gradUR2&&(eZ*eZ))*(eZ);
-        } else {
-            volVectorField shearProd_ = -lm_*(
-                                                 (((SijSij&eX)&eSum)*sqrt(k_&eX))*eX
-                                               + (((SijSij&eY)&eSum)*sqrt(k_&eY))*eY
-                                               + (((SijSij&eZ)&eSum)*sqrt(k_&eZ))*eZ
-                                             );
-        }
+        // compute production term according to Reynolds-stres model
+        volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
+        volVectorField shearProd_ =   (gradUR2&&(eX*eX))*(eX)
+                                    + (gradUR2&&(eY*eY))*(eY)
+                                    + (gradUR2&&(eZ*eZ))*(eZ);
         
-        volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        // compute prefactor for dissipation term
+        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -1012,10 +992,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
-          - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
-          - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
-          - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
+          // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
+          // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1067,6 +1047,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
     // compute nut_
     nut_ = alpha*sqrt(km)*lm_;
+    nut_.correctBoundaryConditions();
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
@@ -1109,7 +1090,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        / sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8))
                      ,alphaP2Mean_)
           - fvm::SuSp(divU,alphaP2Mean_)
-          //+ 2.0*nut_*magSqr(gradAlpha)
           // production/dissipation
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
@@ -1133,9 +1113,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
 
-    
     if (anIsoTropicNut_) {
-        nut_ = dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0);
+        // nut_ = dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0);
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
