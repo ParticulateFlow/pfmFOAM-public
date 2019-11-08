@@ -1062,8 +1062,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibrium_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2MeanO);
         
+        volTensorField R1t(R1_);
+        if (!anIsoTropicNut_) {
+            R1t -= nut_*(gradU + gradU.T());
+        }
         // compute production term according to Reynolds-stres model
-        volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
+        volTensorField gradUR1 = 0.5*((R1t&gradU) + (R1t.T()&gradU.T()));
         shearProd_ =   (gradUR1&&(eX*eX))*(eX)
                      + (gradUR1&&(eY*eY))*(eY)
                      + (gradUR1&&(eZ*eZ))*(eZ);
