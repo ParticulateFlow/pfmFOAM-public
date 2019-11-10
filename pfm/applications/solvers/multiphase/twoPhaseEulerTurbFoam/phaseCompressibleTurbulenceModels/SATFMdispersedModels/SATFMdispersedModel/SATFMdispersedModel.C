@@ -1064,7 +1064,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
-            R1t -= nut_*(gradU + gradU.T());
+            R1t -= nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stres model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + (R1t.T()&gradU.T()));
