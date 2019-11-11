@@ -112,11 +112,23 @@ protected:
 
     PtrList<cellSet> cellSets_;
 
+    List<scalarList> boxExtents_;
+
+    List<labelList> boxExtentsN_;
+
+    scalar dx_;
+
+    scalar dy_;
+
+    scalar dz_;
+
     wordList distDataScalarFieldNames_;
 
     wordList distDataVectorFieldNames_;
 
     OFstream timeListFile_;
+
+    label round(scalar);
 
     // Protected Member Functions
 

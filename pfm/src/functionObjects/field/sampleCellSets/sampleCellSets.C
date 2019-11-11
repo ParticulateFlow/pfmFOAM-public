@@ -44,42 +44,6 @@ namespace functionObjects
 
 void Foam::functionObjects::sampleCellSets::writeFileHeader(const label i)
 {
- /*   OFstream& file = this->file();
-
-    writeHeader(file, "Field minima and maxima");
-    writeCommented(file, "Time");
-
-    if (location_)
-    {
-        writeTabbed(file, "field");
-
-        writeTabbed(file, "min");
-        writeTabbed(file, "location(min)");
-
-        if (Pstream::parRun())
-        {
-            writeTabbed(file, "processor");
-        }
-
-        writeTabbed(file, "max");
-        writeTabbed(file, "location(max)");
-
-        if (Pstream::parRun())
-        {
-            writeTabbed(file, "processor");
-        }
-    }
-    else
-    {
-        forAll(fieldSet_, fieldi)
-        {
-            writeTabbed(file, "min(" + fieldSet_[fieldi] + ')');
-            writeTabbed(file, "max(" + fieldSet_[fieldi] + ')');
-        }
-    }
-
-    file<< endl;
-*/
 }
 
 
@@ -96,6 +60,9 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
     distDataMeshName_(dict.lookupOrDefault<word>("distDataMesh","region0")),
     distDataMesh_(refCast<const fvMesh>(runTime.lookupObject<objectRegistry>(distDataMeshName_))),
     cellSetNames_(),
+    dx_(0.0),
+    dy_(0.0),
+    dz_(0.0),
     distDataScalarFieldNames_(),
     distDataVectorFieldNames_(),
     timeListFile_("sampleTimes")
@@ -104,7 +71,7 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
 
     // get cell sets extensions and write them to file for later checks
     OFstream cellSetsFile("cellSetsExtensions");
-    cellSetsFile << "# cellSetIndex\txmin\txmax\tymin\tymax\tzmin\tzmax" << endl;
+    cellSetsFile << "# cellSetIndex\txmin\txmax\tymin\tymax\tzmin\tzmax\tnx\tny\tnz" << endl;
     for (label cellset = 0; cellset < numCellSets_; cellset++)
     {
         scalar xmin = 1e6;
@@ -114,6 +81,7 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
         scalar zmin = 1e6;
         scalar zmax = -1e6;
         labelList cellsInSet = cellSets_[cellset].toc();
+        // get min and max cell coordinates
         forAll(cellsInSet, cellI)
         {
             label cellID = cellsInSet[cellI];
@@ -127,8 +95,61 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
             if (cz > zmax) zmax = cz;
             else if (cz < zmin) zmin = cz;
         }
+
+        // get next-to-max coordinates
+        scalar xmax2 = -1e6;
+        scalar ymax2 = -1e6;
+        scalar zmax2 = -1e6;
+        forAll(cellsInSet, cellI)
+        {
+            label cellID = cellsInSet[cellI];
+            scalar cx = distDataMesh_.C()[cellID].x();
+            scalar cy = distDataMesh_.C()[cellID].y();
+            scalar cz = distDataMesh_.C()[cellID].z();
+            if (cx > xmax2 && cx < xmax-1e-10) xmax2 = cx;
+            if (cy > ymax2 && cy < ymax-1e-10) ymax2 = cy;
+            if (cz > zmax2 && cz < zmax-1e-10) zmax2 = cz;
+        }
+
+        label nx = 1;
+        label ny = 1;
+        label nz = 1;
+        // check if box is 2D
+        if (xmax2 > -9e5)
+        {
+            dx_ = xmax - xmax2;
+            nx = round((xmax - xmin) / dx_) + 1;
+        }
+        if (ymax2 > -9e5)
+        {
+            dy_ = ymax - ymax2;
+            ny = round((ymax - ymin) / dy_) + 1;
+        }
+        if (zmax2 > -9e5)
+        {
+            dz_ = zmax - zmax2;
+            nz = round((zmax - zmin) / dz_) + 1;
+        }
+
+        boxExtentsN_[cellset].append(nx);
+        boxExtentsN_[cellset].append(ny);
+        boxExtentsN_[cellset].append(nz);
+
+        // consistency check for box-shaped sets with equal cell sizes
+        if (nx * ny * nz != cellsInSet.size())
+        {
+            FatalError << "consistency check for box-shape of cell sets failed for set " << cellSetNames_[cellset] << 
+                ": nx = " << nx << ", ny = " << ny << ", nz = " << nz << ", number of cells = " << cellsInSet.size() << abort(FatalError);
+        }
+
         cellSetsFile << cellset << "\t\t" << xmin << "\t" << xmax << "\t" << ymin << "\t" << ymax <<
-                        "\t" << zmin << "\t" << zmax << endl;
+                        "\t" << zmin << "\t" << zmax << "\t" << nx << "\t" << ny << "\t" << nz << endl;
+        boxExtents_[cellset].append(xmin);
+        boxExtents_[cellset].append(xmax);
+        boxExtents_[cellset].append(ymin);
+        boxExtents_[cellset].append(ymax);
+        boxExtents_[cellset].append(zmin);
+        boxExtents_[cellset].append(zmax);
     }
 }
 
@@ -150,6 +171,10 @@ bool Foam::functionObjects::sampleCellSets::read(const dictionary& dict)
     dict.lookup("cellSets") >> cellSetNames_;
 
     numCellSets_ = cellSetNames_.size();
+
+    boxExtents_.setSize(numCellSets_);
+
+    boxExtentsN_.setSize(numCellSets_);
 
     for (label i=0; i<numCellSets_; i++)
     {
@@ -173,49 +198,80 @@ bool Foam::functionObjects::sampleCellSets::execute()
     // if time to write fields values in cell set to textfiles, do it
     for (label cellset = 0; cellset < numCellSets_; cellset++)
     {
-        fileName filename = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset);
-        OFstream sampleFile(filename);
+        fileName filenameMat = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset)+"_matrix";
+        OFstream sampleFileMat(filenameMat);
+        fileName filenameCSV = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset)+".csv";
+        OFstream sampleFileCSV(filenameCSV);
+        fileName filenameHeader = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset)+"_header";
+        OFstream sampleFileHeader(filenameHeader);
         labelList cellsInSet = cellSets_[cellset].toc();
         scalarRectangularMatrix dataInCellSet(cellsInSet.size(),nScalarFields+3*nVectorFields);
 
-        sampleFile << "# c_x\tc_y\tc_z\t";
+        sampleFileMat << "# cX\tcY\tcZ\t";
         // first sample scalar fields
         for (label fieldI = 0; fieldI < nScalarFields; fieldI++)
         {
-            sampleFile << distDataScalarFieldNames_[fieldI] << "\t";
+            sampleFileMat << distDataScalarFieldNames_[fieldI] << "\t";
             const volScalarField& field = distDataMesh_.lookupObject<volScalarField>(distDataScalarFieldNames_[fieldI]);
-            forAll(cellsInSet, cellI)
+            vector pos;
+            label cellID;
+            label counter = 0;
+            // make sure output for all sets is ordered the same way (first runs z, then y, then x)
+            for (label ix = 0; ix < boxExtentsN_[cellset][0]; ix++)
             {
-                label cellID = cellsInSet[cellI];
-                dataInCellSet(cellI,fieldI) = field[cellID];
+                for (label iy = 0; iy < boxExtentsN_[cellset][1]; iy++)
+                {
+                    for (label iz = 0; iz < boxExtentsN_[cellset][2]; iz++)
+                    {
+                        pos.x() = boxExtents_[cellset][0] + ix*dx_;
+                        pos.y() = boxExtents_[cellset][2] + iy*dy_;
+                        pos.z() = boxExtents_[cellset][4] + iz*dz_;
+                        cellID = distDataMesh_.findCell(pos);
+                        dataInCellSet(counter,fieldI) = field[cellID];
+                        counter++;
+                    }
+                }
             }
         }
 
         // first sample vector fields
         for (label fieldI = 0; fieldI < nVectorFields; fieldI++)
         {
-            sampleFile << distDataVectorFieldNames_[fieldI] << "_x\t";
-            sampleFile << distDataVectorFieldNames_[fieldI] << "_y\t";
-            sampleFile << distDataVectorFieldNames_[fieldI] << "_z\t";
+            sampleFileMat << distDataVectorFieldNames_[fieldI] << "X\t";
+            sampleFileMat << distDataVectorFieldNames_[fieldI] << "Y\t";
+            sampleFileMat << distDataVectorFieldNames_[fieldI] << "Z\t";
             const volVectorField& field = distDataMesh_.lookupObject<volVectorField>(distDataVectorFieldNames_[fieldI]);
-            forAll(cellsInSet, cellI)
+            vector pos;
+            label cellID;
+            label counter = 0;
+            // make sure output for all sets is ordered the same way (first runs z, then y, then x)
+            for (label ix = 0; ix < boxExtentsN_[cellset][0]; ix++)
             {
-                label cellID = cellsInSet[cellI];
-                dataInCellSet(cellI,nScalarFields+3*fieldI) = field[cellID].x();
-                dataInCellSet(cellI,nScalarFields+3*fieldI+1) = field[cellID].y();
-                dataInCellSet(cellI,nScalarFields+3*fieldI+2) = field[cellID].z();
+                for (label iy = 0; iy < boxExtentsN_[cellset][1]; iy++)
+                {
+                    for (label iz = 0; iz < boxExtentsN_[cellset][2]; iz++)
+                    {
+                        pos.x() = boxExtents_[cellset][0] + ix*dx_;
+                        pos.y() = boxExtents_[cellset][2] + iy*dy_;
+                        pos.z() = boxExtents_[cellset][4] + iz*dz_;
+                        cellID = distDataMesh_.findCell(pos);
+                        dataInCellSet(counter,nScalarFields+3*fieldI) = field[cellID].x();
+                        dataInCellSet(counter,nScalarFields+3*fieldI+1) = field[cellID].y();
+                        dataInCellSet(counter,nScalarFields+3*fieldI+2) = field[cellID].z();
+                        counter++;
+                    }
+                }
             }
-
         }
 
-        sampleFile << endl << "#";
+        sampleFileMat << endl << "#";
         for (label i=0; i<nScalarFields + 3*nVectorFields+3; i++)
         {
-            sampleFile << "---------";
+            sampleFileMat << "---------";
         }
-        sampleFile << endl;
+        sampleFileMat << endl;
 
-        // now print data matrix
+        // print data in matrix format
         for (label row=0; row<dataInCellSet.m(); row++)
         {
             // first print cell coordinates, then field values
@@ -223,13 +279,65 @@ bool Foam::functionObjects::sampleCellSets::execute()
             scalar cx = distDataMesh_.C()[cellID].x();
             scalar cy = distDataMesh_.C()[cellID].y();
             scalar cz = distDataMesh_.C()[cellID].z();
-            sampleFile <<  cx << "\t" << cy << "\t" << cz << "\t";
+            sampleFileMat <<  cx << "\t" << cy << "\t" << cz << "\t";
             for (label col=0; col<dataInCellSet.n(); col++)
             {
-                sampleFile << dataInCellSet(row,col) << "\t";
+                sampleFileMat << dataInCellSet(row,col) << "\t";
             }
-            sampleFile << endl;
+            sampleFileMat << endl;
         }
+
+        // print data as csv file
+        for (label col=0; col<dataInCellSet.n(); col++)
+        {
+            for (label row=0; row<dataInCellSet.m(); row++)
+            {
+                sampleFileCSV << dataInCellSet(row,col); 
+                if (col < dataInCellSet.n()-1 || row < dataInCellSet.m()-1)
+                {
+                    sampleFileCSV << ", ";
+                }
+            }
+        }
+
+        // print header file to csv file
+        sampleFileHeader << "# ";
+        for (label fieldI = 0; fieldI < nScalarFields; fieldI++)
+        {
+            word fieldname = distDataScalarFieldNames_[fieldI];
+            for (label row=0; row<dataInCellSet.m(); row++)
+            {
+                sampleFileHeader << fieldname << "_" << row; 
+                if (distDataScalarFieldNames_.size() > 0 || row < dataInCellSet.m()-1)
+                {
+                    sampleFileHeader << ", ";
+                }
+            }
+        }
+        for (label fieldI = 0; fieldI < nVectorFields; fieldI++)
+        {
+            word fieldname = distDataVectorFieldNames_[fieldI];
+            for (label row=0; row<dataInCellSet.m(); row++)
+            {
+                sampleFileHeader << fieldname << "X_" << row << ", "; 
+            }
+
+            fieldname = distDataVectorFieldNames_[fieldI];
+            for (label row=0; row<dataInCellSet.m(); row++)
+            {
+                sampleFileHeader << fieldname << "Y_" << row << ", "; 
+            }
+
+            fieldname = distDataVectorFieldNames_[fieldI];
+            for (label row=0; row<dataInCellSet.m(); row++)
+            {
+                sampleFileHeader << fieldname << "Z_" << row;
+                if (fieldI < nVectorFields - 1 || row < dataInCellSet.m() - 1)
+                {
+                    sampleFileHeader << ", ";
+                }
+            }
+        }  
 
     }
     return true;
@@ -241,6 +349,11 @@ bool Foam::functionObjects::sampleCellSets::write()
     return true;
 }
 
-
+label Foam::functionObjects::sampleCellSets::round(scalar x)
+{
+    int ix = static_cast <int> (x);
+    if (x - ix > 0.5) ix++;
+    return ix;
+}
 
 // ************************************************************************* //
