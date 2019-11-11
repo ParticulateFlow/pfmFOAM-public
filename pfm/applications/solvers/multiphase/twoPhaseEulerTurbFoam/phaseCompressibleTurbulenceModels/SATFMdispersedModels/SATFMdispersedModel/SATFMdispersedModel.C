@@ -1163,6 +1163,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // limit k before computing Reynolds-stresses
     boundNormalStress(k_);
+    // set k_ to kSmall if alpha smaller than residualAlpha
+    k_ = k_*pos(alpha_ - residualAlpha_) + neg(alpha_ - residualAlpha_)*eSum*kSmall;
     k_.correctBoundaryConditions();
 
     //- compute variance of solids volume fraction
