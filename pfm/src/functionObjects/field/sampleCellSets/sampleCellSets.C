@@ -135,13 +135,6 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
         boxExtentsN_[cellset].append(ny);
         boxExtentsN_[cellset].append(nz);
 
-        // consistency check for box-shaped sets with equal cell sizes
-        if (nx * ny * nz != cellsInSet.size())
-        {
-            FatalError << "consistency check for box-shape of cell sets failed for set " << cellSetNames_[cellset] << 
-                ": nx = " << nx << ", ny = " << ny << ", nz = " << nz << ", number of cells = " << cellsInSet.size() << abort(FatalError);
-        }
-
         cellSetsFile << cellset << "\t\t" << xmin << "\t" << xmax << "\t" << ymin << "\t" << ymax <<
                         "\t" << zmin << "\t" << zmax << "\t" << nx << "\t" << ny << "\t" << nz << endl;
         boxExtents_[cellset].append(xmin);
@@ -151,6 +144,74 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
         boxExtents_[cellset].append(zmin);
         boxExtents_[cellset].append(zmax);
     }
+
+    // consistency check for box-shaped sets with equal cell and box sizes
+    for (label cellset = 0; cellset < numCellSets_; cellset++)
+    {
+        label nx = boxExtentsN_[cellset][0];
+        label ny = boxExtentsN_[cellset][1];
+        label nz = boxExtentsN_[cellset][2];
+        labelList cellsInSet = cellSets_[cellset].toc();
+        if (nx * ny * nz != cellsInSet.size())
+        {
+            FatalError << "consistency check for box-shape of cell sets failed for set " << cellSetNames_[cellset] << 
+                ": nx = " << nx << ", ny = " << ny << ", nz = " << nz << ", number of cells = " << cellsInSet.size() << abort(FatalError);
+        }
+        if (cellset < numCellSets_-1)
+        {
+            if (nx != boxExtentsN_[cellset+1][0] || ny != boxExtentsN_[cellset+1][1] || nz != boxExtentsN_[cellset+1][2])
+            {
+                FatalError << "consistency check for congruence of cell sets failed for sets " << cellSetNames_[cellset] << 
+                    " and " << cellSetNames_[cellset+1] << abort(FatalError);
+            }
+        }
+    }
+
+    // write out header file for order of field output
+    fileName filenameHeader = "distData_header";
+    OFstream sampleFileHeader(filenameHeader);
+    labelList cellsInSet = cellSets_[0].toc();
+    label numCells = cellsInSet.size();
+    label nScalarFields = distDataScalarFieldNames_.size();
+    label nVectorFields = distDataVectorFieldNames_.size();
+
+    sampleFileHeader << "# ";
+    for (label fieldI = 0; fieldI < nScalarFields; fieldI++)
+    {
+        word fieldname = distDataScalarFieldNames_[fieldI];
+        for (label cell=0; cell<numCells; cell++)
+        {
+            sampleFileHeader << fieldname << "_" << cell; 
+            if (distDataVectorFieldNames_.size() > 0 || cell < numCells-1)
+            {
+                sampleFileHeader << ", ";
+            }
+        }
+    }
+    for (label fieldI = 0; fieldI < nVectorFields; fieldI++)
+    {
+        word fieldname = distDataVectorFieldNames_[fieldI];
+        for (label cell=0; cell<numCells; cell++)
+        {
+            sampleFileHeader << fieldname << "X_" << cell << ", "; 
+        }
+
+        fieldname = distDataVectorFieldNames_[fieldI];
+        for (label cell=0; cell<numCells; cell++)
+        {
+            sampleFileHeader << fieldname << "Y_" << cell << ", "; 
+        }
+
+        fieldname = distDataVectorFieldNames_[fieldI];
+        for (label cell=0; cell<numCells; cell++)
+        {
+            sampleFileHeader << fieldname << "Z_" << cell;
+            if (fieldI < nVectorFields - 1 || cell < numCells - 1)
+            {
+                sampleFileHeader << ", ";
+            }
+        }
+    }  
 }
 
 
@@ -202,8 +263,6 @@ bool Foam::functionObjects::sampleCellSets::execute()
         OFstream sampleFileMat(filenameMat);
         fileName filenameCSV = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset)+".csv";
         OFstream sampleFileCSV(filenameCSV);
-        fileName filenameHeader = distDataMesh_.time().timeName()+"/distData_cellSet_"+Foam::name(cellset)+"_header";
-        OFstream sampleFileHeader(filenameHeader);
         labelList cellsInSet = cellSets_[cellset].toc();
         scalarRectangularMatrix dataInCellSet(cellsInSet.size(),nScalarFields+3*nVectorFields);
 
@@ -299,46 +358,6 @@ bool Foam::functionObjects::sampleCellSets::execute()
                 }
             }
         }
-
-        // print header file to csv file
-        sampleFileHeader << "# ";
-        for (label fieldI = 0; fieldI < nScalarFields; fieldI++)
-        {
-            word fieldname = distDataScalarFieldNames_[fieldI];
-            for (label row=0; row<dataInCellSet.m(); row++)
-            {
-                sampleFileHeader << fieldname << "_" << row; 
-                if (distDataScalarFieldNames_.size() > 0 || row < dataInCellSet.m()-1)
-                {
-                    sampleFileHeader << ", ";
-                }
-            }
-        }
-        for (label fieldI = 0; fieldI < nVectorFields; fieldI++)
-        {
-            word fieldname = distDataVectorFieldNames_[fieldI];
-            for (label row=0; row<dataInCellSet.m(); row++)
-            {
-                sampleFileHeader << fieldname << "X_" << row << ", "; 
-            }
-
-            fieldname = distDataVectorFieldNames_[fieldI];
-            for (label row=0; row<dataInCellSet.m(); row++)
-            {
-                sampleFileHeader << fieldname << "Y_" << row << ", "; 
-            }
-
-            fieldname = distDataVectorFieldNames_[fieldI];
-            for (label row=0; row<dataInCellSet.m(); row++)
-            {
-                sampleFileHeader << fieldname << "Z_" << row;
-                if (fieldI < nVectorFields - 1 || row < dataInCellSet.m() - 1)
-                {
-                    sampleFileHeader << ", ";
-                }
-            }
-        }  
-
     }
     return true;
 }
