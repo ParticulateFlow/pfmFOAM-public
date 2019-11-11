@@ -501,8 +501,6 @@ Foam::RASModels::SATFMdispersedModel::R() const
                     IOobject::NO_WRITE
                 ),
               - pos(alpha_ - residualAlpha_)*(nut_)*dev(twoSymm(fvc::grad(U_)))
-              + 2.0 * pos(alpha_ - residualAlpha_) * alpha_ *
-                symm(R1_)
             )
         );
     } else {
@@ -519,7 +517,7 @@ Foam::RASModels::SATFMdispersedModel::R() const
                     IOobject::NO_WRITE
                 ),
                2.0 * pos(alpha_ - residualAlpha_) * alpha_ *
-                symm(R1_)
+                dev(symm(R1_))
             )
         );
     }
@@ -622,12 +620,12 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)*
         (
-          - fvm::laplacian(rho_*nut_, U)
-          - fvc::div
+          - fvm::laplacian(0*rho_*nut_, U)
+          - 0*fvc::div
             (
                 (rho_*nut_)*dev2(T(fvc::grad(U)))
             )
-          + fvc::div
+          + 0*fvc::div
             (
                  2.0
                * alpha_
