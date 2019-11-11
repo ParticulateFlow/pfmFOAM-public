@@ -480,26 +480,15 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
 {
     if (!anIsoTropicNut_) {
         return
-        pos(scalar(1.0) - alpha_ - residualAlpha_)*
         (
           - fvm::laplacian(rho_*nut_, U)
           - fvc::div
             (
                 (rho_*nut_)*dev2(T(fvc::grad(U)))
             )
-          + fvc::div
-            (
-                 2.0
-               * alpha_
-               * rho_
-               * (
-                     R2_
-                 )
-            )
         );
     } else {
         return
-        pos(scalar(1.0) - alpha_ - residualAlpha_)*
         (
             fvc::laplacian(rho_*nut_, U)
           + fvc::div
