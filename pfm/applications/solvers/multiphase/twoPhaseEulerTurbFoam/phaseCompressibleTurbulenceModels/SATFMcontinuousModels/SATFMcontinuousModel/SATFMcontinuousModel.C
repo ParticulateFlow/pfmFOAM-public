@@ -395,80 +395,77 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::R() const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
+    if (!anIsoTropicNut_) {
+        return tmp<volSymmTensorField>
         (
-            IOobject
+            new volSymmTensorField
             (
-                IOobject::groupName("R", U_.group()),
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-          - (nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * alpha_ * symm(R2_)
-        )
-    );
+                IOobject
+                (
+                    IOobject::groupName("R", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+              - (nut_)*(twoSymm(fvc::grad(U_)))
+            )
+        );
+    } else {
+        return tmp<volSymmTensorField>
+        (
+            new volSymmTensorField
+            (
+                IOobject
+                (
+                    IOobject::groupName("R", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * symm(R2_)
+            )
+        );
+    }
 }
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
+    if (!anIsoTropicNut_) {
+        return tmp<volSymmTensorField>
         (
-            IOobject
+            new volSymmTensorField
             (
-                IOobject::groupName("devRhoReff", U_.group()),
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-          - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-          + 2.0 * alpha_ * symm(R2_)
-        )
-    );
+                IOobject
+                (
+                    IOobject::groupName("devRhoReff", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+              - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
+            )
+        );
+    } else {
+        return tmp<volSymmTensorField>
+        (
+            new volSymmTensorField
+            (
+                IOobject
+                (
+                    IOobject::groupName("devRhoReff", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * dev(symm(R2_))
+            )
+        );
+    }
 }
 
 
@@ -481,10 +478,10 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     if (!anIsoTropicNut_) {
         return
         (
-          - fvm::laplacian(0.*rho_*nut_, U)
+          - fvm::laplacian(rho_*nut_, U)
           - fvc::div
             (
-                (0.*rho_*nut_)*dev2(T(fvc::grad(U)))
+                (rho_*nut_)*dev2(T(fvc::grad(U)))
             )
         );
     } else {
