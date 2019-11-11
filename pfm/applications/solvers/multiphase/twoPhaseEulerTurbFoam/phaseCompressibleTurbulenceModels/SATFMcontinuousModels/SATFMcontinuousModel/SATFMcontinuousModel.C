@@ -301,7 +301,9 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     shearProd_
@@ -1148,6 +1150,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute R2_
         R2_ = zeroR;
     }
+    R2_.correctBoundaryConditions();
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);

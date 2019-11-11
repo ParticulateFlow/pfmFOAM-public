@@ -390,7 +390,9 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
+        // Set Boundary condition
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     shearProd_
@@ -1321,6 +1323,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             R1_ = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);
         }
     }
+    R1_.correctBoundaryConditions();
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (
