@@ -627,7 +627,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
             (
                 (rho_*nut_)*dev2(T(fvc::grad(U)))
             )
-          + 0*fvc::div
+          + fvc::div
             (
                  2.0
                * alpha_
@@ -1277,7 +1277,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField kmt  = (kt & eSum);
         kmt.max(kSmall.value());
         //compute nut_ (Schneiderbauer, 2017; equ. (34))
-        nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(kmt)*lm_;
+        nut_ = alpha*sqrt(kmt)*lm_;
 
         if (anIsoTropicNut_) {
             volScalarField alphaf = filter_(alpha);
