@@ -1,6 +1,3 @@
-include $(CFDEM_ADD_LIBS_DIR)/additionalLibs
-
-
 EXE_INC = \
      $(PFLAGS) \
     -I$(LIB_SRC)/finiteVolume/cfdTools \
