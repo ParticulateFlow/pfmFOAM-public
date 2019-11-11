@@ -1205,9 +1205,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km  = (k_ & eSum);
     km.max(kSmall.value());
     
-    // compute nut_
-    nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(km)*lm_;
-    
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
     volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/lm_;
@@ -1281,7 +1278,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         nut_ = pos(alpha - residualAlpha_)*alpha*sqrt(kmt)*lm_;
 
         if (anIsoTropicNut_) {
-            nut_ = dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0);
             volScalarField alphaf = filter_(alpha);
             alphaf.max(residualAlpha_.value());
             volVectorField Uf = filter_(alpha*U)/alphaf;
@@ -1348,6 +1344,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
+    nut_.correctBoundaryConditions();
     nuFric_ = min(nuFric_, maxNut_ - nut_);
     nuFric_.min(maxNut_);
     nut_ += nuFric_;
