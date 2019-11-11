@@ -2,23 +2,22 @@
 import os
 import sys
 
-#################################################
-# user-defined input
-nTotSteps = 3
-stepSize = 1
 
-# probe numbers starting from 0
-probePointIndices = [1]
+nTotSteps = 3
+stepSize = 2
+
 acc = 0.05
 
 probesPath = "database/postProcessing/probes1/0/"
 
 probeFieldsScalar = ["p"]
-probeFieldsVector = ["U"]
-#################################################
-
 numProbeFieldsScalar = len(probeFieldsScalar)
+
+probeFieldsVector = ["U"]
 numProbeFieldsVector = len(probeFieldsVector)
+
+# probe numbers starting from 0
+probePointIndices = [1]
 
 def searchProbeList(reftime,times,values):
     probevaluesubset = []
@@ -26,7 +25,7 @@ def searchProbeList(reftime,times,values):
     for timeIndex in range(numTimes):
         if (abs(times[timeIndex]-float(reftime)) < 1e-8):
             for i in range(timeIndex,timeIndex+nTotSteps,stepSize):
-                if (i>=len(values)): break
+                if (i>=len(values)): sys.exit('Could not find enough probe values for reftime '+reftime)
                 probevaluesubset.append(values[i])
             return probevaluesubset
     return []
@@ -42,7 +41,6 @@ def getCellSetIndex(f,probeIndex):
     x = float(row[3].lstrip("("))
     y = float(row[4])
     z = float(row[5].rstrip(")"))
-    print(x, y, z)
     counter = 0
     with open('cellSetsExtensions') as f2:
         for line in f2:
@@ -93,8 +91,8 @@ for probePointIndex in probePointIndices:
             probesubset = []
             probesubset = searchProbeList(sampleTime,t,probevalue)
             with open(os.path.join(sampleTime.strip(),"pointEvol_"+fieldI+"_cellSet_"+str(cellSetIndex)), 'w') as f:
-                for item in probesubset:
-                    f.write("%s\n" % item)
+                for item in range(len(probesubset)):
+                    f.write("%d %s\n" % (item*stepSize,probesubset[item]))
 
 # vector fields
 for probePointIndex in probePointIndices:
