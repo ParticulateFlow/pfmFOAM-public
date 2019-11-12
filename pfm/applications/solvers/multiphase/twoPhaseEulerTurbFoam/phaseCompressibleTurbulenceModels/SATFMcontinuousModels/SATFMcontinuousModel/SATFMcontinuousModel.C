@@ -865,7 +865,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         */
         Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
-        
+        /*
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
