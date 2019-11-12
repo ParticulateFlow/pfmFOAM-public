@@ -1021,9 +1021,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
-        volScalarField xiGSnumP = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                * sqrt(max(aUU,kSmall));
+        volScalarField xiGSnumP(xiGSnum*xiGSden);
         
         //set xiGSnumP to 0 at boundaries
         const fvPatchList& patches = mesh_.boundary();
