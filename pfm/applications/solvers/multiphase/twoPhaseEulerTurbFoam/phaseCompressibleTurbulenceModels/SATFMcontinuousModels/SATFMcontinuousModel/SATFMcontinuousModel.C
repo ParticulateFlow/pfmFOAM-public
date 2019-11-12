@@ -162,9 +162,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5))
     ),
 
     xiUU_
@@ -178,9 +176,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1))
     ),
 
     alphaP2Mean_
@@ -207,9 +203,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4)
     ),
 
     Ceps_
@@ -223,9 +217,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
     Cp_
@@ -239,9 +231,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4)
     ),
 
     CphiG_
@@ -255,9 +245,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.2),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.2)
     ),
 
     deltaF_

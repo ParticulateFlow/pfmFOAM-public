@@ -205,9 +205,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1))
     ),
 
     xiUU_
@@ -221,9 +219,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1))
     ),
 
 
@@ -238,9 +234,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
     xiGS_
@@ -254,9 +248,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9)
     ),
 
     xiGatS_
@@ -270,9 +262,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
     alphaP2Mean_
@@ -299,9 +289,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0e-2),
-        // Set Boundary condition
-        fixedValueFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0e-2)
     ),
 
     Ceps_
@@ -329,9 +317,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
     CphiS_
@@ -345,9 +331,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.3),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.1)
     ),
 
     deltaF_
@@ -1036,11 +1020,26 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiPhiGG_.min(0.99);
         
         // compute correlation coefficient between gas phase and solid phase velocity
-        volScalarField xiGSnum = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
-        volScalarField xiGSden = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
+        volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
+        volScalarField xiGSnumP = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
+        volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                * sqrt(max(aUU,kSmall));
         
-        xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden));
+        //set xiGSnumP to 0 at boundaries
+        const fvPatchList& patches = mesh_.boundary();
+
+        volScalarField::Boundary& xiGSnumPBf = xiGSnumP.boundaryFieldRef();
+
+        forAll(patches, patchi)
+        {
+            if (!patches[patchi].coupled())
+            {
+                xiGSnumPBf[patchi] *= 0.0;
+            }
+        }
+        
+        xiGS_ = filterS(xiGSnumP)/filterS(sqr(xiGSden));
+        
         
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(-0.99);
