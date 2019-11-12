@@ -1262,12 +1262,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        / sqr(denom)
                        * neg(xiKgradAlpha)
                        * pos(denom)
-                       + neg(denom);        
+                       + neg(denom);
     }
     // limit alphaP2Mean_
     volScalarField alphaM = alphaMax_ - alpha;
     alphaM.max(0.0);
-    volScalarField alphaL2 = sqr(min(alpha,alphaM));
+    volScalarField alphaL2 = alphaM*alpha;//sqr(min(alpha,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
                          0.99*alphaL2
