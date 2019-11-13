@@ -72,8 +72,8 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::WenYuC::CdRe() const
     volScalarField ResRes = max(Res,residualRe_);
     volScalarField Cd
     (
-        neg(ResRes - 1000)*24.0*(1.0 + 0.15*pow(Res, 0.687))/ResRes
-      + pos0(ResRes - 1000)*0.44
+        neg(Res - 1000)*24.0*(1.0 + 0.15*pow(Res, 0.687))/ResRes
+      + pos0(Res - 1000)*0.44
     );
     
     return
