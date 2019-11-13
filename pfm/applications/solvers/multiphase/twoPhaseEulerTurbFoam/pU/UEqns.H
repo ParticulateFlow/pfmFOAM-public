@@ -35,7 +35,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
         U1Eqn =
         (
             fvm::ddt(alpha1, rho1, U1) + fvm::div(alphaRhoPhi1, U1)
-          //- fvm::Sp(contErr1, U1)
+          - fvm::Sp(contErr1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
          ==
