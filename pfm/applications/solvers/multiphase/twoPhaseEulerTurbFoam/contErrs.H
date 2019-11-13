@@ -9,7 +9,7 @@ volScalarField contErr1
 volScalarField contErr2
 (
     "contErr2",
-    fvc::ddt(alpha2, rho2)
-//  + fvc::div(alphaRhoPhi2)
+//    fvc::ddt(alpha2, rho2)
+  + fvc::div(alphaRhoPhi2)
   - (fvOptions(alpha2, rho2)&rho2)
 );
