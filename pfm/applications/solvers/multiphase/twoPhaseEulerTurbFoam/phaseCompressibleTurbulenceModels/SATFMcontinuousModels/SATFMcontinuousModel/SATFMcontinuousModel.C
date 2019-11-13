@@ -733,7 +733,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const cellList& cells = mesh_.cells();
     
     // simple filter for local smoothing
-    simpleTestFilter filterS(mesh_);
+    simpleFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
