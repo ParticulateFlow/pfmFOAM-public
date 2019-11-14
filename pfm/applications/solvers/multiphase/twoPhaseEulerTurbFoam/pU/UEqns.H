@@ -32,10 +32,15 @@ volVectorField KdUdrift(fluid.KdUdrift());
     volScalarField CpIPh(fluid.CpIPh());
 
     {
+        volScalarField contErrT1(contErr1);
+        contErrT1.min(0);
         U1Eqn =
         (
             fvm::ddt(alpha1, rho1, U1) + fvm::div(alphaRhoPhi1, U1)
-          + fvm::SuSp(-contErr1, U1)
+//          - fvm::Sp(contErr1, U1)
+         //       + fvm::SuSp(-contErr1, U1)
+         //       - fvm::Sp(-mag(contErr1), U1)
+          - fvm::Sp(contErrT1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
          ==
@@ -109,10 +114,15 @@ volVectorField KdUdrift(fluid.KdUdrift());
     }
 
     {
+        volScalarField contErrT2(contErr2);
+        contErrT2.min(0);
         U2Eqn =
         (
             fvm::ddt(alpha2, rho2, U2) + fvm::div(alphaRhoPhi2, U2)
-          + fvm::SuSp(-contErr2, U2)
+//          - fvm::Sp(contErr2, U2)
+   //       + fvm::SuSp(-contErr2, U2)
+   //       - fvm::Sp(-mag(contErr2), U2)
+          - fvm::Sp(contErrT2, U2)
           + MRF.DDt(alpha2*rho2 + Vm, U2)
           + phase2.turbulence().divDevRhoReff(U2)
         ==
