@@ -38,7 +38,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
         (
             fvm::ddt(alpha1, rho1, U1) + fvm::div(alphaRhoPhi1, U1)
 //          - fvm::Sp(contErr1, U1)
-            + fvm::SuSp(-contErr1, U1)
+            - fvm::SuSp(contErr1, U1)
          //       - fvm::Sp(-mag(contErr1), U1)
          // - fvm::Sp(contErrT1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
@@ -120,7 +120,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
         (
             fvm::ddt(alpha2, rho2, U2) + fvm::div(alphaRhoPhi2, U2)
 //          - fvm::Sp(contErr2, U2)
-          + fvm::SuSp(-contErr2, U2)
+          - fvm::SuSp(contErr2, U2)
    //       - fvm::Sp(-mag(contErr2), U2)
    //       - fvm::Sp(contErrT2, U2)
           + MRF.DDt(alpha2*rho2 + Vm, U2)
