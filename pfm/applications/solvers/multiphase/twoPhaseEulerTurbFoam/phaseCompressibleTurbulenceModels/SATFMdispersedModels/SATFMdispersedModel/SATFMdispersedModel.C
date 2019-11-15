@@ -1120,7 +1120,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-       //  + fvc::SuSp(-fvc::ddt(alpha, rho) - fvc::div(alphaRhoPhi), k_)
+          + fvm::SuSp(-fvc::ddt(alpha, rho) - fvc::div(alphaRhoPhi), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (
