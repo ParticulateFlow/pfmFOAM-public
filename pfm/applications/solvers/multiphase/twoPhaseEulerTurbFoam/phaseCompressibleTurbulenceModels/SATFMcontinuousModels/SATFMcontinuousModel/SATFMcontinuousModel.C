@@ -61,7 +61,8 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
 
     phase_(phase),
 
-    equilibrium_(coeffDict_.lookup("equilibrium")),
+    equilibriumK_(coeffDict_.lookup("equilibriumK")),
+    equilibriumPhiP2_(coeffDict_.lookup("equilibriumPhiP2")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
     anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
 
@@ -339,7 +340,8 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         >::read()
     )
     {
-        coeffDict().lookup("equilibrium") >> equilibrium_;
+        coeffDict().lookup("equilibriumK") >> equilibriumK_;
+        coeffDict().lookup("equilibriumPhiP2") >> equilibriumPhiP2_;
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
         coeffDict().lookup("anIsoTropicNut") >> anIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
@@ -922,7 +924,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // Compute k_
     // ---------------------------
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
-    if (!equilibrium_) {
+    if (!equilibriumK_) {
         // compute production term according to Reynolds-stres model
         volTensorField R2t(R2_);
         if (!anIsoTropicNut_) {
@@ -1048,7 +1050,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                     );
     
     Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
-    if (!equilibrium_) {
+    if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
         (

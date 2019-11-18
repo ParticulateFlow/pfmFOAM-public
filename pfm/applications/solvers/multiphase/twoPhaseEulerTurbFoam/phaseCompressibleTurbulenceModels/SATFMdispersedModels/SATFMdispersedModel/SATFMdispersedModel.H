@@ -93,7 +93,8 @@ class SATFMdispersedModel
         // SA-TFM Model coefficients
 
             //- Use equilibrium approximation: generation == dissipation
-            Switch equilibrium_;
+            Switch equilibriumK_;
+            Switch equilibriumPhiP2_;
     
             //- Use dynamic adjustment of several model parameters and
             //  correlation coefficients

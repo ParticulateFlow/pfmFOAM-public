@@ -68,7 +68,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         )
     ),
 
-    equilibrium_(coeffDict_.lookup("equilibrium")),
+    equilibriumK_(coeffDict_.lookup("equilibriumK")),
+    equilibriumPhiP2_(coeffDict_.lookup("equilibriumPhiP2")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
     anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
     alphaMax_("alphaMax", dimless, coeffDict_),
@@ -424,7 +425,8 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         >::read()
     )
     {
-        coeffDict().lookup("equilibrium") >> equilibrium_;
+        coeffDict().lookup("equilibriumK") >> equilibriumK_;
+        coeffDict().lookup("equilibriumPhiP2") >> equilibriumPhiP2_;
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
         coeffDict().lookup("anIsoTropicNut") >> anIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
@@ -1096,7 +1098,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // Compute k_
     // ---------------------------
-    if (!equilibrium_) {
+    if (!equilibriumK_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2MeanO);
         
         volTensorField R1t(R1_);
@@ -1221,7 +1223,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                );
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
-    if (!equilibrium_) {
+    if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
         (
