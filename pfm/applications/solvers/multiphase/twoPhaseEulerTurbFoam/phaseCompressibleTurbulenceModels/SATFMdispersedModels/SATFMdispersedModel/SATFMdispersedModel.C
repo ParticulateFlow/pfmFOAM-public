@@ -1212,8 +1212,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
     volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/lm_;
-    volScalarField denom = divU + dissPhiP2;
-    volScalarField denomE(denom);
+    volScalarField denom = mag(divU) + dissPhiP2;
     denom.max(SMALL);
     volScalarField xiKgradAlpha = (
                                  ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
@@ -1259,10 +1258,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
-                       / sqr(denom)
-                       * neg(xiKgradAlpha)
-                       * pos(denom)
-                       + neg(denom);
+                       / sqr(denom);
     }
     // limit alphaP2Mean_
     volScalarField alphaM = alphaMax_ - alpha;
