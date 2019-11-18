@@ -398,7 +398,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
-              - (nut_)*(twoSymm(fvc::grad(U_)))
+              - (nuEff())*(twoSymm(fvc::grad(U_)))
             )
         );
     } else {
@@ -415,6 +415,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * symm(R2_)
+              - (nuEff()-nut_)*(twoSymm(fvc::grad(U_)))
             )
         );
     }
@@ -436,7 +437,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
-              - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
+              - (rho_*nuEff())*dev(twoSymm(fvc::grad(U_)))
             )
         );
     } else {
@@ -453,6 +454,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * dev(symm(R2_))
+              - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
             )
         );
     }
@@ -468,10 +470,10 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     if (!anIsoTropicNut_) {
         return
         (
-          - fvm::laplacian(rho_*nut_, U)
+          - fvm::laplacian(rho_*nuEff(), U)
           - fvc::div
             (
-                (rho_*nut_)*dev2(T(fvc::grad(U)))
+                (rho_*nuEff())*dev2(T(fvc::grad(U)))
             )
         );
     } else {
@@ -487,7 +489,11 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                      R2_
                  )
             )
-          - fvm::laplacian(rho_*nut_, U)
+          - fvm::laplacian(rho_*nuEff(), U)
+          - fvc::div
+            (
+               rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
+            )
         );
     }
 }
