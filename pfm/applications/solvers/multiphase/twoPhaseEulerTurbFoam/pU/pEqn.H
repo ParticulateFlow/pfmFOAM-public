@@ -1,3 +1,4 @@
+Info<< "Pressure correction" << endl;
 surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
 surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
 surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(fluid.CpIPh()));
@@ -44,7 +45,8 @@ tmp<surfaceScalarField> phiF2;
     (
         fvc::interpolate
         (
-            rAU1*(D + phase1.turbulence().pPrime() + KdUdriftGradAlpha)
+           // rAU1*(D + phase1.turbulence().pPrime() + KdUdriftGradAlpha)
+            rAU1*(D + phase1.turbulence().pPrime())
         )
     );
 
@@ -53,7 +55,8 @@ tmp<surfaceScalarField> phiF2;
     (
         fvc::interpolate
         (
-            rAU2*(D + phase2.turbulence().pPrime() + KdUdriftGradAlpha)
+           // rAU2*(D + phase2.turbulence().pPrime() + KdUdriftGradAlpha)
+            rAU2*(D + phase2.turbulence().pPrime())
         )
     );
 
@@ -69,12 +72,15 @@ tmp<surfaceScalarField> phiF2;
 
     // Phase-fraction face-gradient
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
+    
+    surfaceScalarField KdUdriftf1("KdUdriftf", -fvc::interpolate(rAU1*KdUdrift)&mesh.Sf());
+    surfaceScalarField KdUdriftf2("KdUdriftf", fvc::interpolate(rAU2*KdUdrift)&mesh.Sf());
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F);
+    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F) + KdUdriftf1;
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F);
+    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F) + KdUdriftf2;
 }
 
 
