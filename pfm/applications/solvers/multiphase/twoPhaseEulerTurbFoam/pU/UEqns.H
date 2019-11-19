@@ -27,7 +27,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
 // this part is moved to pEqn
 volVectorField gradAlpha(fvc::grad(alpha1));
 volScalarField gradAlpha2(magSqr(gradAlpha));
-gradAlpha2.max(ROOTVSMALL);
+gradAlpha2.max(SMALL);
 KdUdriftGradAlpha = - (KdUdrift&gradAlpha)/gradAlpha2;
 volVectorField KdUdriftgA = KdUdrift + KdUdriftGradAlpha*gradAlpha;
 
