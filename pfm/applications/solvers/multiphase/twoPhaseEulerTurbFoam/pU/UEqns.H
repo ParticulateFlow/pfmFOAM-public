@@ -21,7 +21,13 @@ if (periodicBox) {
 }
 
 volScalarField Kd(fluid.Kd());
-volVectorField KdUdrift(fluid.KdUdrift()); 
+volVectorField KdUdrift(fluid.KdUdrift());
+
+volVectorField gradAlpha(fvc::grad(alpha1));
+volScalarField gradAlpha2(magSqr(gradAlpha));
+gradAlpha2.max(ROOTVSMALL);
+KdUdriftGradAlpha = - (KdUdrift&gradAlpha)/gradAlpha2;
+volVectorField KdUdriftgA = KdUdrift + KdUdriftGradAlpha*gradAlpha;
 
 {
 
@@ -49,7 +55,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
             )
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
-          + KdUdrift
+          + KdUdriftgA
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha1*(rho1-rhoMix)*gN
@@ -127,7 +133,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
             )
           // drift velocity correction for filtered drag force
           // (ie. similar to turbulent dispersion)
-          - KdUdrift
+          - KdUdriftgA
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha2*(rho2-rhoMix)*gN
