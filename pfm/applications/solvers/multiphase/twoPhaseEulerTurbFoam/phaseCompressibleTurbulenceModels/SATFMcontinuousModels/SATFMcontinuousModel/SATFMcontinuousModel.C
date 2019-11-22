@@ -852,10 +852,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         */
         xiPhiG_ = 3.0*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // align with slip velocity
+        /*
         xiPhiG_ = sign(xiPhiG_&uSlip)
                  *mag(xiPhiG_)
                  *uSlip
                  /(mag(uSlip) + uSmall);
+        */
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
                

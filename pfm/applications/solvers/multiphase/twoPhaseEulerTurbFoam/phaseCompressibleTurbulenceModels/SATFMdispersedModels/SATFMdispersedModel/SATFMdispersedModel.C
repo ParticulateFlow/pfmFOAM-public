@@ -1011,10 +1011,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         */
         xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // align with slip velocity
+        /*
         xiPhiS_ = sign(xiPhiS_&gradAlpha)
                  *mag(xiPhiS_)
                  *gradAlpha
                  /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
+         */
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         
