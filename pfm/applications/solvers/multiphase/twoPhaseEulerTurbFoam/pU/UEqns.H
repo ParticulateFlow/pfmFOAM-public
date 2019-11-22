@@ -25,12 +25,13 @@ volVectorField KdUdrift(fluid.KdUdrift());
 
 // compute KdUdrift along grad(alpha1)
 // separate handing of gradient part in pEqn
+/*
 volVectorField gradAlpha(fvc::grad(alpha1));
 volScalarField gradAlpha2(magSqr(gradAlpha));
 gradAlpha2.max(SMALL);
 KdUdriftGradAlpha = - (KdUdrift&gradAlpha)/gradAlpha2;
 volVectorField KdUdriftgA = KdUdrift + KdUdriftGradAlpha*gradAlpha;
-
+*/
 {
 
     surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
