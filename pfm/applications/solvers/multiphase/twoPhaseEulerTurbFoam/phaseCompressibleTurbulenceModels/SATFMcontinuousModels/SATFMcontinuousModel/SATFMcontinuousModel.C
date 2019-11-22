@@ -543,8 +543,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax = 1.0;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     xi.max
     (
@@ -581,8 +581,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax = 1.0;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     R.max
     (
@@ -813,6 +813,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                         - alpha1f*filter_(U)
                                       );
         volScalarField tmpA = alpha1fP2-sqr(alpha1f);
+        tmpA.max(ROOTVSMALL);
+        volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
+        tmpK.max(ROOTVSMALL);
+        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alpha2f
@@ -832,7 +836,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         tmpDenX.max(ROOTVSMALL);
         tmpDenY.max(ROOTVSMALL);
         tmpDenZ.max(ROOTVSMALL);
-
+         
         xiPhiG_ =  eX
                  * (
                         filterS(sqrt(tmpDenX)*(xiPhiGNom&eX))/filterS(tmpDenX)
@@ -845,7 +849,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
-
+        */
+        xiPhiG_ = 3.0*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        // align with slip velocity
+        xiPhiG_ = sign(xiPhiG_&uSlip)
+                 *mag(xiPhiG_)
+                 *uSlip
+                 /(mag(uSlip) + uSmall);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
                

@@ -375,9 +375,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
     ),
 
     shearProd_
@@ -728,8 +726,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax = 1.0;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     xi.max
     (
@@ -766,8 +764,8 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax = 1.0;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     R.max
     (
@@ -974,6 +972,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                         - alphaf*filter_(U)
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
+        tmpA.max(ROOTVSMALL);
+        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
+        tmpK.max(ROOTVSMALL);
+        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -1006,6 +1008,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
+        */
+        xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        // align with slip velocity
+        xiPhiS_ = sign(xiPhiS_&gradAlpha)
+                 *mag(xiPhiS_)
+                 *gradAlpha
+                 /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         
@@ -1328,6 +1337,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         }
     }
     R1_.correctBoundaryConditions();
+    
+    //set R1 to 0 at boundaries
+    const fvPatchList& patches = mesh_.boundary();
+
+    volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
+
+    forAll(patches, patchi)
+    {
+        if (!patches[patchi].coupled())
+        {
+            R1Bf[patchi] *= 0.;
+        }
+    }
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (
