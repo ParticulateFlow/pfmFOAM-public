@@ -107,8 +107,11 @@ volVectorField KdUdriftgA = KdUdrift + KdUdriftGradAlpha*gradAlpha;
                       * (fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))
                     ) * mesh.magSf() / rAU1f
                   // drag
-                  + (fvc::interpolate(rAU1*Kd/(alpha2*rho2))*alphaRhoPhi2)/rAU1f
+                  + (fvc::interpolate(rAU1*Kd*U2)&mesh.Sf())/rAU1f
+                  // gravity
                   + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
+                  // drift velocity
+                  + (fvc::interpolate(KdUdrift*rAU1)&mesh.Sf())/rAU1f
                 )
             );
 
@@ -177,9 +180,12 @@ volVectorField KdUdriftgA = KdUdrift + KdUdriftGradAlpha*gradAlpha;
                       - (alpharAUf2 - CpIPhf)
                       * (fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))
                     ) * mesh.magSf() / rAU2f
-                  // drag
-                 + (fvc::interpolate(rAU2*Kd/(max(alpha1,phase1.residualAlpha())*rho1))*alphaRhoPhi1)/rAU2f
+                 // drag
+                 + (fvc::interpolate(rAU2*Kd*U1)&mesh.Sf())/rAU2f
+                 // gravity
                  + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
+                 // drift velocity
+                 + (fvc::interpolate(KdUdrift*rAU2)&mesh.Sf())/rAU2f
                 )
             );
 

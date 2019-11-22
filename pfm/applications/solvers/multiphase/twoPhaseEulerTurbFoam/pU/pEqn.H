@@ -73,15 +73,15 @@ tmp<surfaceScalarField> phiF2;
     // Phase-fraction face-gradient
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
     
-    surfaceScalarField KdUdriftf1("KdUdriftf", -fvc::interpolate(rAU1*KdUdrift)&mesh.Sf());
-    surfaceScalarField KdUdriftf2("KdUdriftf", fvc::interpolate(rAU2*KdUdrift)&mesh.Sf());
+//    surfaceScalarField KdUdriftf1("KdUdriftf", fvc::interpolate(rAU1*KdUdrift)&mesh.Sf());
+//    surfaceScalarField KdUdriftf2("KdUdriftf", fvc::interpolate(rAU2*KdUdrift)&mesh.Sf());
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F) + KdUdriftf1;
+    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*(F - KdUdrift));
     // phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F);
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F) + KdUdriftf2;
+    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*(F - KdUdrift));
     // phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F);
 }
 
