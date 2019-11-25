@@ -973,9 +973,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
         tmpA.max(ROOTVSMALL);
-        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
-        tmpK.max(ROOTVSMALL);
-        /*
+//        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
+//        tmpK.max(ROOTVSMALL);
+
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -1008,8 +1008,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
-        */
-        xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        
+        // xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // align with slip velocity
         /*
         xiPhiS_ = sign(xiPhiS_&gradAlpha)
@@ -1339,7 +1339,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         }
     }
     R1_.correctBoundaryConditions();
-    
+
     //set R1 to 0 at boundaries
     const fvPatchList& patches = mesh_.boundary();
 
@@ -1349,9 +1349,21 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     {
         if (!patches[patchi].coupled())
         {
-            R1Bf[patchi] *= 0.;
+            R1Bf[patchi] = (
+                               (R1Bf[patchi]&mesh_.Sf().boundaryField()[patchi])
+                             - (
+                                 (
+                                    (R1Bf[patchi]&mesh_.Sf().boundaryField()[patchi])
+                                    &mesh_.Sf().boundaryField()[patchi]
+                                 )
+                                 *mesh_.Sf().boundaryField()[patchi]
+                               )/sqr(mesh_.magSf().boundaryField()[patchi])
+                           )
+                          *mesh_.Sf().boundaryField()[patchi]
+                          /sqr(mesh_.magSf().boundaryField()[patchi]);
         }
     }
+    
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (
