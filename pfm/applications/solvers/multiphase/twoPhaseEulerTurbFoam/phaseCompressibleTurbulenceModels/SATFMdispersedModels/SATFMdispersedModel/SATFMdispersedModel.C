@@ -1306,6 +1306,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 if (!patches[patchi].coupled())
                 {
                     kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
+                    kNBf[patchi].component(0) = max(kNBf[patchi].component(0),SMALL);
+                    kNBf[patchi].component(1) = max(kNBf[patchi].component(1),SMALL);
+                    kNBf[patchi].component(2) = max(kNBf[patchi].component(2),SMALL);
                     for (int i=0; i<3; i++) {
                         for (int j=0; j<3; j++) {
                             if (i!=j) {
