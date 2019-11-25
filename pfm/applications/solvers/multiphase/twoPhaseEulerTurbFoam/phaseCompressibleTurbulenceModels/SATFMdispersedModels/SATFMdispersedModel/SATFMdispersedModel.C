@@ -220,7 +220,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1))
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
 
@@ -644,45 +645,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
 }
 
 void Foam::RASModels::SATFMdispersedModel::boundNormalStress
-(
-    volVectorField& k
-) const
-{
-    scalar kMin = 1.e-7;
-    scalar kMax = maxK_.value();
-
-    k.max
-    (
-        dimensionedVector
-        (
-            "zero",
-            k.dimensions(),
-            vector
-            (
-                kMin,
-                kMin,
-                kMin
-            )
-        )
-     );
-
-    k.min
-    (
-        dimensionedVector
-        (
-            "maxvalue",
-            k.dimensions(),
-            vector
-            (
-                kMax,
-                kMax,
-                kMax
-            )
-        )
-    );
-}
-
-void Foam::RASModels::SATFMdispersedModel::boundNormalStress2
 (
     volVectorField& k
 ) const
@@ -1285,16 +1247,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     {
-        volVectorField kt(k_);
-        boundNormalStress2(kt);
-        
-        volScalarField kmt  = (kt & eSum);
-        kmt.max(kSmall.value());
         //compute nut_ (Schneiderbauer, 2017; equ. (34))
-        nut_ = alpha*sqrt(kmt)*lm_;
+        nut_ = alpha*sqrt(km)*lm_;
 
         if (anIsoTropicNut_) {
-            nut_ *= 0;
             volScalarField alphaf = filter_(alpha);
             alphaf.max(residualAlpha_.value());
             volVectorField Uf = filter_(alpha*U)/alphaf;
@@ -1327,43 +1283,47 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     for (int j=0; j<3; j++) {
                         if (i!=j) {
                             R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
-                                    *sqrt(kt[cellI].component(i)*kt[cellI].component(j));
+                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                         } else {
-                            R1_[cellI].component(j+i*3) =  sqrt(kt[cellI].component(i)*kt[cellI].component(j));
+                            R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                        }
+                    }
+                }
+            }
+                        //set R1 to 0 at boundaries
+            const fvPatchList& patches = mesh_.boundary();
+            volVectorField kN(k_);
+            volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
+            volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
+            volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
+            volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
+            const surfaceScalarField& magSf = mesh_.magSf();
+            const surfaceVectorField& N = mesh_.Sf()/magSf;
+            
+
+            forAll(patches, patchi)
+            {
+                if (!patches[patchi].coupled())
+                {
+                    kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
+                    for (int i=0; i<3; i++) {
+                        for (int j=0; j<3; j++) {
+                            if (i!=j) {
+                                R1Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
+                                        *sqrt(kNBf[patchi].component(i)*kNBf[patchi].component(j));
+                            } else {
+                                R1Bf[patchi].component(j+i*3) =  sqrt(kNBf[patchi].component(i)*kNBf[patchi].component(j));
+                            }
                         }
                     }
                 }
             }
         } else {
-            R1_ = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);
+            R1_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
         }
     }
     R1_.correctBoundaryConditions();
-
-    //set R1 to 0 at boundaries
-    const fvPatchList& patches = mesh_.boundary();
-
-    volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-
-    forAll(patches, patchi)
-    {
-        if (!patches[patchi].coupled())
-        {
-            R1Bf[patchi] = (
-                               (R1Bf[patchi]&mesh_.Sf().boundaryField()[patchi])
-                             - (
-                                 (
-                                    (R1Bf[patchi]&mesh_.Sf().boundaryField()[patchi])
-                                    &mesh_.Sf().boundaryField()[patchi]
-                                 )
-                                 *mesh_.Sf().boundaryField()[patchi]
-                               )/sqr(mesh_.magSf().boundaryField()[patchi])
-                           )
-                          *mesh_.Sf().boundaryField()[patchi]
-                          /sqr(mesh_.magSf().boundaryField()[patchi]);
-        }
-    }
-    
+  
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (
