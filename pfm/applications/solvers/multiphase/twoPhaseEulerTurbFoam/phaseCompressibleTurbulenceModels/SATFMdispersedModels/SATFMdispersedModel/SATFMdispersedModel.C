@@ -1303,7 +1303,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
             forAll(patches, patchi)
             {
-                if (!patches[patchi].coupled())
+                if ((!patches[patchi].coupled())||(!isA<cyclicAMIFvPatch>(this->mesh_.boundary()[patchi])))
                 {
                     kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
                     kNBf[patchi].component(0) = max(kNBf[patchi].component(0),SMALL);
