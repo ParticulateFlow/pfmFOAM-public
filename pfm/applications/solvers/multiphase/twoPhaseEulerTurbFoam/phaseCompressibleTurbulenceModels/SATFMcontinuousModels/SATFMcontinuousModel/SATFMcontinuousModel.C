@@ -177,7 +177,8 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1))
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     alphaP2Mean_
@@ -290,9 +291,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
     ),
 
     shearProd_
@@ -1138,6 +1137,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
+        xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
         forAll(cells,cellI)
         {
@@ -1148,6 +1148,34 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                 *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R2_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    }
+                }
+            }
+        }
+        
+        const fvPatchList& patches = mesh_.boundary();
+        volVectorField kN(k_);
+        volTensorField::Boundary& R2Bf = R2_.boundaryFieldRef();
+        volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
+        volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
+        volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
+        const surfaceScalarField& magSf = mesh_.magSf();
+        const surfaceVectorField& N = mesh_.Sf()/magSf;
+        
+
+        forAll(patches, patchi)
+        {
+            if ((!patches[patchi].coupled())||(!isA<cyclicAMIFvPatch>(this->mesh_.boundary()[patchi])))
+            {
+                kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
+                for (int i=0; i<3; i++) {
+                    for (int j=0; j<3; j++) {
+                        if (i!=j) {
+                            R2Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
+                                    *sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
+                        } else {
+                            R2Bf[patchi].component(j+i*3) =  sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
+                        }
                     }
                 }
             }

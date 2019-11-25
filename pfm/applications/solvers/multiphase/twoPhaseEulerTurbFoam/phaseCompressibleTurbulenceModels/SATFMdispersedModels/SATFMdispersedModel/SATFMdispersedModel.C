@@ -1306,16 +1306,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 if ((!patches[patchi].coupled())||(!isA<cyclicAMIFvPatch>(this->mesh_.boundary()[patchi])))
                 {
                     kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
-                    kNBf[patchi].component(0) = max(kNBf[patchi].component(0),SMALL);
-                    kNBf[patchi].component(1) = max(kNBf[patchi].component(1),SMALL);
-                    kNBf[patchi].component(2) = max(kNBf[patchi].component(2),SMALL);
                     for (int i=0; i<3; i++) {
                         for (int j=0; j<3; j++) {
                             if (i!=j) {
                                 R1Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
-                                        *sqrt(kNBf[patchi].component(i)*kNBf[patchi].component(j));
+                                        *sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
                             } else {
-                                R1Bf[patchi].component(j+i*3) =  sqrt(kNBf[patchi].component(i)*kNBf[patchi].component(j));
+                                R1Bf[patchi].component(j+i*3) =  sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
                             }
                         }
                     }
