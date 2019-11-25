@@ -1275,7 +1275,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
             // limit correlation coefficients
             boundCorrTensor(xiUU_);
-            
+            xiUU_.correctBoundaryConditions();
             // compute Reynolds-stress tensor
             forAll(cells,cellI)
             {
