@@ -878,6 +878,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         // Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
+/*
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
@@ -896,12 +897,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Ceps_.min(1.0);
         Ceps_.max(0.01);
-
-//        Ceps_   = CepsScalar_;
+*/
+        Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
         // Currently no dynamic procedure for Cp
+        /*
         const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
@@ -911,7 +913,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_ = filterS(Cp_);
         Cp_.min(1.0);
         Cp_.max(0.1);
-        // Cp_     = CpScalar_;
+        */
+        Cp_     = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
