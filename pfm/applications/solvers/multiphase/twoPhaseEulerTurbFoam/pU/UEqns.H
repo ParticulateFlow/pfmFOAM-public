@@ -22,15 +22,19 @@ if (periodicBox) {
 
 volScalarField Kd(fluid.Kd());
 volVectorField KdUdrift(fluid.KdUdrift());
+// in the case of no drift vel model, KdUdriftE is 0
+volVectorField KdUdriftE(KdUdrift);
 
-// compute KdUdrift along grad(alpha1)
-// separate handling of gradient part in pEqn
-volVectorField gradAlpha(fvc::grad(alpha1));
-volScalarField gradAlpha2(magSqr(gradAlpha));
-volScalarField KdUdriftGradAlpha = (KdUdrift&gradAlpha)
-              /(gradAlpha2+dimensionedScalar("small", dimensionSet(0, -2, 0, 0, 0), 1.0e-4));
-volVectorField KdUdriftgA = KdUdriftGradAlpha*gradAlpha;
-volVectorField KdUdriftE  = KdUdrift - KdUdriftgA;
+if (mesh.foundObject<volScalarField>("dragCorr")) {
+    Info<< "Applying drag correction..." << endl;
+    const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
+    Kd *= (scalar(1.0) - dragCorr);
+    volVectorField uSlipV(U2 - U1);
+    volScalarField uSlip(mag(uSlipV));
+    uSlip.max(SMALL);
+    KdUdriftE = KdUdrift - (KdUdrift&uSlipV)*uSlipV/sqr(uSlip);
+}
+
 {
 
     surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
@@ -55,8 +59,6 @@ volVectorField KdUdriftE  = KdUdrift - KdUdriftgA;
               - fvm::Sp(fvc::div(phi1), U1)
               - DDtU2
             )
-          // Explicit part of drift velocity
-          + KdUdriftE
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha1*(rho1-rhoMix)*gN
@@ -109,7 +111,7 @@ volVectorField KdUdriftE  = KdUdrift - KdUdriftgA;
                   // gravity
                   + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
                   // drift velocity
-                  + (fvc::interpolate(KdUdriftgA*rAU1)&mesh.Sf())/rAU1f
+                  + (fvc::interpolate(KdUdriftE*rAU1)&mesh.Sf())/rAU1f
                 )
             );
 
@@ -135,8 +137,6 @@ volVectorField KdUdriftE  = KdUdrift - KdUdriftgA;
               - fvm::Sp(fvc::div(phi2), U2)
               - DDtU1
             )
-          // Explicit part of drift velocity
-          - KdUdriftE
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha2*(rho2-rhoMix)*gN
@@ -182,7 +182,7 @@ volVectorField KdUdriftE  = KdUdrift - KdUdriftgA;
                  // gravity
                  + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
                  // drift velocity
-                 - (fvc::interpolate(KdUdriftgA*rAU2)&mesh.Sf())/rAU2f
+                 - (fvc::interpolate(KdUdriftE*rAU2)&mesh.Sf())/rAU2f
                 )
             );
 

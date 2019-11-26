@@ -688,8 +688,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -0.99;
-    scalar xiMax = 0.99;
+    scalar xiMin = -1.0;
+    scalar xiMax = 1.0;
 
     xi.max
     (
@@ -935,9 +935,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
         tmpA.max(ROOTVSMALL);
-//        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
-//        tmpK.max(ROOTVSMALL);
-
+        // volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
+        // tmpK.max(ROOTVSMALL);
+        
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -1095,7 +1095,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
+          - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (

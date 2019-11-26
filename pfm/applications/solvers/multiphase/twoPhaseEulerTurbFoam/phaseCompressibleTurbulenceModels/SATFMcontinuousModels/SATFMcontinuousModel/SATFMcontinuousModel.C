@@ -542,8 +542,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -0.99;
-    scalar xiMax = 0.99;
+    scalar xiMin = -1.0;
+    scalar xiMax = 1.0;
 
     xi.max
     (
@@ -815,6 +815,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         tmpA.max(ROOTVSMALL);
         // volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
         // tmpK.max(ROOTVSMALL);
+        
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alpha2f
@@ -847,8 +848,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
-         
-        //xiPhiG_ = 3.0*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        
+        // xiPhiG_ = 3.0*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // align with slip velocity
         /*
         xiPhiG_ = sign(xiPhiG_&uSlip)
@@ -957,7 +958,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
+          + fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (

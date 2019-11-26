@@ -109,4 +109,3 @@ volScalarField unity
      mesh,
      dimensionedScalar("unity", dimless, 1.0)
 );
-
