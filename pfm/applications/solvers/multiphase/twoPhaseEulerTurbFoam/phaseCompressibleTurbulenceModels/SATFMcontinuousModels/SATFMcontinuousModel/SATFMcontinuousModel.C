@@ -861,7 +861,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
                
         // compute mixing length dynamically
-        /*
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
         magSqrDf.max(SMALL);
@@ -876,10 +875,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
-        */
-        Cmu_    = CmuScalar_;
+
+        // Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
-        /*
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
         volScalarField magSqrD = magSqr(D);
         volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
@@ -898,13 +896,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Ceps_.min(1.0);
         Ceps_.max(0.01);
-         */
-        Ceps_   = CepsScalar_;
+
+//        Ceps_   = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
         // Currently no dynamic procedure for Cp
-        /*
         const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
@@ -914,7 +911,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_ = filterS(Cp_);
         Cp_.min(1.0);
         Cp_.max(0.1);
-        */
         // Cp_     = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
