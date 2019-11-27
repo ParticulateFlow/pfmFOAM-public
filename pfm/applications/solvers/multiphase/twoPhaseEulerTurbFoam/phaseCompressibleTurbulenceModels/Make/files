@@ -58,6 +58,7 @@ ADMcontinuousModels/regularizationModel/Stolz/StolzC.C
 ADMcontinuousModels/regularizationModel/none/noneRegularizationC.C
 
 SATFMdispersedModels/SATFMdispersedModel/SATFMdispersedModel.C
+SATFMdispersedModels/derivedFvPatchFields/partialSlipFriction/partialSlipFrictionFvPatchVectorField.C
 SATFMcontinuousModels/SATFMcontinuousModel/SATFMcontinuousModel.C
 
 LIB = $(FOAM_USER_LIBBIN)/libphaseCompressibleTurbulenceModelsT
