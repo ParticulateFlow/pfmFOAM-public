@@ -25,15 +25,20 @@ surfaceScalarField alphaRhof20
 // Drag coefficient
 surfaceScalarField Kdf("Kdf", fluid.Kdf());
 // drift velocity
-volScalarField Kd(fluid.Kd());
 volVectorField KdUdrift(fluid.KdUdrift());
 // in the case of no drift vel model, KdUdriftE is 0
 volVectorField KdUdriftE(KdUdrift);
 
 if (mesh.foundObject<volScalarField>("dragCorr")) {
-    Info<< "Applying drag correction..." << endl;
+    
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
-    Kdf *= fvc::interpolate(scalar(1.0) - dragCorr);
+    surfaceScalarField dragCorrF(fvc::interpolate(dragCorr));
+    dragCorrF.max(0);
+    dragCorrF.min(0.999);
+    Kdf = Kdf*(scalar(1.0) - dragCorrF);
+    Info << "Applying drag correction..." << nl
+         << "    max(dragCorr) = " << max(dragCorrF).value() << nl
+         << "    min(dragCorr) = " << min(dragCorrF).value() << endl;
     volVectorField uSlipV(U2 - U1);
     volScalarField uSlip(mag(uSlipV));
     uSlip.max(SMALL);
