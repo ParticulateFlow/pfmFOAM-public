@@ -1,5 +1,6 @@
 surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
 surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
+surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(fluid.CpIPh()));
 
 surfaceScalarField alphaRhof10
 (
@@ -23,6 +24,21 @@ surfaceScalarField alphaRhof20
 
 // Drag coefficient
 surfaceScalarField Kdf("Kdf", fluid.Kdf());
+// drift velocity
+volScalarField Kd(fluid.Kd());
+volVectorField KdUdrift(fluid.KdUdrift());
+// in the case of no drift vel model, KdUdriftE is 0
+volVectorField KdUdriftE(KdUdrift);
+
+if (mesh.foundObject<volScalarField>("dragCorr")) {
+    Info<< "Applying drag correction..." << endl;
+    const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
+    Kdf *= fvc::interpolate(scalar(1.0) - dragCorr);
+    volVectorField uSlipV(U2 - U1);
+    volScalarField uSlip(mag(uSlipV));
+    uSlip.max(SMALL);
+    KdUdriftE = KdUdrift - (KdUdrift&uSlipV)*uSlipV/sqr(uSlip);
+}
 
 // Virtual-mass coefficient
 surfaceScalarField Vmf("Vmf", fluid.Vmf());
@@ -82,11 +98,13 @@ tmp<surfaceScalarField> Ff2;
     // Phase-fraction face-gradient
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
 
+    // anisotropic part of drift velocity
+    surfaceScalarField KdUdrfitEf(fvc::flux(KdUdriftE));
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + Ff;
+    Ff1 = Df1*snGradAlpha1 + Ff - KdUdrfitEf;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 - Ff;
+    Ff2 = -Df2*snGradAlpha1 - Ff + KdUdrfitEf;
 }
 
 
@@ -124,6 +142,12 @@ while (pimple.correct())
         "ghSnGradRho",
         ghf*fvc::snGrad(rho)*mesh.magSf()
     );
+    
+    surfaceScalarField snGradP
+    (
+        "snGradP",
+        fvc::snGrad(p)*mesh.magSf()
+    );
 
     // Phase-1 buoyancy flux
     surfaceScalarField phig1
@@ -133,6 +157,7 @@ while (pimple.correct())
        *(
             ghSnGradRho
           - alphaf2*(rhof1 - rhof2)*(g & mesh.Sf())
+          + CpIPhf*snGradP / max(alphaf1,phase1.residualAlpha())
         )
     );
 
@@ -144,6 +169,7 @@ while (pimple.correct())
        *(
             ghSnGradRho
           - alphaf1*(rhof2 - rhof1)*(g & mesh.Sf())
+          - CpIPhf*snGradP/alphaf2
         )
     );
 

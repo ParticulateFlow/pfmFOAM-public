@@ -3,7 +3,6 @@ Info<< "Constructing face momentum equations" << endl;
 MRF.correctBoundaryVelocity(U1);
 MRF.correctBoundaryVelocity(U2);
 MRF.correctBoundaryVelocity(U);
-Info<< "Constructing face momentum equations" << endl;
 
 fvVectorMatrix U1Eqn(U1, rho1.dimensions()*U1.dimensions()*dimVol/dimTime);
 fvVectorMatrix U2Eqn(U2, rho2.dimensions()*U2.dimensions()*dimVol/dimTime);
@@ -22,9 +21,7 @@ if (periodicBox) {
 
 {
     volScalarField Vm(fluid.Vm());
-    volScalarField CpIPh(fluid.CpIPh());
-    volVectorField KdUdrift(fluid.KdUdrift());
-
+    
     fvVectorMatrix UgradU1
     (
         fvm::div(phi1, U1) - fvm::Sp(fvc::div(phi1), U1)
@@ -44,11 +41,6 @@ if (periodicBox) {
           + MRF.DDt(alpha1*rho1, U1)
           + phase1.turbulence().divDevRhoReff(U1)
           + Vm*(UgradU1 - (UgradU2 & U2))
-          // meso-scale interPhase force
-          + CpIPh*(fvc::grad(p))
-          // drift velocity correction for filtered drag force
-          // (ie. similar to turbulent dispersion)
-          - KdUdrift 
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha1*(rho1-rhoMix)*gN
@@ -68,12 +60,7 @@ if (periodicBox) {
             fvm::div(alphaRhoPhi2, U2) - fvm::Sp(fvc::div(alphaRhoPhi2), U2)
           + MRF.DDt(alpha2*rho2, U2)
           + phase2.turbulence().divDevRhoReff(U2)
-          + Vm*(UgradU2 - (UgradU1 & U1))
-          // meso-scale interPhase force
-          - CpIPh*(fvc::grad(p))
-          // drift velocity correction for filtered drag force
-          // (ie. similar to turbulent dispersion)
-          + KdUdrift         
+          + Vm*(UgradU2 - (UgradU1 & U1))     
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha2*(rho2-rhoMix)*gN
