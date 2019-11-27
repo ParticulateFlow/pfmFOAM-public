@@ -804,7 +804,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, residualAlpha_));
+    volScalarField alpha(max(alpha_, 1.e-7));
     volScalarField alpha2 = 1.0 - alpha;
     const volScalarField& rho = phase_.rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
@@ -1039,7 +1039,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
-        Ceps_   = CepsScalar_;
+        Ceps_ = pos(alpha_ - residualAlpha_)*CepsScalar_
+              + neg(alpha_- residualAlpha_);
         // compute CphiS
         CphiS_ = CphiSscalar_*Cmu_;
         // Set Cp
@@ -1103,7 +1104,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    + (sqrt(k_&eZ)*(eZ*eZ))
                                    )
                                  / (sigma_)
-                           , k_, "laplacian(kappa,k)")
+                           , k_
+                           , "laplacian(kappa,k)"
+                         )
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1175,8 +1178,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // limit k before computing Reynolds-stresses
     boundNormalStress(k_);
     k_.correctBoundaryConditions();
-    // deactivate energy transfer if alpha is smaller than residualAlpha
-    xiGS_ *= pos(alpha_ - residualAlpha_);
 
     //- compute variance of solids volume fraction
     // update km
@@ -1289,20 +1290,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     }
                 }
             }
-                        //set R1 to 0 at boundaries
+            //set R1 to 0 at boundaries
             const fvPatchList& patches = mesh_.boundary();
             volVectorField kN(k_);
             volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-            volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
             volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
             volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
+            volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
             const surfaceScalarField& magSf = mesh_.magSf();
             const surfaceVectorField& N = mesh_.Sf()/magSf;
-            
 
             forAll(patches, patchi)
             {
-                if ((!patches[patchi].coupled())||(!isA<cyclicAMIFvPatch>(this->mesh_.boundary()[patchi])))
+                if (patches[patchi].type() == "wall")
                 {
                     kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
                     for (int i=0; i<3; i++) {
@@ -1319,6 +1319,23 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         } else {
             R1_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+            //set R1 to 0 at boundaries
+            const fvPatchList& patches = mesh_.boundary();
+            volVectorField kN(k_);
+            volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
+            volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
+            volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
+            const surfaceScalarField& magSf = mesh_.magSf();
+            const surfaceVectorField& N = mesh_.Sf()/magSf;
+            forAll(patches, patchi)
+            {
+                if (patches[patchi].type() == "wall") {
+                    kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
+                    R1Bf[patchi].component(0) = max(kNBf[patchi].component(0),SMALL);
+                    R1Bf[patchi].component(4) = max(kNBf[patchi].component(1),SMALL);
+                    R1Bf[patchi].component(8) = max(kNBf[patchi].component(2),SMALL);
+                }
+            }
         }
     }
     R1_.correctBoundaryConditions();

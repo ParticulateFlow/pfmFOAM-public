@@ -291,7 +291,8 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     shearProd_
@@ -660,9 +661,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, residualAlpha_));
+    volScalarField alpha(max(alpha_, 1.e-7));
     // solid volume fraction
-    volScalarField alpha1 = max(1.0 - alpha,residualAlpha_);
+    volScalarField alpha1 = max(1.0 - alpha,1.e-7);
     const volScalarField& rho = phase_.rho();
     const volScalarField& rho1 = fluid.otherPhase(phase_).rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
@@ -898,7 +899,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_.min(1.0);
         Ceps_.max(0.01);
 */
-        Ceps_   = CepsScalar_;
+        Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CepsScalar_
+              + neg(scalar(1.0) - alpha_ - residualAlpha_);
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
@@ -914,7 +916,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_.min(1.0);
         Cp_.max(0.1);
         */
-        Cp_     = CpScalar_;
+        Cp_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CpScalar_
+            + neg(scalar(1.0) - alpha_ - residualAlpha_);
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
@@ -966,7 +969,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                    + (sqrt(k_&eZ)*(eZ*eZ))
                                    )
                                  / (sigma_)
-                           , k_, "laplacian(kappa,k)")
+                           , k_
+                           , "laplacian(kappa,k)"
+                         )
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -985,7 +990,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       + sqrt((kD_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          + fvm::Sp(-2.0*beta*xiGatS_,k_)
+          + fvm::Sp(
+                      -2.0
+                      *beta
+                      *xiGatS_
+                    ,
+                      k_
+                   )
           // drag production and pressure dilation
           - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
@@ -1152,7 +1163,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        
+        /*
         const fvPatchList& patches = mesh_.boundary();
         volVectorField kN(k_);
         volTensorField::Boundary& R2Bf = R2_.boundaryFieldRef();
@@ -1180,6 +1191,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+         */
     } else {
         // compute R2_
         R2_ = zeroR;
