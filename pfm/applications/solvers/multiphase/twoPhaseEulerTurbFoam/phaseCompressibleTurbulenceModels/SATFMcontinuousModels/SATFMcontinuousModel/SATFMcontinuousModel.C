@@ -960,7 +960,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          + fvm::Sp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          //+ fvc::Sp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -990,7 +990,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       + sqrt((kD_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          - fvm::Sp(
+          - fvm::SpSu(
                       2.0
                       *beta
                       *xiGatS_
