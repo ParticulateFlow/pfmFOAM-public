@@ -935,9 +935,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
         tmpA.max(ROOTVSMALL);
-        // volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
-        // tmpK.max(ROOTVSMALL);
-        
+        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
+        tmpK.max(ROOTVSMALL);
+        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -970,17 +970,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
-        
-        // xiPhiS_ = 3.0*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
-        // align with slip velocity
-        /*
-        xiPhiS_ = sign(xiPhiS_&gradAlpha)
-                 *mag(xiPhiS_)
-                 *gradAlpha
-                 /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
-         */
+        */
+        xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
+        // align with gradAlpha
+        xiPhiS_ = 0.5*(
+                          xiPhiS_
+                        - mag(xiPhiS_)
+                         *gradAlpha
+                        /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
+                      );
         
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))

@@ -814,9 +814,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                       );
         volScalarField tmpA = alpha1fP2-sqr(alpha1f);
         tmpA.max(ROOTVSMALL);
-        // volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
-        // tmpK.max(ROOTVSMALL);
-        
+        volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
+        tmpK.max(ROOTVSMALL);
+        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alpha2f
@@ -849,18 +849,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
-        
-        // xiPhiG_ = 3.0*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
-        // align with slip velocity
-        /*
-        xiPhiG_ = sign(xiPhiG_&uSlip)
-                 *mag(xiPhiG_)
-                 *uSlip
-                 /(mag(uSlip) + uSmall);
         */
+        xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
-               
+        // align with slip velocity
+        xiPhiG_ = 0.5*(
+                         xiPhiG_
+                       - mag(xiPhiG_)
+                        *uSlip
+                        /(mag(uSlip) + uSmall)
+                      );
+
         // compute mixing length dynamically
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
