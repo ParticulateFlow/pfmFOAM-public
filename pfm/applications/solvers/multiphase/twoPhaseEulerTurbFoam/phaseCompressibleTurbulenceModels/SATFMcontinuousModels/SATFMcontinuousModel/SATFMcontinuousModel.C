@@ -990,7 +990,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       + sqrt((kD_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          - fvm::SpSu(
+          - fvm::SuSp(
                       2.0
                       *beta
                       *xiGatS_
