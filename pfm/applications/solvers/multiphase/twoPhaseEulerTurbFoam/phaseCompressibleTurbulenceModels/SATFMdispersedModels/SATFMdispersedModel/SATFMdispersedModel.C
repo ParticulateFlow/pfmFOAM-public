@@ -977,15 +977,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         */
         xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
         // smooth xiPhiS_
-        xiPhiS_ = filterS(xiPhiS_);
+        //xiPhiS_ = filterS(xiPhiS_);
 
         // align with gradAlpha
+        /*
         xiPhiS_ = 0.5*(
                           xiPhiS_
                         - mag(xiPhiS_)
                          *uSlip
                          /max(mag(uSlip),uSmall)
                       );
+        */
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         // compute triple correlation
@@ -998,7 +1000,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
-        xiPhiGG_ = filterS(xiPhiGG_);
+        //xiPhiGG_ = filterS(xiPhiGG_);
         
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
@@ -1025,7 +1027,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(-0.99);
         xiGS_.min(0.99);
-        xiGS_ = filterS(xiGS_);
+        //xiGS_ = filterS(xiGS_);
     
         // compute mixing length dynamically
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
@@ -1281,7 +1283,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
             // limit correlation coefficients
             boundCorrTensor(xiUU_);
-            xiUU_ = filterS(xiUU_);
+            //xiUU_ = filterS(xiUU_);
             xiUU_.correctBoundaryConditions();
             // compute Reynolds-stress tensor
             forAll(cells,cellI)

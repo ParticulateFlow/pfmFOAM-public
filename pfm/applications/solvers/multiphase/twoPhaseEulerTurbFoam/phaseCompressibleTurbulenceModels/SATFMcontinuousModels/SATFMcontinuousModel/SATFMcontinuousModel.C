@@ -853,14 +853,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         */
         xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
         // smooth xiPhiG_
-        xiPhiG_ = filterS(xiPhiG_);
+        // xiPhiG_ = filterS(xiPhiG_);
         // align with slip velocity
-        xiPhiG_ = 0.5*(
+        /*xiPhiG_ = 0.5*(
                          xiPhiG_
                        - mag(xiPhiG_)
                         *uSlip
                         /(mag(uSlip) + uSmall)
                       );
+         */
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
         // compute mixing length dynamically
@@ -1149,7 +1150,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
-        xiUU_ = filterS(xiUU_);
+        // xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
         forAll(cells,cellI)
