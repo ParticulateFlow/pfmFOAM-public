@@ -976,8 +976,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     );
         */
         xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
-        // limit xiPhiS_
-        boundxiPhiS(xiPhiS_);
+        // smooth xiPhiS_
         xiPhiS_ = filterS(xiPhiS_);
 
         // align with gradAlpha
@@ -987,7 +986,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          *uSlip
                          /max(mag(uSlip),uSmall)
                       );
-        
+        // limit xiPhiS_
+        boundxiPhiS(xiPhiS_);
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
                                    - alphaf*filter_(magSqr(Uc_))

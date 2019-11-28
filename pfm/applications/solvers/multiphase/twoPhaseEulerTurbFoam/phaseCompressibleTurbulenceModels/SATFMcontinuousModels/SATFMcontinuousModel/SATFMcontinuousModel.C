@@ -852,8 +852,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
         */
         xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
-        // limit xiPhiG_
-        boundxiPhiG(xiPhiG_);
+        // smooth xiPhiG_
         xiPhiG_ = filterS(xiPhiG_);
         // align with slip velocity
         xiPhiG_ = 0.5*(
@@ -862,7 +861,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         *uSlip
                         /(mag(uSlip) + uSmall)
                       );
-
+        // limit xiPhiG_
+        boundxiPhiG(xiPhiG_);
         // compute mixing length dynamically
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
