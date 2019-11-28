@@ -978,8 +978,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiPhiS_ = 0.5*(
                           xiPhiS_
                         - mag(xiPhiS_)
-                         *gradAlpha
-                        /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7))
+                         *uSlip
+                         /max(mag(uSlip),uSmall)
                       );
         
         // compute triple correlation
@@ -1046,8 +1046,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Set Cp
         Cp_     = CpScalar_;
     } else {
-        volVectorField xiPhiSDir = gradAlpha
-                                  /max(mag(gradAlpha),dimensionedScalar("small",dimensionSet(0,-1,0,0,0),1.e-7));
+        volVectorField xiPhiSDir = uSlip
+                                  /max(mag(uSlip),uSmall);
         xiPhiS_ = -(xiPhiSolidScalar_)*xiPhiSDir;
         xiPhiGG_ = scalar(0.0);
         xiGS_   = xiGSScalar_;
