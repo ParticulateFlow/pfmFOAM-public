@@ -971,7 +971,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom/sqrt(tmpA*tmpK));
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         // align with gradAlpha
@@ -988,7 +988,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
         volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
                                    * max(filter_(magSqr(Uc_))- 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
+        xiPhiGG_ = filterS(xiPhiGGnom/xiPhiGGden);
 
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
@@ -998,6 +998,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                * sqrt(max(aUU,kSmall));
+        /*
         volScalarField xiGSnumP(xiGSnum*xiGSden);
         
         //set xiGSnumP to 0 at boundaries
@@ -1012,8 +1013,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 xiGSnumPBf[patchi] *= 0.0;
             }
         }
-        
-        xiGS_ = filterS(xiGSnumP)/filterS(sqr(xiGSden));
+        */
+        xiGS_ = filterS(xiGSnum/xiGSden);
         
         
         // smooth and regularize xiGS_ (xiGS_ is positive)
@@ -1256,14 +1257,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             volVectorField Uf = filter_(alpha*U)/alphaf;
             
             // compute correlation coefficients
-            volTensorField xiUUnom = filterS(filter_(alpha*(U*U))/alphaf - Uf*Uf);
-            volVectorField xiUUden = filterS
-                                     (
+            volTensorField xiUUnom = filter_(alpha*(U*U))/alphaf - Uf*Uf;
+            volVectorField xiUUden = (
                                         sqrt(max(filter_(alpha*magSqr(U&eX))/alphaf - magSqr(Uf&eX),kSmall))*eX
                                       + sqrt(max(filter_(alpha*magSqr(U&eY))/alphaf - magSqr(Uf&eY),kSmall))*eY
                                       + sqrt(max(filter_(alpha*magSqr(U&eZ))/alphaf - magSqr(Uf&eZ),kSmall))*eZ
                                      );
-            
+
             forAll(cells,cellI)
             {
                 for (int i=0; i<3; i++) {
@@ -1273,6 +1273,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     }
                 }
             }
+            
+            xiUU_ = filterS(xiUU_);
             // limit correlation coefficients
             boundCorrTensor(xiUU_);
             xiUU_.correctBoundaryConditions();

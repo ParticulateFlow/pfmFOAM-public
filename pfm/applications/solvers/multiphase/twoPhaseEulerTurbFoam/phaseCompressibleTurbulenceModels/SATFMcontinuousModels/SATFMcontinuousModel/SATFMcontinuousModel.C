@@ -850,7 +850,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom/sqrt(tmpA*tmpK));
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
         // align with slip velocity
@@ -1129,9 +1129,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volVectorField Uf = filter_(alpha*U)/alphaf;
         
         // compute correlation coefficients
-        volTensorField xiUUnom = filterS(filter_(alpha*(U*U))/alphaf - Uf*Uf);
-        volVectorField xiUUden = filterS
-                                 (
+        volTensorField xiUUnom = (filter_(alpha*(U*U))/alphaf - Uf*Uf);
+        volVectorField xiUUden = (
                                     sqrt(max(filter_(alpha*magSqr(U&eX))/alphaf - magSqr(Uf&eX),kSmall))*eX
                                   + sqrt(max(filter_(alpha*magSqr(U&eY))/alphaf - magSqr(Uf&eY),kSmall))*eY
                                   + sqrt(max(filter_(alpha*magSqr(U&eZ))/alphaf - magSqr(Uf&eZ),kSmall))*eZ
@@ -1146,6 +1145,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        xiUU_ = filterS(xiUU_);
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
         xiUU_.correctBoundaryConditions();
