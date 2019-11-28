@@ -1225,7 +1225,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                      ,alphaP2Mean_)
           - fvm::SuSp(divU,alphaP2Mean_)
           // production/dissipation
-          - fvm::Sp(-dissPhiP2,alphaP2Mean_)
+          + fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();
