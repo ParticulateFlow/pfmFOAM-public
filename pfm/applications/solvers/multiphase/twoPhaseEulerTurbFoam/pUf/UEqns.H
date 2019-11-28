@@ -19,6 +19,8 @@ if (periodicBox) {
                 /fvc::domainIntegrate(alpha1*rho1+alpha2*rho2);
 }
 
+volVectorField uSlipV(U2 - U1);
+
 {
     volScalarField Vm(fluid.Vm());
     
