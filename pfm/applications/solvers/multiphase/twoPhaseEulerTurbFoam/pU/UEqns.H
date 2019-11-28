@@ -28,11 +28,9 @@ volVectorField KdUdriftE(KdUdrift);
 if (mesh.foundObject<volScalarField>("dragCorr")) {
     Info<< "Applying drag correction..." << endl;
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
-    Kd *= (scalar(1.0) - dragCorr);
     volVectorField uSlipV(U2 - U1);
-    volScalarField uSlip(mag(uSlipV));
-    uSlip.max(SMALL);
-    KdUdriftE = KdUdrift - (KdUdrift&uSlipV)*uSlipV/sqr(uSlip);
+    KdUdriftE = KdUdrift + dragCorr*Kd*uSlipV;
+    Kd *= (scalar(1.0) - dragCorr);
 }
 
 {
