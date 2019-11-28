@@ -206,7 +206,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1))
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiUU_
@@ -236,7 +237,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiGS_
@@ -250,7 +252,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.9),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiGatS_
@@ -264,7 +267,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     alphaP2Mean_
@@ -971,9 +975,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom/sqrt(tmpA*tmpK));
+        xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
+        xiPhiS_ = filterS(xiPhiS_);
+
         // align with gradAlpha
         xiPhiS_ = 0.5*(
                           xiPhiS_
@@ -988,11 +994,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
         volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
                                    * max(filter_(magSqr(Uc_))- 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = filterS(xiPhiGGnom/xiPhiGGden);
-
+        xiPhiGG_ = xiPhiGGnom/xiPhiGGden;
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
+        xiPhiGG_ = filterS(xiPhiGG_);
         
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
@@ -1014,12 +1020,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         }
         */
-        xiGS_ = filterS(xiGSnum/xiGSden);
-        
-        
+        xiGS_ = xiGSnum/xiGSden;
+
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(-0.99);
         xiGS_.min(0.99);
+        xiGS_ = filterS(xiGS_);
     
         // compute mixing length dynamically
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
@@ -1273,10 +1279,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     }
                 }
             }
-            
-            xiUU_ = filterS(xiUU_);
             // limit correlation coefficients
             boundCorrTensor(xiUU_);
+            xiUU_ = filterS(xiUU_);
             xiUU_.correctBoundaryConditions();
             // compute Reynolds-stress tensor
             forAll(cells,cellI)

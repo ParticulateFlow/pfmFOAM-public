@@ -163,7 +163,8 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5))
+        dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.5,-0.5,-0.5)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     xiUU_
@@ -850,9 +851,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom/sqrt(tmpA*tmpK));
+        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
+        xiPhiG_ = filterS(xiPhiG_);
         // align with slip velocity
         xiPhiG_ = 0.5*(
                          xiPhiG_
@@ -1145,9 +1147,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        xiUU_ = filterS(xiUU_);
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
+        xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
         forAll(cells,cellI)
