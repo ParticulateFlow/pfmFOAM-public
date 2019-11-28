@@ -1211,18 +1211,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
-          - fvc::div(
-                        (
-                           alpha*lm_
+          - fvm::laplacian(
+                           lm_
                          * (
                               (sqrt(k_&eX)*(eX*eX))
                             + (sqrt(k_&eY)*(eY*eY))
                             + (sqrt(k_&eZ)*(eZ*eZ))
                            )
                          / (sigma_)
+                       ,
+                         alphaP2Mean_
                        )
-                     & (fvc::grad(alphaP2Mean_/alpha))
-                    )
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.

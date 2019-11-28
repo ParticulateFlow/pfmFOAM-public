@@ -1081,17 +1081,16 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi2, alphaP2Mean_)
           // diffusion
-          - fvc::div(
-                        (
-                           alpha1*lm_
+          - fvm::laplacian(
+                           lm_
                          * (
                               (sqrt(k_&eX)*(eX*eX))
                             + (sqrt(k_&eY)*(eY*eY))
                             + (sqrt(k_&eZ)*(eZ*eZ))
                            )
                          / (sigma_)
-                       )
-                     & (fvc::grad(alphaP2Mean_/alpha1))
+                       ,
+                           alphaP2Mean_
                     )
          ==
           // some source terms are explicit since fvm::Sp()
