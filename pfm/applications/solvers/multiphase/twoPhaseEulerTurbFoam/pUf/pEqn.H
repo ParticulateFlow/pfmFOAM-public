@@ -39,7 +39,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
          << "    max(dragCorr) = " << max(dragCorrF).value() << nl
          << "    min(dragCorr) = " << min(dragCorrF).value() << endl;
     volScalarField Kd(fluid.Kd());
-    KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
+    KdUdriftE = (KdUdrift + dragCorr*Kd*uSlipV);
     Kdf = Kdf*(scalar(1.0) - dragCorrF);
 }
 
