@@ -1272,13 +1272,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        nut_ = 0.5*alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
-        
+        R1_.correctBoundaryConditions();
         //set R1 to 0 at boundaries
-        /*
         const fvPatchList& patches = mesh_.boundary();
         volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-
+        /*
         forAll(patches, patchi)
         {
             if (!patches[patchi].coupled())
@@ -1287,8 +1285,23 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         }
         */
+        
+        nut_ = 0.5*alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        // set BC for nut_
+        volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
+        const surfaceScalarField& magSf = mesh_.magSf();
+        const surfaceVectorField& N = mesh_.Sf()/magSf;
+        
+        forAll(patches, patchi)
+        {
+            if (!patches[patchi].coupled())
+            {
+                nutBf[patchi] = (mag((R1Bf[patchi]&N) - ((R1Bf[patchi]&N)&N)*N))
+                               /(mag(U.boundaryField()[patchi].snGrad())+SMALL);
+            }
+        }
     }
-    R1_.correctBoundaryConditions();
+    
   
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
