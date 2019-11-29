@@ -1272,7 +1272,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        nut_ = alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        nut_ = 0.5*alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
         /*
         //set R1 to 0 at boundaries
         const fvPatchList& patches = mesh_.boundary();
