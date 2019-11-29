@@ -380,7 +380,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     shearProd_
@@ -1274,6 +1275,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         nut_ = 0.5*alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
         
         //set R1 to 0 at boundaries
+        /*
         const fvPatchList& patches = mesh_.boundary();
         volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
 
@@ -1284,8 +1286,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 R1Bf[patchi] = dev(R1Bf[patchi]);
             }
         }
+        */
     }
-    // R1_.correctBoundaryConditions();
+    R1_.correctBoundaryConditions();
   
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
