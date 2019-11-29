@@ -742,7 +742,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const cellList& cells = mesh_.cells();
     
     // simple filter for local smoothing
-    simpleFilter filterS(mesh_);
+    simpleFilterADM filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -853,18 +853,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         */
         xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
         // smooth xiPhiG_
-        // xiPhiG_ = filterS(xiPhiG_);
-        // align with slip velocity
-        /*xiPhiG_ = 0.5*(
-                         xiPhiG_
-                       - mag(xiPhiG_)
-                        *uSlip
-                        /(mag(uSlip) + uSmall)
-                      );
-         */
+        xiPhiG_ = filterS(xiPhiG_);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
+        
         // compute mixing length dynamically
+        /*
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
         magSqrDf.max(SMALL);
@@ -879,8 +873,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
-
-        // Cmu_    = CmuScalar_;
+        */
+        Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
 /*
         volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
@@ -932,6 +926,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_     = CpScalar_;
         CphiG_  = CphiGscalar_*CmuScalar_;
     }
+    
     // compute mixing length
     lm_ = Cmu_*deltaF_;
     
@@ -1149,7 +1144,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
-        // xiUU_ = filterS(xiUU_);
+        xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
         forAll(cells,cellI)
