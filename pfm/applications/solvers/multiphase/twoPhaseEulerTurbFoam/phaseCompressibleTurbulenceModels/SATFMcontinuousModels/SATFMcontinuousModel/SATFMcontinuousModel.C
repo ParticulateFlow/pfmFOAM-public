@@ -388,79 +388,43 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::R() const
 {
-    if (!anIsoTropicNut_) {
-        return tmp<volSymmTensorField>
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
         (
-            new volSymmTensorField
+            IOobject
             (
-                IOobject
-                (
-                    IOobject::groupName("R", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-              - (nuEff())*(twoSymm(fvc::grad(U_)))
-            )
-        );
-    } else {
-        return tmp<volSymmTensorField>
-        (
-            new volSymmTensorField
-            (
-                IOobject
-                (
-                    IOobject::groupName("R", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                2.0 * alpha_ * symm(R2_)
-              - (nuEff()-nut_)*(twoSymm(fvc::grad(U_)))
-            )
-        );
-    }
+                IOobject::groupName("R", U_.group()),
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            2.0 * alpha_ * symm(R2_)
+          - (nuEff()-nut_)*(twoSymm(fvc::grad(U_)))
+        )
+    );
 }
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
 {
-    if (!anIsoTropicNut_) {
-        return tmp<volSymmTensorField>
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
         (
-            new volSymmTensorField
+            IOobject
             (
-                IOobject
-                (
-                    IOobject::groupName("devRhoReff", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-              - (rho_*nuEff())*dev(twoSymm(fvc::grad(U_)))
-            )
-        );
-    } else {
-        return tmp<volSymmTensorField>
-        (
-            new volSymmTensorField
-            (
-                IOobject
-                (
-                    IOobject::groupName("devRhoReff", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                2.0 * alpha_ * dev(symm(R2_))
-              - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
-            )
-        );
-    }
+                IOobject::groupName("devRhoReff", U_.group()),
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            2.0 * alpha_ * dev(symm(R2_))
+          - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
+        )
+    );
 }
 
 
@@ -470,6 +434,25 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    dimensionedVector eX
+    (
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
+    );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
+    
     if (!anIsoTropicNut_) {
         return
         (
@@ -478,11 +461,26 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
             (
                 (rho_*nuEff())*dev2(T(fvc::grad(U)))
             )
+          + fvc::div
+            (
+                2.0
+              * alpha_
+              * rho_
+              * (
+                    (R2_&&(eX*eX))*(eX*eX)
+                  + (R2_&&(eY*eY))*(eY*eY)
+                  + (R2_&&(eZ*eZ))*(eZ*eZ)
+                )
+            )
         );
     } else {
         return
         (
-            fvc::laplacian(rho_*nut_, U)
+          - fvm::laplacian(rho_*nuEff(), U)
+          - fvc::div
+            (
+                rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
+            )
           + fvc::div
             (
                  2.0
@@ -492,11 +490,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                      R2_
                  )
             )
-          - fvm::laplacian(rho_*nuEff(), U)
-          - fvc::div
-            (
-               rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
-            )
+          + fvc::laplacian(rho_*nut_, U)
         );
     }
 }
@@ -937,12 +931,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibriumK_) {
         // compute production term according to Reynolds-stres model
+        /*
         volTensorField R2t(R2_);
         if (!anIsoTropicNut_) {
             R2t -= nut_*dev(gradU + gradU.T());
         }
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((R2t.T())&(gradU.T())));
-        
+        */
+        volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
         volVectorField shearProd_ =   (gradUR2&&(eX*eX))*(eX)
                                     + (gradUR2&&(eY*eY))*(eY)
                                     + (gradUR2&&(eZ*eZ))*(eZ);
@@ -1003,7 +999,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
           // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
           // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1052,10 +1049,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // update km
     km = (k_ & eSum);
     km.max(kSmall.value());
-
-    // compute nut_
-    nut_ = alpha*sqrt(km)*lm_;
-    nut_.correctBoundaryConditions();
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
@@ -1119,8 +1112,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
 
-    if (anIsoTropicNut_) {
-        // nut_ = dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0);
+    {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
@@ -1160,6 +1152,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        nut_ = 0.5*alpha*sqrt(dev(R2_)&&dev(R2_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        nut_.correctBoundaryConditions();
         /*
         const fvPatchList& patches = mesh_.boundary();
         volVectorField kN(k_);
@@ -1189,9 +1183,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
          */
-    } else {
-        // compute R2_
-        R2_ = zeroR;
     }
     R2_.correctBoundaryConditions();
     
