@@ -380,7 +380,8 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
+        zeroGradientFvPatchField<scalar>::typeName
     ),
 
     shearProd_
@@ -478,40 +479,21 @@ Foam::RASModels::SATFMdispersedModel::epsilon() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::R() const
 {
-    if (!anIsoTropicNut_) {
-        return tmp<volSymmTensorField>
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
         (
-            new volSymmTensorField
+            IOobject
             (
-                IOobject
-                (
-                    IOobject::groupName("R", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-              - pos(alpha_ - residualAlpha_)*(nut_)*dev(twoSymm(fvc::grad(U_)))
-            )
-        );
-    } else {
-        return tmp<volSymmTensorField>
-        (
-            new volSymmTensorField
-            (
-                IOobject
-                (
-                    IOobject::groupName("R", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-               2.0 * pos(alpha_ - residualAlpha_) * alpha_ *
-                dev(symm(R1_))
-            )
-        );
-    }
+                IOobject::groupName("R", U_.group()),
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+           2.0 * pos(alpha_ - residualAlpha_) * alpha_ * symm(R1_)
+        )
+    );
 }
 
 
@@ -565,39 +547,21 @@ Foam::RASModels::SATFMdispersedModel::pPrimef() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::devRhoReff() const
 {
-    if (!anIsoTropicNut_) {
-        return tmp<volSymmTensorField>
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
         (
-            new volSymmTensorField
+            IOobject
             (
-                IOobject
-                (
-                    IOobject::groupName("devRhoReff", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-              - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-            )
-        );
-    } else {
-        return tmp<volSymmTensorField>
-        (
-            new volSymmTensorField
-            (
-                IOobject
-                (
-                    IOobject::groupName("devRhoReff", U_.group()),
-                    runTime_.timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                2.0 * alpha_ * dev(symm(R1_))
-            )
-        );
-    }
+                IOobject::groupName("devRhoReff", U_.group()),
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            2.0 * alpha_ * dev(symm(R1_))
+        )
+    );
 }
 
 
@@ -607,6 +571,25 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    dimensionedVector eX
+    (
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
+    );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
+    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)*
@@ -622,7 +605,9 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * (
-                     R1_
+                     (R1_&&(eX*eX))*(eX*eX)
+                   + (R1_&&(eY*eY))*(eY*eY)
+                   + (R1_&&(eZ*eZ))*(eZ*eZ)
                  )
             )
         );
@@ -876,7 +861,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
 
     // simple filter for local smoothing
-    simpleFilter filterS(mesh_);
+    simpleFilterADM filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -977,19 +962,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         */
         xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
         // smooth xiPhiS_
-        //xiPhiS_ = filterS(xiPhiS_);
-
-        // align with gradAlpha
-        /*
-        xiPhiS_ = 0.5*(
-                          xiPhiS_
-                        - mag(xiPhiS_)
-                         *uSlip
-                         /max(mag(uSlip),uSmall)
-                      );
-        */
+        xiPhiS_ = filterS(xiPhiS_);
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
+        
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
                                    - alphaf*filter_(magSqr(Uc_))
@@ -1000,7 +976,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
-        //xiPhiGG_ = filterS(xiPhiGG_);
+        xiPhiGG_ = filterS(xiPhiGG_);
         
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
@@ -1027,9 +1003,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(-0.99);
         xiGS_.min(0.99);
-        //xiGS_ = filterS(xiGS_);
+        xiGS_ = filterS(xiGS_);
     
         // compute mixing length dynamically
+        /*
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
@@ -1043,8 +1020,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         Cmu_ = pos(alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(alpha_- residualAlpha_)*CmuScalar_;
-        
-       // Cmu_    = CmuScalar_;
+        */
+        Cmu_    = CmuScalar_;
         
         // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
@@ -1083,18 +1060,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibriumK_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2MeanO);
         
+        /*
         volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
             R1t -= nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stres model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + (R1t.T()&gradU.T()));
+        */
+        volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
         shearProd_ =   (gradUR1&&(eX*eX))*(eX)
                      + (gradUR1&&(eY*eY))*(eY)
                      + (gradUR1&&(eZ*eZ))*(eZ);
-        
-        // compute prefactor for dissipation term
-        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -1143,7 +1120,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1255,96 +1233,75 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     {
-        //compute nut_ (Schneiderbauer, 2017; equ. (34))
-        nut_ = alpha*sqrt(km)*lm_;
+        volScalarField alphaf = filter_(alpha);
+        alphaf.max(residualAlpha_.value());
+        volVectorField Uf = filter_(alpha*U)/alphaf;
+        
+        // compute correlation coefficients
+        volTensorField xiUUnom = filter_(alpha*(U*U))/alphaf - Uf*Uf;
+        volVectorField xiUUden = (
+                                    sqrt(max(filter_(alpha*magSqr(U&eX))/alphaf - magSqr(Uf&eX),kSmall))*eX
+                                  + sqrt(max(filter_(alpha*magSqr(U&eY))/alphaf - magSqr(Uf&eY),kSmall))*eY
+                                  + sqrt(max(filter_(alpha*magSqr(U&eZ))/alphaf - magSqr(Uf&eZ),kSmall))*eZ
+                                 );
 
-        if (anIsoTropicNut_) {
-            volScalarField alphaf = filter_(alpha);
-            alphaf.max(residualAlpha_.value());
-            volVectorField Uf = filter_(alpha*U)/alphaf;
-            
-            // compute correlation coefficients
-            volTensorField xiUUnom = filter_(alpha*(U*U))/alphaf - Uf*Uf;
-            volVectorField xiUUden = (
-                                        sqrt(max(filter_(alpha*magSqr(U&eX))/alphaf - magSqr(Uf&eX),kSmall))*eX
-                                      + sqrt(max(filter_(alpha*magSqr(U&eY))/alphaf - magSqr(Uf&eY),kSmall))*eY
-                                      + sqrt(max(filter_(alpha*magSqr(U&eZ))/alphaf - magSqr(Uf&eZ),kSmall))*eZ
-                                     );
-
-            forAll(cells,cellI)
-            {
-                for (int i=0; i<3; i++) {
-                    for (int j=0; j<3; j++) {
-                        xiUU_[cellI].component(j+i*3) = xiUUnom[cellI].component(j+i*3)
-                                                      / (xiUUden[cellI].component(i)*xiUUden[cellI].component(j));
-                    }
-                }
-            }
-            // limit correlation coefficients
-            boundCorrTensor(xiUU_);
-            //xiUU_ = filterS(xiUU_);
-            xiUU_.correctBoundaryConditions();
-            // compute Reynolds-stress tensor
-            forAll(cells,cellI)
-            {
-                for (int i=0; i<3; i++) {
-                    for (int j=0; j<3; j++) {
-                        if (i!=j) {
-                            R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
-                                    *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
-                        } else {
-                            R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
-                        }
-                    }
-                }
-            }
-            //set R1 to 0 at boundaries
-            const fvPatchList& patches = mesh_.boundary();
-            volVectorField kN(k_);
-            volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-            volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
-            volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
-            volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
-            const surfaceScalarField& magSf = mesh_.magSf();
-            const surfaceVectorField& N = mesh_.Sf()/magSf;
-
-            forAll(patches, patchi)
-            {
-                if (patches[patchi].type() == "wall")
-                {
-                    kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
-                    for (int i=0; i<3; i++) {
-                        for (int j=0; j<3; j++) {
-                            if (i!=j) {
-                                R1Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
-                                        *sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
-                            } else {
-                                R1Bf[patchi].component(j+i*3) =  sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            R1_ = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
-            //set R1 to 0 at boundaries
-            const fvPatchList& patches = mesh_.boundary();
-            volVectorField kN(k_);
-            volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-            volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
-            volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
-            const surfaceScalarField& magSf = mesh_.magSf();
-            const surfaceVectorField& N = mesh_.Sf()/magSf;
-            forAll(patches, patchi)
-            {
-                if (patches[patchi].type() == "wall") {
-                    kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
-                    R1Bf[patchi].component(0) = max(kNBf[patchi].component(0),SMALL);
-                    R1Bf[patchi].component(4) = max(kNBf[patchi].component(1),SMALL);
-                    R1Bf[patchi].component(8) = max(kNBf[patchi].component(2),SMALL);
+        forAll(cells,cellI)
+        {
+            for (int i=0; i<3; i++) {
+                for (int j=0; j<3; j++) {
+                    xiUU_[cellI].component(j+i*3) = xiUUnom[cellI].component(j+i*3)
+                                                  / (xiUUden[cellI].component(i)*xiUUden[cellI].component(j));
                 }
             }
         }
+        // limit correlation coefficients
+        boundCorrTensor(xiUU_);
+        xiUU_ = filterS(xiUU_);
+        xiUU_.correctBoundaryConditions();
+        // compute Reynolds-stress tensor
+        forAll(cells,cellI)
+        {
+            for (int i=0; i<3; i++) {
+                for (int j=0; j<3; j++) {
+                    if (i!=j) {
+                        R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                                *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    } else {
+                        R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                    }
+                }
+            }
+        }
+        nut_ = alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        /*
+        //set R1 to 0 at boundaries
+        const fvPatchList& patches = mesh_.boundary();
+        volVectorField kN(k_);
+        volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
+        volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
+        volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
+        volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
+        const surfaceScalarField& magSf = mesh_.magSf();
+        const surfaceVectorField& N = mesh_.Sf()/magSf;
+
+        forAll(patches, patchi)
+        {
+            if (patches[patchi].type() == "wall")
+            {
+                kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
+                for (int i=0; i<3; i++) {
+                    for (int j=0; j<3; j++) {
+                        if (i!=j) {
+                            R1Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
+                                    *sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
+                        } else {
+                            R1Bf[patchi].component(j+i*3) =  sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
+                        }
+                    }
+                }
+            }
+        }
+        */
     }
     R1_.correctBoundaryConditions();
   
