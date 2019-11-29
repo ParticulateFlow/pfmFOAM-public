@@ -1279,7 +1279,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
         forAll(patches, patchi)
         {
-            if (!patches[patchi].couled())
+            if (!patches[patchi].coupled())
             {
                 R1Bf[patchi] = dev(R1Bf[patchi]);
             }
