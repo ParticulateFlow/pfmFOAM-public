@@ -380,8 +380,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
-        zeroGradientFvPatchField<scalar>::typeName
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
     ),
 
     shearProd_
@@ -1273,37 +1272,24 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         }
         nut_ = 0.5*alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
-        /*
+        
         //set R1 to 0 at boundaries
         const fvPatchList& patches = mesh_.boundary();
-        volVectorField kN(k_);
         volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-        volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
-        volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
-        volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
-        const surfaceScalarField& magSf = mesh_.magSf();
-        const surfaceVectorField& N = mesh_.Sf()/magSf;
 
         forAll(patches, patchi)
         {
             if (patches[patchi].type() == "wall")
             {
-                kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
                 for (int i=0; i<3; i++) {
                     for (int j=0; j<3; j++) {
-                        if (i!=j) {
-                            R1Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
-                                    *sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
-                        } else {
-                            R1Bf[patchi].component(j+i*3) =  sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
-                        }
+                        R1Bf[patchi].component(j+i*3) *= 0;
                     }
                 }
             }
         }
-        */
     }
-    R1_.correctBoundaryConditions();
+    // R1_.correctBoundaryConditions();
   
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure

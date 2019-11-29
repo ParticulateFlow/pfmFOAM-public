@@ -1154,35 +1154,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         nut_ = 0.5*alpha*sqrt(dev(R2_)&&dev(R2_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
         nut_.correctBoundaryConditions();
-        /*
-        const fvPatchList& patches = mesh_.boundary();
-        volVectorField kN(k_);
-        volTensorField::Boundary& R2Bf = R2_.boundaryFieldRef();
-        volTensorField::Boundary& xiUUBf = xiUU_.boundaryFieldRef();
-        volVectorField::Boundary& kBf =  k_.boundaryFieldRef();
-        volVectorField::Boundary& kNBf =  kN.boundaryFieldRef();
-        const surfaceScalarField& magSf = mesh_.magSf();
-        const surfaceVectorField& N = mesh_.Sf()/magSf;
-        
-
-        forAll(patches, patchi)
-        {
-            if ((!patches[patchi].coupled())||(!isA<cyclicAMIFvPatch>(this->mesh_.boundary()[patchi])))
-            {
-                kNBf[patchi] = kBf[patchi] - (kBf[patchi]&N[patchi])*N[patchi];
-                for (int i=0; i<3; i++) {
-                    for (int j=0; j<3; j++) {
-                        if (i!=j) {
-                            R2Bf[patchi].component(j+i*3) =  (xiUUBf[patchi].component(j+i*3))
-                                    *sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
-                        } else {
-                            R2Bf[patchi].component(j+i*3) =  sqrt(max(kNBf[patchi].component(i),SMALL)*max(kNBf[patchi].component(j),SMALL));
-                        }
-                    }
-                }
-            }
-        }
-         */
     }
     R2_.correctBoundaryConditions();
     
