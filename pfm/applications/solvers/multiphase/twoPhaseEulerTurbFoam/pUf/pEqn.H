@@ -33,8 +33,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
     surfaceScalarField dragCorrF(fvc::interpolate(dragCorr));
-    dragCorrF.max(-0.999);
-    dragCorrF.min(0.999);
+    dragCorrF.max(-0.97);
+    dragCorrF.min(0.97);
     Info << "Applying drag correction..." << nl
          << "    max(dragCorr) = " << max(dragCorrF).value() << nl
          << "    min(dragCorr) = " << min(dragCorrF).value() << endl;
