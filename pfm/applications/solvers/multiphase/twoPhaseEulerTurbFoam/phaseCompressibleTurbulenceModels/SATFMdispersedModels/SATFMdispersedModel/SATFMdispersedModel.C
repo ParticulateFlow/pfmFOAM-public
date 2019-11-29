@@ -1292,10 +1292,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         const surfaceScalarField& magSf = mesh_.magSf();
         const surfaceVectorField& N = mesh_.Sf()/magSf;
         
-        forAll(patches, patchi)
+        forAll(patches, patchi) 
         {
-            if (!patches[patchi].coupled())
-            {
+            if (patches[patchi].type() == "wall") {//if (!patches[patchi].coupled()) {
                 nutBf[patchi] = (mag((R1Bf[patchi]&N) - ((R1Bf[patchi]&N)&N)*N))
                                /(mag(U.boundaryField()[patchi].snGrad())+SMALL);
             }
