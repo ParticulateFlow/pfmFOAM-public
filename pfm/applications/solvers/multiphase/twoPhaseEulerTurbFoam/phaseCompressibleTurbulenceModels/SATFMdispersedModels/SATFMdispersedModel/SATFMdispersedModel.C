@@ -1291,7 +1291,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     }
     R1_.correctBoundaryConditions();
 
-        
+    /*
     if (!equilibriumK_) {
         // set BC for nut_
         //set R1 to 0 at boundaries
@@ -1313,7 +1313,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         }
     }
-  
+    */
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (
