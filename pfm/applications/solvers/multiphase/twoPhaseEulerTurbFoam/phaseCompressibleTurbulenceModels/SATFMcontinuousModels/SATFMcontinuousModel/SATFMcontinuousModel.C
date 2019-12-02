@@ -265,6 +265,21 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
+    yPlus_
+    (
+        IOobject
+        (
+            "yPlus",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.e-2),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     lm_
     (
         IOobject
@@ -789,7 +804,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -874,11 +889,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                     filter_(alpha*magSqr(U))/alpha2f
                                   - magSqr(Uf)
                                 );
-        MijEps.max(SMALL);
-        volScalarField MijMijEps = filterS(pow3(MijEps));
+        MijEps.max(ROOTVSMALL);
+        volScalarField MijMijEps = filterS(pow(MijEps,1.5));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps * pow(MijEps,1.5)))/(MijMijEps);
+        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps ))/(MijMijEps);
         
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
@@ -1164,6 +1179,23 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // Limit viscosity
     nut_.min(maxNut_);
     R2_.correctBoundaryConditions();
+    
+    // BC for nut_
+    const fvPatchList& patches = mesh_.boundary();
+    volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
+    volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);
+    volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
+    yPlus_ = sqrt(Cmu_*km)*deltaF_/nu2;
+    yPlus_.max(SMALL);
+    yPlus_.correctBoundaryConditions();
+    volScalarField::Boundary& yPlusBf = yPlus_.boundaryFieldRef();
+    
+    forAll(patches, patchi)
+    {
+        if (patches[patchi].type() == "wall") {
+            nutBf[patchi] = nuBf[patchi]*(yPlusBf[patchi]*0.4/log(9.8*yPlusBf[patchi]) - 1.0);
+        }
+    }
         
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
