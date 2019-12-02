@@ -380,6 +380,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
+                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
+    ),
+
+    R1shear_
+    (
+        IOobject
+        (
+            IOobject::groupName("Rshear", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
                            tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -841,6 +856,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         vector(1,1,1)
     );
     
+    dimensionedTensor zeroR
+    (
+        "eSum",
+        dimensionSet(0, 2, -2, 0, 0, 0, 0),
+        tensor(0,0,0,0,0,0,0,0,0)
+    );
+    
     volTensorField gradU(fvc::grad(U_));
     boundGradU(gradU);
     volSymmTensorField D(dev(symm(gradU)));
@@ -1232,6 +1254,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
+    R1shear_ = zeroR;
+    R1_ = zeroR;
     if (!equilibriumK_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1264,7 +1288,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
-                        R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                        R1shear_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
                                 *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
@@ -1272,43 +1296,44 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        R1_.correctBoundaryConditions();
-        //set R1 to 0 at boundaries
-        const fvPatchList& patches = mesh_.boundary();
-        volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-        /*
-        forAll(patches, patchi)
+        nut_ = 0.5*alpha*sqrt(R1shear_&&R1shear_)/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+    } else {
+        nut_ = alpha*sqrt(km)*lm_;
+        R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+    }
+    R1shear_.correctBoundaryConditions();
+    R1_ = R1_ + R1shear_;
+    //set R1 to 0 at boundaries
+    const fvPatchList& patches = mesh_.boundary();
+    volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
+    volTensorField::Boundary& R1shearBf = R1shear_.boundaryFieldRef();
+    
+    forAll(patches, patchi)
+    {
+        if (!patches[patchi].coupled())
         {
-            if (!patches[patchi].coupled())
-            {
-                R1Bf[patchi] = dev(R1Bf[patchi]);
-            }
+            R1Bf[patchi] = R1shearBf[patchi];
         }
-        */
-        
-        nut_ = 0.5*alpha*sqrt(dev(R1_)&&dev(R1_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+    }
+    
+    if (!equilibriumK_) {
         // set BC for nut_
         volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
         const surfaceScalarField& magSf = mesh_.magSf();
         const surfaceVectorField& N = mesh_.Sf()/magSf;
         
-        forAll(patches, patchi) 
+        forAll(patches, patchi)
         {
             if (patches[patchi].type() == "wall") {//if (!patches[patchi].coupled()) {
                 nutBf[patchi] = min(
-                                       (mag((dev(R1Bf[patchi])&N) - ((dev(R1Bf[patchi])&N)&N)*N))
+                                       (mag((R1shearBf[patchi]&N) - ((R1shearBf[patchi]&N)&N)*N))
                                       /(mag(U.boundaryField()[patchi].snGrad())+SMALL)
                                     ,
                                     maxNut_.value()
                                    );
             }
         }
-    } else {
-        nut_ = alpha*sqrt(km)*lm_;
-        R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
-        R1_.correctBoundaryConditions();
     }
-    
   
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
