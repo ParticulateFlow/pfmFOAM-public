@@ -306,7 +306,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
@@ -1013,10 +1013,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_ = filterS(xiGS_);
     
         // compute mixing length dynamically
-        /*
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
         Lij.max(0);
-        volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(alpha*D)/alphaf) - filter_(alpha*magSqr(D))/alphaf);
+        volScalarField magSqrDf = filter_(alpha*magSqr(D))/alphaf;
+        volSymmTensorField Df   = filter_(alpha*D)/alphaf;
+        volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(Df) - magSqrDf);
         volScalarField MijMij = filterS(sqr(Mij));
         MijMij.max(SMALL);
         
@@ -1027,13 +1028,32 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         Cmu_ = pos(alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(alpha_- residualAlpha_)*CmuScalar_;
-        */
-        Cmu_    = CmuScalar_;
+    
+        //Cmu_    = CmuScalar_;
         
         // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
+        // dynamic procedure for Ceps
+        volScalarField LijEps = nut_*(magSqrDf - magSqr(Df));
+        volScalarField MijEps = (
+                                    filter_(alpha*magSqr(U))/alphaf
+                                  - magSqr(Uf)
+                                );
+        MijEps.max(SMALL);
+        volScalarField MijMijEps = filterS(pow3(MijEps));
+        MijMijEps.max(SMALL);
+        
+        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps * pow(MijEps,1.5)))/(MijMijEps);
+        
+        Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
+              + neg(scalar(1.0) - alpha_ - residualAlpha_);
+        
+        Ceps_.min(1.0);
+        Ceps_.max(0.1);
+        /*
         Ceps_ = pos(alpha_ - residualAlpha_)*CepsScalar_
               + neg(alpha_- residualAlpha_);
+        */
         // compute CphiS
         CphiS_ = CphiSscalar_*Cmu_;
         // Set Cp
