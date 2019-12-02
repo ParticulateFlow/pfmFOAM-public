@@ -1236,7 +1236,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          alphaP2Mean_,
                          0.99*alphaL2
                       );
-    alphaP2Mean_.max(ROOTVSMALL);
+    alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
 
