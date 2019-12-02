@@ -852,7 +852,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
         
         // compute mixing length dynamically
-        /*
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
         magSqrDf.max(SMALL);
@@ -867,31 +866,29 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
-        */
-        Cmu_    = CmuScalar_;
+        
+        //Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
-/*
-        volScalarField nu2 = mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_;
-        volScalarField magSqrD = magSqr(D);
-        volScalarField LijEps = nu2*alpha2f*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = sqr(deltaF_*Cmu_)
-                              * (
-                                    alpha2f*magSqrDf*sqrt(magSqrDf)
-                                  - filter_(alpha*magSqrD*sqrt(magSqrD))
+        volScalarField LijEps = nuEff()*alpha2f*(magSqrDf - magSqr(Df));
+        volScalarField MijEps = (
+                                    filter_(alpha*magSqr(U))
+                                  - alpha2f*magSqr(Uf)
                                 );
-        volScalarField MijMijEps = filterS(sqr(MijEps));
+        MijEps.max(SMALL);
+        volScalarField MijMijEps = filterS(pow3(MijEps));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = 2.0*mag(filterS(LijEps * MijEps)/(MijMijEps));
+        volScalarField CepsT = mag(filterS(LijEps * pow(MijEps,1.5)))/(deltaF_*MijMijEps*Cmu_);
         
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
         
         Ceps_.min(1.0);
         Ceps_.max(0.01);
-*/
+/*
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CepsScalar_
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
+*/
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
@@ -999,8 +996,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
           // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
           // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
 

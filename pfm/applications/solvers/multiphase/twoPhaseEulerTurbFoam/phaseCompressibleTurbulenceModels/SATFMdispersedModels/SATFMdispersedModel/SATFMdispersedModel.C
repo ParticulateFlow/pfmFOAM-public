@@ -1127,8 +1127,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
 
