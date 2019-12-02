@@ -90,59 +90,15 @@ SchneiderbauerEtAl::frictionalPressure
     const volSymmTensorField& D
 ) const
 {
-    const volScalarField& alpha = phase;
-    
-    tmp<volScalarField> tpf
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "SchneiderbauerEtAl:pf",
-                phase.mesh().time().timeName(),
-                phase.mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            phase.mesh(),
-            dimensionedScalar("pf", dimensionSet(1, -1, -2, 0, 0), 0.0)
-        )
-    );
-
-    volScalarField& pf = tpf.ref();
-    
-    forAll(D, celli)
-    {
-        if (alpha[celli] > alphaMinFriction.value())
-        {
-            // Equ. (32)
-            pf[celli] =   2.0*rho[celli]*sqr(b_.value()*dp[celli])
-                        * Foam::min(D[celli]&&D[celli],3.0e4)
-                        / sqr(Foam::max(alphaMax.value() - alpha[celli], alphaDeltaMin_.value()));
-        }
-    }
-
-    const fvPatchList& patches = phase.mesh().boundary();
-    const volVectorField& U = phase.U();
-
-    volScalarField::Boundary& pfBf = pf.boundaryFieldRef();
-
-    forAll(patches, patchi)
-    {
-        if (!patches[patchi].coupled())
-        {
-            // Equ. (32)
-            pfBf[patchi] =   2.0*rho.boundaryField()[patchi]*sqr(b_.value()*dp.boundaryField()[patchi])
-                          * Foam::min(magSqr(U.boundaryField()[patchi].snGrad()),3.0e4)
-                          / sqr(Foam::max(alphaMax.value() - alpha.boundaryField()[patchi], alphaDeltaMin_.value()));
-        }
-    }
-
-    // Correct coupled BCs
-    pf.correctBoundaryConditions();
-    return tpf;
-                
+        const volScalarField& alpha = phase;
+        // Equ. (32)
+        return
+             pos(alpha - alphaMinFriction)
+            *2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),3.0e4))
+            /sqr(max(alphaMax - alpha, alphaDeltaMin_))
+          +
+            pos(alpha - alphaMax)
+           *aQSk_*pow(max(alpha - alphaMax, scalar(0)), 0.66)/dp;
 }
 
 
@@ -158,58 +114,15 @@ SchneiderbauerEtAl::frictionalPressurePrime
     const volSymmTensorField& D
 ) const
 {
-    const volScalarField& alpha = phase;
-    
-    tmp<volScalarField> tpf
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "SchneiderbauerEtAl:dpf",
-                phase.mesh().time().timeName(),
-                phase.mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            phase.mesh(),
-            dimensionedScalar("dpf", dimensionSet(1, -1, -2, 0, 0), 0.0)
-        )
-    );
+        const volScalarField& alpha = phase;
 
-    volScalarField& pf = tpf.ref();
-    
-    forAll(D, celli)
-    {
-        if (alpha[celli] > alphaMinFriction.value())
-        {
-            // Equ. (32)
-            pf[celli] =   4.0*rho[celli]*sqr(b_.value()*dp[celli])
-                        * Foam::min(D[celli]&&D[celli],3.0e4)
-                        / pow3(Foam::max(alphaMax.value() - alpha[celli], alphaDeltaMin_.value()));
-        }
-    }
-
-    const fvPatchList& patches = phase.mesh().boundary();
-    const volVectorField& U = phase.U();
-
-    volScalarField::Boundary& pfBf = pf.boundaryFieldRef();
-
-    forAll(patches, patchi)
-    {
-        if (!patches[patchi].coupled())
-        {
-            // Equ. (32)
-            pfBf[patchi] =   4.0*rho.boundaryField()[patchi]*sqr(b_.value()*dp.boundaryField()[patchi])
-                          * Foam::min(magSqr(U.boundaryField()[patchi].snGrad()),3.0e4)
-                          / pow3(Foam::max(alphaMax.value() - alpha.boundaryField()[patchi], alphaDeltaMin_.value()));
-        }
-    }
-
-    // Correct coupled BCs
-    pf.correctBoundaryConditions();
-    return tpf;
+        return
+             pos(alpha - alphaMinFriction)
+           * 4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),3.0e4))
+           / pow3(max(alphaMax - alpha, alphaDeltaMin_))
+        +
+             pos(alpha - alphaMax)
+           * 0.66*aQSk_/(pow(max(alpha - alphaMax, scalar(1e-8)), 0.33)*dp);
 }
 
 
