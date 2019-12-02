@@ -878,7 +878,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField MijMijEps = filterS(pow3(MijEps));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = mag(filterS(LijEps * pow(MijEps,1.5)))/(deltaF_*MijMijEps*Cmu_);
+        volScalarField CepsT = lm_*mag(filterS(LijEps * pow(MijEps,1.5)))/(MijMijEps);
         
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
