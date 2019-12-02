@@ -79,7 +79,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     (
         "maxNut",
         dimensionSet(0,2,-1,0,0),
-        coeffDict_.lookupOrDefault<scalar>("maxNut",1000)
+        coeffDict_.lookupOrDefault<scalar>("maxNut",1)
     ),
 
     xiPhiContScalar_
@@ -1112,7 +1112,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
 
-    {
+    if (!equilibriumK_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
@@ -1153,13 +1153,16 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
         nut_ = 0.5*alpha*sqrt(dev(R2_)&&dev(R2_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
-        nut_.correctBoundaryConditions();
+    } else {
+        nut_ = alpha*sqrt(km)*lm_;
+        R2_  = zeroR;
     }
-    R2_.correctBoundaryConditions();
     
-    // Limit viscosity and add frictional viscosity
+    // Limit viscosity
     nut_.min(maxNut_);
-    
+    nut_.correctBoundaryConditions();
+    R2_.correctBoundaryConditions();
+        
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl

@@ -90,7 +90,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     (
         "maxNut",
         dimensionSet(0,2,-1,0,0),
-        coeffDict_.lookupOrDefault<scalar>("maxNut",1000)
+        coeffDict_.lookupOrDefault<scalar>("maxNut",10)
     ),
 
     xiPhiSolidScalar_
@@ -1232,7 +1232,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
-    {
+    if (!equilibriumK_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
@@ -1295,10 +1295,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         forAll(patches, patchi) 
         {
             if (patches[patchi].type() == "wall") {//if (!patches[patchi].coupled()) {
-                nutBf[patchi] = (mag((R1Bf[patchi]&N) - ((R1Bf[patchi]&N)&N)*N))
-                               /(mag(U.boundaryField()[patchi].snGrad())+SMALL);
+                nutBf[patchi] = min(
+                                       (mag((dev(R1Bf[patchi])&N) - ((dev(R1Bf[patchi])&N)&N)*N))
+                                      /(mag(U.boundaryField()[patchi].snGrad())+SMALL)
+                                    ,
+                                    maxNut_.value()
+                                   );
             }
         }
+    } else {
+        nut_ = alpha*sqrt(km)*lm_;
+        R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+        R1_.correctBoundaryConditions();
     }
     
   
@@ -1325,7 +1333,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
-    nut_.correctBoundaryConditions();
     nuFric_ = min(nuFric_, maxNut_ - nut_);
     nuFric_.min(maxNut_);
     nut_ += nuFric_;
