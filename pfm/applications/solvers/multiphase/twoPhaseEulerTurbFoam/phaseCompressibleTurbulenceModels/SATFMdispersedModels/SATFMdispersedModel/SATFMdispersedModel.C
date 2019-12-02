@@ -911,7 +911,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -1039,11 +1039,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                     filter_(alpha*magSqr(U))/alphaf
                                   - magSqr(Uf)
                                 );
-        MijEps.max(SMALL);
-        volScalarField MijMijEps = filterS(pow3(MijEps));
+        MijEps.max(ROOTVSMALL);
+        volScalarField MijMijEps = filterS(pow(MijEps,1.5));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps * pow(MijEps,1.5)))/(MijMijEps);
+        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps ))/(MijMijEps);
         
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
