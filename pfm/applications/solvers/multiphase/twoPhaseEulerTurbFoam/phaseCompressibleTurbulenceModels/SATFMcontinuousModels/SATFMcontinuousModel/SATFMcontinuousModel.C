@@ -884,7 +884,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
         
         Ceps_.min(1.0);
-        Ceps_.max(0.01);
+        Ceps_.max(0.1);
+        
 /*
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CepsScalar_
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
