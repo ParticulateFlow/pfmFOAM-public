@@ -380,21 +380,6 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
-    ),
-
-    R1shear_
-    (
-        IOobject
-        (
-            IOobject::groupName("Rshear", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
                            tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
         zeroGradientFvPatchField<scalar>::typeName
     ),
@@ -883,7 +868,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
 
     // simple filter for local smoothing
-    simpleFilterADM filterS(mesh_);
+    simpleFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -1254,8 +1239,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(ROOTVSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
-    R1shear_ = zeroR;
-    R1_ = zeroR;
+
     if (!equilibriumK_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1283,12 +1267,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
+        R1_ = zeroR;
+        volTensorField R1shear = R1_;
+
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
-                        R1shear_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                        R1shear[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
                                 *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
@@ -1296,28 +1283,20 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        nut_ = 0.5*alpha*sqrt(R1shear_&&R1shear_)/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        nut_ = 0.5*alpha*sqrt(R1shear&&R1shear)/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        R1_ = R1_ + R1shear;
     } else {
         nut_ = alpha*sqrt(km)*lm_;
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
-    R1shear_.correctBoundaryConditions();
-    R1_ = R1_ + R1shear_;
-    //set R1 to 0 at boundaries
-    const fvPatchList& patches = mesh_.boundary();
-    volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-    volTensorField::Boundary& R1shearBf = R1shear_.boundaryFieldRef();
-    
-    forAll(patches, patchi)
-    {
-        if (!patches[patchi].coupled())
-        {
-            R1Bf[patchi] = R1shearBf[patchi];
-        }
-    }
-    
+    R1_.correctBoundaryConditions();
+
+        
     if (!equilibriumK_) {
         // set BC for nut_
+        //set R1 to 0 at boundaries
+        const fvPatchList& patches = mesh_.boundary();
+        volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
         volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
         const surfaceScalarField& magSf = mesh_.magSf();
         const surfaceVectorField& N = mesh_.Sf()/magSf;
@@ -1326,7 +1305,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         {
             if (patches[patchi].type() == "wall") {//if (!patches[patchi].coupled()) {
                 nutBf[patchi] = min(
-                                       (mag((R1shearBf[patchi]&N) - ((R1shearBf[patchi]&N)&N)*N))
+                                       (mag((R1Bf[patchi]&N) - ((R1Bf[patchi]&N)&N)*N))
                                       /(mag(U.boundaryField()[patchi].snGrad())+SMALL)
                                     ,
                                     maxNut_.value()

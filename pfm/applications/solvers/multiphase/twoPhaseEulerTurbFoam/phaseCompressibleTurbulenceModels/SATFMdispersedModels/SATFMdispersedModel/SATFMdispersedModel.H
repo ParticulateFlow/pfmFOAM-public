@@ -55,7 +55,7 @@ SourceFiles
 #include "frictionalStressModel.H"
 // h-files for LES filters
 #include "LESfilter.H"
-#include "simpleFilterADM.H"
+#include "simpleFilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -194,9 +194,6 @@ class SATFMdispersedModel
     
             //- Reynolds stress tensor
             volTensorField R1_;
-    
-            //- off diagonal Reynolds stress tensor
-            volTensorField R1shear_;
 
             //- shear production
             volVectorField shearProd_;

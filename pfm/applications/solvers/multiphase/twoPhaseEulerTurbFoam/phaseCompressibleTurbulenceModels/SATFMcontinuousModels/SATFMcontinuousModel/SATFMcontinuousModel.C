@@ -736,7 +736,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const cellList& cells = mesh_.cells();
     
     // simple filter for local smoothing
-    simpleFilterADM filterS(mesh_);
+    simpleFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -1138,9 +1138,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundCorrTensor(xiUU_);
         xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
+        
         // compute Reynolds-stress tensor
-        volTensorField R2shear = zeroR;
         R2_ = zeroR;
+        volTensorField R2shear = R2_;
+
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
