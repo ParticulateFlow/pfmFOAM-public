@@ -1139,12 +1139,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
+        volTensorField R2shear = zeroR;
+        R2_ = zeroR;
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
-                        R2_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                        R2shear[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
                                 *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R2_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
@@ -1152,7 +1154,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        nut_ = 0.5*alpha*sqrt(dev(R2_)&&dev(R2_))/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
+        R2_ = R2_ + R2shear;
+        nut_ = 0.5*alpha*sqrt(R2shear&&R2shear)/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
     } else {
         nut_ = alpha*sqrt(km)*lm_;
         R2_  = zeroR;
@@ -1160,7 +1163,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // Limit viscosity
     nut_.min(maxNut_);
-    nut_.correctBoundaryConditions();
     R2_.correctBoundaryConditions();
         
     Info << "SA-TFM (continuous Phase):" << nl
