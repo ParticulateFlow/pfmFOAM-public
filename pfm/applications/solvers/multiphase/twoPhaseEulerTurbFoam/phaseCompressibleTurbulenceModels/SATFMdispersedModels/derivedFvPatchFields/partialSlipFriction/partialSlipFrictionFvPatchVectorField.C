@@ -181,7 +181,7 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
     (
         patch().lookupPatchField<volScalarField, scalar>
         (
-            IOobject::groupName("nut", granular.name())
+            IOobject::groupName("nuFric", granular.name())
         )
     );
     const scalarField muEffp = nu*rhop;

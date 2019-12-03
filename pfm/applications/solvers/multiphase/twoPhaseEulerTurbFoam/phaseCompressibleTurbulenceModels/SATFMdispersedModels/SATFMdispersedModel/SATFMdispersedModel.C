@@ -1013,10 +1013,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_ = filterS(xiGS_);
     
         // compute mixing length dynamically
-        volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
+        /*
+        volScalarField Lij  = filter_(magSqr(U)) - magSqr(filter_(U));
         Lij.max(0);
-        volScalarField magSqrDf = filter_(alpha*magSqr(D))/alphaf;
-        volSymmTensorField Df   = filter_(alpha*D)/alphaf;
+        volScalarField magSqrDf = filter_(magSqr(D));
+        volSymmTensorField Df   = filter_(D);
         volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(Df) - magSqrDf);
         volScalarField MijMij = filterS(sqr(Mij));
         MijMij.max(SMALL);
@@ -1028,32 +1029,29 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         Cmu_ = pos(alpha_ - residualAlpha_)*sqrt(CmuT)
              + neg(alpha_- residualAlpha_)*CmuScalar_;
-    
-        //Cmu_    = CmuScalar_;
+        */
+        Cmu_    = CmuScalar_;
         
         // Currently no dynamic procedure for Ceps and Cp
         // Set Ceps
         // dynamic procedure for Ceps
-        volScalarField LijEps = nut_*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = (
-                                    filter_(alpha*magSqr(U))/alphaf
-                                  - magSqr(Uf)
-                                );
+        /*
+        volScalarField LijEps = (nut_-nuFric_)*(magSqrDf - magSqr(Df));
+        volScalarField MijEps = Lij;
         MijEps.max(ROOTVSMALL);
-        volScalarField MijMijEps = filterS(pow(MijEps,1.5));
+        volScalarField MijMijEps = filterS(pow(MijEps,1.5)/(2.0*lm_));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps ))/(MijMijEps);
+        volScalarField CepsT = mag(filterS(LijEps ))/(MijMijEps);
         
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
         
         Ceps_.min(1.0);
         Ceps_.max(0.1);
-        /*
+        */
         Ceps_ = pos(alpha_ - residualAlpha_)*CepsScalar_
               + neg(alpha_- residualAlpha_);
-        */
         // compute CphiS
         CphiS_ = CphiSscalar_*Cmu_;
         // Set Cp
@@ -1087,15 +1085,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibriumK_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2MeanO);
         
-        /*
         volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
             R1t -= nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stres model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + (R1t.T()&gradU.T()));
-        */
-        volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
+        
+        // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
         shearProd_ =   (gradUR1&&(eX*eX))*(eX)
                      + (gradUR1&&(eY*eY))*(eY)
                      + (gradUR1&&(eZ*eZ))*(eZ);
@@ -1260,7 +1257,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
 
-    if (!equilibriumK_) {
+    if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
@@ -1333,7 +1330,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         }
     }
-    */
+     */
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (

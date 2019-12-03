@@ -671,7 +671,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, 1.e-7));
+    volScalarField alpha(min(max(alpha_, 1.e-7),1.0));
     // solid volume fraction
     volScalarField alpha1 = max(1.0 - alpha,1.e-7);
     const volScalarField& rho = phase_.rho();
@@ -867,10 +867,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
         
         // compute mixing length dynamically
-        volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
-        volScalarField magSqrDf = filter_(alpha*magSqr(D))/alpha2f;
+        /*
+        volScalarField Lij      = filter_(magSqr(U)) - magSqr(filter_(U));
+        volScalarField magSqrDf = filter_(magSqr(D));
         magSqrDf.max(SMALL);
-        volSymmTensorField Df   = filter_(alpha*D)/alpha2f;
+        volSymmTensorField Df   = filter_(D);
         volScalarField Mij      = sqr(deltaF_)*(4.0*magSqr(Df) - magSqrDf);
         volScalarField MijMij   = filterS(sqr(Mij));
         MijMij.max(SMALL);
@@ -878,33 +879,28 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField CmuT     = 0.5*(filterS(Lij * Mij)/(MijMij));
         CmuT.min(2.0*sqr(CmuScalar_.value()));
         CmuT.max(0.01);
-        
-        Cmu_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*sqrt(CmuT)
-             + neg(scalar(1.0) - alpha_ - residualAlpha_)*CmuScalar_;
-        
-        //Cmu_    = CmuScalar_;
+        Cmu_ = sqrt(CmuT);
+        */
+        Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
+        /*
         volScalarField LijEps = nuEff()*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = (
-                                    filter_(alpha*magSqr(U))/alpha2f
-                                  - magSqr(Uf)
-                                );
+        volScalarField MijEps = Lij;
         MijEps.max(ROOTVSMALL);
-        volScalarField MijMijEps = filterS(pow(MijEps,1.5));
+        volScalarField MijMijEps = filterS(pow(MijEps,1.5)/(2.0*lm_));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = 2.0*lm_*mag(filterS(LijEps ))/(MijMijEps);
+        volScalarField CepsT = filterS(LijEps)/(MijMijEps);
         
-        Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*(CepsT)
-              + neg(scalar(1.0) - alpha_ - residualAlpha_);
+        Ceps_ = mag(CepsT);
         
         Ceps_.min(1.0);
         Ceps_.max(0.1);
         
-/*
+         */
         Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CepsScalar_
               + neg(scalar(1.0) - alpha_ - residualAlpha_);
-*/
+
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
@@ -919,9 +915,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_ = filterS(Cp_);
         Cp_.min(1.0);
         Cp_.max(0.1);
-        */
         Cp_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CpScalar_
             + neg(scalar(1.0) - alpha_ - residualAlpha_);
+        */
+        Cp_ = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
@@ -943,15 +940,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // ---------------------------
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibriumK_) {
-        // compute production term according to Reynolds-stres model
-        /*
+        // compute production term according to Reynolds-stress model
         volTensorField R2t(R2_);
         if (!anIsoTropicNut_) {
             R2t -= nut_*dev(gradU + gradU.T());
         }
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((R2t.T())&(gradU.T())));
-        */
-        volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
+
+        //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
         volVectorField shearProd_ =   (gradUR2&&(eX*eX))*(eX)
                                     + (gradUR2&&(eY*eY))*(eY)
                                     + (gradUR2&&(eZ*eZ))*(eZ);
@@ -1125,7 +1121,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
 
-    if (!equilibriumK_) {
+    if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
