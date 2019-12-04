@@ -945,7 +945,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         if (!anIsoTropicNut_) {
             R2t -= nut_*dev(gradU + gradU.T());
         }
-        volTensorField gradUR2 = 0.5*((R2t&gradU) + ((R2t.T())&(gradU.T())));
+        volTensorField gradUR2 = 0.5*((R2t&gradU) + ((gradU.T())&(R2t.T())));
 
         //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
         shearProd_ = pos(mag(wD) - deltaF)
@@ -973,7 +973,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          // - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -1160,15 +1160,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         xiUU_.correctBoundaryConditions();
         
         // compute Reynolds-stress tensor
-        R2_ = zeroR;
-        volTensorField R2shear = R2_;
-
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
-                        R2shear[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                        R2_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
                                 *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R2_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
@@ -1176,14 +1173,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        R2_ = R2_ + R2shear;
-        nut_ = 0.5*alpha*sqrt(R2shear&&R2shear)/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
     } else {
-        nut_ = alpha*sqrt(km)*lm_;
+        
         R2_  = zeroR;
     }
     
     // Limit viscosity
+    nut_ = alpha*sqrt(km)*lm_;
     nut_.min(maxNut_);
     R2_.correctBoundaryConditions();
     

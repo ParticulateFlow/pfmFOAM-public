@@ -380,8 +380,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
-        zeroGradientFvPatchField<scalar>::typeName
+        tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
     ),
 
     shearProd_
@@ -1087,7 +1086,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             R1t -= (nut_-nuFric_)*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stres model
-        volTensorField gradUR1 = 0.5*((R1t&gradU) + (R1t.T()&gradU.T()));
+        volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
         
         // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
         shearProd_ = (
@@ -1104,7 +1103,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          // - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -1285,15 +1284,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiUU_ = filterS(xiUU_);
         xiUU_.correctBoundaryConditions();
         // compute Reynolds-stress tensor
-        R1_ = zeroR;
-        volTensorField R1shear = R1_;
-
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
-                        R1shear[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
+                        R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
                                 *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
                         R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
@@ -1301,37 +1297,26 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        nut_ = 0.5*alpha*sqrt(R1shear&&R1shear)/(sqrt(D&&D)+dimensionedScalar("small",dimensionSet(0,0,-1,0,0),SMALL));
-        R1_ = R1_ + R1shear;
     } else {
-        nut_ = alpha*sqrt(km)*lm_;
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
-    R1_.correctBoundaryConditions();
+    nut_ = alpha*sqrt(km)*lm_;
+    //R1_.correctBoundaryConditions();
 
-    /*
-    if (!equilibriumK_) {
-        // set BC for nut_
-        //set R1 to 0 at boundaries
-        const fvPatchList& patches = mesh_.boundary();
-        volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-        volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
-        const surfaceScalarField& magSf = mesh_.magSf();
-        const surfaceVectorField& N = mesh_.Sf()/magSf;
-        
-        forAll(patches, patchi)
-        {
-            if (patches[patchi].type() == "wall") {//if (!patches[patchi].coupled()) {
-                nutBf[patchi] = min(
-                                       (mag((R1Bf[patchi]&N) - ((R1Bf[patchi]&N)&N)*N))
-                                      /(mag(U.boundaryField()[patchi].snGrad())+SMALL)
-                                    ,
-                                    maxNut_.value()
-                                   );
-            }
+    // set BC for nut_
+    //set R1 to 0 at boundaries
+    const fvPatchList& patches = mesh_.boundary();
+    volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
+    const surfaceScalarField& magSf = mesh_.magSf();
+    const surfaceVectorField& N = mesh_.Sf()/magSf;
+    
+    forAll(patches, patchi)
+    {
+        if (patches[patchi].type() == "wall") {//if (!patches[patchi].coupled()) {
+            tensorField R1n = (R1Bf[patchi]&N)*N;
+            R1Bf[patchi] = R1Bf[patchi] - dev(0.5*(R1n + R1n.T()));
         }
     }
-     */
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (
