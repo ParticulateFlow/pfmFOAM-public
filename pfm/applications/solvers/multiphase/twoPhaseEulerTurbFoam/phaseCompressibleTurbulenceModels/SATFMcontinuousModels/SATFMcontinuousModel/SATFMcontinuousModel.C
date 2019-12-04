@@ -780,6 +780,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volScalarField km  = (k_ & eSum);
     km.max(kSmall.value());
     
+    // local reference to deltaF
+    volScalarField deltaF(deltaF_);
     // compute grid size for mixing length
     forAll(cells,cellI)
     {
@@ -797,14 +799,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 deltaMaxTmp = tmp;
             }
         }
-        deltaF_[cellI] = 2.0*deltaMaxTmp;
+        deltaF[cellI] = 2.0*deltaMaxTmp;
     }
     
     volScalarField wD = wallDist(mesh_).y();
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
+    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF,wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -860,9 +862,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
-        // smooth xiPhiG_
-        xiPhiG_ = filterS(xiPhiG_);
+        xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
         
@@ -948,10 +948,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((R2t.T())&(gradU.T())));
 
         //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
-        volVectorField shearProd_ =   (gradUR2&&(eX*eX))*(eX)
-                                    + (gradUR2&&(eY*eY))*(eY)
-                                    + (gradUR2&&(eZ*eZ))*(eZ);
-        
+        shearProd_ = pos(mag(wD) - deltaF)
+                    *(
+                         (gradUR2&&(eX*eX))*(eX)
+                       + (gradUR2&&(eY*eY))*(eY)
+                       + (gradUR2&&(eZ*eZ))*(eZ)
+                     )
+                   - neg(mag(wD) - deltaF)
+                    *lm_
+                    *(
+                         (((SijSij&eX)&eSum)*(k_&eX))*eX
+                       + (((SijSij&eY)&eSum)*(k_&eY))*eY
+                       + (((SijSij&eZ)&eSum)*(k_&eZ))*eZ
+                     )
+                    /sqrt(km);
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
@@ -1078,16 +1088,17 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi2, alphaP2Mean_)
           // diffusion
-          - fvm::laplacian(
-                           lm_
+          - fvc::div(
+                        (
+                           alpha*lm_
                          * (
                               (sqrt(k_&eX)*(eX*eX))
                             + (sqrt(k_&eY)*(eY*eY))
                             + (sqrt(k_&eZ)*(eZ*eZ))
                            )
                          / (sigma_)
-                       ,
-                           alphaP2Mean_
+                       )
+                     & (fvc::grad(alphaP2Mean_/alpha))
                     )
          ==
           // some source terms are explicit since fvm::Sp()
@@ -1176,7 +1187,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     nut_.min(maxNut_);
     R2_.correctBoundaryConditions();
     
-    // BC for nut_
+    // BCs for nut_
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
     volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);

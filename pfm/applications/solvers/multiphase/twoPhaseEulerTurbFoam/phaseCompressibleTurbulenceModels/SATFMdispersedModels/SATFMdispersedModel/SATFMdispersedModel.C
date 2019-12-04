@@ -617,9 +617,9 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         (
           - fvm::laplacian(rho_*nut_, U)
           - fvc::div
-            (
-                (rho_*nut_)*dev2(T(fvc::grad(U)))
-            )
+           (
+               (rho_*nuFric_)*dev2(T(fvc::grad(U)))
+           )
           + fvc::div
             (
                  2.0
@@ -629,6 +629,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                      R1_
                  )
             )
+          + fvc::laplacian(rho_*(nut_-nuFric_), U)
         );
     }
 }
@@ -967,9 +968,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
-        // smooth xiPhiS_
-        xiPhiS_ = filterS(xiPhiS_);
+        xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         
@@ -979,18 +978,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
         volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
                                    * max(filter_(magSqr(Uc_))- 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = xiPhiGGnom/xiPhiGGden;
+        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
-        xiPhiGG_ = filterS(xiPhiGG_);
         
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                * sqrt(max(aUU,kSmall));
-        /*
-        volScalarField xiGSnumP(xiGSnum*xiGSden);
+    
+        volScalarField xiGSnumP(mag(xiGSnum*xiGSden));
         
         //set xiGSnumP to 0 at boundaries
         const fvPatchList& patches = mesh_.boundary();
@@ -1004,13 +1002,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 xiGSnumPBf[patchi] *= 0.0;
             }
         }
-        */
-        xiGS_ = xiGSnum/xiGSden;
+
+        xiGS_ = filterS(xiGSnumP)/filterS(sqr(xiGSden));
 
         // smooth and regularize xiGS_ (xiGS_ is positive)
-        xiGS_.max(-0.99);
+        xiGS_.max(0);
         xiGS_.min(0.99);
-        xiGS_ = filterS(xiGS_);
     
         // compute mixing length dynamically
         /*
@@ -1087,15 +1084,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
-            R1t -= nut_*dev(gradU + gradU.T());
+            R1t -= (nut_-nuFric_)*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stres model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + (R1t.T()&gradU.T()));
         
         // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-        shearProd_ =   (gradUR1&&(eX*eX))*(eX)
-                     + (gradUR1&&(eY*eY))*(eY)
-                     + (gradUR1&&(eZ*eZ))*(eZ);
+        shearProd_ = (
+                         (gradUR1&&(eX*eX))*(eX)
+                       + (gradUR1&&(eY*eY))*(eY)
+                       + (gradUR1&&(eZ*eZ))*(eZ)
+                      );
         
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -1213,17 +1212,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
-          - fvm::laplacian(
-                           lm_
+          // diffusion
+          - fvc::div(
+                        (
+                           alpha*lm_
                          * (
                               (sqrt(k_&eX)*(eX*eX))
                             + (sqrt(k_&eY)*(eY*eY))
                             + (sqrt(k_&eZ)*(eZ*eZ))
                            )
                          / (sigma_)
-                       ,
-                         alphaP2Mean_
                        )
+                     & (fvc::grad(alphaP2Mean_/alpha))
+                    )
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
