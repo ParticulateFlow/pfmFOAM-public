@@ -479,7 +479,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             (
                 fvm::ddt(alpha, rho, Theta_)
               + fvm::div(alphaRhoPhi, Theta_)
-              - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), Theta_)
+              //- fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
          ==
