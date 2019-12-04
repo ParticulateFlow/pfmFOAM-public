@@ -18,8 +18,6 @@ if (periodicBox) {
     totalMomentum =
                  fvc::domainIntegrate(alpha1*rho1*U1 + alpha2*rho2*U2)
                 /fvc::domainIntegrate(alpha1*rho1+alpha2*rho2);
-    U1 -= totalMomentum;
-    U2 -= totalMomentum;
 }
 
 volScalarField Kd(fluid.Kd());
@@ -62,6 +60,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha1*(rho1-rhoMix)*gN
+          // in case of periodic box, adjust CG-velocity
+          - alpha1*rho1*totalMomentum/deltaT
           + fvOptions(alpha1, rho1, U1)
         );
         U1Eqn.relax();
@@ -138,6 +138,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha2*(rho2-rhoMix)*gN
+          // in case of periodic box, adjust CG-velocity
+          - alpha2*rho2*totalMomentum/deltaT
           + fvOptions(alpha2, rho2, U2)
         );
         U2Eqn.relax();

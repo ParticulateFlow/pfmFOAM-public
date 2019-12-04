@@ -157,8 +157,8 @@ while (pimple.correct())
 
     // ddtPhiCorr filter -- only apply in pure(ish) phases
     surfaceScalarField alphaf1Bar(fvc::interpolate(fvc::average(alphaf1)));
-    surfaceScalarField phiCorrCoeff1(pos0(alphaf1Bar - 0.99));
-    surfaceScalarField phiCorrCoeff2(pos0(0.01 - alphaf1Bar));
+    surfaceScalarField phiCorrCoeff1(pos0(alphaf1Bar - 0.999));
+    surfaceScalarField phiCorrCoeff2(pos0(0.001 - alphaf1Bar));
 
     {
         surfaceScalarField::Boundary& phiCorrCoeff1Bf =
@@ -264,14 +264,14 @@ while (pimple.correct())
         pEqnComp1 =
             (
                 contErr1
-              - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
+              + fvc::SuSp(-(fvc::ddt(alpha1) + fvc::div(alphaPhi1)), rho1)
             )/rho1
           + correction
             (
                 (alpha1/rho1)*
                 (
                     psi1*fvm::ddt(p_rgh)
-                  + fvm::div(phid1, p_rgh) - fvm::Sp(fvc::div(phid1), p_rgh)
+                  + fvm::div(phid1, p_rgh) + fvm::SuSp(-fvc::div(phid1), p_rgh)
                 )
             );
         pEqnComp1.ref().relax();
@@ -279,14 +279,14 @@ while (pimple.correct())
         pEqnComp2 =
             (
                 contErr2
-              - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
+              + fvc::SuSp(-(fvc::ddt(alpha2) + fvc::div(alphaPhi2)), rho2)
             )/rho2
           + correction
             (
                 (alpha2/rho2)*
                 (
                     psi2*fvm::ddt(p_rgh)
-                  + fvm::div(phid2, p_rgh) - fvm::Sp(fvc::div(phid2), p_rgh)
+                  + fvm::div(phid2, p_rgh) + fvm::SuSp(-fvc::div(phid2), p_rgh)
                 )
             );
         pEqnComp2.ref().relax();
@@ -296,14 +296,14 @@ while (pimple.correct())
         pEqnComp1 =
             (
                 contErr1
-              - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
+              + fvc::SuSp(-(fvc::ddt(alpha1) + fvc::div(alphaPhi1)), rho1)
             )/rho1
           + (alpha1*psi1/rho1)*correction(fvm::ddt(p_rgh));
 
         pEqnComp2 =
             (
                 contErr2
-              - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
+              + fvc::SuSp(-(fvc::ddt(alpha2) + fvc::div(alphaPhi2)), rho2)
             )/rho2
           + (alpha2*psi2/rho2)*correction(fvm::ddt(p_rgh));
     }
