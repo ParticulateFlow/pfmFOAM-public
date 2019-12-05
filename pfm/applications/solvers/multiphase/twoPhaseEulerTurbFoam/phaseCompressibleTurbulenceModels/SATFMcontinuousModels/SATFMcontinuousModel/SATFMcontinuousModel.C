@@ -864,8 +864,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
         
         // compute mixing length dynamically
-        /*
-        volScalarField Lij      = filter_(magSqr(U)) - magSqr(filter_(U));
+        volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
+        Lij.max(SMALL);
         volScalarField magSqrDf = filter_(magSqr(D));
         magSqrDf.max(SMALL);
         volSymmTensorField Df   = filter_(D);
@@ -874,48 +874,38 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         MijMij.max(SMALL);
         
         volScalarField CmuT     = 0.5*(filterS(Lij * Mij)/(MijMij));
-        CmuT.min(2.0*sqr(CmuScalar_.value()));
-        CmuT.max(0.01);
-        Cmu_ = sqrt(CmuT);
-        */
-        Cmu_    = CmuScalar_;
+        CmuT.min(4.0*sqr(CmuScalar_.value()));
+        Cmu_ = sqrt(0.5*(CmuT+mag(CmuT))+scalar(1.e-2));
+        
+        //Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
-        /*
-        volScalarField LijEps = nuEff()*(magSqrDf - magSqr(Df));
-        volScalarField MijEps = Lij;
-        MijEps.max(ROOTVSMALL);
-        volScalarField MijMijEps = filterS(pow(MijEps,1.5)/(2.0*lm_));
+        volScalarField LijEps    = alpha*nuEff()*(magSqrDf - magSqr(Df));
+        volScalarField MijEps    = pow(alpha*Lij,1.5)/(2.0*lm_);
+        volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
         
-        volScalarField CepsT = filterS(LijEps)/(MijMijEps);
+        volScalarField CepsT     = filterS(LijEps*MijEps)/(MijMijEps);
         
-        Ceps_ = mag(CepsT);
+        Ceps_ = 0.33*(CepsT + mag(CepsT) + CepsScalar_);
         
-        Ceps_.min(1.0);
-        Ceps_.max(0.1);
-        
-         */
-        Ceps_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CepsScalar_
-              + neg(scalar(1.0) - alpha_ - residualAlpha_);
-
+        Ceps_.min(2.0);
+    
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
         // Currently no dynamic procedure for Cp
-        /*
         const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
 
-        Cp_ = (gradp&gN_)/(rhom*magSqr(gN_))
+        Cp_ = filterS((gradp&gN_)*rhom)/filterS(sqr(rhom)*magSqr(gN_))
             + dimensionedScalar("unity",dimensionSet(0,0,0,0,0),1.0);
-        Cp_ = filterS(Cp_);
+        Cp_ = 0.33*(Cp_ + mag(Cp_) + CpScalar_);
         Cp_.min(1.0);
-        Cp_.max(0.1);
-        Cp_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*CpScalar_
+        Cp_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*Cp_
             + neg(scalar(1.0) - alpha_ - residualAlpha_);
-        */
-        Cp_ = CpScalar_;
+         
+        //Cp_ = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
