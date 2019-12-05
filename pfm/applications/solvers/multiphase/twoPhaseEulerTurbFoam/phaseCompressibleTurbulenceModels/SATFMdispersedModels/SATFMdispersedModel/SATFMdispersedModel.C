@@ -375,28 +375,10 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::groupName("R", phase.name()),
             U.time().timeName(),
             U.mesh(),
-            IOobject::NO_READ,
+            IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        U.mesh(),
-        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-        tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0))
-    ),
-
-    R1t_
-    (
-        IOobject
-        (
-            IOobject::groupName("R", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        U.mesh(),
-        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-        tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
-        zeroGradientFvPatchField<scalar>::typeName
+        U.mesh()
     ),
 
     shearProd_
@@ -1317,24 +1299,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
     nut_ = alpha*sqrt(km)*lm_;
-    R1t_ = R1_;
-    R1t_.correctBoundaryConditions();
-
-    // set BC for nut_
-    //set R1 to 0 at boundaries
-    const fvPatchList& patches = mesh_.boundary();
-    volTensorField::Boundary& R1Bf = R1_.boundaryFieldRef();
-    volTensorField::Boundary& R1tBf = R1_.boundaryFieldRef();
-    const surfaceScalarField& magSf = mesh_.magSf();
-    const surfaceVectorField& N = mesh_.Sf()/magSf;
+    R1_.correctBoundaryConditions();
     
-    forAll(patches, patchi)
-    {
-        if (patches[patchi].type() == "wall") {
-            tensorField Rn = (R1tBf[patchi]&N[patchi])*N[patchi];
-            R1Bf[patchi] = R1tBf[patchi] - 0.5*(Rn + Rn.T());
-        }
-    }
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
     (

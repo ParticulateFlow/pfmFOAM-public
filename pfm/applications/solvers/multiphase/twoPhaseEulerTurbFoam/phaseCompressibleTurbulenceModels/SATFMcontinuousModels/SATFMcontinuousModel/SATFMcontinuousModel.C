@@ -302,13 +302,10 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::groupName("R", phase.name()),
             U.time().timeName(),
             U.mesh(),
-            IOobject::NO_READ,
+            IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        U.mesh(),
-        dimensionedTensor("zero", dimensionSet(0, 2, -2, 0, 0),
-                           tensor(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0)),
-        zeroGradientFvPatchField<scalar>::typeName
+        U.mesh()
     ),
 
     shearProd_
@@ -1174,7 +1171,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     } else {
-        
         R2_  = zeroR;
     }
     
