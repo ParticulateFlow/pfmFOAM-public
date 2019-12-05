@@ -195,6 +195,9 @@ class SATFMdispersedModel
             //- Reynolds stress tensor
             volTensorField R1_;
 
+            //- Reynolds stress tensor
+            volTensorField R1t_;
+    
             //- shear production
             volVectorField shearProd_;
     
