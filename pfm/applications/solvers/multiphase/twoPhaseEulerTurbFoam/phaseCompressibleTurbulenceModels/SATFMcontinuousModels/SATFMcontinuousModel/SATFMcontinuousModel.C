@@ -588,8 +588,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -0.99;
-    scalar xiMax = 0.99;
+    scalar xiMin = -0.75;
+    scalar xiMax = 0.75;
 
     R.max
     (
@@ -864,6 +864,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         boundxiPhiG(xiPhiG_);
         
         // compute mixing length dynamically
+        /*
         volScalarField Lij      = filter_(alpha*magSqr(U))/alpha2f - magSqr(Uf);
         Lij.max(SMALL);
         volScalarField magSqrDf = filter_(magSqr(D));
@@ -876,9 +877,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField CmuT     = 0.5*(filterS(Lij * Mij)/(MijMij));
         CmuT.min(4.0*sqr(CmuScalar_.value()));
         Cmu_ = sqrt(0.5*(CmuT+mag(CmuT))+scalar(1.e-2));
-        
-        //Cmu_    = CmuScalar_;
+        */
+        Cmu_    = CmuScalar_;
         // dynamic procedure for Ceps
+        /*
         volScalarField LijEps    = alpha*nuEff()*(magSqrDf - magSqr(Df));
         volScalarField MijEps    = pow(alpha*Lij,1.5)/(2.0*lm_);
         volScalarField MijMijEps = filterS(sqr(MijEps));
@@ -889,11 +891,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_ = 0.33*(CepsT + mag(CepsT) + CepsScalar_);
         
         Ceps_.min(2.0);
-    
+        */
+        Ceps_ = CepsScalar_;
         // Compute CphiG_
         CphiG_ = CphiGscalar_*Cmu_;
         
         // Currently no dynamic procedure for Cp
+        /*
         const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
@@ -904,8 +908,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_.min(1.0);
         Cp_ = pos(scalar(1.0) - alpha_ - residualAlpha_)*Cp_
             + neg(scalar(1.0) - alpha_ - residualAlpha_);
-         
-        //Cp_ = CpScalar_;
+        */
+        Cp_ = CpScalar_;
     } else {
         // the sign of xiPhiG should be opposite to the slip velocity
         volVectorField xiPhiGDir = uSlip/(mag(uSlip)+dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7));
@@ -950,7 +954,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                      )
                     /sqrt(km);
         // compute prefactor for dissipation term
-        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -1002,10 +1006,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
-          // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
-          // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
-          // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
+          - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
+          - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1126,24 +1130,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         
         // compute correlation coefficients
         volTensorField xiUUnom = (filter_(alpha*(U*U))/alphaf - Uf*Uf);
-        volVectorField xiUUden = (
-                                    sqrt(max(filter_(alpha*magSqr(U&eX))/alphaf - magSqr(Uf&eX),kSmall))*eX
-                                  + sqrt(max(filter_(alpha*magSqr(U&eY))/alphaf - magSqr(Uf&eY),kSmall))*eY
-                                  + sqrt(max(filter_(alpha*magSqr(U&eZ))/alphaf - magSqr(Uf&eZ),kSmall))*eZ
-                                 );
+        volScalarField xiUUden = max(tr(xiUUnom),kSmall);
         
-        forAll(cells,cellI)
-        {
-            for (int i=0; i<3; i++) {
-                for (int j=0; j<3; j++) {
-                    xiUU_[cellI].component(j+i*3) = xiUUnom[cellI].component(j+i*3)
-                                                  / (xiUUden[cellI].component(i)*xiUUden[cellI].component(j));
-                }
-            }
-        }
+        xiUU_ = filterS(xiUUnom*xiUUden)/filterS(sqr(xiUUden));
+        
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
-        xiUU_ = filterS(xiUU_);
+        
         xiUU_.correctBoundaryConditions();
         
         // compute Reynolds-stress tensor
