@@ -515,9 +515,7 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             da,
             rho,
             //strain-rate fluctuations --> Srivastrava (2003)
-            dev(D) + sqrt(k())
-                    *symmTensor::I
-                    /max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
+            dev(D)// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
     );
@@ -1093,7 +1091,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        + (gradUR1&&(eY*eY))*(eY)
                        + (gradUR1&&(eZ*eZ))*(eZ)
                       );
-        volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -1105,6 +1103,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           // - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
+         /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -1114,6 +1113,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                  / (sigma_)
                            , k_
                            , "laplacian(kappa,k)"
+                         )
+          */
+          - fvm::laplacian(
+                             rho*nut_/sigma_,
+                             k_,
+                             "laplacian(kappa,k)"
                          )
          ==
           // some source terms are explicit since fvm::Sp()
@@ -1135,14 +1140,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
           + fvm::Sp(-2.0*beta,k_)
           // pressure dilation & dissipation
-          - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
-          - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
-          - (coeffDissipation*(k_&eZ) + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
-          //- ((pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
-          //- ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
-          //- ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
+          // - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
+          // - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
+          // - (coeffDissipation*(k_&eZ) + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
+          - ((pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
+          - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
+          - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1212,6 +1217,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
           // diffusion
+          /*
           - fvc::div(
                         (
                            alpha*lm_
@@ -1223,6 +1229,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          / (sigma_)
                        )
                      & (fvc::grad(alphaP2Mean_/alpha))
+                    )
+           */
+          - fvc::div(
+                       nut_/sigma_
+                     * fvc::grad(alphaP2Mean_/alpha)
                     )
          ==
           // some source terms are explicit since fvm::Sp()
@@ -1311,7 +1322,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         pf_/rho,
         da,
         //strain-rate fluctuations --> Srivastrava (2003)
-        dev(D) + sqrt(km)/lm_*symmTensor::I
+        dev(D)// + sqrt(km)/lm_*symmTensor::I
     );
     
     // Limit viscosity and add frictional viscosity
