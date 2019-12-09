@@ -473,17 +473,6 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
             (
                 (rho_*nuEff())*dev2(T(fvc::grad(U)))
             )
-          + fvc::div
-            (
-                2.0
-              * alpha_
-              * rho_
-              * (
-                    (R2_&&(eX*eX))*(eX*eX)
-                  + (R2_&&(eY*eY))*(eY*eY)
-                  + (R2_&&(eZ*eZ))*(eZ*eZ)
-                )
-            )
         );
     } else {
         return
@@ -498,7 +487,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * (
+               * dev(
                      R2_
                  )
             )
@@ -806,6 +795,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF,wD);
     deltaF_.max(lSmall.value());
     
+    // compute nut
+    nut_ = alpha*sqrt(km)*lm_;
     if (dynamicAdjustment_) {
         // precompute \bar phi
         volScalarField alpha2f = filter_(alpha);
@@ -954,7 +945,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                      )
                     /sqrt(km);
         // compute prefactor for dissipation term
-        volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -966,6 +957,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           // - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
+          /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -975,6 +967,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                  / (sigma_)
                            , k_
                            , "laplacian(kappa,k)"
+                         )
+        */
+          - fvm::laplacian(
+                             rho*nut_/sigma_,
+                             k_,
+                             "laplacian(kappa,k)"
                          )
          ==
           // some source terms are explicit since fvm::Sp()
@@ -1006,10 +1004,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
-          - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
-          - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
-          - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
+          // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
+          // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1079,6 +1077,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi2, alphaP2Mean_)
           // diffusion
+         /*
           - fvc::div(
                         (
                            alpha*lm_
@@ -1091,6 +1090,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        )
                      & (fvc::grad(alphaP2Mean_/alpha))
                     )
+          */
+          - fvc::div(
+                       nut_/sigma_
+                     * fvc::grad(alphaP2Mean_/alpha)
+                    )
+          
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1154,7 +1159,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     } else {
-        R2_  = zeroR;
+        R2_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
     
     // Limit viscosity
