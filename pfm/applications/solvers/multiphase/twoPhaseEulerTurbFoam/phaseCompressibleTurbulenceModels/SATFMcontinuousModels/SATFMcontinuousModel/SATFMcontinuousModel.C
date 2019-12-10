@@ -792,7 +792,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,2.0*wD);
     deltaF_.max(lSmall.value());
     
     // compute nut
@@ -930,14 +930,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((gradU.T())&(R2t.T())));
 
         //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
-        shearProd_ = pos(mag(wD) - deltaF)
+        shearProd_ = pos(2.0*mag(wD) - deltaF)
                     *(
                          (gradUR2&&(eX*eX))*(eX)
                        + (gradUR2&&(eY*eY))*(eY)
                        + (gradUR2&&(eZ*eZ))*(eZ)
                      )
                     // special treatment of P_k near walls
-                   - neg(mag(wD) - deltaF)
+                   - neg(2.0*mag(wD) - deltaF)
                     *lm_
                     *(
                          (sqr(U&eX)*sqrt(k_&eX))*eX
@@ -1019,14 +1019,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         fvOptions.correct(k_);
     }
     else {
-        volVectorField SijSijV =  pos(mag(wD) - deltaF)
+        volVectorField SijSijV =  pos(2.0*mag(wD) - deltaF)
                                  *(
                                       ((SijSij&eX)&eSum)*eX
                                     + ((SijSij&eY)&eSum)*eY
                                     + ((SijSij&eZ)&eSum)*eZ
                                   )
                                  // special treatment of P_k near walls
-                                + neg(mag(wD) - deltaF)
+                                + neg(2.0*mag(wD) - deltaF)
                                  *(
                                       (sqr(U&eX))*eX
                                     + (sqr(U&eY))*eY
@@ -1180,12 +1180,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     R2_.correctBoundaryConditions();
     
     // BCs for nut_
-    /*
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
+    const volScalarField::Boundary& alphaBf = alpha_.boundaryFieldRef();
     volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);
-    volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
-    yPlus_ = sqrt(Cmu_*km)*deltaF_/nu2;
+    const volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
+    yPlus_ = 0.5*alpha*sqrt(Cmu_*km)*deltaF_/nu2;
     yPlus_.max(SMALL);
     yPlus_.correctBoundaryConditions();
     volScalarField::Boundary& yPlusBf = yPlus_.boundaryFieldRef();
@@ -1193,10 +1193,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     forAll(patches, patchi)
     {
         if (patches[patchi].type() == "wall") {
-            nutBf[patchi] = nuBf[patchi]*(yPlusBf[patchi]*0.4/log(9.8*yPlusBf[patchi]) - 1.0);
+            nutBf[patchi] = alphaBf[patchi]*nuBf[patchi]*(yPlusBf[patchi]*0.4/log(9.8*yPlusBf[patchi]) - 1.0);
         }
     }
-    */
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl
