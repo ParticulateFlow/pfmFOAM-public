@@ -792,7 +792,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF,wD);
+    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
     deltaF_.max(lSmall.value());
     
     // compute nut
@@ -936,14 +936,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        + (gradUR2&&(eY*eY))*(eY)
                        + (gradUR2&&(eZ*eZ))*(eZ)
                      )
+                    // special treatment of P_k near walls
                    - neg(mag(wD) - deltaF)
                     *lm_
                     *(
-                         (((SijSij&eX)&eSum)*(k_&eX))*eX
-                       + (((SijSij&eY)&eSum)*(k_&eY))*eY
-                       + (((SijSij&eZ)&eSum)*(k_&eZ))*eZ
-                     )
-                    /sqrt(km);
+                         (sqr(U&eX)*sqrt(k_&eX))*eX
+                       + (sqr(U&eY)*sqrt(k_&eY))*eY
+                       + (sqr(U&eZ)*sqrt(k_&eZ))*eZ
+                      )
+                     /sqr(deltaF_);
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
@@ -1018,9 +1019,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         fvOptions.correct(k_);
     }
     else {
-        volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
-                                + ((SijSij&eY)&eSum)*eY
-                                + ((SijSij&eZ)&eSum)*eZ;
+        volVectorField SijSijV =  pos(mag(wD) - deltaF)
+                                 *(
+                                      ((SijSij&eX)&eSum)*eX
+                                    + ((SijSij&eY)&eSum)*eY
+                                    + ((SijSij&eZ)&eSum)*eZ
+                                  )
+                                 // special treatment of P_k near walls
+                                + neg(mag(wD) - deltaF)
+                                 *(
+                                      (sqr(U&eX))*eX
+                                    + (sqr(U&eY))*eY
+                                    + (sqr(U&eZ))*eZ
+                                   )
+                                  /sqr(deltaF_);
         
         // no dynamic adjustment for Ceps in case of equilibrium
         Ceps_ = CepsScalar_;
