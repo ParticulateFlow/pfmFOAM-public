@@ -385,7 +385,7 @@ Foam::RASModels::SATFMcontinuousModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return k_&eSum;
+    return 0.666*k_&eSum;
 }
 
 
