@@ -1182,10 +1182,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // BCs for nut_
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
-    volScalarField::Boundary& alphaBf = alpha.boundaryFieldRef();
     volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);
     volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
-    yPlus_ = 0.5*alpha*sqrt(Cmu_*km)*deltaF_/nu2;
+    yPlus_ = nut_/nu2;
     yPlus_.max(SMALL);
     yPlus_.correctBoundaryConditions();
     volScalarField::Boundary& yPlusBf = yPlus_.boundaryFieldRef();
@@ -1193,7 +1192,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     forAll(patches, patchi)
     {
         if (patches[patchi].type() == "wall") {
-            nutBf[patchi] = alphaBf[patchi]*nuBf[patchi]*(yPlusBf[patchi]*0.4/log(9.8*yPlusBf[patchi]) - 1.0);
+            //nutBf[patchi] = alphaBf[patchi]*nuBf[patchi]*(yPlusBf[patchi]*0.4/log(9.8*yPlusBf[patchi]) - 1.0);
+            nutBf[patchi] = yPlusBf[patchi]*nuBf[patchi];
         }
     }
     Info << "SA-TFM (continuous Phase):" << nl
