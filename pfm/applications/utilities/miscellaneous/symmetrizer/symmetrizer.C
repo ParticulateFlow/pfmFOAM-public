@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        dictname = "symmetrizerDict";
+        dictname = "symmetrizerProperties";
     }
 
     Info<< "dictname: " << dictname << endl;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     (
         IOobject
         (
-            "symmetrizerProperties",
+            dictname,
             mesh.time().constant(),
             mesh,
             IOobject::MUST_READ,
