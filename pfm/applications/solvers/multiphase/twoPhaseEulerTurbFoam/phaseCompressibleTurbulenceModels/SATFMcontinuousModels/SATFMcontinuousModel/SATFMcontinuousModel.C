@@ -1182,9 +1182,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // BCs for nut_
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
-    const volScalarField::Boundary& alphaBf = alpha_.boundaryFieldRef();
+    volScalarField::Boundary& alphaBf = alpha_.boundaryFieldRef();
     volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);
-    const volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
+    volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
     yPlus_ = 0.5*alpha*sqrt(Cmu_*km)*deltaF_/nu2;
     yPlus_.max(SMALL);
     yPlus_.correctBoundaryConditions();
