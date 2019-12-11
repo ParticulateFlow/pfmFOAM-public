@@ -192,6 +192,9 @@ class SATFMdispersedModel
             //- mixing length
             volScalarField lm_;
     
+            //- temp nut
+            volScalarField nutT_;
+    
             //- Reynolds stress tensor
             volTensorField R1_;
     

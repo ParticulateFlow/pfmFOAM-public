@@ -368,6 +368,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
+    nutT_
+    (
+        IOobject
+        (
+            "yPlus",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 2, -1, 0, 0), 1.e-5),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     R1_
     (
         IOobject
@@ -1324,6 +1339,21 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         //strain-rate fluctuations --> Srivastrava (2003)
         dev(D)// + sqrt(km)/lm_*symmTensor::I
     );
+    
+    // BCs for nut_
+    const fvPatchList& patches = mesh_.boundary();
+    volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
+    nutT_ = nut_;
+    nutT_.max(SMALL);
+    nutT_.correctBoundaryConditions();
+    volScalarField::Boundary& nutTBf = nutT_.boundaryFieldRef();
+    
+    forAll(patches, patchi)
+    {
+        if (patches[patchi].type() == "wall") {
+            nutBf[patchi] = nutTBf[patchi];
+        }
+    }
     
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
