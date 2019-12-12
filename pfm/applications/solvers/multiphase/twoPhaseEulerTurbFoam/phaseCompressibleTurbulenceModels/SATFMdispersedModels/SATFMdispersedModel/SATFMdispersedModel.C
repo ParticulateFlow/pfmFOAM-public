@@ -1315,7 +1315,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
-    nut_ = alpha*sqrt(km)*lm_;
+    nut_ = 0*alpha*sqrt(km)*lm_;
     R1_.correctBoundaryConditions();
     
     // Frictional pressure
