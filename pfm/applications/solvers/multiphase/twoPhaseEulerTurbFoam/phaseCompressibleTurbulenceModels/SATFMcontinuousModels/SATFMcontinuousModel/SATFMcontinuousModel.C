@@ -400,43 +400,79 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::R() const
 {
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
+    if (anIsoTropicNut_) {
+        return tmp<volSymmTensorField>
         (
-            IOobject
+            new volSymmTensorField
             (
-                IOobject::groupName("R", U_.group()),
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            2.0 * alpha_ * symm(R2_)
-          - (nuEff()-nut_)*(twoSymm(fvc::grad(U_)))
-        )
-    );
+                IOobject
+                (
+                    IOobject::groupName("R", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * (symm(R2_))
+              - rho_*(nuEff()-nut_)*(twoSymm(fvc::grad(U_)))
+            )
+        );
+    } else {
+        return tmp<volSymmTensorField>
+        (
+            new volSymmTensorField
+            (
+                IOobject
+                (
+                    IOobject::groupName("R", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+              - rho_*(nuEff())*(twoSymm(fvc::grad(U_)))
+            )
+        );
+    }
 }
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
 {
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
+    if (anIsoTropicNut_) {
+        return tmp<volSymmTensorField>
         (
-            IOobject
+            new volSymmTensorField
             (
-                IOobject::groupName("devRhoReff", U_.group()),
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            2.0 * alpha_ * dev(symm(R2_))
-          - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
-        )
-    );
+                IOobject
+                (
+                    IOobject::groupName("devRhoReff", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * dev(symm(R2_))
+              - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
+            )
+        );
+    } else {
+        return tmp<volSymmTensorField>
+        (
+            new volSymmTensorField
+            (
+                IOobject
+                (
+                    IOobject::groupName("devRhoReff", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+              - rho_*(nuEff())*dev(twoSymm(fvc::grad(U_)))
+            )
+        );
+    }
 }
 
 
