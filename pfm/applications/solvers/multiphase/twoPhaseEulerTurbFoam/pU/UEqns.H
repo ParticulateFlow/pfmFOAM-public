@@ -23,16 +23,16 @@ if (periodicBox) {
 volScalarField Kd(fluid.Kd());
 volVectorField KdUdrift(fluid.KdUdrift());
 // in the case of no drift vel model, KdUdriftE is 0
-volVectorField KdUdriftE(0.0*KdUdrift);
-
+volVectorField KdUdriftE(KdUdrift);
+/*
 if (mesh.foundObject<volScalarField>("dragCorr")) {
     Info<< "Applying drag correction..." << endl;
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
     volVectorField uSlipV(U2 - U1);
-    KdUdriftE = 0*( KdUdrift + dragCorr*Kd*uSlipV);
+    KdUdriftE = KdUdrift + dragCorr*Kd*uSlipV;
     Kd *= (scalar(1.0) - dragCorr);
 }
-
+*/
 {
 
     surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
