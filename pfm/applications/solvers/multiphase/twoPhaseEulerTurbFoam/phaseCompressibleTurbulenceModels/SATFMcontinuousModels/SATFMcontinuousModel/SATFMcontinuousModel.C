@@ -1216,6 +1216,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     R2_.correctBoundaryConditions();
     
     // BCs for nut_
+    /*
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
     volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);
@@ -1232,7 +1233,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             nutBf[patchi] = yPlusBf[patchi]*nuBf[patchi];
         }
     }
-
+    */
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl
