@@ -1315,7 +1315,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
-    nut_ = 0*alpha*sqrt(km)*lm_;
+    nut_ = alpha*sqrt(km)*lm_;
     R1_.correctBoundaryConditions();
     
     // Frictional pressure
@@ -1341,6 +1341,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     );
     
     // BCs for nut_
+    /*
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
     nutT_ = nut_;
@@ -1354,7 +1355,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             nutBf[patchi] = nutTBf[patchi];
         }
     }
-    
+    */
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     nuFric_ = min(nuFric_, maxNut_ - nut_);
