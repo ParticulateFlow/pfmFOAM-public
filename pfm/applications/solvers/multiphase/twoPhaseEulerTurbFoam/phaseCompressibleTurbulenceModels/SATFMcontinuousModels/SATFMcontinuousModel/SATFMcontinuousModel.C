@@ -265,21 +265,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
-    yPlus_
-    (
-        IOobject
-        (
-            "yPlus",
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.e-2),
-        zeroGradientFvPatchField<scalar>::typeName
-    ),
-
     lm_
     (
         IOobject
@@ -770,8 +755,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const volScalarField& xiGatS_(mesh_.lookupObject<volScalarField>
                              ("xiGatS"));
     
-    const cellList& cells = mesh_.cells();
-    
     // simple filter for local smoothing
     simpleFilter filterS(mesh_);
     
@@ -805,6 +788,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // local reference to deltaF
     volScalarField deltaF(deltaF_);
     // compute grid size for mixing length
+    const cellList& cells = mesh_.cells();
     forAll(cells,cellI)
     {
         scalar deltaMaxTmp = 0.0;
@@ -1215,25 +1199,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     nut_.min(maxNut_);
     R2_.correctBoundaryConditions();
     
-    // BCs for nut_
-    /*
-    const fvPatchList& patches = mesh_.boundary();
-    volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
-    volScalarField nu2(mesh_.lookupObject<volScalarField>("thermo:mu." + phase_.name())/rho_);
-    volScalarField::Boundary& nuBf = nu2.boundaryFieldRef();
-    yPlus_ = nut_/nu2;
-    yPlus_.max(SMALL);
-    yPlus_.correctBoundaryConditions();
-    volScalarField::Boundary& yPlusBf = yPlus_.boundaryFieldRef();
-    
-    forAll(patches, patchi)
-    {
-        if (patches[patchi].type() == "wall") {
-            //nutBf[patchi] = alphaBf[patchi]*nuBf[patchi]*(yPlusBf[patchi]*0.4/log(9.8*yPlusBf[patchi]) - 1.0);
-            nutBf[patchi] = yPlusBf[patchi]*nuBf[patchi];
-        }
-    }
-    */
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nut)        = " << max(nut_).value() << nl
          << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl

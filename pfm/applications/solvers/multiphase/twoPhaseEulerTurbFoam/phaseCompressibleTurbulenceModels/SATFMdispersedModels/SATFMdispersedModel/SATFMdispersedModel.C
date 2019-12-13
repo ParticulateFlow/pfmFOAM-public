@@ -869,6 +869,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
+    volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
+                            + ((SijSij&eY)&eSum)*eY
+                            + ((SijSij&eZ)&eSum)*eZ;
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
@@ -899,9 +902,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField km  = (k_ & eSum);
     km.max(kSmall.value());
     
+    
+    // local reference to deltaF
+    volScalarField deltaF(deltaF_);
     // compute grid size
     const cellList& cells = mesh_.cells();
-    
     forAll(cells,cellI)
     {
         scalar deltaMaxTmp = 0.0;
@@ -918,14 +923,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 deltaMaxTmp = tmp;
             }
         }
-        deltaF_[cellI] = 2*deltaMaxTmp;
+        deltaF[cellI] = 2*deltaMaxTmp;
     }
     
     volScalarField wD = wallDist(mesh_).y();
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
+    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
     deltaF_.max(lSmall.value());
     
     if (dynamicAdjustment_) {
@@ -1101,10 +1106,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
         
         // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-        shearProd_ = (
+        shearProd_ = pos(mag(wD) - deltaF)
+                    *(
                          (gradUR1&&(eX*eX))*(eX)
                        + (gradUR1&&(eY*eY))*(eY)
                        + (gradUR1&&(eZ*eZ))*(eZ)
+                     )
+                    // special treatment of P_k near walls
+                   - neg(mag(wD) - deltaF)
+                    *lm_
+                    *(
+                         ((SijSijV&eX)*sqrt(k_&eX))*eX
+                       + ((SijSijV&eY)*sqrt(k_&eY))*eY
+                       + ((SijSijV&eZ)*sqrt(k_&eZ))*eZ
                       );
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
@@ -1173,10 +1187,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         fvOptions.correct(k_);
     }
     else {
-        volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
-                                + ((SijSij&eY)&eSum)*eY
-                                + ((SijSij&eZ)&eSum)*eZ;
-                                  
         // no dynamic adjustment for Ceps in case of equilibrium
         Ceps_   = CepsScalar_;
         // Equilibrium => dissipation == production

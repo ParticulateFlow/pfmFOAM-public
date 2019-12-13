@@ -160,9 +160,6 @@ class SATFMcontinuousModel
             //- grid size
             volScalarField deltaF_;
     
-            //- yPlus
-            volScalarField yPlus_;
-    
             //- mixing length
             volScalarField lm_;
     
