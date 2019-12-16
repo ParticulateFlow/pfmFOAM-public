@@ -146,7 +146,6 @@ int main(int argc, char *argv[])
         for (int i=0; i<scalarFieldNames_.size(); i++)
         {
             volScalarField tmpField(scalarFields_[i]);
-            tmpField *= 0.0;
 
             forAll(tmpField, cellI)
             {
@@ -170,7 +169,6 @@ int main(int argc, char *argv[])
         for (int i=0; i<vectorFieldNames_.size(); i++)
         {
             volVectorField tmpField(vectorFields_[i]);
-            tmpField *= 0.0;
 
             forAll(tmpField, cellI)
             {
