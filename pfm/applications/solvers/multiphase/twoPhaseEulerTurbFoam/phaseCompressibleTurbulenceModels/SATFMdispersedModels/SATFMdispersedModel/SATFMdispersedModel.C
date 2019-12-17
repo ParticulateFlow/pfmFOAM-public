@@ -483,8 +483,13 @@ Foam::RASModels::SATFMdispersedModel::k() const
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::SATFMdispersedModel::epsilon() const
 {
-    NotImplemented;
-    return nut_;
+    dimensionedVector eSum
+    (
+        "eSum",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,1,1)
+    );
+    return Ceps_*pow(k_&eSum,3.0/2.0)/lm_;
 }
 
 
@@ -533,6 +538,8 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             dev(D)// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
+      + pos(alpha_ - residualAlpha_)
+      * (2.0/3.0)*rho*tr(R1_)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -617,7 +624,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * (
+               * dev(
                      (R1_&&(eX*eX))*(eX*eX)
                    + (R1_&&(eY*eY))*(eY*eY)
                    + (R1_&&(eZ*eZ))*(eZ*eZ)
@@ -628,7 +635,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)*
         (
-          - fvm::laplacian(rho_*nuFric_, U)
+          - fvm::laplacian(rho_*nut_, U)
           - fvc::div
            (
                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
@@ -638,11 +645,11 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * (
+               * dev(
                      R1_
                  )
             )
-          //+ fvc::laplacian(rho_*(nut_-nuFric_), U)
+          + fvc::laplacian(rho_*(nut_-nuFric_), U)
         );
     }
 }
@@ -950,9 +957,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
         tmpA.max(ROOTVSMALL);
-        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
-        tmpK.max(ROOTVSMALL);
-        /*
+        //volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
+        //tmpK.max(ROOTVSMALL);
+
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -985,8 +992,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
                     );
-        */
-        xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        
+        // xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         
@@ -1106,20 +1113,20 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
         
         // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-        shearProd_ = pos(mag(wD) - deltaF)
+        shearProd_ = pos(mag(wD) - 0*deltaF)
                     *(
                          (gradUR1&&(eX*eX))*(eX)
                        + (gradUR1&&(eY*eY))*(eY)
                        + (gradUR1&&(eZ*eZ))*(eZ)
-                     )
-                    // special treatment of P_k near walls
-                   - neg(mag(wD) - deltaF)
-                    *lm_
-                    *(
-                         ((SijSijV&eX)*sqrt(k_&eX))*eX
-                       + ((SijSijV&eY)*sqrt(k_&eY))*eY
-                       + ((SijSijV&eZ)*sqrt(k_&eZ))*eZ
                       );
+                    // special treatment of P_k near walls
+                 //  - neg(mag(wD) - deltaF)
+                 //   *lm_
+                 //   *(
+                 //        ((SijSijV&eX)*sqrt(k_&eX))*eX
+                 //      + ((SijSijV&eY)*sqrt(k_&eY))*eY
+                 //      + ((SijSijV&eZ)*sqrt(k_&eZ))*eZ
+                 //     );
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
@@ -1176,8 +1183,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
+          //+ fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
 
@@ -1302,7 +1309,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField xiUUnom = (filter_(alpha*(U*U))/alphaf - Uf*Uf);
         volScalarField xiUUden = max(tr(xiUUnom),kSmall);
         
-        xiUU_ = filterS(xiUUnom*xiUUden)/filterS(sqr(xiUUden));
+        xiUU_ = fvc::average(xiUUnom*xiUUden)/fvc::average(sqr(xiUUden));
         
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
