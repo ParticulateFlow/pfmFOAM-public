@@ -538,8 +538,6 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             dev(D)// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
-      + pos(alpha_ - residualAlpha_)
-      * (2.0/3.0)*rho*tr(R1_)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -624,7 +622,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * dev(
+               * (
                      (R1_&&(eX*eX))*(eX*eX)
                    + (R1_&&(eY*eY))*(eY*eY)
                    + (R1_&&(eZ*eZ))*(eZ*eZ)
@@ -645,7 +643,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * dev(
+               * (
                      R1_
                  )
             )
@@ -1183,8 +1181,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          //+ fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
 
