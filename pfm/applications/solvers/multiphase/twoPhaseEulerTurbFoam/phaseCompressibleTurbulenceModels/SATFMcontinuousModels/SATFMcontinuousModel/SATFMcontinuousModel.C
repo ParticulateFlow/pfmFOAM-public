@@ -1194,6 +1194,46 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
         R2_ = 0.5*(2.0*R2_ - nut_*(gradU + gradU.T()));
+        
+        // set wall-bc for R
+        const fvPatchList& patches = mesh_.boundary();
+
+        volTensorField::Boundary& RBf = R2_.boundaryFieldRef();
+
+        forAll(patches, patchi)
+        {
+            const fvPatch& curPatch = patches[patchi];
+
+            if (isA<wallFvPatch>(curPatch))
+            {
+                tensorField& Rw = RBf[patchi];
+
+                const scalarField& nutw = nut_.boundaryField()[patchi];
+
+                const vectorField snGradU
+                (
+                    U.boundaryField()[patchi].snGrad()
+                );
+
+                const vectorField& faceAreas
+                    = mesh_.Sf().boundaryField()[patchi];
+
+                const scalarField& magFaceAreas
+                    = mesh_.magSf().boundaryField()[patchi];
+
+                forAll(curPatch, facei)
+                {
+                    // Calculate near-wall velocity gradient
+                    const tensor gradUw
+                        = (faceAreas[facei]/magFaceAreas[facei])*snGradU[facei];
+
+                    // Set the wall Reynolds-stress to the near-wall shear-stress
+                    // Note: the spherical part of the normal stress is included in
+                    // the pressure
+                    Rw[facei] = -nutw[facei]*(gradUw + gradUw.T());
+                }
+            }
+        }
     } else {
         R2_  = zeroR;
     }
@@ -1204,45 +1244,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     nut_.correctBoundaryConditions();
     R2_.correctBoundaryConditions();
     
-    // set wall-bc for R
-    const fvPatchList& patches = mesh_.boundary();
 
-    volTensorField::Boundary& RBf = R2_.boundaryFieldRef();
-
-    forAll(patches, patchi)
-    {
-        const fvPatch& curPatch = patches[patchi];
-
-        if (isA<wallFvPatch>(curPatch))
-        {
-            tensorField& Rw = RBf[patchi];
-
-            const scalarField& nutw = nut_.boundaryField()[patchi];
-
-            const vectorField snGradU
-            (
-                U.boundaryField()[patchi].snGrad()
-            );
-
-            const vectorField& faceAreas
-                = mesh_.Sf().boundaryField()[patchi];
-
-            const scalarField& magFaceAreas
-                = mesh_.magSf().boundaryField()[patchi];
-
-            forAll(curPatch, facei)
-            {
-                // Calculate near-wall velocity gradient
-                const tensor gradUw
-                    = (faceAreas[facei]/magFaceAreas[facei])*snGradU[facei];
-
-                // Set the wall Reynolds-stress to the near-wall shear-stress
-                // Note: the spherical part of the normal stress is included in
-                // the pressure
-                Rw[facei] = -nutw[facei]*(gradUw + gradUw.T());
-            }
-        }
-    }
     
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nuEff)      = " << max(nuEff()).value() << nl
