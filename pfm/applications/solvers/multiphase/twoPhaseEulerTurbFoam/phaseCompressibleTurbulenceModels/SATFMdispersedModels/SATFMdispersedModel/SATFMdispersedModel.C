@@ -1111,20 +1111,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
         
         // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-        shearProd_ = pos(mag(wD) - 0*deltaF)
-                    *(
+        shearProd_ =  (
                          (gradUR1&&(eX*eX))*(eX)
                        + (gradUR1&&(eY*eY))*(eY)
                        + (gradUR1&&(eZ*eZ))*(eZ)
                       );
-                    // special treatment of P_k near walls
-                 //  - neg(mag(wD) - deltaF)
-                 //   *lm_
-                 //   *(
-                 //        ((SijSijV&eX)*sqrt(k_&eX))*eX
-                 //      + ((SijSijV&eY)*sqrt(k_&eY))*eY
-                 //      + ((SijSijV&eZ)*sqrt(k_&eZ))*eZ
-                 //     );
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));

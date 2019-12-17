@@ -953,14 +953,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((gradU.T())&(R2t.T())));
 
         //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
-        shearProd_ = pos(mag(wD) - 0*deltaF)
+        shearProd_ = pos(mag(wD) - deltaF)
                     *(
                          (gradUR2&&(eX*eX))*(eX)
                        + (gradUR2&&(eY*eY))*(eY)
                        + (gradUR2&&(eZ*eZ))*(eZ)
-                      );
+                      )
                     // special treatment of P_k near walls
-        /*
                    - neg(mag(wD) - deltaF)
                     *lm_
                     *(
@@ -969,7 +968,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        + (sqr(U&eZ)*sqrt(k_&eZ))*eZ
                       )
                      /sqr(deltaF_);
-        */
+        
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
@@ -1044,21 +1043,21 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         fvOptions.correct(k_);
     }
     else {
-        volVectorField SijSijV =  pos(mag(wD) - 0*deltaF)
+        volVectorField SijSijV =  pos(mag(wD) - deltaF)
                                  *(
                                       ((SijSij&eX)&eSum)*eX
                                     + ((SijSij&eY)&eSum)*eY
                                     + ((SijSij&eZ)&eSum)*eZ
-                                   );
+                                   )
                                  // special treatment of P_k near walls
-                               /* + neg(mag(wD) - deltaF)
+                                + neg(mag(wD) - deltaF)
                                  *(
                                       (sqr(U&eX))*eX
                                     + (sqr(U&eY))*eY
                                     + (sqr(U&eZ))*eZ
                                    )
                                   /sqr(deltaF_);
-        */
+
         // no dynamic adjustment for Ceps in case of equilibrium
         Ceps_ = CepsScalar_;
         // Equilibrium => dissipation == production
