@@ -370,7 +370,8 @@ Foam::RASModels::SATFMcontinuousModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return k_&eSum;
+    dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
+    return 1.5*(k_ - (k_ & U_) * U_/(magSqr(U_)+sqr(uSmall)))&eSum;
 }
 
 
@@ -787,7 +788,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     );
     
     // compute total k
-    volScalarField km  = (k_ & eSum);
+    volScalarField km(k());
     km.max(kSmall.value());
     
     // local reference to deltaF
@@ -1091,7 +1092,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     //- compute variance of solids volume fraction
     //--------------------------------------------
     // update km
-    km = (k_ & eSum);
+    km = k();
     km.max(kSmall.value());
     
     // compute fields for transport equation for phiP2
@@ -1194,7 +1195,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        R2_ = 0.5*(2.0*R2_ - nut_*(gradU + gradU.T()));
         
         // set wall-bc for R
         const fvPatchList& patches = mesh_.boundary();

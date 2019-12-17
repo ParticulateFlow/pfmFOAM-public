@@ -476,7 +476,8 @@ Foam::RASModels::SATFMdispersedModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return 0.666*k_&eSum;
+    dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
+    return 1.5*(k_ - (k_ & U_) * U_/(magSqr(U_)+sqr(uSmall)))&eSum;
 }
 
 
@@ -489,7 +490,7 @@ Foam::RASModels::SATFMdispersedModel::epsilon() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return Ceps_*pow(k_&eSum,3.0/2.0)/lm_;
+    return Ceps_*pow(k(),3.0/2.0)/lm_;
 }
 
 
@@ -904,7 +905,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField betaA = beta/(rho);
     beta *= alpha;
     // compute total k
-    volScalarField km  = (k_ & eSum);
+    volScalarField km(k());
     km.max(kSmall.value());
     
     
@@ -1216,7 +1217,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     //- compute variance of solids volume fraction
     // update km
-    km  = (k_ & eSum);
+    km = k();
     km.max(kSmall.value());
     
     // compute fields for transport equation for phiP2
