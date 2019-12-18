@@ -1189,7 +1189,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          )
           */
           - fvm::laplacian(
-                             rho*nut_/sigma_,
+                             alpha*rho*sqrt(k())*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
@@ -1301,7 +1301,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
            */
           - fvc::div(
-                       nut_/sigma_
+                       alpha*sqrt(k())*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
          ==
