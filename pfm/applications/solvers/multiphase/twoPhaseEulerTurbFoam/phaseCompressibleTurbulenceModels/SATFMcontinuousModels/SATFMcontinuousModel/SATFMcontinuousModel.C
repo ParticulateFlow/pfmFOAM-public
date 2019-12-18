@@ -877,35 +877,38 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          
         xiPhiG_ =  eX
                  * (
-                        filterS(sqrt(tmpDenX)*(xiPhiGNom&eX))/filterS(tmpDenX)
+                        ((xiPhiGNom&eX))/sqrt(tmpDenX)
                     )
                  + eY
                  * (
-                        filterS(sqrt(tmpDenY)*(xiPhiGNom&eY))/filterS(tmpDenY)
+                        ((xiPhiGNom&eY))/sqrt(tmpDenY)
                     )
                  + eZ
                  * (
-                        filterS(sqrt(tmpDenZ)*(xiPhiGNom&eZ))/filterS(tmpDenZ)
+                        ((xiPhiGNom&eZ))/sqrt(tmpDenZ)
                     );
         // xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
-        // limit xiPhiG_
-        boundxiPhiG(xiPhiG_);
+
         // wall treatment for xiPhiG
         const fvPatchList& patches = mesh_.boundary();
+        volVectorField::Boundary& xiPhiGBf = xiPhiG_.boundaryFieldRef();
         
         forAll(patches, patchi) {
             const fvPatch& curPatch = patches[patchi];
 
             if (isA<wallFvPatch>(curPatch)) {
-                
+                vectorField& xiPhiGw = xiPhiGBf[patchi];
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
-                    xiPhiG_[celli] = -xiPhiContScalar_.value()
+                    xiPhiGw[facei] = -xiPhiContScalar_.value()
                                      *uSlip[celli]
                                      /(mag(uSlip[celli])+SMALL);
                 }
             }
         }
+        xiPhiG_ = filterS(xiPhiG_);
+        // limit xiPhiG_
+        boundxiPhiG(xiPhiG_);
         
         // compute mixing length dynamically
         /*

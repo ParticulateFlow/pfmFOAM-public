@@ -1016,20 +1016,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
         xiPhiS_ =  eX
                  * (
-                        filterS(sqrt(tmpDenX)*(xiPhiSNom&eX))/filterS(tmpDenX)
+                        ((xiPhiSNom&eX))/sqrt(tmpDenX)
                     )
                  + eY
                  * (
-                        filterS(sqrt(tmpDenY)*(xiPhiSNom&eY))/filterS(tmpDenY)
+                        ((xiPhiSNom&eY))/sqrt(tmpDenY)
                     )
                  + eZ
                  * (
-                        filterS(sqrt(tmpDenZ)*(xiPhiSNom&eZ))/filterS(tmpDenZ)
+                        ((xiPhiSNom&eZ))/sqrt(tmpDenZ)
                     );
         
         // xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
-        // limit xiPhiS_
-        boundxiPhiS(xiPhiS_);
+
         
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
@@ -1052,19 +1051,21 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // wall treatment for xiPhiG and xiGS
         const fvPatchList& patches = mesh_.boundary();
         volScalarField::Boundary& xiGSnumPBf = xiGSnumP.boundaryFieldRef();
+        volVectorField::Boundary& xiPhiSBf = xiPhiS_.boundaryFieldRef();
         
         forAll(patches, patchi) {
             const fvPatch& curPatch = patches[patchi];
 
             if (isA<wallFvPatch>(curPatch)) {
                 scalarField& xiGSnumPw = xiGSnumPBf[patchi];
+                vectorField& xiPhiSw = xiPhiSBf[patchi];
                 
                 forAll(curPatch, facei) {
-                    // label celli = curPatch.faceCells()[facei];
+                    label celli = curPatch.faceCells()[facei];
                     xiGSnumPw[facei] = 0;
-                   /* xiPhiS_[celli]   = -xiGSScalar_.value()
+                    xiPhiSw[facei]   = -xiGSScalar_.value()
                                         *uSlip[celli]
-                                        /(mag(uSlip[celli])+SMALL);*/
+                                        /(mag(uSlip[celli])+SMALL);
                 }
             }
         }
@@ -1074,6 +1075,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(0);
         xiGS_.min(0.99);
+        
+        // limit xiPhiS_
+        xiPhiS_ = filterS(xiPhiS_);
+        boundxiPhiS(xiPhiS_);
     
         // compute mixing length dynamically
         /*
