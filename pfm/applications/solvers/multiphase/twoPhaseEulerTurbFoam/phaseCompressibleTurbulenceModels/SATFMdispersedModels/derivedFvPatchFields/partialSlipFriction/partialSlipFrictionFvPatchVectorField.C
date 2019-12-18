@@ -161,6 +161,14 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
     // Tangential cell velocity
     const scalarField Utc(mag(Uc - this->patch().nf()*Un));
 
+    const vectorField kp
+    (
+        patch().lookupPatchField<volVectorField, vector>
+        (
+            IOobject::groupName("k", granular.name())
+        )
+    );
+    const scalarField kpn(mag(this->patch().nf() & kp));
     
     const scalarField rhop
     (
@@ -222,8 +230,8 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
         (
             min
             (
-                (pfW*muW_)/max(Utc*(muEffp)*patch().deltaCoeffs(),
-                                    scalar(1e-10)),
+                (pfW+2.0*alphap*rhop*kpn)*muW
+               /max(Utc*(muEffp)*patch().deltaCoeffs(),scalar(1e-10)),
                 scalar(1)
             ),
             scalar(0)
