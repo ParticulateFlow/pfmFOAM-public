@@ -1062,8 +1062,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
                     xiGSnumPw[facei] = 0;
-                    xiPhiS_[celli]   = -gradAlpha[celli]
-                        /(mag(gradAlpha[celli])+SMALL);
+                    xiPhiS_[celli]   = -xiGSScalar_.value()
+                                        *gradAlpha[celli]
+                                        /(mag(gradAlpha[celli])+SMALL);
                 }
             }
         }

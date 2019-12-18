@@ -900,7 +900,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
-                    xiPhiG_[celli] = -uSlip[celli]/(mag(uSlip[celli])+SMALL);
+                    xiPhiG_[celli] = -xiPhiContScalar_.value()
+                                     *uSlip[celli]
+                                     /(mag(uSlip[celli])+SMALL);
                 }
             }
         }
