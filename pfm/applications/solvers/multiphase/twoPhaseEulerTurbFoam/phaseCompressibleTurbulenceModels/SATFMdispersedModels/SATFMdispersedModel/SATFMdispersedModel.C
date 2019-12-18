@@ -1060,11 +1060,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 scalarField& xiGSnumPw = xiGSnumPBf[patchi];
                 
                 forAll(curPatch, facei) {
-                    label celli = curPatch.faceCells()[facei];
+                    // label celli = curPatch.faceCells()[facei];
                     xiGSnumPw[facei] = 0;
-                    xiPhiS_[celli]   = -xiGSScalar_.value()
-                                        *gradAlpha[celli]
-                                        /(mag(gradAlpha[celli])+SMALL);
+                   /* xiPhiS_[celli]   = -xiGSScalar_.value()
+                                        *uSlip[celli]
+                                        /(mag(uSlip[celli])+SMALL);*/
                 }
             }
         }
