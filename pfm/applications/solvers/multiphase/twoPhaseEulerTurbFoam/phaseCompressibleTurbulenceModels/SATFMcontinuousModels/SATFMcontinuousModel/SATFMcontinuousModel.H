@@ -164,6 +164,9 @@ class SATFMcontinuousModel
             //- mixing length
             volScalarField lm_;
     
+            //- bulk viscosity
+            volScalarField lambda_;
+    
             //- Reynolds stress tensor
             volTensorField R2_;
     

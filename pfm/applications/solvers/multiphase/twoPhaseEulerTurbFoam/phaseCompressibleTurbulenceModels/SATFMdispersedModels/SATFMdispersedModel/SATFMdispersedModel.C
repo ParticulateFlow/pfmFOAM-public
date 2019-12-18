@@ -368,19 +368,18 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
-    nutT_
+    lambda_
     (
         IOobject
         (
-            "yPlus",
+            IOobject::groupName("lambda", phase.name()),
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 2, -1, 0, 0), 1.e-5),
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0)
     ),
 
     R1_
@@ -477,7 +476,22 @@ Foam::RASModels::SATFMdispersedModel::k() const
         vector(1,1,1)
     );
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
-    return 1.5*(k_ - (k_ & U_) * U_/(magSqr(U_)+sqr(uSmall)))&eSum;
+    dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
+    
+    tmp<volScalarField> kT
+    (
+        
+       1.5
+      *max
+      (
+            (k_&eSum)
+          - mag(k_ & U_)
+          / (mag(U_)+uSmall)
+        ,
+            kSmall
+       )
+    );
+    return kT;
 }
 
 
@@ -490,28 +504,49 @@ Foam::RASModels::SATFMdispersedModel::epsilon() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return Ceps_*pow(k(),3.0/2.0)/lm_;
+    return Ceps_*pow(k_&eSum,3.0/2.0)/lm_;
 }
 
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::R() const
 {
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
+    if (!anIsoTropicNut_) {
+        return tmp<volSymmTensorField>
         (
-            IOobject
+            new volSymmTensorField
             (
-                IOobject::groupName("R", U_.group()),
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-           2.0 * pos(alpha_ - residualAlpha_) * alpha_ * symm(R1_)
-        )
-    );
+                IOobject
+                (
+                    IOobject::groupName("R", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * symm(R1_)
+              - (nut_)*dev(twoSymm(fvc::grad(U_)))
+              - ((lambda_)*fvc::div(phi_))
+               *dimensioned<symmTensor>("I", dimless, symmTensor::I)
+            )
+        );
+    } else {
+        return tmp<volSymmTensorField>
+        (
+            new volSymmTensorField
+            (
+                IOobject
+                (
+                    IOobject::groupName("R", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * symm(R1_)
+            )
+        );
+    }
 }
 
 
@@ -566,21 +601,42 @@ Foam::RASModels::SATFMdispersedModel::pPrimef() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::devRhoReff() const
 {
-    return tmp<volSymmTensorField>
-    (
-        new volSymmTensorField
+    if (!anIsoTropicNut_) {
+        return tmp<volSymmTensorField>
         (
-            IOobject
+            new volSymmTensorField
             (
-                IOobject::groupName("devRhoReff", U_.group()),
-                runTime_.timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            2.0 * alpha_ * dev(symm(R1_))
-        )
-    );
+                IOobject
+                (
+                    IOobject::groupName("devRhoReff", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * rho_ * symm(R1_)
+              - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
+              - ((rho_*lambda_)*fvc::div(phi_))
+               *dimensioned<symmTensor>("I", dimless, symmTensor::I)
+            )
+        );
+    } else {
+        return tmp<volSymmTensorField>
+        (
+            new volSymmTensorField
+            (
+                IOobject
+                (
+                    IOobject::groupName("devRhoReff", U_.group()),
+                    runTime_.timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                2.0 * alpha_ * rho_ * symm(R1_)
+            )
+        );
+    }
 }
 
 
@@ -590,25 +646,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)*
@@ -617,17 +654,15 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvc::div
             (
                 (rho_*nut_)*dev2(T(fvc::grad(U)))
+              + ((rho_*lambda_)*fvc::div(phi_))
+               *dimensioned<symmTensor>("I", dimless, symmTensor::I)
             )
           + fvc::div
             (
                  2.0
                * alpha_
                * rho_
-               * (
-                     (R1_&&(eX*eX))*(eX*eX)
-                   + (R1_&&(eY*eY))*(eY*eY)
-                   + (R1_&&(eZ*eZ))*(eZ*eZ)
-                 )
+               * R1_
             )
         );
     } else {
@@ -644,9 +679,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * (
-                     R1_
-                 )
+               * R1_
             )
           + fvc::laplacian(rho_*(nut_-nuFric_), U)
         );
@@ -905,7 +938,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField betaA = beta/(rho);
     beta *= alpha;
     // compute total k
-    volScalarField km(k());
+    volScalarField km(k_&eSum);
     km.max(kSmall.value());
     
     
@@ -939,6 +972,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
     deltaF_.max(lSmall.value());
     
+    // compute nut
+    nut_ = alpha*sqrt(km)*lm_;
     if (dynamicAdjustment_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1057,7 +1092,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Set Ceps
         // dynamic procedure for Ceps
         /*
-        volScalarField LijEps = alpha*(nut_-nuFric_)*(magSqrDf - magSqr(Df));
+        volScalarField LijEps = alpha*(nut_)*(magSqrDf - magSqr(Df));
         volScalarField MijEps = pow(alpha*Lij,1.5)/(2.0*lm_);
         volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
@@ -1106,7 +1141,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
-            R1t -= (nut_-nuFric_)*dev(gradU + gradU.T());
+            R1t -= 0.5*nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stres model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
@@ -1217,7 +1252,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     //- compute variance of solids volume fraction
     // update km
-    km = k();
+    km = k_&eSum;
     km.max(kSmall.value());
     
     // compute fields for transport equation for phiP2
@@ -1322,7 +1357,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
-    nut_ = alpha*sqrt(km)*lm_;
+    // use k() for nut in stress tensor
+    nut_ = alpha*sqrt(k())*lm_;
+    
+    volScalarField kl(km - k());
+    kl.max(0);
+    lambda_ = 0*alpha*sqrt(kl)*lm_;
+    
     R1_.correctBoundaryConditions();
     
     // Frictional pressure
@@ -1346,23 +1387,31 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         //strain-rate fluctuations --> Srivastrava (2003)
         dev(D)// + sqrt(km)/lm_*symmTensor::I
     );
-    
+
     // BCs for nut_
-    /*
     const fvPatchList& patches = mesh_.boundary();
     volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
-    nutT_ = nut_;
-    nutT_.max(SMALL);
-    nutT_.correctBoundaryConditions();
-    volScalarField::Boundary& nutTBf = nutT_.boundaryFieldRef();
     
-    forAll(patches, patchi)
-    {
-        if (patches[patchi].type() == "wall") {
-            nutBf[patchi] = nutTBf[patchi];
+    forAll(patches, patchi) {
+        const fvPatch& curPatch = patches[patchi];
+
+        if (isA<wallFvPatch>(curPatch)) {
+            scalarField& nutw = nutBf[patchi];
+            const vectorField& faceAreas
+                = mesh_.Sf().boundaryField()[patchi];
+            const scalarField& magFaceAreas
+                = mesh_.magSf().boundaryField()[patchi];
+            
+            forAll(curPatch, facei) {
+                label celli = curPatch.faceCells()[facei];
+                nutw[facei] = Cmu_[celli]
+                             *deltaF_[celli]
+                             *mag(k_[celli]&faceAreas[facei])
+                             /magFaceAreas[facei];
+            }
         }
     }
-    */
+
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     nuFric_ = min(nuFric_, maxNut_ - nut_);

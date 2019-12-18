@@ -56,6 +56,7 @@ SourceFiles
 // h-files for LES filters
 #include "LESfilter.H"
 #include "simpleFilter.H"
+#include "wallFvPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -192,8 +193,8 @@ class SATFMdispersedModel
             //- mixing length
             volScalarField lm_;
     
-            //- temp nut
-            volScalarField nutT_;
+            //- bulk viscosity
+            volScalarField lambda_;    
     
             //- Reynolds stress tensor
             volTensorField R1_;
