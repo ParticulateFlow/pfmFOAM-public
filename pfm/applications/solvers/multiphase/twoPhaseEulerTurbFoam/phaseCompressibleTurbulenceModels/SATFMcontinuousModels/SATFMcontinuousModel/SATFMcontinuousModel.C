@@ -890,6 +890,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
+        // wall treatment for xiPhiG
+        const fvPatchList& patches = mesh_.boundary();
+        
+        forAll(patches, patchi) {
+            const fvPatch& curPatch = patches[patchi];
+
+            if (isA<wallFvPatch>(curPatch)) {
+                
+                forAll(curPatch, facei) {
+                    label celli = curPatch.faceCells()[facei];
+                    xiPhiG_[celli] = -uSlip[celli]/(mag(uSlip[celli])+SMALL);
+                }
+            }
+        }
         
         // compute mixing length dynamically
         /*

@@ -1049,16 +1049,22 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
         volScalarField xiGSnumP(mag(xiGSnum*xiGSden));
         
-        //set xiGSnumP to 0 at boundaries
+        // wall treatment for xiPhiG and xiGS
         const fvPatchList& patches = mesh_.boundary();
-
         volScalarField::Boundary& xiGSnumPBf = xiGSnumP.boundaryFieldRef();
+        
+        forAll(patches, patchi) {
+            const fvPatch& curPatch = patches[patchi];
 
-        forAll(patches, patchi)
-        {
-            if (!patches[patchi].coupled())
-            {
-                xiGSnumPBf[patchi] *= 0.0;
+            if (isA<wallFvPatch>(curPatch)) {
+                scalarField& xiGSnumPw = xiGSnumPBf[patchi];
+                
+                forAll(curPatch, facei) {
+                    label celli = curPatch.faceCells()[facei];
+                    xiGSnumPw[facei] = 0;
+                    xiPhiS_[celli]   = -gradAlpha[celli]
+                        /(mag(gradAlpha[celli])+SMALL);
+                }
             }
         }
 
