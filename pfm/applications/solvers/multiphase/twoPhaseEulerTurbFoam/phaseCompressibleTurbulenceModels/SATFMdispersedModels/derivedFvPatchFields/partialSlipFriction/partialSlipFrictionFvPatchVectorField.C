@@ -230,7 +230,7 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
         (
             min
             (
-                (pfW+2.0*alphap*rhop*kpn)*muW
+                (pfW+2.0*alphap*rhop*kpn)*muW_
                /max(Utc*(muEffp)*patch().deltaCoeffs(),scalar(1e-10)),
                 scalar(1)
             ),
