@@ -449,6 +449,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
+                2.0 * alpha_ * symm(R2_)
               - (nuEff())*(twoSymm(fvc::grad(U_)))
               - ((lambda_)*fvc::div(phi_))
                *dimensioned<symmTensor>("I", dimless, symmTensor::I)
@@ -490,6 +491,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
+                2.0 * alpha_ * rho_ * symm(R2_)
               - rho_*(nuEff())*dev(twoSymm(fvc::grad(U_)))
               - ((rho_*lambda_)*fvc::div(phi_))
                *dimensioned<symmTensor>("I", dimless, symmTensor::I)
@@ -515,6 +517,13 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
               + ((rho_*lambda_)*fvc::div(phi_))
                *dimensioned<symmTensor>("I", dimless, symmTensor::I)
             )
+         + fvc::div
+           (
+                2.0
+              * alpha_
+              * rho_
+              * R2_
+           )
         );
     } else {
         return
@@ -853,8 +862,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                       );
         volScalarField tmpA = alpha1fP2-sqr(alpha1f);
         tmpA.max(ROOTVSMALL);
-        // volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
-        // tmpK.max(ROOTVSMALL);
+        volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
+        tmpK.max(ROOTVSMALL);
+        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alpha2f
@@ -887,7 +897,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         ((xiPhiGNom&eZ))/sqrt(tmpDenZ)
                     );
-        // xiPhiG_ = sqrt(3.0)*filterS(xiPhiGNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        */
+        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
 
         // wall treatment for xiPhiG
         const fvPatchList& patches = mesh_.boundary();
@@ -1129,7 +1140,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
-    volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(k())/lm_;
+    volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(km)/lm_;
     volScalarField denom  = mag(divU) + dissPhiP2;
     denom.max(SMALL);
     volScalarField xiKgradAlpha = - (
@@ -1196,6 +1207,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       );
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
+    
+    // use k() for nut in stress tensor
+    nut_ = alpha*sqrt(k())*lm_;
+    // Limit viscosity
+    nut_.min(maxNut_);
+    nut_.correctBoundaryConditions();
+    
+    // volScalarField kl(km - k());
+    // kl.max(0);
+    lambda_ = 0*alpha*sqrt(k())*lm_;
+    
+
 
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
@@ -1266,19 +1289,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     } else {
-        R2_  = zeroR;
+        R2_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);;
     }
     
-    // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(k())*lm_;
-    
-    volScalarField kl(km - k());
-    kl.max(0);
-    lambda_ = 0*alpha*sqrt(kl)*lm_;
-    
-    // Limit viscosity
-    nut_.min(maxNut_);
-    nut_.correctBoundaryConditions();
     R2_.correctBoundaryConditions();
     
 

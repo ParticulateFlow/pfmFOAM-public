@@ -991,9 +991,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
         tmpA.max(ROOTVSMALL);
-        //volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
-        //tmpK.max(ROOTVSMALL);
-
+        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
+        tmpK.max(ROOTVSMALL);
+        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -1026,8 +1026,31 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         ((xiPhiSNom&eZ))/sqrt(tmpDenZ)
                     );
+        */
+        xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
         
-        // xiPhiS_ = sqrt(3.0)*filterS(xiPhiSNom*sqrt(tmpA*tmpK))/filterS(tmpA*tmpK);
+        // wall treatment for xiPhiS
+        const fvPatchList& patches = mesh_.boundary();
+        volVectorField::Boundary& xiPhiSBf = xiPhiS_.boundaryFieldRef();
+        
+        forAll(patches, patchi) {
+            const fvPatch& curPatch = patches[patchi];
+
+            if (isA<wallFvPatch>(curPatch)) {
+                vectorField& xiPhiSw = xiPhiSBf[patchi];
+                
+                forAll(curPatch, facei) {
+                    label celli = curPatch.faceCells()[facei];
+                    xiPhiSw[facei]   = -xiGSScalar_.value()
+                                        *uSlip[celli]
+                                        /(mag(uSlip[celli])+SMALL);
+                }
+            }
+        }
+        
+        // limit xiPhiS_
+        xiPhiS_ = filterS(xiPhiS_);
+        boundxiPhiS(xiPhiS_);
 
         
         // compute triple correlation
@@ -1045,40 +1068,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                * sqrt(max(aUU,kSmall));
-    
-        volScalarField xiGSnumP(mag(xiGSnum*xiGSden));
-        
-        // wall treatment for xiPhiG and xiGS
-        const fvPatchList& patches = mesh_.boundary();
-        volScalarField::Boundary& xiGSnumPBf = xiGSnumP.boundaryFieldRef();
-        volVectorField::Boundary& xiPhiSBf = xiPhiS_.boundaryFieldRef();
-        
-        forAll(patches, patchi) {
-            const fvPatch& curPatch = patches[patchi];
 
-            if (isA<wallFvPatch>(curPatch)) {
-                scalarField& xiGSnumPw = xiGSnumPBf[patchi];
-                vectorField& xiPhiSw = xiPhiSBf[patchi];
-                
-                forAll(curPatch, facei) {
-                    label celli = curPatch.faceCells()[facei];
-                    xiGSnumPw[facei] = 0;
-                    xiPhiSw[facei]   = -xiGSScalar_.value()
-                                        *uSlip[celli]
-                                        /(mag(uSlip[celli])+SMALL);
-                }
-            }
-        }
-
-        xiGS_ = filterS(xiGSnumP)/filterS(sqr(xiGSden));
+        xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden));
 
         // smooth and regularize xiGS_ (xiGS_ is positive)
         xiGS_.max(0);
         xiGS_.min(0.99);
-        
-        // limit xiPhiS_
-        xiPhiS_ = filterS(xiPhiS_);
-        boundxiPhiS(xiPhiS_);
     
         // compute mixing length dynamically
         /*
@@ -1269,7 +1264,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
-    volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(k())/lm_;
+    volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/lm_;
     volScalarField denom = mag(divU) + dissPhiP2;
     denom.max(SMALL);
     volScalarField xiKgradAlpha = (
@@ -1336,6 +1331,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
+    // use k() for nut in stress tensor
+    nut_ = alpha*sqrt(k())*lm_;
+    
+    volScalarField kl(km - k());
+    kl.max(0);
+    lambda_ = 0*alpha*sqrt(kl)*lm_;
 
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
@@ -1369,12 +1370,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
-    // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(k())*lm_;
-    
-    volScalarField kl(km - k());
-    kl.max(0);
-    lambda_ = 0*alpha*sqrt(kl)*lm_;
     
     R1_.correctBoundaryConditions();
     
