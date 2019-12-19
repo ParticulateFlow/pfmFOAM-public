@@ -1028,20 +1028,41 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     );
         */
         xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
+                
+        // compute triple correlation
+        volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
+                                   - alphaf*filter_(magSqr(Uc_))
+                                   - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
+        volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
+                                   * max(filter_(magSqr(Uc_)) - 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
+        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
+        // smooth and limit xiPhiGG_
+        xiPhiGG_.max(-0.99);
+        xiPhiGG_.min(0.99);
+        
+        // compute correlation coefficient between gas phase and solid phase velocity
+        volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
+        volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
+                                * sqrt(max(aUU,kSmall));
+
+        xiGS_ = xiGSnum/xiGSden;
         
         // wall treatment for xiPhiS
         const fvPatchList& patches = mesh_.boundary();
+        volScalarField::Boundary& xiGSBf = xiGS_.boundaryFieldRef();
         volVectorField::Boundary& xiPhiSBf = xiPhiS_.boundaryFieldRef();
         
         forAll(patches, patchi) {
             const fvPatch& curPatch = patches[patchi];
 
             if (isA<wallFvPatch>(curPatch)) {
+                scalarField& xiGSw   = xiGSBf[patchi];
                 vectorField& xiPhiSw = xiPhiSBf[patchi];
                 
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
-                    xiPhiSw[facei]   = -xiGSScalar_.value()
+                    xiGSw[facei]     = -xiGSScalar_.value();
+                    xiPhiSw[facei]   = -xiPhiSolidScalar_.value()
                                         *uSlip[celli]
                                         /(mag(uSlip[celli])+SMALL);
                 }
@@ -1051,27 +1072,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // limit xiPhiS_
         xiPhiS_ = filterS(xiPhiS_);
         boundxiPhiS(xiPhiS_);
-
-        
-        // compute triple correlation
-        volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
-                                   - alphaf*filter_(magSqr(Uc_))
-                                   - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
-        volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
-                                   * max(filter_(magSqr(Uc_))- 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
-        // smooth and limit xiPhiGG_
-        xiPhiGG_.max(-0.99);
-        xiPhiGG_.min(0.99);
-        
-        // compute correlation coefficient between gas phase and solid phase velocity
-        volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
-        volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
-                               * sqrt(max(aUU,kSmall));
-
-        xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden));
-
+         
         // smooth and regularize xiGS_ (xiGS_ is positive)
+        xiGS_ = filterS(xiGS_);
         xiGS_.max(0);
         xiGS_.min(0.99);
     
