@@ -464,20 +464,21 @@ Foam::RASModels::SATFMdispersedModel::k() const
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     
-    volScalarField kT
+    tmp<volScalarField> kT
     (
         
        1.5
-      *max
-      (
-            (k_&eSum)
-          - mag(k_ & U_)
-          / (mag(U_)+uSmall)
-        ,
-            kSmall
-       )
-    );
-    kT.min(3.0*maxK_.value());
+      *min(
+           max
+          (
+                (k_&eSum)
+              - mag(k_ & U_)
+              / (mag(U_)+uSmall)
+            ,
+                kSmall
+           )
+      ,3.0*maxK_)
+     );
     return kT;
 }
 
@@ -650,7 +651,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)*
         (
-          - fvm::laplacian(rho_*nut_, U)
+          - fvm::laplacian(rho_*nuFric_, U)
           - fvc::div
            (
                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
@@ -662,7 +663,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * rho_
                * R1_
             )
-          + fvc::laplacian(rho_*(nut_-nuFric_), U)
         );
     }
 }

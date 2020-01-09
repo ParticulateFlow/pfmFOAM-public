@@ -372,20 +372,21 @@ Foam::RASModels::SATFMcontinuousModel::k() const
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     
-    volScalarField kT
+    tmp<volScalarField> kT
     (
         
        1.5
-      *max
-      (
-            (k_&eSum)
-          - mag(k_ & U_)
-          / (mag(U_)+uSmall)
-        ,
-            kSmall
-       )
-    );
-    kT.min(3.0*maxK_.value());
+      *min(
+           max
+          (
+                (k_&eSum)
+              - mag(k_ & U_)
+              / (mag(U_)+uSmall)
+            ,
+                kSmall
+           )
+      ,3.0*maxK_)
+     );
     return kT;
 }
 
