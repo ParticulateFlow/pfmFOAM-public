@@ -191,10 +191,7 @@ class SATFMdispersedModel
             volScalarField deltaF_;
     
             //- mixing length
-            volScalarField lm_;
-    
-            //- bulk viscosity
-            volScalarField lambda_;    
+            volScalarField lm_;   
     
             //- Reynolds stress tensor
             volTensorField R1_;

@@ -368,20 +368,6 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
     ),
 
-    lambda_
-    (
-        IOobject
-        (
-            IOobject::groupName("lambda", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0)
-    ),
-
     R1_
     (
         IOobject
@@ -478,7 +464,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     
-    tmp<volScalarField> kT
+    volScalarField kT
     (
         
        1.5
@@ -491,6 +477,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
             kSmall
        )
     );
+    kT.min(maxK_.value());
     return kT;
 }
 
@@ -526,8 +513,6 @@ Foam::RASModels::SATFMdispersedModel::R() const
                 ),
                 2.0 * alpha_ * symm(R1_)
               - (nut_)*dev(twoSymm(fvc::grad(U_)))
-              - ((lambda_)*fvc::div(phi_))
-               *dimensioned<symmTensor>("I", dimless, symmTensor::I)
             )
         );
     } else {
@@ -616,8 +601,6 @@ Foam::RASModels::SATFMdispersedModel::devRhoReff() const
                 ),
                 2.0 * alpha_ * rho_ * symm(R1_)
               - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
-              - ((rho_*lambda_)*fvc::div(phi_))
-               *dimensioned<symmTensor>("I", dimless, symmTensor::I)
             )
         );
     } else {
@@ -654,8 +637,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvc::div
             (
                 (rho_*nut_)*dev2(T(fvc::grad(U)))
-              + ((rho_*lambda_)*fvc::div(phi_))
-               *dimensioned<symmTensor>("I", dimless, symmTensor::I)
             )
           + fvc::div
             (
@@ -1256,8 +1237,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
     }
     
-    // limit k before computing Reynolds-stresses
-    boundNormalStress(k_);
+    // correct BCs
     k_.correctBoundaryConditions();
 
     //- compute variance of solids volume fraction
@@ -1337,10 +1317,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // use k() for nut in stress tensor
     nut_ = alpha*sqrt(k())*lm_;
     
-    volScalarField kl(km - k());
-    kl.max(0);
-    lambda_ = 0*alpha*sqrt(kl)*lm_;
-
+    volVectorField kt(k_);
+    // limit k before computing Reynolds-stresses
+    boundNormalStress(kt);
+    
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1363,15 +1343,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
                         R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
-                                *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                                *sqrt(kt[cellI].component(i)*kt[cellI].component(j));
                     } else {
-                        R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
+                        R1_[cellI].component(j+i*3) =  sqrt(kt[cellI].component(i)*kt[cellI].component(j));
                     }
                 }
             }
         }
     } else {
-        R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+        R1_  = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);
     }
     
     R1_.correctBoundaryConditions();
@@ -1416,7 +1396,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 label celli = curPatch.faceCells()[facei];
                 nutw[facei] = Cmu_[celli]
                              *deltaF_[celli]
-                             *mag(k_[celli]&faceAreas[facei])
+                             *mag(kt[celli]&faceAreas[facei])
                              /magFaceAreas[facei];
             }
         }
