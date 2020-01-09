@@ -385,7 +385,7 @@ Foam::RASModels::SATFMcontinuousModel::k() const
             kSmall
        )
     );
-    kT.min(maxK_.value());
+    kT.min(3.0*maxK_.value());
     return kT;
 }
 
@@ -1108,7 +1108,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     }
-    
+    k_.max
+    (
+        dimensionedVector
+        (
+            "zero",
+            k_.dimensions(),
+            vector
+            (
+                1e-7,
+                1e-7,
+                1e-7
+            )
+        )
+    );
     // correct BCs
     k_.correctBoundaryConditions();
 
