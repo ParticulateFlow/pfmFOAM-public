@@ -1250,6 +1250,20 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             )
         )
     );
+    k_.min
+    (
+        dimensionedVector
+        (
+            "zero",
+            k_.dimensions(),
+            vector
+            (
+                1e2,
+                1e2,
+                1e2
+            )
+        )
+    );
     // correct BCs
     k_.correctBoundaryConditions();
 
