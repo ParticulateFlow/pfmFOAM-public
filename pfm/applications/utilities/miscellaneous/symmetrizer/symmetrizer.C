@@ -25,10 +25,10 @@ License
 Application
     symmetrizer
 
-
 Description
-    Read time series and extend it by mirrored fields if geometry possesses
-    the same symmetry
+    Read time series and symmetrize its fields (either all times or latest time)
+    with respect to a given plane. Needs to be run in serial mode so that all cells
+    can be found. Works only if geometry is reflection-invariant wrt the specified plane.
 
 \*---------------------------------------------------------------------------*/
 
