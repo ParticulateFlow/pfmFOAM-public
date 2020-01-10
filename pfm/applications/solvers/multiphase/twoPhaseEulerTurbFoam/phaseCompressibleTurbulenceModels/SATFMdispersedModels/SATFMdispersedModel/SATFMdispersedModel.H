@@ -143,6 +143,9 @@ class SATFMdispersedModel
     
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
+    
+            //- terminal settling velocity
+            dimensionedScalar ut_;
 
 
         // SA-TFM fields
@@ -216,6 +219,7 @@ protected:
     
     //- bound k
     void boundNormalStress(volVectorField& k) const;
+    void boundStress(volTensorField& R) const;
     void boundxiPhiS(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
     void boundGradU(volTensorField& S) const;

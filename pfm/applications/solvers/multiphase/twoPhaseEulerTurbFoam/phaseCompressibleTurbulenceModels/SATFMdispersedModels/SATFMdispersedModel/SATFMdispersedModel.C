@@ -154,6 +154,13 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("maxK",25.0)
     ),
 
+    ut_
+    (
+        "ut",
+        dimensionSet(0,1,-1,0,0),
+        coeffDict_.lookupOrDefault<scalar>("ut",1.0)
+    ),
+
     k_
     (
         IOobject
@@ -441,6 +448,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         sigma_.readIfPresent(coeffDict());
         gN_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
+        ut_.readIfPresent(coeffDict());
         frictionalStressModel_->read();
 
         return true;
@@ -630,6 +638,9 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    volTensorField R1(R1_);
+    boundStress(R1);
+    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)*
@@ -644,7 +655,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * R1_
+               * R1
             )
         );
     } else {
@@ -661,10 +672,49 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * R1_
+               * R1
             )
         );
     }
+}
+
+void Foam::RASModels::SATFMdispersedModel::boundStress
+(
+    volTensorField& R
+) const
+{
+    scalar RMin = -ut_.value()*ut_.value();
+    scalar RMax = -RMin;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  0, 0.75*RMin, 0.75*RMin,
+                  0.75*RMin, 0, 0.75*RMin,
+                  0.75*RMin, 0.75*RMin, 0
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  RMax, 0.75*RMax, 0.75*RMax,
+                  0.75*RMax, RMax, 0.75*RMax,
+                  0.75*RMax, 0.75*RMax, RMax
+            )
+        )
+    );
 }
 
 void Foam::RASModels::SATFMdispersedModel::boundNormalStress
@@ -1236,34 +1286,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         
     }
-    k_.max
-    (
-        dimensionedVector
-        (
-            "zero",
-            k_.dimensions(),
-            vector
-            (
-                1e-7,
-                1e-7,
-                1e-7
-            )
-        )
-    );
-    k_.min
-    (
-        dimensionedVector
-        (
-            "zero",
-            k_.dimensions(),
-            vector
-            (
-                1e2,
-                1e2,
-                1e2
-            )
-        )
-    );
+    // limit k_
+    boundNormalStress(k_);
     // correct BCs
     k_.correctBoundaryConditions();
 
@@ -1343,11 +1367,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // use k() for nut in stress tensor
     nut_ = alpha*sqrt(k())*lm_;
-    
-    volVectorField kt(k_);
-    // limit k before computing Reynolds-stresses
-    boundNormalStress(kt);
-    
+       
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1370,15 +1390,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
                         R1_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
-                                *sqrt(kt[cellI].component(i)*kt[cellI].component(j));
+                                *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
-                        R1_[cellI].component(j+i*3) =  sqrt(kt[cellI].component(i)*kt[cellI].component(j));
+                        R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     }
                 }
             }
         }
     } else {
-        R1_  = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);
+        R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
     
     R1_.correctBoundaryConditions();
@@ -1423,7 +1443,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 label celli = curPatch.faceCells()[facei];
                 nutw[facei] = Cmu_[celli]
                              *deltaF_[celli]
-                             *mag(kt[celli]&faceAreas[facei])
+                             *mag(k_[celli]&faceAreas[facei])
                              /magFaceAreas[facei];
             }
         }

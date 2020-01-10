@@ -1109,34 +1109,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     }
-    k_.max
-    (
-        dimensionedVector
-        (
-            "zero",
-            k_.dimensions(),
-            vector
-            (
-                1e-7,
-                1e-7,
-                1e-7
-            )
-        )
-    );
-    k_.min
-    (
-        dimensionedVector
-        (
-            "zero",
-            k_.dimensions(),
-            vector
-            (
-                1e2,
-                1e2,
-                1e2
-            )
-        )
-    );
+    // limit k
+    boundNormalStress(k_);
     // correct BCs
     k_.correctBoundaryConditions();
 
@@ -1221,11 +1195,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // Limit viscosity
     nut_.min(maxNut_);
     nut_.correctBoundaryConditions();
-    
-    volVectorField kt(k_);
-    // limit k before computing Reynolds-stresses
-    boundNormalStress(kt);
-    
+       
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1249,9 +1219,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 for (int j=0; j<3; j++) {
                     if (i!=j) {
                         R2_[cellI].component(j+i*3) =  (xiUU_[cellI].component(j+i*3))
-                                *sqrt(kt[cellI].component(i)*kt[cellI].component(j));
+                                *sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     } else {
-                        R2_[cellI].component(j+i*3) =  sqrt(kt[cellI].component(i)*kt[cellI].component(j));
+                        R2_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     }
                 }
             }
@@ -1295,7 +1265,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     } else {
-        R2_  = (kt&eX)*(eX*eX) + (kt&eY)*(eY*eY) + (kt&eZ)*(eZ*eZ);;
+        R2_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);;
     }
     
     R2_.correctBoundaryConditions();
