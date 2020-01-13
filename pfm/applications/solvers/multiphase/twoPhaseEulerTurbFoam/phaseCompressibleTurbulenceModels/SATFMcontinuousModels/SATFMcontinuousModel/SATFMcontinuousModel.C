@@ -1182,10 +1182,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // limti alphaP2Mean_
     volScalarField alphaM  = alphaMax_ - alpha1;
     alphaM.max(0.0);
-    volScalarField alphaL2 = sqr(min(alpha1,alphaM));
+    volScalarField alphaL2 = alpha1*alphaM;//sqr(min(alpha1,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         0.999*alphaMax_*alphaMax_//0.99*alphaL2
+                         0.999*alphaL2
                       );
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
