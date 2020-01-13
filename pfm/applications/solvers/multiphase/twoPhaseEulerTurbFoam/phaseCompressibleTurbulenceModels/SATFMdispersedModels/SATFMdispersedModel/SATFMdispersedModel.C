@@ -1366,7 +1366,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(k())*lm_;
+    nut_ = alpha*sqrt(min(k(),sqr(ut_)))*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
