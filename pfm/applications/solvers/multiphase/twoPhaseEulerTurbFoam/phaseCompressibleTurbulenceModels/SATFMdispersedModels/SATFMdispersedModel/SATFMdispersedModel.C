@@ -1357,7 +1357,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // limit alphaP2Mean_
     volScalarField alphaM = alphaMax_ - alpha;
     alphaM.max(0.0);
-    volScalarField alphaL2 = alpha*alphaM;//sqr(min(alpha1,alphaM));
+    volScalarField alphaL2 = alpha*alphaM;//sqr(min(alpha,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
                          0.999*alphaL2
