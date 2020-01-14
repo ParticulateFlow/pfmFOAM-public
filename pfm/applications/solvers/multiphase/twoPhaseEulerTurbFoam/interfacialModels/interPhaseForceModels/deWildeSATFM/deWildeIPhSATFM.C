@@ -113,10 +113,17 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
     (
         alpha1*rho1 + alpha2*rho2
     );
+    
+    volScalarField oneMinMg
+    (
+        alpha2*(scalar(1.0) - alpha2*rho2/rho)
+    );
+    
+    oneMinMg.max(0);
 
     volScalarField Cp
     (
-        min(alphaP2Mean*rho1/rho,0.99*sqr(alpha2))
+        min(alphaP2Mean*rho1/rho,oneMinMg)
     );
 
     return
