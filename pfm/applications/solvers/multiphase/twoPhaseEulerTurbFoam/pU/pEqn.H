@@ -140,7 +140,7 @@ while (pimple.correct())
        *(
            ghSnGradRho
          - alphaf2*fvc::interpolate(rho1 - rho2)*(g & mesh.Sf())
-         + CpIPhf*snGradP / max(alphaf1,phase1.residualAlpha())
+ //        + CpIPhf*snGradP / max(alphaf1,phase1.residualAlpha())
         )
     );
 
@@ -150,7 +150,7 @@ while (pimple.correct())
        *(
            ghSnGradRho
          - alphaf1*fvc::interpolate(rho2 - rho1)*(g & mesh.Sf())
-         - CpIPhf*snGradP/alphaf2
+ //        - CpIPhf*snGradP/alphaf2
         )
     );
 

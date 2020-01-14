@@ -57,6 +57,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
               - fvm::Sp(fvc::div(phi1), U1)
               - DDtU2
             )
+          // interphase force
+          - CpIPh*fvc::grad(p)
           // anisotropic part of drift velocity
           + KdUdriftE
           // own gravity for periodic box
@@ -137,6 +139,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
               - fvm::Sp(fvc::div(phi2), U2)
               - DDtU1
             )
+          // interphase force
+          + CpIPh*fvc::grad(p)
           // anisotropic part of drift velocity
           - KdUdriftE
           // own gravity for periodic box
