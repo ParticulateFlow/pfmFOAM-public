@@ -1022,9 +1022,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
         tmpA.max(ROOTVSMALL);
-        volScalarField tmpK = filter_(alpha*magSqr(U)) / alphaf - magSqr(Uf);
-        tmpK.max(ROOTVSMALL);
-        /*
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -1057,8 +1054,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         ((xiPhiSNom&eZ))/sqrt(tmpDenZ)
                     );
-        */
-        xiPhiS_ = sqrt(3.0)*xiPhiSNom/sqrt(tmpA*tmpK);
                 
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))

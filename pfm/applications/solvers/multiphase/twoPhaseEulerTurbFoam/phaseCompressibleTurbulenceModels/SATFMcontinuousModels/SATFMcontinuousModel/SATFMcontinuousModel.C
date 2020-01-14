@@ -844,9 +844,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                       );
         volScalarField tmpA = alpha1fP2-sqr(alpha1f);
         tmpA.max(ROOTVSMALL);
-        volScalarField tmpK = filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf);
-        tmpK.max(ROOTVSMALL);
-        /*
+
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alpha2f
@@ -879,8 +877,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         ((xiPhiGNom&eZ))/sqrt(tmpDenZ)
                     );
-        */
-        xiPhiG_ = sqrt(3.0)*xiPhiGNom/sqrt(tmpA*tmpK);
 
         // wall treatment for xiPhiG
         const fvPatchList& patches = mesh_.boundary();
