@@ -500,7 +500,7 @@ Foam::RASModels::SATFMdispersedModel::epsilon() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return Ceps_*pow(k_&eSum,3.0/2.0)/lm_;
+    return Ceps_*pow(k(),3.0/2.0)/lm_;
 }
 
 
@@ -1350,12 +1350,20 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        / sqr(denom);
     }
     // limit alphaP2Mean_
-    volScalarField alphaM = alphaMax_ - alpha;
-    alphaM.max(0.0);
-    volScalarField alphaL2 = alpha*alphaM;//sqr(min(alpha,alphaM));
+    volScalarField alpha1(alpha);
+    alpha1.min(alphaMax_.value());
+    volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
+    volScalarField alphaL2 = sqr(alpha1)
+                            *(scalar(1.0) + cbrtPhiPhiM)
+                            /(
+                                 scalar(1.0)
+                               + (1.0/3.0)
+                                *cbrtPhiPhiM
+                                /(scalar(1.0) - cbrtPhiPhiM)
+                             );//sqr(min(alpha1,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         0.999*alphaL2
+                         alphaL2
                       );
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
