@@ -1176,7 +1176,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        / sqr(denom);
     }
     // limit alphaP2Mean_
-    alpha1.min(alphaMax_.value());
+    alpha1.min(0.99*alphaMax_.value());
     volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
     volScalarField alphaL2 = sqr(alpha1)
                             *(scalar(1.0) + cbrtPhiPhiM)
