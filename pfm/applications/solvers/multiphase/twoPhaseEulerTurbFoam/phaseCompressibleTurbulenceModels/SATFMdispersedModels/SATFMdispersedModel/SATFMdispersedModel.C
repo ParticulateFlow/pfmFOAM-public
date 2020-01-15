@@ -877,7 +877,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, 1.e-7));
+    volScalarField alpha(min(max(alpha_, 1.e-7),alphaMax_));
     volScalarField alpha2 = 1.0 - alpha;
     const volScalarField& rho = phase_.rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
@@ -1297,10 +1297,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField denom = mag(divU) + dissPhiP2;
     denom.max(SMALL);
     volScalarField xiKgradAlpha = (
-                                 ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
-                               + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
-                               + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
-                               );
+                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
+                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
+                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
+                                   )
+                                 + 2.0
+                                   *beta
+                                   *CphiS_
+                                   *mag(
+                                        xiGS_*sqrt((kC_&eSum)*(k_&eSum))
+                                      - sqrt(k_&k_)
+                                    )/(rho*sqrt(k_&k_));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     if (!equilibriumPhiP2_) {
@@ -1340,6 +1347,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp(divU,alphaP2Mean_)
           // production/dissipation
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
+          - fvm::SuSp(
+           - 2.0
+           *beta
+           *CphiS_
+           *(
+                xiGS_*sqrt((kC_&eSum)*(k_&eSum))
+              - sqrt(k_&k_)
+            )/(rho*sqrt(k_&k_)*sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8)))
+            ,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();
@@ -1352,8 +1368,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // limit alphaP2Mean_
     volScalarField alpha1(alpha);
     alpha1.min(0.99*alphaMax_.value());
-    volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
-    volScalarField alphaL2 = sqr(alpha1)
+    volScalarField alphaM(alphaMax_-alpha);
+    alphaM.max(0);
+    volScalarField cbrtPhiPhiM(cbrt(alpha1/(alphaMax_)));
+    volScalarField alphaL2 = alpha1*alphaM
                             *(scalar(1.0) + cbrtPhiPhiM)
                             /(
                                  scalar(1.0)
@@ -1363,7 +1381,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                              );//sqr(min(alpha1,alphaM));
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         alphaL2
+                         0.99*alphaL2
                       );
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
