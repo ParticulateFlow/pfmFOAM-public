@@ -1304,12 +1304,26 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                  + 2.0
                                    *beta
                                    *CphiS_
+                                   *sqrt(alpha*max(alphaMax_-alpha,0.))
                                    *mag(
-                                        xiGS_*sqrt((kC_&eSum)*(k_&eSum))
-                                      - sqrt(k_&k_)
-                                    )/(rho*sqrt(k_&k_));
+                                        xiGS_*sqrt((kC_&eSum)*km)
+                                      - km
+                                    )/(rho*alpha*km);
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
+    volScalarField alpha1(alpha);
+    alpha1.min(0.99*alphaMax_.value());
+    volScalarField alphaM(alphaMax_-alpha);
+    alphaM.max(0);
+    volScalarField cbrtPhiPhiM(cbrt(alpha1/(alphaMax_)));
+    volScalarField alphaL2 = alpha1*alphaM
+                            *(scalar(1.0) + cbrtPhiPhiM)
+                            /(
+                                 scalar(1.0)
+                               + (1.0/3.0)
+                                *cbrtPhiPhiM
+                                /(scalar(1.0) - cbrtPhiPhiM)
+                             );//sqr(min(alpha1,alphaM));
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
@@ -1347,15 +1361,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp(divU,alphaP2Mean_)
           // production/dissipation
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
-          - fvm::SuSp(
-           - 2.0
+          + 2.0
            *beta
            *CphiS_
-           *(
-                xiGS_*sqrt((kC_&eSum)*(k_&eSum))
-              - sqrt(k_&k_)
-            )/(rho*sqrt(k_&k_)*sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8)))
-            ,alphaP2Mean_)
+           *sqrt(alpha*max(alphaMax_-alpha,0.))
+           *sqrt(alphaL2)
+           *mag(xiGS_*sqrt((kC_&eSum)*km) - km)
+           /(rho*alpha*km)
         );
 
         phiP2Eqn.relax();
@@ -1365,20 +1377,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        * sqr(xiKgradAlpha)
                        / sqr(denom);
     }
-    // limit alphaP2Mean_
-    volScalarField alpha1(alpha);
-    alpha1.min(0.99*alphaMax_.value());
-    volScalarField alphaM(alphaMax_-alpha);
-    alphaM.max(0);
-    volScalarField cbrtPhiPhiM(cbrt(alpha1/(alphaMax_)));
-    volScalarField alphaL2 = alpha1*alphaM
-                            *(scalar(1.0) + cbrtPhiPhiM)
-                            /(
-                                 scalar(1.0)
-                               + (1.0/3.0)
-                                *cbrtPhiPhiM
-                                /(scalar(1.0) - cbrtPhiPhiM)
-                             );//sqr(min(alpha1,alphaM));
+    // limit alphaP2Mean
     alphaP2Mean_ = min(
                          alphaP2Mean_,
                          0.99*alphaL2
