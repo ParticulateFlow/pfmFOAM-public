@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
                                    + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
                                 );
 */
-
+/*
                 volSymmTensorField SijdHat(filter_(dev(symm(gradU&gradU))));
                 volScalarField strainHat(pow3(magSqr(SijdHat))
                                     /sqr(
@@ -245,7 +245,8 @@ int main(int argc, char *argv[])
                 MijMijS.max(ROOTVSMALL);
               
                 Cst_ = (filterS_(LijS&MijS))/MijMijS;
-                
+                */
+                Cst_ = Csigma_/Cmu_;
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
