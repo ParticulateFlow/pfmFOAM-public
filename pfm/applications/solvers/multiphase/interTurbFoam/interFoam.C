@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
                 const volTensorField& gradU(tgradU());
                 volTensorField D(0.5*(gradU+T(gradU)));
                  // Dynamic adjustment of Cmu
+                /*
                 volScalarField Lij  = filter_(magSqr(U)) - magSqr(filter_(U));
                 Lij.max(0);
                 volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
@@ -170,7 +171,7 @@ int main(int argc, char *argv[])
                 CmuT.max(0.001);
                 
                 Cmu_ = sqrt(CmuT);
-                
+                */
                 //volScalarField nutSigmaCorr = -filterL_(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho);
                 volScalarField nutSigmaCorr = -sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho;
                 nutSigmaCorr.max(SMALL);
