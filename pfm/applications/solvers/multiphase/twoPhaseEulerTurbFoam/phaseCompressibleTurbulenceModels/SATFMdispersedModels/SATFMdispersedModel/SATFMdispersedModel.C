@@ -1303,8 +1303,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                  + 2.0
                                    *beta
-                                   *CphiS_
-                                   *mag(
+                                   //*CphiS_
+                                   *(
                                         xiGS_*sqrt((kC_&eSum)*km)
                                       - km
                                     )/(rho*km);
@@ -1315,7 +1315,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alphaM(alphaMax_-alpha);
     alphaM.max(0);
     volScalarField cbrtPhiPhiM(cbrt(alpha1/(alphaMax_)));
-    volScalarField alphaL2 = alpha1*alphaM
+    volScalarField alphaL2 = sqr(alpha1)//*alphaM
                             *(scalar(1.0) + cbrtPhiPhiM)
                             /(
                                  scalar(1.0)
