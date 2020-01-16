@@ -176,8 +176,15 @@ int main(int argc, char *argv[])
                 volScalarField nutSigmaCorr = -sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho;
                 nutSigmaCorr.max(SMALL);
                 
+                // standard
+                nutSigma_ =  sqr(Cmu_*deltaF_)
+                           * sqrt(
+                                     2.0*(dev(D)&&D)
+                                   + nutSigmaCorr
+                                );
                 
                 // WALE
+                /*
                 volSymmTensorField Sijd(dev(symm(gradU&gradU)));
                 volScalarField strain(pow3(magSqr(Sijd))
                                     /sqr(
@@ -196,6 +203,7 @@ int main(int argc, char *argv[])
                                      2.0*strain
                                    + nutSigmaCorr
                                 );
+                */
                 nutSigma_.correctBoundaryConditions();
                 // Limit nut
                 nutSigma_ = min(nutSigma_,1.0e5*nu);
