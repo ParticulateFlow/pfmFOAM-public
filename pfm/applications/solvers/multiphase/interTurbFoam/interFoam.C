@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
                 volScalarField MijMijS = filterS_(MijS&MijS);
                 MijMijS.max(ROOTVSMALL);
               
-                Cst_ = mag(filterS_(LijS&MijS))/MijMijS;
+                Cst_ = (filterS_(LijS&MijS))/MijMijS;
                 
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
                                              + Cst_*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.1);
-                corrSurfaceTensionForce_.min(100.0);
+                corrSurfaceTensionForce_.min(10.0);
                 turbulence->correct();
             }
         }
