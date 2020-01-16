@@ -1296,18 +1296,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/lm_;
     volScalarField denom = mag(divU) + dissPhiP2;
     denom.max(SMALL);
-    volScalarField xiKgradAlpha = -(
+    volScalarField xiKgradAlpha = (
                                          ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
-                                 + 2.0
-                                   *beta
-                                   //*CphiS_
-                                   *(
-                                        xiGS_*sqrt((kC_&eSum)*km)
-                                      - km
-                                    )/(rho*km);
+                                - beta
+                                  //*CphiS_
+                                  *(
+                                       xiGS_*sqrt((kC_&eSum)*km)
+                                     - km
+                                   )/(rho*km);
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
@@ -1360,18 +1359,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp(divU,alphaP2Mean_)
           // production/dissipation
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
-          + 2.0
-           *beta
-           *sqrt(alphaP2Mean_)
-           *(xiGS_*sqrt((kC_&eSum)*km) - km)
-           /(rho*km)
         );
 
         phiP2Eqn.relax();
         phiP2Eqn.solve();
     } else {
         alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)*pos(xiKgradAlpha)
+                       * sqr(xiKgradAlpha)*neg(xiKgradAlpha)
                        / sqr(denom);
     }
     // limit alphaP2Mean
