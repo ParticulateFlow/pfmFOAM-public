@@ -209,7 +209,7 @@ cellVolume.ref() = mesh.V();
 deltaF_ = pow(cellVolume,1.0/3.0);
 
 volScalarField wD = wallDist(mesh).y();
-deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,2.0*wD);
+deltaF_ = neg(wD)*deltaF_ + pos(wD)*min(deltaF_,wD);
 
 
 volScalarField corrSurfaceTensionForce_
