@@ -1303,7 +1303,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                 - beta
                                   *CphiS_
-                                  *mag(
+                                  *(
                                        xiGS_*sqrt((kC_&eSum)*km)
                                      - km
                                    )/(rho*km);
