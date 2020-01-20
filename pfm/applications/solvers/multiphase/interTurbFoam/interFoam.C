@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
               
                 Cst_ = (filterS_(LijS&MijS))/MijMijS;
                 */
-                Cst_ = Csigma_/Cmu_;
+                
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
