@@ -264,8 +264,8 @@ int main(int argc, char *argv[])
                                                scalar(1.0)
                                              + Cst_*sqrt(nutSigma_/nu)
                                            );
-                corrSurfaceTensionForce_.max(0.1);
-                corrSurfaceTensionForce_.min(10.0);
+                corrSurfaceTensionForce_.max(0.01);
+                corrSurfaceTensionForce_.min(100.0);
                 turbulence->correct();
             }
         }
