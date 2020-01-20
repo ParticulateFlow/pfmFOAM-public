@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
                                      2.0*(strainHat)
                                    + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
                                 );
-*/
+*//*
                 nutSigmaHat = min(nutSigmaHat,1.0e5*nu);
                 nutSigmaHat.max(SMALL);
                 
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
               
                 Cst_ = (filterS_(LijS&MijS))/MijMijS;
             
-                
+                */
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
