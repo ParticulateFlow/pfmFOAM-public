@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
                 const volTensorField& gradU(tgradU());
                 volTensorField D(0.5*(gradU+T(gradU)));
                  // Dynamic adjustment of Cmu
+                /*
                 volScalarField Lij  = filter_(magSqr(U)) - magSqr(filter_(U));
                 Lij.max(0);
                 volScalarField Mij = sqr(deltaF_)*(4.0*magSqr(filter_(D)) - filter_(magSqr(D)));
@@ -170,7 +171,7 @@ int main(int argc, char *argv[])
                 CmuT.max(0.001);
                 
                 Cmu_ = sqrt(CmuT);
-            
+            */
                 //volScalarField nutSigmaCorr = -filterL_(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho);
                 volScalarField nutSigmaCorr = -sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho;
                 nutSigmaCorr.max(SMALL);
@@ -209,6 +210,7 @@ int main(int argc, char *argv[])
                 nutSigma_.max(SMALL);
  
                 // Dynamic adjustment of Cst
+                /*
                 volTensorField Dhat(filter_(D));
                 volScalarField sigmaKhat(filter_(mixture.sigmaK()));
 
@@ -218,7 +220,7 @@ int main(int argc, char *argv[])
                                      2.0*(dev(Dhat)&&Dhat)
                                    + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
                                 );
-
+*/
 /*
                 volSymmTensorField SijdHat(filter_(dev(symm(gradU&gradU))));
                 volScalarField strainHat(pow3(magSqr(SijdHat))
@@ -239,7 +241,7 @@ int main(int argc, char *argv[])
                                      2.0*(strainHat)
                                    + mag(sqr(Csigma_)*(sigmaKhat)*filter_(fvc::laplacian(alpha1)/rho))
                                 );
-*/
+*//*
                 nutSigmaHat = min(nutSigmaHat,1.0e5*nu);
                 nutSigmaHat.max(SMALL);
                 
@@ -255,7 +257,7 @@ int main(int argc, char *argv[])
               
                 Cst_ = (filterS_(LijS&MijS))/MijMijS;
             
-                
+                */
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
