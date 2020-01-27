@@ -1376,6 +1376,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
+    Info << "Computing nut (dispersed phase) ... " << endl;
     // use k() for nut in stress tensor
     nut_ = alpha*sqrt(min(k(),sqr(ut_)))*lm_;
        
