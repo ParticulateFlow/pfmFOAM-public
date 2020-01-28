@@ -823,6 +823,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    Info << "deltaFmin: " << min(deltaF_).value() << "deltaFmax: " << max(deltaF_).value() << endl;
     deltaF_.max(lSmall.value());
     
     // compute nut
@@ -879,6 +880,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
 
         // wall treatment for xiPhiG
+        /*
         const fvPatchList& patches = mesh_.boundary();
         volVectorField::Boundary& xiPhiGBf = xiPhiG_.boundaryFieldRef();
         
@@ -895,6 +897,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        */
         xiPhiG_ = filterS(xiPhiG_);
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
