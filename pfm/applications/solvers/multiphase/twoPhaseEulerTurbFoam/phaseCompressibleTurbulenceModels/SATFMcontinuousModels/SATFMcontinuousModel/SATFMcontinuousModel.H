@@ -58,6 +58,7 @@ SourceFiles
 #include "LESfilter.H"
 #include "simpleFilter.H"
 #include "wallFvPatch.H"
+#include "cyclicAMIFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
