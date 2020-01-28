@@ -29,6 +29,9 @@ License
 #include "wallDist.H"
 #include "uniformDimensionedFields.H"
 #include "fvOptions.H"
+#include "cyclicPolyPatch.H"
+#include "cyclicAMIPolyPatch.H"
+#include "cyclicACMIPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -1008,7 +1011,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         forAll(patches, patchi) {
             const fvPatch& curPatch = patches[patchi];
 
-            if (isA<cyclicPolyPatch>(curPatch)||isA<cyclicAMIPolyPatch>(curPatch)) {
+            if (  isA<cyclicPolyPatch>(curPatch)
+                ||isA<cyclicAMIPolyPatch>(curPatch)
+                ||isA<cyclicACMIPolyPatch>(curPatch)) {
+                Info << "I am a cyclic patch" << endl;
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
                     deltaF_[celli] = deltaF[celli];
@@ -1016,7 +1022,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             }
         }
     }
-    deltaF_.max(lSmall.value());
     deltaF_.max(lSmall.value());
     
     // compute nut

@@ -29,6 +29,9 @@ License
 #include "wallDist.H"
 #include "uniformDimensionedFields.H"
 #include "fvOptions.H"
+#include "cyclicPolyPatch.H"
+#include "cyclicAMIPolyPatch.H"
+#include "cyclicACMIPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -819,7 +822,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     }
     
     volScalarField wD = wallDist(mesh_).y();
-    Info << min(wD).value() << endl;
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
@@ -830,7 +832,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         forAll(patches, patchi) {
             const fvPatch& curPatch = patches[patchi];
 
-            if (isA<cyclicPolyPatch>(curPatch)||isA<cyclicAMIPolyPatch>(curPatch)) {
+            if (  isA<cyclicPolyPatch>(curPatch)
+                ||isA<cyclicAMIPolyPatch>(curPatch)
+                ||isA<cyclicACMIPolyPatch>(curPatch)) {
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
                     deltaF_[celli] = deltaF[celli];
