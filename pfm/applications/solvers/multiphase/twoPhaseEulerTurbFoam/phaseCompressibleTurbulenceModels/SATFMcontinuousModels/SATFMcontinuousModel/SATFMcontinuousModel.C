@@ -822,7 +822,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = deltaF;//neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
     deltaF_.max(lSmall.value());
     
     // compute nut
