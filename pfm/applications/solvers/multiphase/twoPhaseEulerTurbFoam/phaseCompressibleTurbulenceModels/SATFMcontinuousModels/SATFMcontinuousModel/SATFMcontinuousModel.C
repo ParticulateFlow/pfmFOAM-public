@@ -259,7 +259,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 1, 0, 0, 0), 1.e-2)
@@ -823,7 +823,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
-    Info << "deltaFmin: " << min(deltaF_).value() << "deltaFmax: " << max(deltaF_).value() << endl;
     deltaF_.max(lSmall.value());
     
     // compute nut
