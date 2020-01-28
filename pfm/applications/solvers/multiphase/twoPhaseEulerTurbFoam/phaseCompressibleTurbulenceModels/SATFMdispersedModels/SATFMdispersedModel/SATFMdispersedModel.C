@@ -1001,6 +1001,22 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    // correction for cyclic patches
+    {
+        const fvPatchList& patches = mesh_.boundary();
+        
+        forAll(patches, patchi) {
+            const fvPatch& curPatch = patches[patchi];
+
+            if (isA<cyclicPolyPatch>(curPatch)||isA<cyclicAMIPolyPatch>(curPatch)) {
+                forAll(curPatch, facei) {
+                    label celli = curPatch.faceCells()[facei];
+                    deltaF_[celli] = deltaF[celli];
+                }
+            }
+        }
+    }
+    deltaF_.max(lSmall.value());
     deltaF_.max(lSmall.value());
     
     // compute nut
