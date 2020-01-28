@@ -58,6 +58,7 @@ SourceFiles
 #include "simpleFilter.H"
 #include "wallFvPatch.H"
 #include "cyclicAMIFvsPatchField.H"
+#include "cyclicACMIFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
