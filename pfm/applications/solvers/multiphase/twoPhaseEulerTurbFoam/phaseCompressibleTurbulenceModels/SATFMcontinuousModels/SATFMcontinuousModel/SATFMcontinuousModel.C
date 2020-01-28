@@ -255,7 +255,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     (
         IOobject
         (
-            "deltaF",
+            IOobject::groupName("deltaF", phase.name()),
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
