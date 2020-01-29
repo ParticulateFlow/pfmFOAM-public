@@ -830,7 +830,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             const fvPatch& curPatch = patches[patchi];
 
             if (isA<cyclicAMIFvPatch>(curPatch)||isA<cyclicACMIFvPatch>(curPatch)) {
-                Info << "I am a cyclic patch" << endl;
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
                     deltaF_[celli] = deltaF[celli];
