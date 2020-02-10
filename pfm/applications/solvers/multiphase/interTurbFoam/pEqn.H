@@ -55,7 +55,7 @@
             fvm::laplacian(rAUf, p_rgh)
          ==
             fvc::div(phiHbyA)
-          + correctGradient
+          //+ correctGradient
         );
 
         p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
