@@ -75,6 +75,9 @@ class SchneiderbauerEtAl
 
         //- Lower limit for (alphaMax - alpha1)
         dimensionedScalar alphaDeltaMin_;
+    
+        //- Rolling friction/Cohesion
+        dimensionedScalar Rc_;
 
 
 public:

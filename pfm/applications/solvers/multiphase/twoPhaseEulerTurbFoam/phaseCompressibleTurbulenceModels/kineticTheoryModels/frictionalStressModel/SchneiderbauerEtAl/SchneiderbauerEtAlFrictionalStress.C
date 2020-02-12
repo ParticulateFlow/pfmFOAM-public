@@ -63,7 +63,8 @@ SchneiderbauerEtAl::SchneiderbauerEtAl
     muC_("muC", dimless, coeffDict_),
     I0_("I0", dimless, coeffDict_),
     aQSk_("aQSk", dimensionSet(1, 0, -2, 0, 0), coeffDict_),
-    alphaDeltaMin_("alphaDeltaMin", dimless, coeffDict_)
+    alphaDeltaMin_("alphaDeltaMin", dimless, coeffDict_),
+    Rc_("Rc", dimless, coeffDict_)
 {
 
 }
@@ -165,7 +166,8 @@ SchneiderbauerEtAl::nu
         if (alpha[celli] > alphaMinFriction.value())
         {
             nuf[celli] = (
-                             muSt_.value()
+                             Rc_.value()
+                           + muSt_.value()
                            + (
                                 muC_.value() - muSt_.value()
                              )
@@ -236,6 +238,7 @@ SchneiderbauerEtAl::read()
     aQSk_.read(coeffDict_);
     
     alphaDeltaMin_.read(coeffDict_);
+    Rc_.read(coeffDict_);
 
     return true;
 }
