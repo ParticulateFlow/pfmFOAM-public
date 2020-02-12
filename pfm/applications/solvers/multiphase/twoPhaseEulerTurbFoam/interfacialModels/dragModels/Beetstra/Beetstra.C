@@ -95,7 +95,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Beetstra::CdRe() const
        /(1.0 + pow(10.0, 3.0*alpha1)*pow(ResLim, -(1.0 + 4.0*alpha1)/2.0))
     );
 
-    return 24.0*alpha2*(F0 + F1)*(1.0 + 0.064*alpha2)*pos(Res-residualRe_);
+    return 24.0*alpha2*(F0 + F1)*(1.0 + 0.064*alpha2);
 }
 
 
