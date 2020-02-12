@@ -103,7 +103,7 @@ Foam::dragModel::~dragModel()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volScalarField> Foam::dragModel::Ki() const
-{/*
+{
     return
         min(
             0.75
@@ -119,16 +119,6 @@ Foam::tmp<Foam::volScalarField> Foam::dragModel::Ki() const
             1.0/pair_.continuous().rho().mesh().time().deltaT()
         )
        *pair_.dispersed().rho();
-    */
-    return
-        0.75
-       *CdRe()
-       *swarmCorrection_->Cs()
-       *pair_.continuous().rho()
-       *pair_.continuous().nu()
-      /(
-           sqr(pair_.dispersed().d())
-       );
 }
 
 
