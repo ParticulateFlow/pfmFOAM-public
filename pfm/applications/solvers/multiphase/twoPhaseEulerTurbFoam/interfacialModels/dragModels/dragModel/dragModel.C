@@ -105,12 +105,20 @@ Foam::dragModel::~dragModel()
 Foam::tmp<Foam::volScalarField> Foam::dragModel::Ki() const
 {
     return
-        0.75
-       *CdRe()
-       *swarmCorrection_->Cs()
-       *pair_.continuous().rho()
-       *pair_.continuous().nu()
-       /sqr(pair_.dispersed().d());
+        min(
+            0.75
+           *CdRe()
+           *swarmCorrection_->Cs()
+           *pair_.continuous().rho()
+           *pair_.continuous().nu()
+           /(
+                sqr(pair_.dispersed().d())
+               *pair_.dispersed().rho()
+             )
+        ,
+            1.0/pair_.continuous().rho().mesh().time().deltaT()
+        )
+       *pair_.dispersed().rho();
 }
 
 
