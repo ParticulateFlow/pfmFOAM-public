@@ -93,7 +93,7 @@ dimensionedVector gN
 (
      "gN",
      dimensionSet(0,1,-2,0,0,0,0),
-     vector(0,0,-9.81)
+     vector(0,-9.81,0)
 );
 
 volScalarField unity
