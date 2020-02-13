@@ -116,7 +116,8 @@ Foam::tmp<Foam::volScalarField> Foam::dragModel::Ki() const
                *pair_.dispersed().rho()
              )
         ,
-            1.0/pair_.continuous().rho().mesh().time().deltaT()
+            max(pair_.continuous(), pair_.continuous().residualAlpha())
+           /pair_.continuous().rho().mesh().time().deltaT()
         )
        *pair_.dispersed().rho();
 }
