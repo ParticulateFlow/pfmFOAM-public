@@ -1496,8 +1496,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          << "    mean(k1z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                      << nl
-         << "    mean(phi1P2)    = " << fvc::domainIntegrate(alpha*(alphaP2Mean_)).value()
-                                        /fvc::domainIntegrate(alpha).value()
          << endl;
 }
 

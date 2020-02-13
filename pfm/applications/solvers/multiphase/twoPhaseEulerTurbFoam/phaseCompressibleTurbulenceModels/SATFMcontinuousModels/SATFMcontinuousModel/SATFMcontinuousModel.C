@@ -1139,82 +1139,83 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km.max(kSmall.value());
     
     // compute fields for transport equation for phiP2
-    volScalarField divU(fvc::div(U));
-    volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(km)/lm_;
-    volScalarField denom  = mag(divU) + dissPhiP2;
-    denom.max(SMALL);
-    volScalarField xiKgradAlpha = - (
-                                       ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)))
-                                     + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)))
-                                     + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)))
-                                    );
-    
-    Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
-    if (!equilibriumPhiP2_) {
-        // Construct the transport equation for alphaP2Mean
-        fvScalarMatrix phiP2Eqn
-        (
-            fvm::ddt(alphaP2Mean_)
-          + fvm::div(phi2, alphaP2Mean_)
-          // diffusion
-         /*
-          - fvc::div(
-                        (
-                           alpha*lm_
-                         * (
-                              (sqrt(k_&eX)*(eX*eX))
-                            + (sqrt(k_&eY)*(eY*eY))
-                            + (sqrt(k_&eZ)*(eZ*eZ))
-                           )
-                         / (sigma_)
-                       )
-                     & (fvc::grad(alphaP2Mean_/alpha))
-                    )
-          */
-          - fvc::div(
-                       alpha*sqrt(k())*lm_/(sigma_)
-                     * fvc::grad(alphaP2Mean_/alpha)
-                    )
-          
-         ==
-          // some source terms are explicit since fvm::Sp()
-          // takes solely scalars as first argument.
-          // ----------------
-          // shear production
-          - fvm::SuSp(
-                         2.0*xiKgradAlpha
-                       / sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8))
-                     ,alphaP2Mean_)
-          - fvm::SuSp(divU,alphaP2Mean_)
-          // production/dissipation
-          + fvm::Sp(-dissPhiP2,alphaP2Mean_)
-        );
-
-        phiP2Eqn.relax();
-        phiP2Eqn.solve();
-    } else {
-        alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)
-                       / sqr(denom);
-    }
-    // limit alphaP2Mean_
-    alpha1.min(0.99*alphaMax_.value());
-    volScalarField alphaM(alphaMax_-alpha1);
-    alphaM.max(0);
-    volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
-    volScalarField alphaL2 = sqr(alpha1)//*alphaM
-                            *(scalar(1.0) + cbrtPhiPhiM)
-                            /(
-                                 scalar(1.0)
-                               + (1.0/3.0)
-                                *cbrtPhiPhiM
-                                /(scalar(1.0) - cbrtPhiPhiM)
-                             );//sqr(min(alpha1,alphaM));
-    alphaP2Mean_ = min(
-                         alphaP2Mean_,
-                         0.99*alphaL2
-                      );
-    alphaP2Mean_.max(VSMALL);
+    alphaP2Mean_ = mesh_.lookupObject<volScalarField>("alphaP2Mean." + fluid.otherPhase(phase_).name());
+//    volScalarField divU(fvc::div(U));
+//    volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(km)/lm_;
+//    volScalarField denom  = mag(divU) + dissPhiP2;
+//    denom.max(SMALL);
+//    volScalarField xiKgradAlpha = - (
+//                                       ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)))
+//                                     + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)))
+//                                     + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)))
+//                                    );
+//
+//    Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
+//    if (!equilibriumPhiP2_) {
+//        // Construct the transport equation for alphaP2Mean
+//        fvScalarMatrix phiP2Eqn
+//        (
+//            fvm::ddt(alphaP2Mean_)
+//          + fvm::div(phi2, alphaP2Mean_)
+//          // diffusion
+//         /*
+//          - fvc::div(
+//                        (
+//                           alpha*lm_
+//                         * (
+//                              (sqrt(k_&eX)*(eX*eX))
+//                            + (sqrt(k_&eY)*(eY*eY))
+//                            + (sqrt(k_&eZ)*(eZ*eZ))
+//                           )
+//                         / (sigma_)
+//                       )
+//                     & (fvc::grad(alphaP2Mean_/alpha))
+//                    )
+//          */
+//          - fvc::div(
+//                       alpha*sqrt(k())*lm_/(sigma_)
+//                     * fvc::grad(alphaP2Mean_/alpha)
+//                    )
+//
+//         ==
+//          // some source terms are explicit since fvm::Sp()
+//          // takes solely scalars as first argument.
+//          // ----------------
+//          // shear production
+//          - fvm::SuSp(
+//                         2.0*xiKgradAlpha
+//                       / sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8))
+//                     ,alphaP2Mean_)
+//          - fvm::SuSp(divU,alphaP2Mean_)
+//          // production/dissipation
+//          + fvm::Sp(-dissPhiP2,alphaP2Mean_)
+//        );
+//
+//        phiP2Eqn.relax();
+//        phiP2Eqn.solve();
+//    } else {
+//        alphaP2Mean_ =   8.0
+//                       * sqr(xiKgradAlpha)
+//                       / sqr(denom);
+//    }
+//    // limit alphaP2Mean_
+//    alpha1.min(0.99*alphaMax_.value());
+//    volScalarField alphaM(alphaMax_-alpha1);
+//    alphaM.max(0);
+//    volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
+//    volScalarField alphaL2 = sqr(alpha1)//*alphaM
+//                            *(scalar(1.0) + cbrtPhiPhiM)
+//                            /(
+//                                 scalar(1.0)
+//                               + (1.0/3.0)
+//                                *cbrtPhiPhiM
+//                                /(scalar(1.0) - cbrtPhiPhiM)
+//                             );//sqr(min(alpha1,alphaM));
+//    alphaP2Mean_ = min(
+//                         alphaP2Mean_,
+//                         0.99*alphaL2
+//                      );
+//    alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
     // use k() for nut in stress tensor
@@ -1312,8 +1313,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                      << nl
-         << "    mean(phi2P2)    = " << fvc::domainIntegrate(alpha*(alphaP2Mean_)).value()
-                                        /fvc::domainIntegrate(alpha).value()
          << endl;
 }
 
