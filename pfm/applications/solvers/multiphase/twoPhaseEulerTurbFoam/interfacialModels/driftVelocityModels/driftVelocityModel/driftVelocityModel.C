@@ -141,14 +141,8 @@ Foam::driftVelocityModel::KdUdrift() const
 
     // multiply drift velocity by drag coefficient
     return
-        0.75
-        *pos(dragCorr_)
-        *pair_.dispersed()
-        *drag.CdRe()
-        *pair_.continuous().nu()
-        *pair_.continuous().rho()
-        *ud
-        /sqr(pair_.dispersed().d());
+         drag.K()
+        *ud; 
 }
 
 bool Foam::driftVelocityModel::writeData(Ostream& os) const
