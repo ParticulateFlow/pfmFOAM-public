@@ -109,17 +109,15 @@ Foam::tmp<Foam::volScalarField> Foam::dragModel::Ki() const
             0.75
            *CdRe()
            *swarmCorrection_->Cs()
-           *pair_.continuous().rho()
            *pair_.continuous().nu()
            /(
                 sqr(pair_.dispersed().d())
-               *pair_.dispersed().rho()
              )
         ,
-            max(pair_.continuous(), pair_.continuous().residualAlpha())
+            pair_.continuous()
            /pair_.continuous().rho().mesh().time().deltaT()
         )
-       *pair_.dispersed().rho();
+       *pair_.continuous().rho();
 }
 
 
