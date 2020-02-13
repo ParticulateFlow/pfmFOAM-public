@@ -88,13 +88,14 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
 
     const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
                                         ("alphaP2Mean." + pair_.continuous().name()));
-    
-    volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
 
     volScalarField alpha1
     (
         max(pair_.dispersed(), residualAlpha_)
     );
+    
+    volScalarField alphaP2Mean(min(sqr(alpha1),max(alphaP2Mean1_,alphaP2Mean2_)));
+    
     volScalarField alpha2
     (
         scalar(1.0) - alpha1
