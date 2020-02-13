@@ -1076,7 +1076,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
         volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
                                    * max(filter_(magSqr(Uc_)) - 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
+        xiPhiGG_ = 0*filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
@@ -1318,7 +1318,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                 - beta
                                   //*CphiS_
-                                  *mag(
+                                  *(
                                        xiGS_*sqrt(max(kC_&eSum,kSmall)*km)
                                      - km
                                    )/(rho*km);
@@ -1328,14 +1328,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alpha1.min(0.99*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha);
     alphaM.max(0);
-    volScalarField cbrtPhiPhiM(cbrt(alpha1/(alphaMax_)));
-    volScalarField alphaL2 = sqr(alpha1)//*alphaM
-                            *(scalar(1.0) + cbrtPhiPhiM)
+    volScalarField phiPhiM(alpha1/(alphaMax_));
+    volScalarField alphaL2 = alpha1*alphaM
+                            *(scalar(1.0) + phiPhiM)
                             /(
                                  scalar(1.0)
-                               + (1.0/3.0)
-                                *cbrtPhiPhiM
-                                /(scalar(1.0) - cbrtPhiPhiM)
+                               + phiPhiM
+                                /(scalar(1.0) - phiPhiM)
                              );//sqr(min(alpha1,alphaM));
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
