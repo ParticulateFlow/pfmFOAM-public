@@ -1076,7 +1076,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)));
         volScalarField xiPhiGGden =  sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
                                    * max(filter_(magSqr(Uc_)) - 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall));
-        xiPhiGG_ = 0*filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
+        xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
         // smooth and limit xiPhiGG_
         xiPhiGG_.max(-0.99);
         xiPhiGG_.min(0.99);
@@ -1176,7 +1176,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // compute mixing length
     lm_ = Cmu_*deltaF_;
-
+    
+    
+    xiGS_   = xiGSScalar_;
+    xiPhiGG_ = scalar(0.0);
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
