@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
                 nutSigma_ =  sqr(Cmu_*deltaF_)
                            * sqrt(
                                      2.0*(dev(D)&&D)
-                                   + nutSigmaCorr
+                                   + nutSigmaCorr*mixture.nearInterface()
                                 );
                 
                 // WALE
