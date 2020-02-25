@@ -37,7 +37,6 @@
 
     
     volScalarField preTauAlphaU(((rho2-rho1)*nutSigma_/rho));
-    surfaceScalarField sgsAlphaUG(fvc::snGrad(alpha1)*mesh.magSf());
 
     // Update the pressure BCs to ensure flux consistency
     constrainPressure(p_rgh, U, phiHbyA, rAUf, MRF);
@@ -48,7 +47,7 @@
         (
             fvc::div(phiHbyA)
           - fvm::laplacian(rAUf, p_rgh)
-          - mixture.nearInterface()*preTauAlphaU*fvc::div(sgsAlphaUG)
+          - mixture.nearInterface()*preTauAlphaU*fvc::div(fvc::grad(alpha1))
         );
 
         p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
