@@ -1398,7 +1398,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // limit alphaP2Mean
     alphaP2Mean_ = min(
                          alphaP2Mean_,
-                         0.999*alphaL2
+                         alphaL2
                       );
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
