@@ -94,7 +94,7 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
         max(pair_.dispersed(), residualAlpha_)
     );
     
-    volScalarField alphaP2Mean(min(sqr(alpha1),max(alphaP2Mean1_,alphaP2Mean2_)));
+    volScalarField alphaP2Mean(min(0.9*sqr(alpha1),max(alphaP2Mean1_,alphaP2Mean2_)));
     
     volScalarField alpha2
     (
