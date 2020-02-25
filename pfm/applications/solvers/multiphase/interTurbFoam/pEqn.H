@@ -47,7 +47,7 @@
         (
             fvc::div(phiHbyA)
           - fvm::laplacian(rAUf, p_rgh)
-          - mixture.nearInterface()*preTauAlphaU*fvc::div(fvc::grad(alpha1))
+          - fvc::laplacian(mixture.nearInterface()*preTauAlphaU,alpha1)
         );
 
         p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
