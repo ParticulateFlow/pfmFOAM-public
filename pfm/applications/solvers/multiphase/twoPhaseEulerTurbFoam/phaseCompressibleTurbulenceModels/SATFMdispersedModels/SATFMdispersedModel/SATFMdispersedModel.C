@@ -1056,7 +1056,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         tmpDenX.max(ROOTVSMALL);
         tmpDenY.max(ROOTVSMALL);
         tmpDenZ.max(ROOTVSMALL);
-
+/*
         xiPhiS_ =  eX
                  * (
                         ((xiPhiSNom&eX))/sqrt(tmpDenX)
@@ -1069,7 +1069,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         ((xiPhiSNom&eZ))/sqrt(tmpDenZ)
                     );
-                
+ */
+        xiPhiS_ =  eX
+                 * (
+                        filterS((xiPhiSNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
+                    )
+                 + eY
+                 * (
+                        filterS((xiPhiSNom&eY)*sqrt(tmpDenY))/filterS(tmpDenY)
+                    )
+                 + eZ
+                 * (
+                        filterS((xiPhiSNom&eZ)*sqrt(tmpDenY))/filterS(tmpDenZ)
+                    );
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
                                    - alphaf*filter_(magSqr(Uc_))
@@ -1085,10 +1097,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
                                 * sqrt(max(aUU,kSmall));
-
-        xiGS_ = xiGSnum/xiGSden;
         
+        //xiGS_ = xiGSnum/xiGSden;
+        xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden));
         // wall treatment for xiPhiS
+        /*
         const fvPatchList& patches = mesh_.boundary();
         volScalarField::Boundary& xiGSBf = xiGS_.boundaryFieldRef();
         volVectorField::Boundary& xiPhiSBf = xiPhiS_.boundaryFieldRef();
@@ -1109,13 +1122,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        
+        */
         // limit xiPhiS_
-        xiPhiS_ = filterS(xiPhiS_);
+        //xiPhiS_ = filterS(xiPhiS_);
         boundxiPhiS(xiPhiS_);
          
         // smooth and regularize xiGS_ (xiGS_ is positive)
-        xiGS_ = filterS(xiGS_);
+        //xiGS_ = filterS(xiGS_);
         xiGS_.max(0);
         xiGS_.min(0.99);
     
@@ -1158,7 +1171,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Ceps_ = pos(alpha_ - residualAlpha_)*CepsScalar_
               + neg(alpha_- residualAlpha_);
         // compute CphiS
-        CphiS_ = CphiSscalar_*Cmu_;
+        CphiS_ = CphiSscalar_;
         // Set Cp
         Cp_     = CpScalar_;
     } else {
@@ -1171,15 +1184,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
         // compute CphiS
-        CphiS_ = CphiSscalar_*CmuScalar_;
+        CphiS_ = CphiSscalar_;
     }
     
     // compute mixing length
     lm_ = Cmu_*deltaF_;
     
-    
-    xiGS_   = xiGSScalar_;
-    xiPhiGG_ = scalar(0.0);
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
@@ -1320,7 +1330,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
                                 - beta
-                                  //*CphiS_
+                                  *CphiS_
                                   *(
                                        xiGS_*sqrt(max(kC_&eSum,kSmall)*km)
                                      - km
@@ -1329,8 +1339,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
     alpha1.min(0.99*alphaMax_.value());
-    volScalarField alphaM(alphaMax_-alpha);
-    alphaM.max(0);
+    volScalarField alphaM(alphaMax_-alpha1);
 //    volScalarField phiPhiM(alpha1/(alphaMax_));
 //    volScalarField alphaLE = sqr(alpha1)
 //                            *(scalar(1.0) + phiPhiM)
