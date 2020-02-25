@@ -1193,7 +1193,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
-    xiGatS_.max(1.0e-7);
+    xiGatS_.max(0.5);
     xiGatS_.min(2.0);
     // correct xiGS_
     xiGS_ *= sqrt(xiGatS_);
@@ -1338,7 +1338,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
-    alpha1.min(alphaMax_.value());
+    alpha1.min(0.999*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
 //    volScalarField phiPhiM(alpha1/(alphaMax_));
 //    volScalarField alphaLE = sqr(alpha1)
@@ -1348,7 +1348,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 //                               + phiPhiM
 //                                /(scalar(1.0) - phiPhiM)
 //                             );
-    volScalarField alphaL2(alpha1*alphaM*0.9999);
+    volScalarField alphaL2(alpha1*alphaM*0.66);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
