@@ -570,8 +570,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax = 1.0;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     xi.max
     (

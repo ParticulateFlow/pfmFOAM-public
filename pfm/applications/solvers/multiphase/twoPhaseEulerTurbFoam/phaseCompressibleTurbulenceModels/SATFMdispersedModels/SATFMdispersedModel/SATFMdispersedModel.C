@@ -761,8 +761,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax = 1.0;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     xi.max
     (
@@ -1338,7 +1338,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
-    alpha1.min(0.999*alphaMax_.value());
+    alpha1.min(0.99*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
 //    volScalarField phiPhiM(alpha1/(alphaMax_));
 //    volScalarField alphaLE = sqr(alpha1)
