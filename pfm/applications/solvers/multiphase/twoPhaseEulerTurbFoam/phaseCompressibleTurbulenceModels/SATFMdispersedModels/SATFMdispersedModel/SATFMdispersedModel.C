@@ -1056,20 +1056,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         tmpDenX.max(ROOTVSMALL);
         tmpDenY.max(ROOTVSMALL);
         tmpDenZ.max(ROOTVSMALL);
-/*
-        xiPhiS_ =  eX
-                 * (
-                        ((xiPhiSNom&eX))/sqrt(tmpDenX)
-                    )
-                 + eY
-                 * (
-                        ((xiPhiSNom&eY))/sqrt(tmpDenY)
-                    )
-                 + eZ
-                 * (
-                        ((xiPhiSNom&eZ))/sqrt(tmpDenZ)
-                    );
- */
+
         xiPhiS_ =  eX
                  * (
                         filterS((xiPhiSNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
@@ -1082,6 +1069,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                  * (
                         filterS((xiPhiSNom&eZ)*sqrt(tmpDenY))/filterS(tmpDenZ)
                     );
+        
+        // limit xiPhiS_
+        boundxiPhiS(xiPhiS_);
+        
         // compute triple correlation
         volScalarField xiPhiGGnom =  filter_(alpha*magSqr(Uc_))
                                    - alphaf*filter_(magSqr(Uc_))
@@ -1099,37 +1090,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                 * sqrt(max(aUU,kSmall));
         
         //xiGS_ = xiGSnum/xiGSden;
-        xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden));
-        // wall treatment for xiPhiS
-        /*
-        const fvPatchList& patches = mesh_.boundary();
-        volScalarField::Boundary& xiGSBf = xiGS_.boundaryFieldRef();
-        volVectorField::Boundary& xiPhiSBf = xiPhiS_.boundaryFieldRef();
-        
-        forAll(patches, patchi) {
-            const fvPatch& curPatch = patches[patchi];
-
-            if (isA<wallFvPatch>(curPatch)) {
-                scalarField& xiGSw   = xiGSBf[patchi];
-                vectorField& xiPhiSw = xiPhiSBf[patchi];
-                
-                forAll(curPatch, facei) {
-                    label celli = curPatch.faceCells()[facei];
-                    xiGSw[facei]     = -xiGSScalar_.value();
-                    xiPhiSw[facei]   = -xiPhiSolidScalar_.value()
-                                        *uSlip[celli]
-                                        /(mag(uSlip[celli])+SMALL);
-                }
-            }
-        }
-        */
-        // limit xiPhiS_
-        //xiPhiS_ = filterS(xiPhiS_);
-        boundxiPhiS(xiPhiS_);
-         
+        xiGS_ = (filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden)));
+                 
         // smooth and regularize xiGS_ (xiGS_ is positive)
-        //xiGS_ = filterS(xiGS_);
-        xiGS_.max(0);
+        //xiGS_.max(0);
+        xiGS_ = 0.5*(xiGS_+mag(xiGS_));
         xiGS_.min(0.99);
     
         // compute mixing length dynamically
@@ -1193,7 +1158,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
-    xiGatS_.max(0.5);
+    xiGatS_.max(SMALL);
     xiGatS_.min(2.0);
     // correct xiGS_
     xiGS_ *= sqrt(xiGatS_);
@@ -1338,8 +1303,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
-    alpha1.min(0.99*alphaMax_.value());
-    volScalarField alphaM(alphaMax_-alpha1);
+    alpha1.min(0.8*alphaMax_.value());
+    volScalarField alphaM(0.8*alphaMax_-alpha1);
 //    volScalarField phiPhiM(alpha1/(alphaMax_));
 //    volScalarField alphaLE = sqr(alpha1)
 //                            *(scalar(1.0) + phiPhiM)
@@ -1348,7 +1313,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 //                               + phiPhiM
 //                                /(scalar(1.0) - phiPhiM)
 //                             );
-    volScalarField alphaL2(alpha1*alphaM*0.66);
+    volScalarField alphaL2(alpha1*alphaM/0.8);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
