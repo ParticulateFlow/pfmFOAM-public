@@ -138,7 +138,7 @@ volScalarField Cmu_
           IOobject::AUTO_WRITE
      ),
      mesh,
-     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 0.5) //0.094
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 0.15) //0.094
 );
 
 dimensionedScalar Csigma_
@@ -172,7 +172,7 @@ volScalarField Cst_
           IOobject::AUTO_WRITE
      ),
      mesh,
-     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 6.0)
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 1.0)
 );
 
 volScalarField deltaF_
