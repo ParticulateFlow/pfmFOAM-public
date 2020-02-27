@@ -33,13 +33,13 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
     surfaceScalarField dragCorrF(fvc::interpolate(dragCorr));
-    dragCorrF.max(-0.97);
-    dragCorrF.min(0.97);
+    dragCorrF.max(-0.99);
+    dragCorrF.min(0.99);
     Info << "Applying drag correction..." << nl
          << "    max(dragCorr) = " << max(dragCorrF).value() << nl
          << "    min(dragCorr) = " << min(dragCorrF).value() << endl;
     volScalarField Kd(fluid.Kd());
-    KdUdriftE = (KdUdrift + dragCorr*Kd*uSlipV);
+    KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
     Kdf = Kdf*(scalar(1.0) - dragCorrF);
 }
 
