@@ -27,6 +27,8 @@ License
 #include "phasePair.H"
 #include "dragModel.H"
 #include "zeroGradientFvPatchField.H"
+#include "LESfilter.H"
+#include "simpleFilter.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -104,6 +106,7 @@ Foam::driftVelocityModel::KdUdrift() const
         )
     );
     dimensionedScalar uSmall("uSmall", dimensionSet(0, 1, -1, 0, 0, 0, 0), 1.0e-6);
+    simpleFilter filterS(mesh);
     
     dimensionedVector eX
     (
@@ -137,7 +140,7 @@ Foam::driftVelocityModel::KdUdrift() const
         + ((ud&eY)*min(0.99*mag(uSlipV&eY)/(mag(ud&eY)+uSmall),1.0))*eY
         + ((ud&eZ)*min(0.99*mag(uSlipV&eZ)/(mag(ud&eZ)+uSmall),1.0))*eZ;
     
-    dragCorr_ = -(ud&uSlipV)/sqr(uSlip);
+    dragCorr_ = -filterS((ud&uSlipV)/sqr(uSlip));
 
     // multiply drift velocity by drag coefficient
     return
