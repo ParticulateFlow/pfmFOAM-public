@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
                 
                 volScalarField a(Ceps/deltaF_);
                 volScalarField b((2.0/3.0)*tr(D));
-                volScalarField c(Ck_*this->delta()*(2*(dev(D) && D) + nutSigmaCorr*mixture.nearInterface()));
+                volScalarField c(Cmu_*deltaF_*(2*(dev(D) && D) + nutSigmaCorr*mixture.nearInterface()));
                 
                 volScalarField k(sqr((-b + sqrt(sqr(b) + 4*a*c))/(2*a)));
                 
