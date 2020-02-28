@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
                 
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
-                                            // + Cst_*sqrt(nutSigma_/nu)
+                                             + Cst_*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.01);
                 corrSurfaceTensionForce_.min(100.0);
