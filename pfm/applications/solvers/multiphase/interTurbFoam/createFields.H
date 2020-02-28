@@ -145,7 +145,7 @@ dimensionedScalar Csigma_
 (
      "Csigma",
      dimensionSet(0,0,0,0,0,0,0),
-     1.0
+     0.5
 );
 
 volScalarField nutSigma_
@@ -172,7 +172,7 @@ volScalarField Cst_
           IOobject::AUTO_WRITE
      ),
      mesh,
-     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 1.0)
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 0.0)
 );
 
 volScalarField Ceps_
