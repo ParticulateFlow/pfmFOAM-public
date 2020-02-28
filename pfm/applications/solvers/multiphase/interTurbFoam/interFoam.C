@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
                 nutSigma_ =  sqr(Cmu_*deltaF_)
                            * sqrt(
                                      2.0*(dev(D)&&D)
-                                   + nutSigmaCorr*mixture.nearInterface()
+                                  // + nutSigmaCorr*mixture.nearInterface()
                                 );
                 
                 // WALE
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
                 
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
-                                             + Cst_*sqrt(nutSigma_/nu)
+                                            // + Cst_*sqrt(nutSigma_/nu)
                                            );
                 corrSurfaceTensionForce_.max(0.01);
                 corrSurfaceTensionForce_.min(100.0);
