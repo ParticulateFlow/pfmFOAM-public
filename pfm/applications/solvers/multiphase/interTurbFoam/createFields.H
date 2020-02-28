@@ -175,6 +175,20 @@ volScalarField Cst_
      dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 6.0)
 );
 
+volScalarField Ceps_
+(
+     IOobject
+     (
+          "Cst",
+          runTime.timeName(),
+          mesh,
+          IOobject::NO_READ,
+          IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 1.048)
+);
+
 volScalarField deltaF_
 (
      IOobject

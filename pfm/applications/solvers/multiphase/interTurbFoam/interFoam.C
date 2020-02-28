@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
                 
                 tmp<volTensorField> tgradU(fvc::grad(U));
                 const volTensorField& gradU(tgradU());
-                volTensorField D(0.5*(gradU+T(gradU)));
+                volSymmTensorField D(symm(gradU));
                  // Dynamic adjustment of Cmu
                 /*
                 volScalarField Lij  = filter_(magSqr(U)) - magSqr(filter_(U));
@@ -172,16 +172,18 @@ int main(int argc, char *argv[])
                 
                 Cmu_ = sqrt(CmuT);
             */
-                //volScalarField nutSigmaCorr = -filterL_(sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho);
                 volScalarField nutSigmaCorr = -sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho;
                 nutSigmaCorr.max(SMALL);
                 
+                volScalarField a(Ceps/deltaF_);
+                volScalarField b((2.0/3.0)*tr(D));
+                volScalarField c(Ck_*this->delta()*(2*(dev(D) && D) + nutSigmaCorr*mixture.nearInterface()));
+                
+                volScalarField k(sqr((-b + sqrt(sqr(b) + 4*a*c))/(2*a)));
+                
                 // standard
-                nutSigma_ =  sqr(Cmu_*deltaF_)
-                           * sqrt(
-                                     2.0*(dev(D)&&D)
-                                  // + nutSigmaCorr*mixture.nearInterface()
-                                );
+                nutSigma_ =  Cmu_*deltaF_*sqrt(k);
+                                 
                 
                 // WALE
                 /*
