@@ -1003,6 +1003,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((gradU.T())&(R2t.T())));
 
         //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
+        /*
         shearProd_ = pos(mag(wD) - deltaF)
                     *(
                          (gradUR2&&(eX*eX))*(eX)
@@ -1018,13 +1019,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                        + (sqr(U&eZ)*sqrt(k_&eZ))*eZ
                       )
                      /sqr(deltaF_);
-        /*
+        */
         shearProd_ = (
                            (gradUR2&&(eX*eX))*(eX)
                          + (gradUR2&&(eY*eY))*(eY)
                          + (gradUR2&&(eZ*eZ))*(eZ)
                       );
-        */
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
