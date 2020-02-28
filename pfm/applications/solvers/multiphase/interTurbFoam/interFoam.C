@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
                 volScalarField nutSigmaCorr = -sqr(Csigma_)*(mixture.sigmaK())*(fvc::laplacian(alpha1))/rho;
                 nutSigmaCorr.max(SMALL);
                 
-                volScalarField a(Ceps/deltaF_);
+                volScalarField a(Ceps_/deltaF_);
                 volScalarField b((2.0/3.0)*tr(D));
                 volScalarField c(Cmu_*deltaF_*(2*(dev(D) && D) + nutSigmaCorr*mixture.nearInterface()));
                 
