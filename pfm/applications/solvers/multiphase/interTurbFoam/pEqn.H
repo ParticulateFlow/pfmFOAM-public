@@ -47,7 +47,7 @@
         fvScalarMatrix p_rghEqn
         (
             fvc::div(phiHbyA)
-          - mixture.nearInterface()*(fvc::laplacian(preTauAlphaU,alpha1))
+          - fvm::SuSp(sign(p_rgh)*fvc::laplacian(preTauAlphaU,alpha1)/(mag(p_rgh)+dimensionedScalar("small",dimensionSet(1,-1,-2,0,0,0,0), 1e-7)),p_rgh)
           - fvm::laplacian(rAUf, p_rgh)
         );
 
@@ -57,11 +57,11 @@
 
         if (pimple.finalNonOrthogonalIter())
         {
-            phi = phiHbyA + p_rghEqn.flux() - corrPhi;
+            phi = phiHbyA + p_rghEqn.flux();
 
             p_rgh.relax();
 
-            U = HbyA + rAU()*fvc::reconstruct((phig + p_rghEqn.flux() - corrPhi)/rAUf);
+            U = HbyA + rAU()*fvc::reconstruct((phig + p_rghEqn.flux())/rAUf);
             U.correctBoundaryConditions();
             fvOptions.correct(U);
         }
