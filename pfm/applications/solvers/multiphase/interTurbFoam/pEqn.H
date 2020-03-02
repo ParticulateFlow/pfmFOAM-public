@@ -47,7 +47,7 @@
         (
             fvc::div(phiHbyA)
           - mixture.nearInterface()
-           *preTauAlphaU
+           *filter_(preTauAlphaU)
            *fvc::laplacian(alpha1)
           - fvm::laplacian(rAUf, p_rgh)
         );
