@@ -36,7 +36,7 @@
     phiHbyA += phig;
 
     
-    volScalarField preTauAlphaU(((rho2-rho1)*nutSigma_/rho));
+    volScalarField preTauAlphaU((rho2-rho1)*filter_(nutSigma_/rho));
 
     // Update the pressure BCs to ensure flux consistency
     constrainPressure(p_rgh, U, phiHbyA, rAUf, MRF);
@@ -46,7 +46,7 @@
         fvScalarMatrix p_rghEqn
         (
             fvc::div(phiHbyA)
-          - mixture.nearInterface()
+          + mixture.nearInterface()
            *(preTauAlphaU)
            *fvc::laplacian(alpha1)
           - fvm::laplacian(rAUf, p_rgh)
