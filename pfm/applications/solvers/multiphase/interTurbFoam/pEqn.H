@@ -37,7 +37,7 @@
 
     
     volScalarField preTauAlphaU(((rho2-rho1)*nutSigma_/rho));
-    surfaceScalarField corrPhi(fvc::interpolate(preTauAlphaU)*fvc::snGrad(alpha1)*rAUf*mesh.magSf());
+    surfaceScalarField corrPhi(fvc::interpolate(preTauAlphaU)*fvc::snGrad(alpha1)*mesh.magSf());
 
     // Update the pressure BCs to ensure flux consistency
     constrainPressure(p_rgh, U, phiHbyA, rAUf, MRF);
