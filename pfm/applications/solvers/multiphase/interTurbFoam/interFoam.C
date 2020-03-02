@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
                 */
                 nutSigma_.correctBoundaryConditions();
                 // Limit nut
-                nutSigma_ = min(nutSigma_,1.0e2*nu);
+                nutSigma_ = min(nutSigma_,1.0e5*nu);
                 nutSigma_.max(SMALL); 
  
                 // Dynamic adjustment of Cst
