@@ -145,7 +145,7 @@ dimensionedScalar Csigma_
 (
      "Csigma",
      dimensionSet(0,0,0,0,0,0,0),
-     0.25
+     0.1
 );
 
 volScalarField nutSigma_
