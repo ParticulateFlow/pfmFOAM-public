@@ -46,7 +46,7 @@
         fvScalarMatrix p_rghEqn
         (
             fvc::div(phiHbyA)
-         // - fvc::laplacian(mixture.nearInterface()*preTauAlphaU,alpha1)
+          - mixture.nearInterface()*(fvc::laplacian(preTauAlphaU,alpha1))
           - fvm::laplacian(rAUf, p_rgh)
         );
 
