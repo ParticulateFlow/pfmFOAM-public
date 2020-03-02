@@ -37,6 +37,7 @@
 
     
     volScalarField preTauAlphaU(((rho2-rho1)*nutSigma_/rho));
+    surfaceScalarField corrPhi(fvc::interpolate(preTauAlphaU)*fvc::snGrad(alpha1)*rAUf*mesh.magSf());
 
     // Update the pressure BCs to ensure flux consistency
     constrainPressure(p_rgh, U, phiHbyA, rAUf, MRF);
@@ -56,11 +57,11 @@
 
         if (pimple.finalNonOrthogonalIter())
         {
-            phi = phiHbyA + p_rghEqn.flux();
+            phi = phiHbyA + p_rghEqn.flux() - corrPhi;
 
             p_rgh.relax();
 
-            U = HbyA + rAU()*fvc::reconstruct((phig + p_rghEqn.flux())/rAUf);
+            U = HbyA + rAU()*fvc::reconstruct((phig + p_rghEqn.flux() - corrPhi)/rAUf);
             U.correctBoundaryConditions();
             fvOptions.correct(U);
         }
