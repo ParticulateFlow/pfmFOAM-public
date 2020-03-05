@@ -140,7 +140,7 @@ Foam::driftVelocityModel::KdUdrift() const
         + ((ud&eY)*min(0.99*mag(uSlipV&eY)/(mag(ud&eY)+uSmall),1.0))*eY
         + ((ud&eZ)*min(0.99*mag(uSlipV&eZ)/(mag(ud&eZ)+uSmall),1.0))*eZ;
     
-    dragCorr_ = -filterS((ud&uSlipV)/sqr(uSlip));
+    dragCorr_ = -((ud&uSlipV)/sqr(uSlip));
 
     // multiply drift velocity by drag coefficient
     return
