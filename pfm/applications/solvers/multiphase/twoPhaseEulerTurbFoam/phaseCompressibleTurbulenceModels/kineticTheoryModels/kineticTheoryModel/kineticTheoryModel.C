@@ -475,19 +475,16 @@ void Foam::RASModels::kineticTheoryModel::correct()
         //     the laplacian has the wrong sign
         fvScalarMatrix ThetaEqn
         (
-            1.5*
-            (
-                fvm::ddt(alpha, rho, Theta_)
-              + fvm::div(alphaRhoPhi, Theta_)
-              //- fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), Theta_)
-            )
+            fvm::ddt(alpha, rho, Theta_)
+          + fvm::div(alphaRhoPhi, Theta_)
+          - fvc::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), Theta_)
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
          ==
-          - fvm::SuSp((PsCoeff*I) && gradU, Theta_)
-          + (tau && gradU)
-          + fvm::Sp(-gammaCoeff, Theta_)
-          + fvm::Sp(-J1, Theta_)
-          + fvm::Sp(J2/(Theta_ + ThetaSmall), Theta_)
+          - fvm::SuSp((2.0/3.0)*((PsCoeff*I) && gradU), Theta_)
+          + (2.0/3.0)*(tau && gradU)
+          + fvm::Sp(-(2.0/3.0)*gammaCoeff, Theta_)
+          + fvm::Sp(-(2.0/3.0)*J1, Theta_)
+          - fvm::SuSp(-(2.0/3.0)*J2/(Theta_ + ThetaSmall), Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
