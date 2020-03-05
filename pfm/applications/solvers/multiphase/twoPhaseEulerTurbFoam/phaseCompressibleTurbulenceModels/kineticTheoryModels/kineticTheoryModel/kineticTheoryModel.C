@@ -497,6 +497,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
     {
         // Equilibrium => dissipation == production
         // Eq. 4.14, p.82
+        /*
         volScalarField K1("K1", 2.0*(1.0 + e_)*rho*gs0_);
         volScalarField K3
         (
@@ -543,7 +544,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
             (l1 + sqrt(l2 + l3))
            /(2.0*max(alpha, residualAlpha_)*K4)
         );
-
+        */
+        Theta_ = sqr(da)*magSqr(D);
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
     }
 
