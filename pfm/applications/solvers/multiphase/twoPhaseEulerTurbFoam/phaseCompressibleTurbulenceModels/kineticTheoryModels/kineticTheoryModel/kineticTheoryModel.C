@@ -392,7 +392,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
     const volVectorField& Uc_ = fluid.otherPhase(phase_).U();
 
     const scalar sqrtPi = sqrt(constant::mathematical::pi);
-    dimensionedScalar ThetaSmall("ThetaSmall", Theta_.dimensions(), 1.0e-6);
+    dimensionedScalar ThetaSmall("ThetaSmall", Theta_.dimensions(), 1.0e-8);
     dimensionedScalar ThetaSmallSqrt(sqrt(ThetaSmall));
 
     tmp<volScalarField> tda(phase_.d());
@@ -426,7 +426,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         (
             "gammaCoeff",
             12.0*(1.0 - sqr(e_))
-           *max(sqr(alpha), residualAlpha_)
+           *max(sqr(alpha), sqr(residualAlpha_))
            *rho*gs0_*(1.0/da)*ThetaSqrt/sqrtPi
         );
 
@@ -486,8 +486,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
           - fvm::SuSp((PsCoeff*I) && gradU, Theta_)
           + (tau && gradU)
           + fvm::Sp(-gammaCoeff, Theta_)
-          //+ fvm::Sp(-J1, Theta_)
-          //+ fvm::Sp(J2/(Theta_ + ThetaSmall), Theta_)
+          + fvm::Sp(-J1, Theta_)
+          + fvm::Sp(J2/(Theta_ + ThetaSmall), Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
