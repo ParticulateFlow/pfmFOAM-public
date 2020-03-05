@@ -1151,7 +1151,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km.max(kSmall.value());
     
     // compute fields for transport equation for phiP2
-//    alphaP2Mean_ = mesh_.lookupObject<volScalarField>("alphaP2Mean." + fluid.otherPhase(phase_).name());
+    alphaP2Mean_ = mesh_.lookupObject<volScalarField>("alphaP2Mean." + fluid.otherPhase(phase_).name());
+/*
     volScalarField divU(fvc::div(U));
     volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(km)/lm_;
     volScalarField denom  = mag(divU) + dissPhiP2;
@@ -1177,20 +1178,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi2, alphaP2Mean_)
           // diffusion
-         /*
-          - fvc::div(
-                        (
-                           alpha*lm_
-                         * (
-                              (sqrt(k_&eX)*(eX*eX))
-                            + (sqrt(k_&eY)*(eY*eY))
-                            + (sqrt(k_&eZ)*(eZ*eZ))
-                           )
-                         / (sigma_)
-                       )
-                     & (fvc::grad(alphaP2Mean_/alpha))
-                    )
-          */
           - fvc::div(
                        alpha*sqrt(k())*lm_/(sigma_)
                      * fvc::grad(alphaP2Mean_/alpha)
@@ -1237,7 +1224,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       );
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
-    
+*/
     // use k() for nut in stress tensor
     nut_ = alpha*sqrt(k())*lm_;
     // Limit viscosity

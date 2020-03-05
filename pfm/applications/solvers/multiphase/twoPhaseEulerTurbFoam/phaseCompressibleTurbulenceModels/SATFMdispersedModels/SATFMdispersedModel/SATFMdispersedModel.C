@@ -1086,16 +1086,16 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
-        volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf-2.0*((filter_(alpha*Uc_)/alphaf)&Ucf)+magSqr(Ucf),kSmall))
-                                * sqrt(max(aUU,kSmall));
+        volScalarField xiGSden  = sqrt(max(filter_(alpha*magSqr(Uc_))/alphaf - magSqr(Ucf),dimensionedScalar("zero",dimensionSet(0,2,-2,0,0),0.0)))
+                                * sqrt(max(aUU,dimensionedScalar("zero",dimensionSet(0,2,-2,0,0),0.0)));
         
         //xiGS_ = xiGSnum/xiGSden;
-        xiGS_ = (filterS(xiGSnum*xiGSden)/filterS(sqr(xiGSden)));
+        xiGS_ = filterS(xiGSnum*xiGSden)/filterS(sqr(max(xiGSden,kSmall)));
                  
         // smooth and regularize xiGS_ (xiGS_ is positive)
         //xiGS_.max(0);
-        xiGS_ = 0.5*(xiGS_+mag(xiGS_));
-        xiGS_.min(0.99);
+        xiGS_ = mag(xiGS_);
+        xiGS_.min(sqrt(2.0));
     
         // compute mixing length dynamically
         /*
@@ -1160,8 +1160,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
     xiGatS_.max(SMALL);
     xiGatS_.min(2.0);
-    // correct xiGS_
-    xiGS_ *= sqrt(xiGatS_);
+
     
     // Compute k_
     // ---------------------------
@@ -1294,7 +1293,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
-                                - 2.0*beta
+                                -  beta
                                   *CphiS_
                                   *(
                                        xiGS_*sqrt(max(kC_&eSum,kSmall)*km)
@@ -1314,6 +1313,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 //                                /(scalar(1.0) - phiPhiM)
 //                             );
     volScalarField alphaL2(alpha1*alphaM);
+    alphaP2Mean_.max(VSMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
@@ -1346,7 +1346,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // shear production
           - fvm::SuSp(
                          2.0*xiKgradAlpha
-                       / sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8))
+                       / sqrt(alphaP2Mean_)
                      ,alphaP2Mean_)
           - fvm::SuSp(divU,alphaP2Mean_)
           // production/dissipation
