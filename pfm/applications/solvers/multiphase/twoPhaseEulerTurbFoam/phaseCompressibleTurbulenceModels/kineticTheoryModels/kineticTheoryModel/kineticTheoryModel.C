@@ -427,7 +427,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             "gammaCoeff",
             12.0*(1.0 - sqr(e_))
            *max(sqr(alpha), sqr(residualAlpha_))
-           *rho*gs0_*(1.0/da)*ThetaSqrt/sqrtPi
+           *rho*gs0_*ThetaSqrt/(da*sqrtPi)
         );
 
         // Drag
@@ -483,7 +483,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
           - fvm::SuSp((2.0/3.0)*((PsCoeff*I) && gradU), Theta_)
           + (2.0/3.0)*(tau && gradU)
           + fvm::Sp(-(2.0/3.0)*gammaCoeff, Theta_)
-          //+ fvm::Sp(-(2.0/3.0)*J1, Theta_)
+          + fvm::Sp(-(2.0/3.0)*J1, Theta_)
           //- fvm::SuSp(-(2.0/3.0)*J2/(Theta_ + ThetaSmall), Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
