@@ -404,6 +404,13 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
     // Calculating the radial distribution function
     gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
+    
+    volScalarField trD
+    (
+        "trD",
+        alpha/(alpha + residualAlpha_)
+       *fvc::div(phi_)
+    );
 
     if (!equilibrium_)
     {
@@ -477,10 +484,10 @@ void Foam::RASModels::kineticTheoryModel::correct()
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
          ==
-          - fvm::SuSp((PsCoeff*I) && gradU, Theta_)
+          - fvm::SuSp(PsCoeff*trD, Theta_)
           + rho
            *(
-                lambda_*sqr(tr(D))
+                lambda_*sqr(trD)
               + 2.0*nut_*tr(D&D)
             )
           + fvm::Sp(-gammaCoeff, Theta_)
