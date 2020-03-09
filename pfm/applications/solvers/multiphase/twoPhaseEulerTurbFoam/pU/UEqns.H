@@ -21,12 +21,6 @@ if (periodicBox) {
 }
 
 volScalarField Kd(fluid.Kd());
-volScalarField Kd2(Kd);
-if (mesh.time().value() < scalar(2)) {
-    Kd *=0;
-} else {
-    Kd2 *=0;
-}
 volVectorField KdUdrift(fluid.KdUdrift());
 // in the case of no drift vel model, KdUdriftE is 0
 volVectorField KdUdriftE(0.0*KdUdrift);
@@ -70,7 +64,6 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha1*(rho1-rhoMix)*gN
-          + Kd2*(U2 - U1)
           // in case of periodic box, adjust CG-velocity
           - alpha1*rho1*totalMomentum/deltaT
           + fvOptions(alpha1, rho1, U1)
