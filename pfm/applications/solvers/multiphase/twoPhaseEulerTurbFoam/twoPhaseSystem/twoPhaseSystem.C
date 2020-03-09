@@ -467,12 +467,12 @@ void Foam::twoPhaseSystem::solve()
         {
             if (dgdt_[celli] > 0.0)
             {
-                Sp[celli] -= dgdt_[celli]/max(1.0 - alpha1[celli], 1e-4);
-                Su[celli] += dgdt_[celli]/max(1.0 - alpha1[celli], 1e-4);
+                Sp[celli] -= dgdt_[celli]/max(1.0 - alpha1[celli], 1e-7);// 1e-4
+                Su[celli] += dgdt_[celli]/max(1.0 - alpha1[celli], 1e-7);
             }
             else if (dgdt_[celli] < 0.0)
             {
-                Sp[celli] += dgdt_[celli]/max(alpha1[celli], 1e-4);
+                Sp[celli] += dgdt_[celli]/max(alpha1[celli], 1e-7);
             }
         }
 
