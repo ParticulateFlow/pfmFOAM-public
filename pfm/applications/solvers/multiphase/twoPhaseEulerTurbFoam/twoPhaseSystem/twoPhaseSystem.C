@@ -430,7 +430,9 @@ void Foam::twoPhaseSystem::solve()
 
         surfaceScalarField phiP
         (
-            pPrimeByA_()*fvc::snGrad(alpha1, "bounded")*mesh_.magSf()
+            pPrimeByA_()
+           *fvc::snGrad(alpha1, "bounded")
+           *mesh_.magSf()
         );
 
         phir += phiP;
