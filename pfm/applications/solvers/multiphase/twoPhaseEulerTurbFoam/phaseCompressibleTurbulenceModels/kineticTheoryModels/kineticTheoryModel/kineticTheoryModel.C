@@ -415,12 +415,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // Bulk viscosity  p. 45 (Lun et al. 1984).
         lambda_ = (4.0/3.0)*sqr(alpha)*da*gs0_*(1.0 + e_)*ThetaSqrt/sqrtPi;
 
-        // Stress tensor, Definitions, Table 3.1, p. 43
-        volSymmTensorField tau
-        (
-            rho*(2.0*nut_*D + (lambda_ - (2.0/3.0)*nut_)*tr(D)*I)
-        );
-
         // Dissipation (Eq. 3.24, p.50)
         volScalarField gammaCoeff
         (
@@ -475,16 +469,20 @@ void Foam::RASModels::kineticTheoryModel::correct()
         //     the laplacian has the wrong sign
         fvScalarMatrix ThetaEqn
         (
-            fvm::ddt(alpha, rho, Theta_)
-          + fvm::div(alphaRhoPhi, Theta_)
-          //+ fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
-          - fvm::laplacian((2.0/3.0)*kappa_, Theta_, "laplacian(kappa,Theta)")
+            1.5
+           *(
+                fvm::ddt(alpha, rho, Theta_)
+              + fvm::div(alphaRhoPhi, Theta_)
+            //+ fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
+            )
+          - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
          ==
-          - fvm::SuSp((2.0/3.0)*((PsCoeff*I) && gradU), Theta_)
-          - fvm::SuSp(-(2.0/3.0)*(tau && gradU)/(Theta_+ThetaSmall), Theta_)
-          + fvm::Sp(-(2.0/3.0)*gammaCoeff, Theta_)
-          + fvm::Sp(-(2.0/3.0)*J1, Theta_)
-          - fvm::SuSp(-(2.0/3.0)*J2/(Theta_ + ThetaSmall), Theta_)
+          - fvm::SuSp((PsCoeff*I) && gradU, Theta_)
+          + lambda_*sqr(tr(D))
+          + 2.0*rho*nut_*tr(D&D)
+          + fvm::Sp(-gammaCoeff, Theta_)
+          + fvm::Sp(-J1, Theta_)
+          - fvm::SuSp(-J2/(Theta_ + ThetaSmall), Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
