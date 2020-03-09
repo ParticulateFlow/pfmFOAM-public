@@ -437,15 +437,15 @@ void Foam::RASModels::kineticTheoryModel::correct()
             (
                 phase_,
                 fluid.otherPhase(phase_)
-            ).K()
+            ).Ki()
         );
 
         // Eq. 3.25, p. 50 Js = J1 - J2
-        volScalarField J1("J1", 3.0*beta);
+        volScalarField J1("J1", 3.0*alpha*beta);
         volScalarField J2
         (
             "J2",
-            0.25*sqr(beta)*da*magSqr(U - Uc_)
+            0.25*sqr(alpha*beta)*da*magSqr(U - Uc_)
            /(
                max(alpha, residualAlpha_)*rho
               *sqrtPi*(ThetaSqrt + ThetaSmallSqrt)

@@ -775,8 +775,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fluid.otherPhase(phase_),
             phase_
-        ).K()
+        ).Ki()
     );
+    beta *= alpha1;
     beta.max(1.0e-7);
     
     volScalarField betaA = beta/(rho*alpha);
