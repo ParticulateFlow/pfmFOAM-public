@@ -304,6 +304,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
             radialModel_->g0prime(alpha_, alphaMinFriction_, alphaMax_),
             rho,
+            da,
             e_
         )*neg(alpha_-alphaMinFriction_)
      + frictionalStressModel_->frictionalPressurePrime
@@ -461,6 +462,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
                 alpha,
                 gs0_,
                 rho,
+                da,
                 e_
             )
         );

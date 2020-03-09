@@ -20,7 +20,7 @@ if (periodicBox) {
                 /fvc::domainIntegrate(alpha1*rho1+alpha2*rho2);
 }
 
-volScalarField Kd(fluid.Kd());
+Kd = fluid.Kd();
 volVectorField KdUdrift(fluid.KdUdrift());
 // in the case of no drift vel model, KdUdriftE is 0
 volVectorField KdUdriftE(0.0*KdUdrift);

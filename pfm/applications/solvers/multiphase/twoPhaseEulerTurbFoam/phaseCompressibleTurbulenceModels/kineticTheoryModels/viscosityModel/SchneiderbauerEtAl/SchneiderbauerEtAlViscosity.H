@@ -22,19 +22,19 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::kineticTheoryModels::granularPressureModels::Lun
+    Foam::kineticTheoryModels::viscosityModels::SchneiderbauerEtAl
 
 Description
 
 SourceFiles
-    LunPressure.C
+    SchneiderbauerEtAlViscosity.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef LunPressure_H
-#define LunPressure_H
+#ifndef SchneiderbauerEtAlViscosity_H
+#define SchneiderbauerEtAlViscosity_H
 
-#include "granularPressureModel.H"
+#include "viscosityModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,60 +42,63 @@ namespace Foam
 {
 namespace kineticTheoryModels
 {
-namespace granularPressureModels
+namespace viscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class Lun Declaration
+                           Class SchneiderbauerEtAl Declaration
 \*---------------------------------------------------------------------------*/
 
-class Lun
+class SchneiderbauerEtAl
 :
-    public granularPressureModel
+    public viscosityModel
 {
+    // Private data
+
+        dictionary coeffDict_;
+
+        //- Characteristic length of geometry
+        dimensionedScalar L_;
+    
+        //- prefactor
+        dimensionedScalar alphaPre_;
+
 
 public:
 
     //- Runtime type information
-    TypeName("Lun");
+    TypeName("SchneiderbauerEtAl");
 
 
     // Constructors
 
         //- Construct from components
-        Lun(const dictionary& dict);
+        SchneiderbauerEtAl(const dictionary& dict);
 
 
     //- Destructor
-    virtual ~Lun();
+    virtual ~SchneiderbauerEtAl();
 
 
-    // Member Functions
+    // Member functions
 
-        tmp<volScalarField> granularPressureCoeff
+        tmp<volScalarField> nu
         (
             const volScalarField& alpha1,
+            const volScalarField& Theta,
             const volScalarField& g0,
             const volScalarField& rho1,
             const volScalarField& da,
             const dimensionedScalar& e
         ) const;
 
-        tmp<volScalarField> granularPressureCoeffPrime
-        (
-            const volScalarField& alpha1,
-            const volScalarField& g0,
-            const volScalarField& g0prime,
-            const volScalarField& rho1,
-            const volScalarField& da,
-            const dimensionedScalar& e
-        ) const;
+        virtual bool read();
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace granularPressureModels
+} // End namespace viscosityModels
 } // End namespace kineticTheoryModels
 } // End namespace Foam
 

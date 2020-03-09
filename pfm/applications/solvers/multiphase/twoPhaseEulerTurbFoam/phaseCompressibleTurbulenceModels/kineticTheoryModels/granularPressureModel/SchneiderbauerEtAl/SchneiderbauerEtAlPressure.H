@@ -22,17 +22,17 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::kineticTheoryModels::granularPressureModels::Lun
+    Foam::kineticTheoryModels::granularPressureModels::SchneiderbauerEtAl
 
 Description
 
 SourceFiles
-    LunPressure.C
+    SchneiderbauerEtAlPressure.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef LunPressure_H
-#define LunPressure_H
+#ifndef SchneiderbauerEtAlPressure_H
+#define SchneiderbauerEtAlPressure_H
 
 #include "granularPressureModel.H"
 
@@ -46,28 +46,34 @@ namespace granularPressureModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class Lun Declaration
+                           Class SchneiderbauerEtAl Declaration
 \*---------------------------------------------------------------------------*/
 
-class Lun
+class SchneiderbauerEtAl
 :
     public granularPressureModel
 {
+    // Private data
+
+        dictionary coeffDict_;
+
+        //- Characteristic length of geometry
+        dimensionedScalar L_;
 
 public:
 
     //- Runtime type information
-    TypeName("Lun");
+    TypeName("SchneiderbauerEtAl");
 
 
     // Constructors
 
         //- Construct from components
-        Lun(const dictionary& dict);
+        SchneiderbauerEtAl(const dictionary& dict);
 
 
     //- Destructor
-    virtual ~Lun();
+    virtual ~SchneiderbauerEtAl();
 
 
     // Member Functions

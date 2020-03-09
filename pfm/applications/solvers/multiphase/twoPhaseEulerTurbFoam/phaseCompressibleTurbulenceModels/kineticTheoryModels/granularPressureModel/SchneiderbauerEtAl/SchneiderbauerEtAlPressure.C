@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "LunPressure.H"
+#include "SchneiderbauerEtAlPressure.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,12 +34,12 @@ namespace kineticTheoryModels
 {
 namespace granularPressureModels
 {
-    defineTypeNameAndDebug(Lun, 0);
+    defineTypeNameAndDebug(SchneiderbauerEtAl, 0);
 
     addToRunTimeSelectionTable
     (
         granularPressureModel,
-        Lun,
+        SchneiderbauerEtAl,
         dictionary
     );
 }
@@ -49,25 +49,27 @@ namespace granularPressureModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::kineticTheoryModels::granularPressureModels::Lun::Lun
+Foam::kineticTheoryModels::granularPressureModels::SchneiderbauerEtAl::SchneiderbauerEtAl
 (
     const dictionary& dict
 )
 :
-    granularPressureModel(dict)
+    granularPressureModel(dict),
+    coeffDict_(dict.optionalSubDict(typeName + "Coeffs")),
+    L_("L", dimensionSet(0, 1, 0, 0, 0), coeffDict_)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::kineticTheoryModels::granularPressureModels::Lun::~Lun()
+Foam::kineticTheoryModels::granularPressureModels::SchneiderbauerEtAl::~SchneiderbauerEtAl()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volScalarField>
-Foam::kineticTheoryModels::granularPressureModels::Lun::granularPressureCoeff
+Foam::kineticTheoryModels::granularPressureModels::SchneiderbauerEtAl::granularPressureCoeff
 (
     const volScalarField& alpha1,
     const volScalarField& g0,
@@ -76,13 +78,17 @@ Foam::kineticTheoryModels::granularPressureModels::Lun::granularPressureCoeff
     const dimensionedScalar& e
 ) const
 {
-
-    return rho1*alpha1*(1.0 + 2.0*(1.0 + e)*alpha1*g0);
+    volScalarField lambda
+    (
+        scalar(1) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+    );
+    
+    return rho1*alpha1*(1.0/lambda + 2.0*(1.0 + e)*alpha1*g0);
 }
 
 
 Foam::tmp<Foam::volScalarField>
-Foam::kineticTheoryModels::granularPressureModels::Lun::
+Foam::kineticTheoryModels::granularPressureModels::SchneiderbauerEtAl::
 granularPressureCoeffPrime
 (
     const volScalarField& alpha1,
@@ -93,7 +99,11 @@ granularPressureCoeffPrime
     const dimensionedScalar& e
 ) const
 {
-    return rho1*(1.0 + alpha1*(1.0 + e)*(4.0*g0 + 2.0*g0prime*alpha1));
+    volScalarField lambda
+    (
+        scalar(1) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+    );
+    return rho1*(1.0/lambda + alpha1*(1.0 + e)*(4.0*g0 + 2.0*g0prime*alpha1));
 }
 
 

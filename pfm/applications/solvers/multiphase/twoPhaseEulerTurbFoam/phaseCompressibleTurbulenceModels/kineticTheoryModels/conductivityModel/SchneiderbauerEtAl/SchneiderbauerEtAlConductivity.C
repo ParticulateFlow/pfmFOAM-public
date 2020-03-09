@@ -23,7 +23,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "LunPressure.H"
+#include "SchneiderbauerEtAlConductivity.H"
+#include "mathematicalConstants.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -32,14 +33,14 @@ namespace Foam
 {
 namespace kineticTheoryModels
 {
-namespace granularPressureModels
+namespace conductivityModels
 {
-    defineTypeNameAndDebug(Lun, 0);
+    defineTypeNameAndDebug(SchneiderbauerEtAl, 0);
 
     addToRunTimeSelectionTable
     (
-        granularPressureModel,
-        Lun,
+        conductivityModel,
+        SchneiderbauerEtAl,
         dictionary
     );
 }
@@ -49,51 +50,90 @@ namespace granularPressureModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::kineticTheoryModels::granularPressureModels::Lun::Lun
+Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::SchneiderbauerEtAl
 (
     const dictionary& dict
 )
 :
-    granularPressureModel(dict)
+    conductivityModel(dict),
+    coeffDict_(dict.optionalSubDict(typeName + "Coeffs")),
+    L_("L", dimensionSet(0, 1, 0, 0, 0), coeffDict_)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::kineticTheoryModels::granularPressureModels::Lun::~Lun()
+Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::
+~SchneiderbauerEtAl()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volScalarField>
-Foam::kineticTheoryModels::granularPressureModels::Lun::granularPressureCoeff
+Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::kappa
 (
     const volScalarField& alpha1,
+    const volScalarField& Theta,
     const volScalarField& g0,
     const volScalarField& rho1,
     const volScalarField& da,
     const dimensionedScalar& e
 ) const
 {
+    const scalar Pi = constant::mathematical::pi;
+    const scalar sqrtPi = sqrt(Pi);
+    
+    const fvMesh& mesh = alpha1.mesh();
+    
+    const volScalarField& Kd = mesh.lookupObject<volScalarField>("Kd");
 
-    return rho1*alpha1*(1.0 + 2.0*(1.0 + e)*alpha1*g0);
+    volScalarField lambda
+    (
+        scalar(1) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+     );
+    
+    dimensionedScalar eta(0.5*(1 + e));
+    
+    volScalarField kappa
+    (
+        1.5625*rho1*da*sqrtPi*sqrt(Theta)
+       /(eta*(scalar(41.0) - 33.0*eta))
+    );
+    
+    volScalarField kappaStar
+    (
+        kappa
+       /(
+            scalar(1.0)
+          + 6.0*Kd*kappa
+           /(5.0*sqr(alpha1*rho1)*g0*Theta)
+         )
+    );
+
+    return
+     kappaStar/g0
+    *(
+         (
+            1.0/lambda
+          + 2.4*eta*alpha1*g0
+         )
+        *(
+            scalar(1.0)
+          + 2.4*sqr(eta)*(4.0*eta - scalar(3.0)*alpha1*g0)
+         )
+       + (2.56/Pi)*(scalar(41.0) - 33.0*eta)*sqr(eta*alpha1*g0)
+    );
 }
 
 
-Foam::tmp<Foam::volScalarField>
-Foam::kineticTheoryModels::granularPressureModels::Lun::
-granularPressureCoeffPrime
-(
-    const volScalarField& alpha1,
-    const volScalarField& g0,
-    const volScalarField& g0prime,
-    const volScalarField& rho1,
-    const volScalarField& da,
-    const dimensionedScalar& e
-) const
+bool Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::read()
 {
-    return rho1*(1.0 + alpha1*(1.0 + e)*(4.0*g0 + 2.0*g0prime*alpha1));
+    coeffDict_ <<= dict_.optionalSubDict(typeName + "Coeffs");
+
+    L_.readIfPresent(coeffDict_);
+
+    return true;
 }
 
 

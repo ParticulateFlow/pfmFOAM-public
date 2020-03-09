@@ -77,6 +77,7 @@ public:
             const volScalarField& alpha1,
             const volScalarField& g0,
             const volScalarField& rho1,
+            const volScalarField& da,
             const dimensionedScalar& e
         ) const;
 
@@ -86,6 +87,7 @@ public:
             const volScalarField& g0,
             const volScalarField& g0prime,
             const volScalarField& rho1,
+            const volScalarField& da,
             const dimensionedScalar& e
         ) const;
 };
