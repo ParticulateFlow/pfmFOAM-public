@@ -1211,7 +1211,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     alphaM.max(0);
     volScalarField alphaL2(alpha1*alphaM);
 //    volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
-//    volScalarField alphaL2 = sqr(alpha1)//*alphaM
+//    volScalarField alphaL2 = sqr(alpha1)
 //                            *(scalar(1.0) + cbrtPhiPhiM)
 //                            /(
 //                                 scalar(1.0)
