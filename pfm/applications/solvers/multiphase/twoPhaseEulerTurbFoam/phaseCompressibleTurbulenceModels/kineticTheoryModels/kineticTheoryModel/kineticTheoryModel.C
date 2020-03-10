@@ -594,10 +594,10 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
         // Limit viscosity and add frictional viscosity
         nut_.min(maxNut_);
-        //nuFric_ = min(nuFric_, maxNut_ - nut_);
-        nuFric_.min(maxNut_);
-        nut_ = pos(alpha-alphaMinFriction_)*nuFric_ + neg(alpha-alphaMinFriction_)*nut_;
-        //nut_ += nuFric_;
+        nuFric_ = min(nuFric_, maxNut_ - nut_);
+        //nuFric_.min(maxNut_);
+        //nut_ = pos(alpha-alphaMinFriction_)*nuFric_ + neg(alpha-alphaMinFriction_)*nut_;
+        nut_ += nuFric_;
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
