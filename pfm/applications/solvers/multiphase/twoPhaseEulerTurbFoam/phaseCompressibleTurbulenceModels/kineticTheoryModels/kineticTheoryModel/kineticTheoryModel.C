@@ -447,10 +447,12 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField J2
         (
             "J2",
-            0.25*sqr(alpha*beta)*da*magSqr(U - Uc_)
+            0.25*alpha*sqr(beta)*da*magSqr(U - Uc_)
            /(
-               max(alpha, residualAlpha_)*rho
-              *sqrtPi*(ThetaSqrt + ThetaSmallSqrt)
+               rho
+              *gs0_
+              *sqrtPi
+              *(ThetaSqrt + ThetaSmallSqrt)
             )
         );
 
@@ -494,7 +496,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             )
           + fvm::Sp(-gammaCoeff, Theta_)
           + fvm::Sp(-J1, Theta_)
-          //- fvm::SuSp(-J2/(Theta_ + ThetaSmall), Theta_)
+          + J2
           + fvOptions(alpha, rho, Theta_)
         );
 
