@@ -452,7 +452,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
                rho
               *gs0_
               *sqrtPi
-              *(ThetaSqrt + ThetaSmallSqrt)
+              *(ThetaSqrt*Theta_ + ThetaSmallSqrt*ThetaSmall)
             )
         );
 
@@ -497,6 +497,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
           + fvm::Sp(-gammaCoeff, Theta_)
           // + fvm::Sp(-J1, Theta_)
           // + J2
+          - fvm::SuSp(J1 - J2,Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
