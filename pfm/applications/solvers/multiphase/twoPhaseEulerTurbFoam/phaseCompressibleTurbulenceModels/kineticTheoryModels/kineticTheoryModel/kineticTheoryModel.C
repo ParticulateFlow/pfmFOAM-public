@@ -295,30 +295,31 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(symm(gradU));
     
+    const scalar Pi = constant::mathematical::pi;
+    volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
+    
     tmp<volScalarField> tpPrime
     (
-        max
+        (scalar(1.0) - psi)
+       *Theta_
+       *granularPressureModel_->granularPressureCoeffPrime
         (
-            Theta_
-           *granularPressureModel_->granularPressureCoeffPrime
-            (
-                alpha_,
-                radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
-                radialModel_->g0prime(alpha_, alphaMinFriction_, alphaMax_),
-                rho,
-                da,
-                e_
-            )
-         ,
-            frictionalStressModel_->frictionalPressurePrime
-            (
-                phase_,
-                alphaMinFriction_,
-                alphaMax_,
-                da,
-                rho,
-                dev(D)
-            )
+            alpha_,
+            radialModel_->g0(alpha_, 0.99*alphaMax_, alphaMax_),
+            radialModel_->g0prime(alpha_, 0.99*alphaMax_, alphaMax_),
+            rho,
+            da,
+            e_
+        )
+      + psi
+       *frictionalStressModel_->frictionalPressurePrime
+        (
+            phase_,
+            alphaMinFriction_,
+            alphaMax_,
+            da,
+            rho,
+            dev(D)
         )
     );
 
@@ -475,7 +476,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         );
 
         // 'thermal' conductivity (Table 3.3, p. 49)
-        kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
+        kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0M, rho, da, e_);
 
         fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -595,7 +596,10 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // Limit viscosity and add frictional viscosity
         nut_.min(maxNut_);
         nuFric_.min(maxNut_);
-        nut_ = max(nut_,nuFric_);
+        
+        const scalar Pi = constant::mathematical::pi;
+        volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
+        nut_ = (scalar(1.0) - psi)*nut_ + psi*nuFric_;
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
