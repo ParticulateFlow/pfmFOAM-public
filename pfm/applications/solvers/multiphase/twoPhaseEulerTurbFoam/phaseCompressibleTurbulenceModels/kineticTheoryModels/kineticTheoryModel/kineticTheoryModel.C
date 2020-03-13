@@ -296,27 +296,29 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     volSymmTensorField D(symm(gradU));
     
     tmp<volScalarField> tpPrime
-    max
     (
-        Theta_
-       *granularPressureModel_->granularPressureCoeffPrime
+        max
         (
-            alpha_,
-            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
-            radialModel_->g0prime(alpha_, alphaMinFriction_, alphaMax_),
-            rho,
-            da,
-            e_
-        )
-     ,
-        frictionalStressModel_->frictionalPressurePrime
-        (
-            phase_,
-            alphaMinFriction_,
-            alphaMax_,
-            da,
-            rho,
-            dev(D)
+            Theta_
+           *granularPressureModel_->granularPressureCoeffPrime
+            (
+                alpha_,
+                radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
+                radialModel_->g0prime(alpha_, alphaMinFriction_, alphaMax_),
+                rho,
+                da,
+                e_
+            )
+         ,
+            frictionalStressModel_->frictionalPressurePrime
+            (
+                phase_,
+                alphaMinFriction_,
+                alphaMax_,
+                da,
+                rho,
+                dev(D)
+            )
         )
     );
 
