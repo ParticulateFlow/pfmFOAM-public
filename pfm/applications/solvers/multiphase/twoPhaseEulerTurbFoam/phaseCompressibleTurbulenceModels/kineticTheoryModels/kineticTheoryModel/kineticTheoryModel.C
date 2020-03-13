@@ -437,6 +437,12 @@ void Foam::RASModels::kineticTheoryModel::correct()
            *max(sqr(alpha), sqr(residualAlpha_))
            *rho*gs0M*ThetaSqrt/(da*sqrtPi)
         );
+        volScalarField dissTrD
+        (
+              3.0*(1.0 - sqr(e_))
+             *max(sqr(alpha), sqr(residualAlpha_))
+             *rho*gs0M*Theta_*trD
+        );
 
         // Drag
         volScalarField beta
@@ -501,7 +507,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
               + 2.0*nut_*tr(D&D)
             )
           + fvm::Sp(-gammaCoeff, Theta_)
-          - fvm::SuSp(J1 - J2,Theta_)
+          + dissTrD
+          - fvm::SuSp(J1 - 0*J2,Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
