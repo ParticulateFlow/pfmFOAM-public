@@ -296,6 +296,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     volSymmTensorField D(symm(gradU));
     
     tmp<volScalarField> tpPrime
+    max
     (
         Theta_
        *granularPressureModel_->granularPressureCoeffPrime
@@ -307,7 +308,8 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             da,
             e_
         )
-     + frictionalStressModel_->frictionalPressurePrime
+     ,
+        frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
@@ -589,8 +591,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
         // Limit viscosity and add frictional viscosity
         nut_.min(maxNut_);
-        nuFric_ = min(nuFric_, maxNut_ - nut_);
-        nut_ += nuFric_;
+        nuFric_.min(maxNut_);
+        nut_ = max(nut_,nuFric_);
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
