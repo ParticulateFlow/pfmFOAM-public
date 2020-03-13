@@ -427,7 +427,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField ThetaSqrt("sqrtTheta", sqrt(Theta_));
 
         // Bulk viscosity  p. 45 (Lun et al. 1984).
-        lambda_ = (4.0/3.0)*sqr(alpha)*da*gs0_*(1.0 + e_)*ThetaSqrt/sqrtPi;
+        lambda_ = (4.0/3.0)*sqr(alpha)*da*gs0M*(1.0 + e_)*ThetaSqrt/sqrtPi;
 
         // Dissipation (Eq. 3.24, p.50)
         volScalarField gammaCoeff
@@ -496,7 +496,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
            *(
                 fvm::ddt(alpha, rho, Theta_)
               + fvm::div(alphaRhoPhi, Theta_)
-            //+ fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
+              + fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
          ==
@@ -504,11 +504,11 @@ void Foam::RASModels::kineticTheoryModel::correct()
           + rho
            *(
                 lambda_*sqr(trD)
-              + 2.0*nut_*tr(D&D)
+              + 2.0*nut_*(dev(D)&&D)
             )
           + fvm::Sp(-gammaCoeff, Theta_)
           + dissTrD
-          - fvm::SuSp(J1 - 0*J2,Theta_)
+          - fvm::SuSp(J1 - J2,Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
