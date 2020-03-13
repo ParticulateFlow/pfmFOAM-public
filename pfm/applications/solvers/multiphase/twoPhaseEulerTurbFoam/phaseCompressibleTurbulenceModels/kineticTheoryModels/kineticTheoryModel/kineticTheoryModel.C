@@ -409,6 +409,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
     // Calculating the radial distribution function
     gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
+    volScalarField gs0M(radialModel_->g0(alpha, 0.99*alphaMax_, alphaMax_));
     
     volScalarField trD
     (
@@ -433,7 +434,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             "gammaCoeff",
             12.0*(1.0 - sqr(e_))
            *max(sqr(alpha), sqr(residualAlpha_))
-           *rho*gs0_*ThetaSqrt/(da*sqrtPi)
+           *rho*gs0M*ThetaSqrt/(da*sqrtPi)
         );
 
         // Drag
@@ -454,7 +455,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             0.25*alpha*sqr(beta)*da*magSqr(U - Uc_)
            /(
                rho
-              *gs0_
+              *gs0M
               *sqrtPi
               *(ThetaSqrt*Theta_ + ThetaSmallSqrt*ThetaSmall)
             )
@@ -499,7 +500,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
               + 2.0*nut_*tr(D&D)
             )
           + fvm::Sp(-gammaCoeff, Theta_)
-          // - fvm::SuSp(J1 - J2,Theta_)
+          - fvm::SuSp(J1 - J2,Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
