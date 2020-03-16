@@ -304,8 +304,8 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
        *granularPressureModel_->granularPressureCoeffPrime
         (
             alpha_,
-            radialModel_->g0(alpha_, 0.99*alphaMax_, alphaMax_),
-            radialModel_->g0prime(alpha_, 0.99*alphaMax_, alphaMax_),
+            radialModel_->g0(alpha_, 0.999*alphaMax_, alphaMax_),
+            radialModel_->g0prime(alpha_, 0.999*alphaMax_, alphaMax_),
             rho,
             da,
             e_
@@ -407,8 +407,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
     volSymmTensorField D(symm(gradU));
 
     // Calculating the radial distribution function
-    gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
-    volScalarField gs0M(radialModel_->g0(alpha, 0.99*alphaMax_, alphaMax_));
+    //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
+    gs0_ = radialModel_->g0(alpha, 0.999*alphaMax_, alphaMax_);
     
     volScalarField trD
     (
@@ -425,7 +425,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField ThetaSqrt("sqrtTheta", sqrt(Theta_));
 
         // Bulk viscosity  p. 45 (Lun et al. 1984).
-        lambda_ = (4.0/3.0)*sqr(alpha)*da*gs0M*(1.0 + e_)*ThetaSqrt/sqrtPi;
+        lambda_ = (4.0/3.0)*sqr(alpha)*da*gs0_*(1.0 + e_)*ThetaSqrt/sqrtPi;
 
         // Dissipation (Eq. 3.24, p.50)
         volScalarField gammaCoeff
@@ -433,13 +433,13 @@ void Foam::RASModels::kineticTheoryModel::correct()
             "gammaCoeff",
             12.0*(1.0 - sqr(e_))
            *max(sqr(alpha), sqr(residualAlpha_))
-           *rho*gs0M*ThetaSqrt/(da*sqrtPi)
+           *rho*gs0_*ThetaSqrt/(da*sqrtPi)
         );
         volScalarField dissTrD
         (
               3.0*(1.0 - sqr(e_))
              *max(sqr(alpha), sqr(residualAlpha_))
-             *rho*gs0M*Theta_*trD
+             *rho*gs0_*Theta_*trD
         );
 
         // Drag
@@ -460,7 +460,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             0.25*alpha*sqr(beta)*da*magSqr(U - Uc_)
            /(
                rho
-              *gs0M
+              *gs0_
               *sqrtPi
               *(ThetaSqrt*Theta_ + ThetaSmallSqrt*ThetaSmall)
             )
@@ -480,7 +480,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         );
 
         // 'thermal' conductivity (Table 3.3, p. 49)
-        kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0M, rho, da, e_);
+        kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
 
         fv::options& fvOptions(fv::options::New(mesh_));
 
