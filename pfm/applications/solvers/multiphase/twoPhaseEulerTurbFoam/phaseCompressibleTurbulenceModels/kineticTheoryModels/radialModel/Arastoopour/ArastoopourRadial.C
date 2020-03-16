@@ -74,15 +74,7 @@ Foam::kineticTheoryModels::radialModels::Arastoopour::g0
     const dimensionedScalar& alphaMax
 ) const
 {
-    volScalarField gs0A(1.0/(1.0 - alpha/alphaMax));
-    volScalarField gs0C
-    (
-          1.0/(1.0 - alpha)
-        + 3.0*alpha/(2.0*sqr(1.0 - alpha))
-        + sqr(alpha)/(2.0*pow3(1.0 - alpha))
-    );
-    
-    return min(gs0A,gs0C);
+    return 1.0/(1.0 - min(alpha,alphaMinFriction)/alphaMax);
 }
 
 
@@ -94,35 +86,12 @@ Foam::kineticTheoryModels::radialModels::Arastoopour::g0prime
     const dimensionedScalar& alphaMax
 ) const
 {
-    volScalarField gs0A
-    (
-         1.0
-         /(
-              sqr(1.0 - alpha/alphaMax)
-             *alphaMax
-          )
-    );
-    volScalarField gs0C
-    (
-          2.5/sqr(1.0 - alpha)
-        + 4.0*alpha/pow3(1.0 - alpha)
-        + 1.5*sqr(alpha)/pow4(1.0 - alpha)
-    );
-    
-    dimensionedScalar aM
-    (
-        dimensionedScalar("unit", dimensionSet(0,0,0,0,0), -1.0)
-      + 6.0*alphaMax
-      - sqrt
-        (
-             dimensionedScalar("unit", dimensionSet(0,0,0,0,0), 1.0)
-           + 4.0*alphaMax - 4.0*sqr(alphaMax)
-        )
-       /(
-           4.0*alphaMax
-        )
-     );
-    return pos0(alpha - aM)*gs0C + neg(alpha - aM)*gs0A;
+    return
+    1.0
+    /(
+         sqr(1.0 - min(alpha,alphaMinFriction)/alphaMax)
+        *alphaMax
+      );
 }
 
 
