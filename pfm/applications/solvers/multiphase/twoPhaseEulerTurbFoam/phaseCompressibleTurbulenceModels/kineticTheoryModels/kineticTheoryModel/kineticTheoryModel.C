@@ -508,7 +508,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
             )
           + fvm::Sp(-gammaCoeff, Theta_)
           + dissTrD
-          - fvm::SuSp(J1 - J2,Theta_)
+          //- fvm::SuSp(J1 - J2,Theta_)
+          + fvm::Sp(-J1,Theta_)
           + fvOptions(alpha, rho, Theta_)
         );
 
