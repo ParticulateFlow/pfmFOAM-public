@@ -551,9 +551,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField tr2D("tr2D", sqr(trD));
         volScalarField trD2("trD2", tr(D & D));
         
-        // limit trD
-        trD.min(0);
-        
         Theta_ = sqr
         (
             (
