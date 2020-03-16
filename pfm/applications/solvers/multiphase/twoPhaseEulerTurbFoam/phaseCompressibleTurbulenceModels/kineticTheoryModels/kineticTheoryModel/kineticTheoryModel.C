@@ -295,13 +295,12 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(symm(gradU));
     
-    const scalar Pi = constant::mathematical::pi;
-    volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
+   // const scalar Pi = constant::mathematical::pi;
+   // volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
     
     tmp<volScalarField> tpPrime
     (
-        (scalar(1.0) - psi)
-       *Theta_
+        Theta_
        *granularPressureModel_->granularPressureCoeffPrime
         (
             alpha_,
@@ -311,8 +310,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             da,
             e_
         )
-      + psi
-       *frictionalStressModel_->frictionalPressurePrime
+      + frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
@@ -600,11 +598,13 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
         // Limit viscosity and add frictional viscosity
         nut_.min(maxNut_);
-        nuFric_.min(maxNut_);
+        nuFric_ = min(nuFric_, maxNut_ - nut_);
+        nut_ += nuFric_;
+//        nuFric_.min(maxNut_);
         
-        const scalar Pi = constant::mathematical::pi;
-        volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
-        nut_ = (scalar(1.0) - psi)*nut_ + psi*nuFric_;
+//        const scalar Pi = constant::mathematical::pi;
+//        volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
+//        nut_ = (scalar(1.0) - psi)*nut_ + psi*nuFric_;
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
