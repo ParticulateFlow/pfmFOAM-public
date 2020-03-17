@@ -410,12 +410,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
     //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
     gs0_ = radialModel_->g0(alpha, 0.999*alphaMax_, alphaMax_);
     
-    volScalarField trD
-    (
-        "trD",
-        alpha/(alpha + residualAlpha_)
-       *fvc::div(phi_)
-    );
+    volScalarField trD(tr(D));
 
     if (!equilibrium_)
     {
@@ -540,25 +535,26 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
         volScalarField K4("K4", 12.0*(1.0 - sqr(e_))*rho*gs0_/(da*sqrtPi));
 
-        volScalarField trD
-        (
-            "trD",
-            alpha/(alpha + residualAlpha_)
-           *fvc::div(phi_)
-        );
+//        volScalarField trD
+//        (
+//            "trD",
+//            alpha/(alpha + residualAlpha_)
+//           *fvc::div(phi_)
+//        );
+        
         volScalarField tr2D("tr2D", sqr(trD));
-        volScalarField trD2("trD2", tr(D & D));
+        volScalarField trD2("trD2", dev(D)&&D);
         
         Theta_ = sqr
         (
             (
-                - K1*alpha*trD
+                - K1*trD
                 + sqrt(
-                          sqr(K1*alpha)*tr2D
-                        + 4.0*K4*alpha*(K2*tr2D + 2.0*K3*trD2)
+                          sqr(K1)*tr2D
+                        + 4.0*K4*(K2*tr2D + 2.0*K3*trD2)/max(alpha, residualAlpha_)
                        )
             )
-           /(2.0*max(alpha, residualAlpha_)*K4)
+           /(2.0*K4)
         );
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
     }
