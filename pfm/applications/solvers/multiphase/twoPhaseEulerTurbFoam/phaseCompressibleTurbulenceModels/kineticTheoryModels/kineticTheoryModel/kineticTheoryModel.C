@@ -463,7 +463,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
         if (mesh_.foundObject<volScalarField>("k." + fluid.otherPhase(phase_).name())) {
             Info<<"Getting k from continuous phase..." << endl;
             const volScalarField& kc = mesh_.lookupObject<volScalarField>("k." + fluid.otherPhase(phase_).name());
-            J2 = sqrt(6.0*kc)/(ThetaSqrt+ThetaSmallSqrt);
+            volScalarField tau1(max(alpha*beta,24.0*sqr(alpha)*gs0_*rho*ThetaSqrt/(da*1.7725)));
+            J1 = 3.0*tau1;
+            J2 = tau1*sqrt(6.0*kc)/(ThetaSqrt+ThetaSmallSqrt);
         }
         // particle pressure - coefficient in front of Theta (Eq. 3.22, p. 45)
         volScalarField PsCoeff
