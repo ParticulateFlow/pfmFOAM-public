@@ -107,7 +107,7 @@ Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::kappa
        /(
             scalar(1.0)
           + 6.0*Kd*kappa
-           /(5.0*sqr(alpha1*rho1)*g0*Theta)
+           /(5.0*sqr((alpha1 + scalar(1.0e-7))*rho1)*g0*Theta)
          )
     );
 
