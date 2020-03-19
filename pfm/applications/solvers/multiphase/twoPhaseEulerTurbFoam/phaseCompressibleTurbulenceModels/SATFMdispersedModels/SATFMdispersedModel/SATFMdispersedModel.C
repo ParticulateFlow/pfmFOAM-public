@@ -1236,7 +1236,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1285,7 +1285,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
-    volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/lm_;
+    volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/deltaF_;
     volScalarField denom = divU
                          + dissPhiP2
                          - 2.0
