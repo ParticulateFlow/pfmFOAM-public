@@ -1085,7 +1085,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiPhiGG_.min(0.99);
         
         // compute correlation coefficient between gas phase and solid phase velocity
-        /*
         volScalarField xiGSnum  = filter_(alpha*(Uc_&U))/alphaf - (filter_(alpha*Uc_) & Uf)/alphaf;
         volScalarField xiGSden  = sqrt(max(filter_(alpha2*magSqr(Uc_))/alpha2f - magSqr(Ucf),kSmall))
                                 * sqrt(max(aUU,kSmall));
@@ -1097,8 +1096,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         //xiGS_.max(0);
         xiGS_ = mag(xiGS_);
         xiGS_.min(sqrt(2.0));
-        */
-        xiGS_   = xiGSScalar_;
+        
         // compute mixing length dynamically
         /*
         volScalarField Lij  = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
@@ -1293,12 +1291,16 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          - 2.0
                           *beta
                           *CphiS_
-                          *(
-                              xiGS_*sqrt(max(kC_&k_,sqr(kSmall)))
-                            - sqrt(max(k_&k_,sqr(kSmall)))
+                          *mag(
+                               xiGS_
+                              *(
+                                    sqrt((kC_&eX)*(k_&eX))*eX
+                                  + sqrt((kC_&eY)*(k_&eY))*eY
+                                  + sqrt((kC_&eZ)*(k_&eZ))*eZ
+                               )
+                             - k_
                            )
                           /(alpha*rho*km);
-    denom.max(SMALL);
     volScalarField xiKgradAlpha = (
                                          ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
@@ -1349,18 +1351,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // production/dissipation
-          - fvm::SuSp(
-                2.0*xiKgradAlpha
-               /sqrt(alphaP2Mean_)
-             + denom
-             ,
-               alphaP2Mean_
-            )
+          - 2.0*xiKgradAlpha*sqrt(alphaP2Mean_)
+          - fvm::SuSp(denom,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();
         phiP2Eqn.solve();
     } else {
+        denom.max(SMALL);
         alphaP2Mean_ =   8.0
                        * sqr(xiKgradAlpha)
                        / sqr(denom);
