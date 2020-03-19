@@ -475,7 +475,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
                 dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
             );
             cellVolume.ref() = mesh_.V();
-            volScalarField kc(sqr(nutC)/sqr(0.09*cellVolume));
+            volScalarField kc(sqr(nutC)/(0.0081*pow(cellVolume,2.0/3.0));
             volScalarField tau1(max(alpha*beta,24.0*sqr(alpha)*gs0_*rho*ThetaSqrt/(da*1.7725)));
             J1 = 3.0*tau1;
             J2 = tau1*sqrt(6.0*kc)/(ThetaSqrt+ThetaSmallSqrt);
