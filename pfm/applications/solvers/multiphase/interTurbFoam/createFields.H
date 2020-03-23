@@ -172,7 +172,7 @@ volScalarField Cst_
           IOobject::AUTO_WRITE
      ),
      mesh,
-     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 6.0)
+     dimensionedScalar("value", dimensionSet(0,0,0,0,0,0,0), 12.0)
 );
 
 volScalarField Ceps_
