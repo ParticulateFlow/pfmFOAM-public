@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
                 
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
-                                             + (scalar(1.0) - 2.0*alpha1)
+                                             + pos0(1 - 2.0*alpha1)
                                               *Cst_*sqrt(nutSigma_/nu)
                                               *mixture.nearInterface()
                                            );
