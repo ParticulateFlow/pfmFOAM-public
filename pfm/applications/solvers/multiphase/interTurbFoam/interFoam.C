@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
                 
                 volScalarField a(Ceps_/deltaF_);
                 volScalarField b((2.0/3.0)*tr(D));
-                volScalarField c(Cmu_*deltaF_*(2*(dev(D) && D) + nutSigmaCorr*mixture.nearInterface()));
+                volScalarField c(Cmu_*deltaF_*(2*(dev(D) && D) + nutSigmaCorr));
                 
                 volScalarField k(sqr((-b + sqrt(sqr(b) + 4*a*c))/(2*a)));
                 
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                 
                 volScalarField aH(Ceps_/(2.0*deltaF_));
                 volScalarField bH((2.0/3.0)*tr(Dhat));
-                volScalarField cH(2.0*Cmu_*deltaF_*(2.0*(dev(Dhat) && Dhat) + nutSigmaCorrH*mixture.nearInterface()));
+                volScalarField cH(2.0*Cmu_*deltaF_*(2.0*(dev(Dhat) && Dhat) + nutSigmaCorrH));
                 
                 volScalarField kH(sqr((-bH + sqrt(sqr(bH) + 4*aH*cH))/(2*aH)));
                 
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
                 volScalarField MijMijS = filterS_(MijS&MijS);
                 MijMijS.max(ROOTVSMALL);
               
-                Cst_ = mixture.nearInterface()*(filterS_(LijS&MijS))/MijMijS;
+                Cst_ = (filterS_(LijS&MijS))/MijMijS;
                 Cst_ = 0.5*(Cst_+mag(Cst_));
             
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
@@ -250,7 +250,6 @@ int main(int argc, char *argv[])
                 corrSurfaceTensionForce_ = (
                                                scalar(1.0)
                                              + Cst_*sqrt(nutSigma_/nu)
-                                              *mixture.nearInterface()
                                            );
                 corrSurfaceTensionForce_.max(0.01);
                 corrSurfaceTensionForce_.min(100.0);
