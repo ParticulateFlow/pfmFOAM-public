@@ -212,10 +212,10 @@ int main(int argc, char *argv[])
                 nutSigma_.max(SMALL); 
  
                 // Dynamic adjustment of Cst
-                
                 volSymmTensorField Dhat(filter_(D));
                 volScalarField sigmaKhat(filter_(mixture.sigmaK()));
-                volScalarField nutSigmaCorrH = -sqr(Csigma_)*sigmaKhat*filter_(fvc::laplacian(alpha1)/rho);
+                volScalarField alphaF(filter_(alpha1));
+                volScalarField nutSigmaCorrH = -sqr(Csigma_)*sigmaKhat*(fvc::laplacian(alphaF)/filter_(rho));
                 nutSigmaCorrH.max(SMALL);
                 
                 volScalarField aH(Ceps_/(2.0*deltaF_));
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
                 nutSigmaHat.max(SMALL);
                 
                 volVectorField gradAlpha = fvc::grad(alpha1);
-                volVectorField gradAlphaHat = filter_(gradAlpha);
+                volVectorField gradAlphaHat = fvc::grad(alphaF);
  
                 volVectorField MijS = sigmaKhat*gradAlphaHat*sqrt(nutSigmaHat/nu)
                                     - filter_(mixture.sigmaK()*gradAlpha*sqrt(nutSigma_/nu));
@@ -241,8 +241,8 @@ int main(int argc, char *argv[])
                 volScalarField MijMijS = filterS_(MijS&MijS);
                 MijMijS.max(ROOTVSMALL);
               
-                Cst_ = -(filterS_(LijS&MijS))/MijMijS;
-            
+                Cst_ = (filterS_(LijS&MijS))/MijMijS;
+                 
                 Info << "max(nut) = " << max(nutSigma_).value() << nl
                      << "min(nut) = " << min(nutSigma_).value() << endl;
                 
