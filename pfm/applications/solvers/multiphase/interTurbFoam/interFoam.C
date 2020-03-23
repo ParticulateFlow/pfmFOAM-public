@@ -213,14 +213,14 @@ int main(int argc, char *argv[])
  
                 // Dynamic adjustment of Cst
                 
-                volTensorField Dhat(filter_(D));
+                volSymmTensorField Dhat(filter_(D));
                 volScalarField sigmaKhat(filter_(mixture.sigmaK()));
                 volScalarField nutSigmaCorrH = -sqr(Csigma_)*sigmaKhat*filter_(fvc::laplacian(alpha1)/rho);
                 nutSigmaCorrH.max(SMALL);
                 
                 volScalarField aH(Ceps_/(2.0*deltaF_));
                 volScalarField bH((2.0/3.0)*tr(Dhat));
-                volScalarField cH(2.0*Cmu_*deltaF_*(2.0*(dev(Dhat) && Dhat) + nutSigmaCorrHJ*mixture.nearInterface()));
+                volScalarField cH(2.0*Cmu_*deltaF_*(2.0*(dev(Dhat) && Dhat) + nutSigmaCorrH*mixture.nearInterface()));
                 
                 volScalarField kH(sqr((-bH + sqrt(sqr(bH) + 4*aH*cH))/(2*aH)));
                 
