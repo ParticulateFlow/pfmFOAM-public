@@ -506,6 +506,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
         //     the laplacian has the wrong sign
         fvScalarMatrix ThetaEqn
         (
+         neg0(alpha - alphaMinFriction_)
+        *(
+         
             1.5
            *(
                 fvm::ddt(alpha, rho, Theta_)
@@ -523,7 +526,12 @@ void Foam::RASModels::kineticTheoryModel::correct()
           + fvm::Sp(-gammaCoeff, Theta_)
           + dissTrD
           - fvm::SuSp(J1 - J2,Theta_)
-          + fvOptions(alpha, rho, Theta_)
+         )
+         + pos(alpha - alphaMinFriction_)
+         *(
+            fvm::Sp(dimensionedScalar("units",dimensionSet(1,-3,-1,0,0),scalar(1.0)), Theta_)
+          )
+         + fvOptions(alpha, rho, Theta_)
         );
 
         ThetaEqn.relax();
