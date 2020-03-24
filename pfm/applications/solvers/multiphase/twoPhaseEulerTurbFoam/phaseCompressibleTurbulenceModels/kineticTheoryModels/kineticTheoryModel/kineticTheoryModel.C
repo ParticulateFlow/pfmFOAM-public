@@ -518,7 +518,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
           + rho
            *(
                 lambda_*sqr(trD)
-              + 2.0*nut_*(D&&D)
+              + 2.0*nut_*(dev(D)&&dev(D))
             )
           + fvm::Sp(-gammaCoeff, Theta_)
           + dissTrD
@@ -563,7 +563,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
 //        );
         
         volScalarField tr2D("tr2D", sqr(trD));
-        volScalarField trD2("trD2", D&&D);
+        volScalarField trD2("trD2", dev(D)&&dev(D));
         
         Theta_ = sqr
         (
