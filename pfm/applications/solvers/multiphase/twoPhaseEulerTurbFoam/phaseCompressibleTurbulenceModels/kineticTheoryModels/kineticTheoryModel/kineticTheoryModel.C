@@ -511,7 +511,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // NB. note that there are two typos in Eq. 3.20:
         //     Ps should be without grad
         //     the laplacian has the wrong sign
-        volScalarField solveTheta(alpha - 0.52*pow(da,3.0)/cellVolume);
+        volScalarField solveTheta(alpha - pow(da,3.0)/cellVolume);
         fvScalarMatrix ThetaEqn
         (
          pos0(solveTheta)
