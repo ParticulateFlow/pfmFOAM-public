@@ -510,9 +510,10 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // NB. note that there are two typos in Eq. 3.20:
         //     Ps should be without grad
         //     the laplacian has the wrong sign
+        volScalarField solveTheta(1.0-(da/(6.0*sqrt(2.0)*(alpha + scalar(1.0e-7))))/dimensionedScalar("L",dimensionedScalar(0,1,0,0,0),0.001));
         fvScalarMatrix ThetaEqn
         (
-         neg0(alpha - alphaMinFriction_)
+         pos0(solveTheta)*
         *(
          
             1.5
@@ -522,9 +523,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
               //+ fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
-         ==
-          - fvm::SuSp(PsCoeff*trD, Theta_)
-          + rho
+          + fvm::SuSp(PsCoeff*trD, Theta_)
+          - rho
            *(
                 lambda_*sqr(trD)
               + 2.0*nut_*(dev(D)&&dev(D))
@@ -532,12 +532,12 @@ void Foam::RASModels::kineticTheoryModel::correct()
 //          + fvm::Sp(-gammaCoeff, Theta_)
 //          + fvm::Sp(-dissTrD,Theta_)
 //          - fvm::SuSp(J1 - J2,Theta_)
-          - gammaCoeff*Theta_
-          - dissTrD*Theta_
-          - (J1 - J2)*Theta_
+          + gammaCoeff*Theta_
+          + dissTrD*Theta_
+          + (J1 - J2)*Theta_
 
          )
-         + pos(alpha - alphaMinFriction_)
+         + neg(solveTheta)
          *(
             fvm::Sp(dimensionedScalar("units",dimensionSet(1,-3,-1,0,0),scalar(1.0)), Theta_)
           )
