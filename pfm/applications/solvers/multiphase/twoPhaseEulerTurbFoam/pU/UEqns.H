@@ -45,7 +45,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
         U1Eqn =
         (
             fvm::ddt(alpha1, rho1, U1) + fvm::div(alphaRhoPhi1, U1)
-          + fvm::SuSp(-contErr1, U1)
+          //+ fvm::SuSp(-contErr1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
          ==
@@ -126,7 +126,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
         U2Eqn =
         (
             fvm::ddt(alpha2, rho2, U2) + fvm::div(alphaRhoPhi2, U2)
-          + fvm::SuSp(-contErr2, U2)
+          //+ fvm::SuSp(-contErr2, U2)
           + MRF.DDt(alpha2*rho2 + Vm, U2)
           + phase2.turbulence().divDevRhoReff(U2)
         ==
