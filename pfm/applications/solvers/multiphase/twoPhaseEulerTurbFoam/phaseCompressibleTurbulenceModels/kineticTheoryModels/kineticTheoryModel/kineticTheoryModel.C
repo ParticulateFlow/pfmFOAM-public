@@ -407,6 +407,19 @@ void Foam::RASModels::kineticTheoryModel::correct()
     tmp<volTensorField> tgradU(fvc::grad(U_));
     const volTensorField& gradU(tgradU());
     volSymmTensorField D(symm(gradU));
+    
+    volScalarField cellVolume
+    (
+        IOobject
+        (
+            "cellVolume",
+            mesh_.time().timeName(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
+    );
+    cellVolume.ref() = mesh_.V();
 
     // Calculating the radial distribution function
     //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
@@ -471,18 +484,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
         if (mesh_.foundObject<volScalarField>("nut." + fluid.otherPhase(phase_).name())) {
             Info<<"Getting nut from continuous phase..." << endl;
             const volScalarField& nutC = mesh_.lookupObject<volScalarField>("nut." + fluid.otherPhase(phase_).name());
-            volScalarField cellVolume
-            (
-                IOobject
-                (
-                    "cellVolume",
-                    mesh_.time().timeName(),
-                    mesh_
-                ),
-                mesh_,
-                dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
-            );
-            cellVolume.ref() = mesh_.V();
             volScalarField kc(sqr(nutC)/(0.0081*pow(cellVolume,2.0/3.0)));
             volScalarField tau1(max(alpha*beta,24.0*sqr(alpha)*gs0_*rho*ThetaSqrt/(da*1.7725)));
             J1 = 3.0*tau1;
@@ -510,7 +511,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // NB. note that there are two typos in Eq. 3.20:
         //     Ps should be without grad
         //     the laplacian has the wrong sign
-        volScalarField solveTheta(1.0-(da/(6.0*sqrt(2.0)*(alpha + scalar(1.0e-7))))/dimensionedScalar("L",dimensionSet(0,1,0,0,0),0.001));
+        volScalarField solveTheta(alpha - 0.52*pow(da,3.0)/cellVolume);
         fvScalarMatrix ThetaEqn
         (
          pos0(solveTheta)
