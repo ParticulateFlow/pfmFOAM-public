@@ -553,8 +553,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
             0.5*da*rho*
             (
                 (sqrtPi/(3.0*(3.0 - e_)))
-               *(0.5*(3.0*e_ + 1.0) + 0.4*(1.0 + e_)*(3.0*e_ - 1.0)*alpha*gs0_)
-               +1.6*alpha*gs0_*(1.0 + e_)/sqrtPi
+               *(1.0 + 0.4*(1.0 + e_)*(3.0*e_ - 1.0)*alpha*gs0_)
+              + 1.6*alpha*gs0_*(1.0 + e_)/sqrtPi
             )
         );
 
@@ -579,13 +579,13 @@ void Foam::RASModels::kineticTheoryModel::correct()
         Theta_ = sqr
         (
             (
-                - K1*trD
+                - (K1*alpha_ + rhoa_)*trD
                 + sqrt(
                           sqr(K1)*tr2D
-                        + 4.0*K4*(K2*tr2D + 2.0*K3*trD2)/max(alpha, residualAlpha_)
+                        + 4.0*K4*max(alpha, residualAlpha_)*(K2*tr2D + 2.0*K3*trD2)
                        )
             )
-           /(2.0*K4)
+           /(2.0*max(alpha, residualAlpha_)*K4)
         );
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
     }
