@@ -426,6 +426,16 @@ void Foam::RASModels::kineticTheoryModel::correct()
     gs0_ = radialModel_->g0(alpha, 0.999*alphaMax_, alphaMax_);
     
     volScalarField trD(tr(D));
+    
+    // Drag
+    volScalarField beta
+    (
+        fluid.lookupSubModel<dragModel>
+        (
+            phase_,
+            fluid.otherPhase(phase_)
+        ).Ki()
+    );
 
     if (!equilibrium_)
     {
@@ -452,16 +462,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
               /(da*sqrtPi)
              - trD
            )
-        );
-        
-        // Drag
-        volScalarField beta
-        (
-            fluid.lookupSubModel<dragModel>
-            (
-                phase_,
-                fluid.otherPhase(phase_)
-            ).Ki()
         );
 
         // Eq. 3.25, p. 50 Js = J1 - J2
@@ -579,9 +579,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
         Theta_ = sqr
         (
             (
-                - (K1*alpha_ + rho_)*trD
+                - (K1*alpha_ + rho_)*trD - beta
                 + sqrt(
-                          sqr(K1*alpha_ + rho_)*tr2D
+                          sqr(-(K1*alpha_ + rho_)*trD - beta)
                         + 4.0*K4*max(alpha, residualAlpha_)*(K2*tr2D + 2.0*K3*trD2)
                        )
             )
