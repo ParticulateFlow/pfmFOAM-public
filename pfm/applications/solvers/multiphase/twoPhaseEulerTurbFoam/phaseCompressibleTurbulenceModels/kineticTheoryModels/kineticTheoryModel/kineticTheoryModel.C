@@ -441,22 +441,18 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField gammaCoeff
         (
             "gammaCoeff",
-            12.0*(1.0 - sqr(e_))
+           3.0
+           *(1.0 - sqr(e_))
            *max(sqr(alpha), sqr(residualAlpha_))
            *rho
            *gs0_
-           *ThetaSqrt
-           /(da*sqrtPi)
+           *(
+               4.0
+              *ThetaSqrt
+              /(da*sqrtPi)
+             - trD
+           )
         );
-        volScalarField dissTrD
-        (
-             - 3.0*(1.0 - sqr(e_))
-             *max(sqr(alpha), sqr(residualAlpha_))
-             *rho
-             *gs0_
-             *trD
-        );
-        dissTrD.max(0);
         
         // Drag
         volScalarField beta
@@ -473,7 +469,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField J2
         (
             "J2",
-           0*0.25*alpha*sqr(beta)*da*magSqr(U - Uc_)
+           0.25*alpha*sqr(beta)*da*magSqr(U - Uc_)
            /(
                rho
               *gs0_
@@ -511,7 +507,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // NB. note that there are two typos in Eq. 3.20:
         //     Ps should be without grad
         //     the laplacian has the wrong sign
-        volScalarField solveTheta(alpha - pow(da,3.0)/cellVolume);
+        volScalarField solveTheta(alpha - 0.5*pow(da,3.0)/cellVolume);
         fvScalarMatrix ThetaEqn
         (
          pos0(solveTheta)
@@ -524,20 +520,16 @@ void Foam::RASModels::kineticTheoryModel::correct()
               //+ fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
-          + fvm::SuSp(PsCoeff*trD, Theta_)
+          - fvm::SuSp(-PsCoeff*trD, Theta_)
           - rho
            *(
                 lambda_*sqr(trD)
-              + 2.0*nut_*(dev(D)&&dev(D))
+              + 2.0*nut_*(dev(D)&&gradU)
             )
-//          + fvm::Sp(-gammaCoeff, Theta_)
-//          + fvm::Sp(-dissTrD,Theta_)
-//          - fvm::SuSp(J1 - J2,Theta_)
-          + gammaCoeff*Theta_
-          + dissTrD*Theta_
-          + (J1 - J2)*Theta_
-
-         )
+          - fvm::Sp(-gammaCoeff, Theta_)
+          - fvm::Sp(-J1, Theta_)
+          - fvm::Sp( J2, Theta_)
+          )
          + neg(solveTheta)
          *(
             fvm::Sp(dimensionedScalar("units",dimensionSet(1,-3,-1,0,0),scalar(1.0)), Theta_)
