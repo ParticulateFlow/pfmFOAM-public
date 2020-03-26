@@ -305,8 +305,8 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
        *granularPressureModel_->granularPressureCoeffPrime
         (
             alpha_,
-            radialModel_->g0(alpha_, 0.999*alphaMax_, alphaMax_),
-            radialModel_->g0prime(alpha_, 0.999*alphaMax_, alphaMax_),
+            radialModel_->g0(alpha_, 0.99*alphaMax_, alphaMax_),
+            radialModel_->g0prime(alpha_, 0.99*alphaMax_, alphaMax_),
             rho,
             da,
             e_
@@ -423,7 +423,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
     // Calculating the radial distribution function
     //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
-    gs0_ = radialModel_->g0(alpha, 0.999*alphaMax_, alphaMax_);
+    gs0_ = radialModel_->g0(alpha, 0.99*alphaMax_, alphaMax_);
     
     volScalarField trD(tr(D));
     
