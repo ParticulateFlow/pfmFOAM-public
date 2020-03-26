@@ -579,9 +579,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
         Theta_ = sqr
         (
             (
-                - (K1*alpha_ + rhoa_)*trD
+                - (K1*alpha_ + rho_)*trD
                 + sqrt(
-                          sqr(K1)*tr2D
+                          sqr(K1*alpha_ + rho_)*tr2D
                         + 4.0*K4*max(alpha, residualAlpha_)*(K2*tr2D + 2.0*K3*trD2)
                        )
             )
