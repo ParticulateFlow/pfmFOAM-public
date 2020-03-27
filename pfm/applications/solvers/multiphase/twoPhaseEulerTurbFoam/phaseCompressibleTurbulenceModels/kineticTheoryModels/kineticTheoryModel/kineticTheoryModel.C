@@ -586,6 +586,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             )
            /(2.0*gammaCoeff)
         );
+        Theta_ = da*da*trD2;
         Theta_.max(ThetaSmall.value());
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
     }
