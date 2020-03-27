@@ -156,7 +156,8 @@ class kineticTheoryModel
         //- Disallow default bitwise assignment
         void operator=(const kineticTheoryModel&);
 
-
+protected:
+        void boundGradU(volTensorField& S) const;
 public:
 
     //- Runtime type information

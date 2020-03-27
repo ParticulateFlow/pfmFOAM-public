@@ -283,6 +283,45 @@ Foam::RASModels::kineticTheoryModel::R() const
     );
 }
 
+void Foam::RASModels::kineticTheoryModel::boundGradU
+(
+    volTensorField& R
+) const
+{
+    scalar sMin = -1.0e3;
+    scalar sMax =  1.0e3;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  sMin, sMin, sMin,
+                  sMin, sMin, sMin,
+                  sMin, sMin, sMin
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                  sMax, sMax, sMax,
+                  sMax, sMax, sMax,
+                  sMax, sMax, sMax
+            )
+        )
+    );
+}
+
 
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::kineticTheoryModel::pPrime() const
@@ -291,8 +330,8 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
     // Get strain rate tensor for frictional pressure models
-    tmp<volTensorField> tgradU(fvc::grad(phase_.U()));
-    const volTensorField& gradU(tgradU());
+    volTensorField gradU(fvc::grad(phase_.U()));
+    boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
     
 //    const scalar Pi = constant::mathematical::pi;
@@ -404,8 +443,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
-    tmp<volTensorField> tgradU(fvc::grad(U_));
-    const volTensorField& gradU(tgradU());
+    volTensorField gradU(fvc::grad(U_));
+    boundGradU(gradU);
+    
     volSymmTensorField D(symm(gradU));
     
     volScalarField cellVolume
@@ -586,7 +626,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
             )
            /(2.0*gammaCoeff)
         );
-        Theta_ = da*da*trD2;
         Theta_.max(ThetaSmall.value());
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
     }
