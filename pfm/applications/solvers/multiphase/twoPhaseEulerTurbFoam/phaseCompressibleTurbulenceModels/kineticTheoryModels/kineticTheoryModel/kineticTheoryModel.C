@@ -600,7 +600,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
            /(da*sqrtPi)
         );
         
-        
+        trD *=0 ;
         volScalarField K1("K1", PsCoeff*trD + 3.0*beta);
                 
         volScalarField tr2D("tr2D", sqr(trD));
