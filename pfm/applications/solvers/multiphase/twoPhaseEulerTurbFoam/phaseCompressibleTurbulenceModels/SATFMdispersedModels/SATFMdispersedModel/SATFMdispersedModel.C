@@ -551,9 +551,9 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
     // Get strain rate tensor for frictional pressure models
-    tmp<volTensorField> tgradU(fvc::grad(phase_.U()));
-    const volTensorField& gradU(tgradU());
-    volSymmTensorField D(symm(gradU));
+    volTensorField gradU(fvc::grad(U_));
+    boundGradU(gradU);
+    volSymmTensorField devD(dev(symm(gradU)));
 
     tmp<volScalarField> tpPrime
     (
@@ -565,7 +565,7 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             da,
             rho,
             //strain-rate fluctuations --> Srivastrava (2003)
-            dev(D)// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
+            devD// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
     );

@@ -288,8 +288,8 @@ void Foam::RASModels::kineticTheoryModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e3;
-    scalar sMax =  1.0e3;
+    scalar sMin = -1.0e2;
+    scalar sMax =  1.0e2;
 
     R.max
     (
