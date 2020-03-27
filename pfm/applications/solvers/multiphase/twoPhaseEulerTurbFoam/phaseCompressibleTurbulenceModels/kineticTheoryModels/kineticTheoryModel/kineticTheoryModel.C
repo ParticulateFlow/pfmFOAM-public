@@ -495,8 +495,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // Particle viscosity (Table 3.2, p.47)
         nut_ = viscosityModel_->nu(alpha, Theta_, gs0_, rho, da, e_);
 
-        
-
         // Bulk viscosity  p. 45 (Lun et al. 1984).
         lambda_ = (4.0/3.0)*sqr(alpha)*da*gs0_*(1.0 + e_)*ThetaSqrt/sqrtPi;
 
@@ -548,7 +546,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // NB. note that there are two typos in Eq. 3.20:
         //     Ps should be without grad
         //     the laplacian has the wrong sign
-        volScalarField solveTheta(alpha - 0.5*pow(da,3.0)/cellVolume);
+        volScalarField solveTheta(alpha - residualAlpha_);
         fvScalarMatrix ThetaEqn
         (
          pos0(solveTheta)
@@ -608,7 +606,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         );
         
         
-        volScalarField K1("K1", PsCoeff*trD + 3*beta);
+        volScalarField K1("K1", PsCoeff*trD + 3*alpha*beta);
                 
         volScalarField tr2D("tr2D", sqr(trD));
         volScalarField trD2("trD2", dev(D)&&dev(D));
