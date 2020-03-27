@@ -613,7 +613,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
         
         volScalarField K2("K2", rho*(lambdaC*tr2D + 2.0*nutC*trD2));
         
-        Theta_ = sqr
+        Theta_ =
+         pos(alpha - residualAlpha_)
+        *sqr
         (
             (
                 - K1
