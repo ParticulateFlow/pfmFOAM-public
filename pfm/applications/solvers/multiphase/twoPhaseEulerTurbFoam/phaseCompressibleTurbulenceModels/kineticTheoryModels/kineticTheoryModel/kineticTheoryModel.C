@@ -468,14 +468,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
     volScalarField trD(tr(D));
     
     // Drag
-    volScalarField beta
-    (
-        fluid.lookupSubModel<dragModel>
-        (
-            phase_,
-            fluid.otherPhase(phase_)
-        ).Ki()
-    );
+    const volScalarField& beta = mesh_.lookupObject<volScalarField>("Kd");
+    
     volScalarField ThetaSqrt("sqrtTheta", sqrt(Theta_));
     
     volScalarField PsCoeff
@@ -516,13 +510,14 @@ void Foam::RASModels::kineticTheoryModel::correct()
         );
 
         // Eq. 3.25, p. 50 Js = J1 - J2
-        volScalarField J1("J1", 3.0*alpha*beta);
+        volScalarField J1("J1", 3.0*beta);
         volScalarField J2
         (
             "J2",
-           0.25*alpha*sqr(beta)*da*magSqr(U - Uc_)
+           0.25*sqr(beta)*da*magSqr(U - Uc_)
            /(
                rho
+              *max(alpha,residualAlpha_)
               *gs0_
               *sqrtPi
               *(ThetaSqrt*Theta_ + ThetaSmallSqrt*ThetaSmall)
@@ -532,7 +527,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             Info<<"Getting nut from continuous phase..." << endl;
             const volScalarField& nutC = mesh_.lookupObject<volScalarField>("nut." + fluid.otherPhase(phase_).name());
             volScalarField kc(sqr(nutC)/(0.0081*pow(cellVolume,2.0/3.0)));
-            volScalarField tau1(max(alpha*beta,24.0*sqr(alpha)*gs0_*rho*ThetaSqrt/(da*1.7725)));
+            volScalarField tau1(max(beta,24.0*sqr(alpha)*gs0_*rho*ThetaSqrt/(da*1.7725)));
             J1 = 3.0*tau1;
             J2 = tau1*sqrt(6.0*kc)/(ThetaSqrt+ThetaSmallSqrt);
         }
@@ -606,7 +601,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         );
         
         
-        volScalarField K1("K1", PsCoeff*trD + 3*alpha*beta);
+        volScalarField K1("K1", PsCoeff*trD + 3.0*beta);
                 
         volScalarField tr2D("tr2D", sqr(trD));
         volScalarField trD2("trD2", dev(D)&&dev(D));
