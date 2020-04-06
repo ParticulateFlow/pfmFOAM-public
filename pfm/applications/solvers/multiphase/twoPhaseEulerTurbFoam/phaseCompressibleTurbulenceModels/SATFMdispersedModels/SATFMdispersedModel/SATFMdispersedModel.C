@@ -1364,24 +1364,24 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
     alpha1.min(0.99*alphaMax_.value());
-//    volScalarField alphaM(alphaMax_-alpha1);
+    volScalarField alphaM(alphaMax_-alpha1);
     volScalarField phiPhiM(alpha1/(alphaMax_));
-//    volScalarField alphaL2
-//    (
-//        min
-//        (
-//            sqr(alpha1)
-//           *(scalar(1.0) + phiPhiM)
-//           /(
-//               scalar(1.0)
-//             + phiPhiM
-//             /(scalar(1.0) - phiPhiM)
-//            )
-//         ,
-//            alpha1*(alphaMax_.value()-alpha1)
-//         )
-//    );
-    volScalarField alphaL2(alpha1*(alphaMax_.value()-alpha1));
+    volScalarField alphaL2
+    (
+        min
+        (
+            sqr(alpha1)
+           *(scalar(1.0) + phiPhiM)
+           /(
+               scalar(1.0)
+             + phiPhiM
+             /(scalar(1.0) - phiPhiM)
+            )
+         ,
+            alpha1*alphaM
+         )
+    );
+//    volScalarField alphaL2(alpha1*(alphaMax_-alpha1));
 //  volScalarField alphaL2(alpha1*alphaM);
     alphaP2Mean_.max(VSMALL);
     if (!equilibriumPhiP2_) {
