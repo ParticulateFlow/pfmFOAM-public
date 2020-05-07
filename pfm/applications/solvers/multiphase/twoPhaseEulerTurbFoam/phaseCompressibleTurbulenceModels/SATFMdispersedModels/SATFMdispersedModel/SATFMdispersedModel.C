@@ -1135,9 +1135,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // xiPhiDivU
         volScalarField divU(tr(gradU));
-        volTensorField gradUf(fvc::grad(Uf));
+        volTensorField gradUf(0.5*fvc::grad(Uf));
         boundGradU(gradUf);
-        volScalarField divUf(0.5*tr(gradUf));
+        volScalarField divUf(tr(gradUf));
         volScalarField xiPhiDivUnum
         (
             filter_(alpha*divU)
@@ -1357,9 +1357,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
-                                 + xiPhiDivU_
+                                 + 2.0
+                                  *xiPhiDivU_
                                   *alpha
-                                  *sqrt(2.0*mag(fvc::laplacian(km)));
+                                  *sqrt(mag(fvc::laplacian(km)));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
