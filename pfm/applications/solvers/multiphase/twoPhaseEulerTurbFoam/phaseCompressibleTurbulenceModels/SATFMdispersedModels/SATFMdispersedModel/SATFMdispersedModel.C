@@ -1348,6 +1348,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km = k_&eSum;
     km.max(kSmall.value());
     
+    Info << "Computing nut (dispersed phase) ... " << endl;
+    // use k() for nut in stress tensor
+    nut_ = alpha*sqrt(min(k(),sqr(ut_)))*lm_;
+    nut_.max(1.5e-5);
+    
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
     volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/deltaF_;
@@ -1357,10 +1362,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
-                                 + 2.0
-                                  *xiPhiDivU_
+                                 + xiPhiDivU_
                                   *alpha
-                                  *sqrt(mag(fvc::laplacian(km)));
+                                  *sqrt(2.0*mag(fvc::laplacian(km)) + Ceps_*alpha*sqrt(km)*km/(deltaF_*nut_));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
@@ -1434,9 +1438,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
-    Info << "Computing nut (dispersed phase) ... " << endl;
-    // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(min(k(),sqr(ut_)))*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
