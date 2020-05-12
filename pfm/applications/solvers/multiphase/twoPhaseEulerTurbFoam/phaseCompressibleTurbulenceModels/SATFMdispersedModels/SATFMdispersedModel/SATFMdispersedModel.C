@@ -1364,7 +1364,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                  + xiPhiDivU_
                                   *alpha
-                                  *sqrt(2.0*mag(fvc::laplacian(km)) + Ceps_*alpha*sqrt(km)*km/(deltaF_*nut_));
+                                  *sqrt(2.0*mag(fvc::laplacian(km)) + km/(Cmu_*sqr(deltaF_)));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
