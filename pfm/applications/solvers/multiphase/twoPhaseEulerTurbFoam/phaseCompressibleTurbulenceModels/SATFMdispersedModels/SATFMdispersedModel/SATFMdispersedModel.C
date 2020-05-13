@@ -1351,7 +1351,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info << "Computing nut (dispersed phase) ... " << endl;
     // use k() for nut in stress tensor
     nut_ = alpha*sqrt(min(k(),sqr(ut_)))*lm_;
-    nut_.max(1.5e-5);
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(U));
