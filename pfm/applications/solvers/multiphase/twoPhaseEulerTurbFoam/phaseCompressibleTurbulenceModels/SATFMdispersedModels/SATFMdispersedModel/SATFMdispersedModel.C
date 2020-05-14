@@ -1386,7 +1386,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 //         )
 //    );
     volScalarField alphaL2(alpha1*alphaM);
-    alphaP2Mean_.max(VSMALL);
+    alphaP2Mean_.max(SMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
@@ -1417,8 +1417,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // production/dissipation
-          - 2.0*xiKgradAlpha*sqrt(alphaP2Mean_)
-          - fvm::SuSp(denom,alphaP2Mean_)
+          - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_) + divU,alphaP2Mean_)
+          + fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();
