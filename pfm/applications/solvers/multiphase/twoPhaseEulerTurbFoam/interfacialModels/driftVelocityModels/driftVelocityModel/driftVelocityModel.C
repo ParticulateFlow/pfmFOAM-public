@@ -106,7 +106,6 @@ Foam::driftVelocityModel::KdUdrift() const
         )
     );
     dimensionedScalar uSmall("uSmall", dimensionSet(0, 1, -1, 0, 0, 0, 0), 1.0e-6);
-    simpleFilter filterS(mesh);
     
     dimensionedVector eX
     (
@@ -136,9 +135,7 @@ Foam::driftVelocityModel::KdUdrift() const
     // limit turbulent dispersion force according to
     // Parmentier et al., AIChE J., 2012
     
-    ud =  ((ud&eX)*min(0.99*mag(uSlipV&eX)/(mag(ud&eX)+uSmall),1.0))*eX
-        + ((ud&eY)*min(0.99*mag(uSlipV&eY)/(mag(ud&eY)+uSmall),1.0))*eY
-        + ((ud&eZ)*min(0.99*mag(uSlipV&eZ)/(mag(ud&eZ)+uSmall),1.0))*eZ;
+    ud *= min(mag(uSlipV&ud)/uSlip,0.99*uSlip)/magUd;
     
     dragCorr_ = -((ud&uSlipV)/sqr(uSlip));
     
