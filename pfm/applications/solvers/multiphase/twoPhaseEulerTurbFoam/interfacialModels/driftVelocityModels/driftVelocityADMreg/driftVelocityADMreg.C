@@ -73,6 +73,7 @@ Foam::driftVelocityModels::driftVelocityADMreg::driftVelocityADMreg
     ),
 
     alphaMax_("alphaMax", dimless, dict),
+    Cd_("Cd", dimless, dict),
 
     filterPtr_(LESfilter::New(pair.dispersed().mesh(), dict)),
     filter_(filterPtr_())
@@ -106,8 +107,10 @@ Foam::driftVelocityModels::driftVelocityADMreg::udrift() const
            (
                 filter_(alpha1star*U2star)/alpha1f
               - filter_((scalar(1.0) - alpha1star)*U2star)/alpha2f
-              + pair_.continuous().turbulence().nut()*(fvc::grad(pair_.dispersed()))
-                /((scalar(1.0) - pair_.dispersed())*max(pair_.dispersed(),residualAlpha_))
+              + Cd_
+               *pair_.continuous().turbulence().nut()
+               *(fvc::grad(pair_.dispersed()))
+               /((scalar(1.0) - pair_.dispersed())*max(pair_.dispersed(),residualAlpha_))
            );
 }
 
