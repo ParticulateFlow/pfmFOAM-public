@@ -371,7 +371,7 @@ Foam::RASModels::SATFMcontinuousModel::k() const
     );
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
-    
+    /*
     tmp<volScalarField> kT
     (
         
@@ -387,6 +387,8 @@ Foam::RASModels::SATFMcontinuousModel::k() const
            )
       ,3.0*maxK_)
      );
+    */
+    tmp<volScalarField> kT(mag(k_&eSum));
     return kT;
 }
 
