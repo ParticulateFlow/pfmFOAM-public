@@ -1030,13 +1030,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
-        volVectorField k0p25
-        (
-            pow(k_&eX,0.25)*eX
-          + pow(k_&eY,0.25)*eY
-          + pow(k_&eZ,0.25)*eZ
-        ); 
-        
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
@@ -1045,21 +1038,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          //- fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
-          // diffusion with anisotropic diffusivity
-          - fvm::laplacian(alpha*rho*lm_
-                                *(k0p25*k0p25)
-                                /(sigma_)
-                           , k_
-                           , "laplacian(kappa,k)"
-                         )
-        /*
+          - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           - fvm::laplacian(
                              alpha*rho*sqrt(k())*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
-         */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
