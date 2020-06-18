@@ -371,7 +371,7 @@ Foam::RASModels::SATFMcontinuousModel::k() const
     );
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
-    /*
+
     tmp<volScalarField> kT
     (
         
@@ -387,8 +387,7 @@ Foam::RASModels::SATFMcontinuousModel::k() const
            )
       ,3.0*maxK_)
      );
-    */
-    tmp<volScalarField> kT(mag(k_&eSum));
+    
     return kT;
 }
 
@@ -1031,6 +1030,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
+        volVectorField k0p25
+        (
+            pow(k_&eX,0.25)*eX
+          + pow(k_&eY,0.25)*eY
+          + pow(k_&eZ,0.25)*eZ
+        ); 
+        
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
@@ -1041,23 +1047,19 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           //- fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-          /*
           - fvm::laplacian(alpha*rho*lm_
-                                * (
-                                     (sqrt(k_&eX)*(eX*eX))
-                                   + (sqrt(k_&eY)*(eY*eY))
-                                   + (sqrt(k_&eZ)*(eZ*eZ))
-                                   )
-                                 / (sigma_)
+                                *(k0p25*k0p25)
+                                /(sigma_)
                            , k_
                            , "laplacian(kappa,k)"
                          )
-        */
+        /*
           - fvm::laplacian(
                              alpha*rho*sqrt(k())*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+         */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
