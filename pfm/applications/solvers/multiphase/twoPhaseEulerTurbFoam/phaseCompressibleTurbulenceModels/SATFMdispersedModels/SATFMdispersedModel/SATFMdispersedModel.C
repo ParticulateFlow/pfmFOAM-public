@@ -120,6 +120,14 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Cmu",0.25)
     ),
+
+    CmuWScalar_
+    (
+        "CmuWScalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cmu",0.25)
+    ),
+
     CphiSscalar_
     (
         "CphiSscalar",
@@ -465,6 +473,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         xiPhiDivUScalar_.readIfPresent(coeffDict());
         xiGSScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
+        CmuWScalar_.readIfPresent(coeffDict());
         CphiSscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
         CpScalar_.readIfPresent(coeffDict());
@@ -1019,11 +1028,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         deltaF[cellI] = 2*deltaMaxTmp;
     }
     
-    volScalarField wD = 2.0*wallDist(mesh_).y();
+    volScalarField wD = wallDist(mesh_).y();
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    // compute mixing length
+    lm_ =  neg(wD)*Cmu_*deltaF + pos(wD)*min(Cmu_*deltaF,CmuWScalar_*wD);
     // correction for cyclic patches
     {
         const fvPatchList& patches = mesh_.boundary();
@@ -1035,11 +1046,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
                     deltaF_[celli] = deltaF[celli];
+                    lm_[celli]     = Cmu_[celli]*deltaF[celli];
                 }
             }
         }
     }
     deltaF_.max(lSmall.value());
+    lm_.max(lSmall.value());
     
     // compute nut
     nut_ = alpha*sqrt(km)*lm_;
@@ -1217,9 +1230,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         CphiS_     = CphiSscalar_;
     }
     
-    // compute mixing length
-    lm_ = Cmu_*deltaF_;
-    
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
@@ -1363,7 +1373,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                  + xiPhiDivU_
                                   *alpha
-                                  *sqrt(2.0*mag(fvc::laplacian(km)) + 0*km/(Cmu_*sqr(deltaF_)));
+                                  *sqrt(2.0*mag(fvc::laplacian(km)));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
@@ -1511,8 +1521,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             
             forAll(curPatch, facei) {
                 label celli = curPatch.faceCells()[facei];
-                nutw[facei] = Cmu_[celli]
-                             *deltaF_[celli]
+                nutw[facei] = lm_[celli]
                              *mag(k_[celli]&faceAreas[facei])
                              /magFaceAreas[facei];
             }

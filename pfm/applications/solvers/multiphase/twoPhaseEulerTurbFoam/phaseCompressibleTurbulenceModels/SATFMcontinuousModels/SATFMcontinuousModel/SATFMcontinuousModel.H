@@ -115,6 +115,9 @@ class SATFMcontinuousModel
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
+            //- "Smagorinsky constant" near walls
+            dimensionedScalar CmuWScalar_;
+    
             //- constant in alphaP2Mean equation
             dimensionedScalar CphiGscalar_;
     

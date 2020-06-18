@@ -96,6 +96,13 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("Cmu",0.4)
     ),
 
+    CmuWScalar_
+    (
+        "CmuWScalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cmu",0.6)
+    ),
+
     CphiGscalar_
     (
         "CphiGscalar",
@@ -344,6 +351,7 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         alphaMax_.readIfPresent(coeffDict());
         xiPhiContScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
+        CmuWScalar_.readIfPresent(coeffDict());
         CphiGscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
         CpScalar_.readIfPresent(coeffDict());
@@ -751,6 +759,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
                            + magSqr(gradU&eY)*(eY*eY)
                            + magSqr(gradU&eZ)*(eZ*eZ);
+    volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
+                            + ((SijSij&eY)&eSum)*eY
+                            + ((SijSij&eZ)&eSum)*eZ;
 
     // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
@@ -820,10 +831,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         deltaF[cellI] = 2.0*deltaMaxTmp;
     }
     
-    volScalarField wD = 2.0*wallDist(mesh_).y();
+    volScalarField wD = wallDist(mesh_).y();
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    // compute mixing length
+    lm_ =  neg(wD)*Cmu_*deltaF + pos(wD)*min(Cmu_*deltaF,CmuWScalar_*wD);
     // correction for cyclic patches
     {
         const fvPatchList& patches = mesh_.boundary();
@@ -835,11 +848,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
                     deltaF_[celli] = deltaF[celli];
+                    lm_[celli]     = Cmu_[celli]*deltaF[celli];
                 }
             }
         }
     }
     deltaF_.max(lSmall.value());
+    lm_.max(lSmall.value());
+    
+
     
     // compute nut
     nut_ = alpha*sqrt(km)*lm_;
@@ -987,11 +1004,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cp_     = CpScalar_;
         CphiG_  = CphiGscalar_;
     }
-    
-    // compute mixing length
-    lm_ = Cmu_*deltaF_;
-    
-
 
     // Compute k_
     // ---------------------------
@@ -1088,21 +1100,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         fvOptions.correct(k_);
     }
     else {
-        volVectorField SijSijV =  pos(mag(wD) - deltaF)
-                                 *(
-                                      ((SijSij&eX)&eSum)*eX
-                                    + ((SijSij&eY)&eSum)*eY
-                                    + ((SijSij&eZ)&eSum)*eZ
-                                   )
-                                 // special treatment of P_k near walls
-                                + neg(mag(wD) - deltaF)
-                                 *(
-                                      (sqr(U&eX))*eX
-                                    + (sqr(U&eY))*eY
-                                    + (sqr(U&eZ))*eZ
-                                   )
-                                  /sqr(deltaF_);
-
         // no dynamic adjustment for Ceps in case of equilibrium
         Ceps_ = CepsScalar_;
         // Equilibrium => dissipation == production
