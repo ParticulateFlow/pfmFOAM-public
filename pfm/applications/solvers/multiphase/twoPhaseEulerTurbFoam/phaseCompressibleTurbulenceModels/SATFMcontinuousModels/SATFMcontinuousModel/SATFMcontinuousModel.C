@@ -100,7 +100,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
     (
         "CmuWScalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("Cmu",0.6)
+        coeffDict_.lookupOrDefault<scalar>("CmuW",0.6)
     ),
 
     CphiGscalar_

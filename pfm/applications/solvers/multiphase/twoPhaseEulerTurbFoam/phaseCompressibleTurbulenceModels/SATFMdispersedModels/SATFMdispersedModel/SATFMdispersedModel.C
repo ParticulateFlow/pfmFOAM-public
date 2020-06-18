@@ -125,7 +125,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     (
         "CmuWScalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("Cmu",0.25)
+        coeffDict_.lookupOrDefault<scalar>("CmuW",0.25)
     ),
 
     CphiSscalar_
