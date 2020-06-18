@@ -820,7 +820,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         deltaF[cellI] = 2.0*deltaMaxTmp;
     }
     
-    volScalarField wD = wallDist(mesh_).y();
+    volScalarField wD = 2.0*wallDist(mesh_).y();
     // correction for cases w/o walls
     // (since wall distance is then negative)
     deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
