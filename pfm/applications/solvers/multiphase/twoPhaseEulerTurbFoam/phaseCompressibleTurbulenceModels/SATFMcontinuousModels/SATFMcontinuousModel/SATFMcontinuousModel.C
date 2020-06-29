@@ -703,7 +703,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const volScalarField& rho = phase_.rho();
     const volScalarField& rho1 = fluid.otherPhase(phase_).rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
-    const surfaceScalarField& phi2 = phi_;
     const volVectorField& U = U_;
     
     // dispersed Phase velocity
@@ -1138,79 +1137,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // compute fields for transport equation for phiP2
     alphaP2Mean_ = mesh_.lookupObject<volScalarField>("alphaP2Mean." + fluid.otherPhase(phase_).name());
-/*
-    volScalarField divU(fvc::div(U));
-    volScalarField dissPhiP2 = CphiG_ * Ceps_ * sqrt(km)/lm_;
-    volScalarField denom  = mag(divU) + dissPhiP2;
-    denom.max(SMALL);
-    volScalarField xiKgradAlpha = - (
-                                       ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiG_&eX)))
-                                     + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiG_&eY)))
-                                     + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiG_&eZ)))
-                                    )
-                                  + CphiG_
-                                   *(
-                                        (KdUdrift&uSlip)
-                                      + (KdUdrift&pDil)
-                                      - 2.0*beta*(xiGS_*sqrt(km*(kD_&eSum)) - xiGatS_*km)
-                                    )
-                                   /(rho*km);
 
-    Info << "Computing alphaP2Mean (continuous phase) ... " << endl;
-    if (!equilibriumPhiP2_) {
-        // Construct the transport equation for alphaP2Mean
-        fvScalarMatrix phiP2Eqn
-        (
-            fvm::ddt(alphaP2Mean_)
-          + fvm::div(phi2, alphaP2Mean_)
-          // diffusion
-          - fvc::div(
-                       alpha*sqrt(k())*lm_/(sigma_)
-                     * fvc::grad(alphaP2Mean_/alpha)
-                    )
-
-         ==
-          // some source terms are explicit since fvm::Sp()
-          // takes solely scalars as first argument.
-          // ----------------
-          // shear production
-          - fvm::SuSp(
-                         2.0*xiKgradAlpha
-                       / sqrt(alphaP2Mean_+dimensionedScalar("small",dimensionSet(0,0,0,0,0), 1.0e-8))
-                     ,alphaP2Mean_)
-          - fvm::SuSp(divU,alphaP2Mean_)
-          // production/dissipation
-          + fvm::Sp(-dissPhiP2,alphaP2Mean_)
-        );
-
-        phiP2Eqn.relax();
-        phiP2Eqn.solve();
-    } else {
-        alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)
-                       / sqr(denom);
-    }
-    // limit alphaP2Mean_
-    alpha1.min(alphaMax_.value());
-    volScalarField alphaM(alphaMax_-alpha1);
-    alphaM.max(0);
-    volScalarField alphaL2(alpha1*alphaM);
-//    volScalarField cbrtPhiPhiM(cbrt(alpha1/alphaMax_));
-//    volScalarField alphaL2 = sqr(alpha1)
-//                            *(scalar(1.0) + cbrtPhiPhiM)
-//                            /(
-//                                 scalar(1.0)
-//                               + (1.0/3.0)
-//                                *cbrtPhiPhiM
-//                                /(scalar(1.0) - cbrtPhiPhiM)
-//                             );//sqr(min(alpha1,alphaM));
-    alphaP2Mean_ = min(
-                         alphaP2Mean_,
-                         alphaL2
-                      );
-    alphaP2Mean_.max(VSMALL);
-    alphaP2Mean_.correctBoundaryConditions();
-*/
     // use k() for nut in stress tensor
     nut_ = alpha*sqrt(k())*lm_;
     // Limit viscosity
@@ -1296,7 +1223,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nuEff)      = " << max(nuEff()).value() << nl
          << "    min(nuEff)      = " << min(nuEff()).value() << nl
-         << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha1)).value() << nl
          << "    max(k2)         = " << max(k_&eSum).value() << nl
          << "    mean(k2x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
                                         /fvc::domainIntegrate(alpha).value()
