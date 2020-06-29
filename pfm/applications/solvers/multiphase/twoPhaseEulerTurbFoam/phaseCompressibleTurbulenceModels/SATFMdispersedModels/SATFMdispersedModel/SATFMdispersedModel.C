@@ -118,14 +118,14 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     (
         "CmuScalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("Cmu",0.25)
+        coeffDict_.lookupOrDefault<scalar>("Cmu",0.2)
     ),
 
     CmuWScalar_
     (
         "CmuWScalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("CmuW",0.25)
+        coeffDict_.lookupOrDefault<scalar>("CmuW",0.3)
     ),
 
     CphiSscalar_
@@ -1371,7 +1371,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
-                                 + xiPhiDivU_
+                                 + 0*xiPhiDivU_
                                   *alpha
                                   *sqrt(2.0*mag(fvc::laplacian(km)));
     
