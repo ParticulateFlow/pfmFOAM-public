@@ -1371,7 +1371,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    )
-                                 + 0*xiPhiDivU_
+                                 + xiPhiDivU_
                                   *alpha
                                   *sqrt(2.0*mag(fvc::laplacian(km)));
     
