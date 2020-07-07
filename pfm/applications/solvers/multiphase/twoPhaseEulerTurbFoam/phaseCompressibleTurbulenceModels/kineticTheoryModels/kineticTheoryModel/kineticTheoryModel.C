@@ -523,14 +523,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
               *(ThetaSqrt*Theta_ + ThetaSmallSqrt*ThetaSmall)
             )
         );
-        if (mesh_.foundObject<volScalarField>("nut." + fluid.otherPhase(phase_).name())) {
-            Info<<"Getting nut from continuous phase..." << endl;
-            const volScalarField& nutC = mesh_.lookupObject<volScalarField>("nut." + fluid.otherPhase(phase_).name());
-            volScalarField kc(sqr(nutC)/(0.0081*pow(cellVolume,2.0/3.0)));
-            volScalarField tau1(max(beta,24.0*sqr(alpha)*gs0_*rho*ThetaSqrt/(da*1.7725)));
-            J1 = 3.0*tau1;
-            J2 = tau1*sqrt(6.0*kc)/(ThetaSqrt+ThetaSmallSqrt);
-        }
 
         // 'thermal' conductivity (Table 3.3, p. 49)
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
@@ -538,9 +530,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the granular temperature equation (Eq. 3.20, p. 44)
-        // NB. note that there are two typos in Eq. 3.20:
-        //     Ps should be without grad
-        //     the laplacian has the wrong sign
         volScalarField solveTheta(alpha - residualAlpha_);
         fvScalarMatrix ThetaEqn
         (
