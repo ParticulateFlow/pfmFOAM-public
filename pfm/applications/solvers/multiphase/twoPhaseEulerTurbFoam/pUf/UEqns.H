@@ -10,7 +10,7 @@ fvVectorMatrix U2Eqn(U2, rho2.dimensions()*U2.dimensions()*dimVol/dimTime);
 // modification for periodic box simulations
 volScalarField rhoMix = 0.0*rho1;
 volVectorField totalMomentum = 0.0*U1;
-dimensionedScalar deltaT = U1.mesh().time().deltaT();
+// dimensionedScalar deltaT = U1.mesh().time().deltaT();
 if (periodicBox) {
     rhoMix = fvc::domainIntegrate(alpha1*rho1+alpha2*rho2)
                 / fvc::domainIntegrate(unity);
@@ -48,7 +48,7 @@ volVectorField uSlipV(U2 - U1);
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha1*(rho1-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          + alpha1*rho1*totalMomentum/deltaT
+          + alpha1*rho1*totalMomentum*dimensionedScalar("tau",dimensionSet(0,0,-1,0,0),9.81)
           - fvOptions(alpha1, rho1, U1)
         );
         U1Eqn.relax();
@@ -69,7 +69,7 @@ volVectorField uSlipV(U2 - U1);
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha2*(rho2-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          + alpha2*rho2*totalMomentum/deltaT
+          // + alpha2*rho2*totalMomentum/deltaT
           - fvOptions(alpha2, rho2, U2)
         );
         U2Eqn.relax();
