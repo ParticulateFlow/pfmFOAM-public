@@ -288,8 +288,8 @@ void Foam::RASModels::kineticTheoryModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e2;
-    scalar sMax =  1.0e2;
+    scalar sMin = -1.0e4;
+    scalar sMax =  1.0e4;
 
     R.max
     (
@@ -465,7 +465,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
     //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
     gs0_ = radialModel_->g0(alpha, 0.99*alphaMax_, alphaMax_);
     
-    volScalarField trD(tr(D));
+    volScalarField trD(fvc::div(U_));
     
     // Drag
     const volScalarField& beta = mesh_.lookupObject<volScalarField>("Kd");
@@ -543,7 +543,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
               //+ fvc::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
-          - fvm::SuSp(-PsCoeff*trD, Theta_)
+          + fvm::SuSp(PsCoeff*trD, Theta_)
           - rho
            *(
                 lambda_*sqr(trD)
