@@ -88,7 +88,7 @@ Foam::kineticTheoryModels::viscosityModels::SchneiderbauerEtAl::nu
     
     const volScalarField& Kd = mesh.lookupObject<volScalarField>("Kd");
 
-    volScalarField mu((5.0/96)*rho1*da*sqrtPi*sqrt(Theta));
+    volScalarField mu((5.0/96.0)*rho1*da*sqrtPi*sqrt(Theta));
     volScalarField muStar
     (
         mu
@@ -120,7 +120,7 @@ Foam::kineticTheoryModels::viscosityModels::SchneiderbauerEtAl::nu
            scalar(1.0)
          + 1.6*eta*(3.0*eta - scalar(2.0))*alpha1*g0
        )
-     + 0.6*eta*muB
+      + 0.6*eta*muB
     );
 }
 
