@@ -101,14 +101,15 @@ Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::kappa
        /(eta*(scalar(41.0) - 33.0*eta))
     );
     
+    volScalarField alphaRhoThetaG0(rho1*alpha1*g0*Theta);
     volScalarField kappaStar
     (
-        kappa
+        kappa*alphaRhoThetaG0
        /(
-            scalar(1.0)
+            alphaRhoThetaG0
           + 6.0*Kd*kappa
-           /(5.0*sqr((alpha1 + scalar(1.0e-7))*rho1)*g0*Theta)
-         )
+          /(5.0*(alpha1 + scalar(1.0e-7))*rho1)
+        )
     );
 
     return
