@@ -465,7 +465,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
     //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
     gs0_ = radialModel_->g0(alpha, 0.99*alphaMax_, alphaMax_);
     
-    volScalarField trD(fvc::div(U_));
+    volScalarField trD(fvc::div(phi_));
     
     // Drag
     const volScalarField& beta = mesh_.lookupObject<volScalarField>("Kd");
@@ -496,17 +496,13 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField gammaCoeff
         (
             "gammaCoeff",
-           3.0
+            12.0
            *(1.0 - sqr(e_))
            *max(sqr(alpha), sqr(residualAlpha_))
            *rho
            *gs0_
-           *(
-               4.0
-              *ThetaSqrt
-              /(da*sqrtPi)
-             - trD
-           )
+           *ThetaSqrt
+           /(da*sqrtPi)
         );
 
         // Eq. 3.25, p. 50 Js = J1 - J2
