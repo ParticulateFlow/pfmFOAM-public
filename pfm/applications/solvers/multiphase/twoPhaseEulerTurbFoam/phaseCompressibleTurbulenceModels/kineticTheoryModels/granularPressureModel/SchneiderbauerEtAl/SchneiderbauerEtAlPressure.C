@@ -80,7 +80,7 @@ Foam::kineticTheoryModels::granularPressureModels::SchneiderbauerEtAl::granularP
 {
     volScalarField lambda
     (
-         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7))*L_)
     );
     
     return rho1*alpha1*(1.0/lambda + 2.0*(1.0 + e)*alpha1*g0);
@@ -101,7 +101,7 @@ granularPressureCoeffPrime
 {
     volScalarField lambda
     (
-         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7))*L_)
     );
     volScalarField lambdaP
     (

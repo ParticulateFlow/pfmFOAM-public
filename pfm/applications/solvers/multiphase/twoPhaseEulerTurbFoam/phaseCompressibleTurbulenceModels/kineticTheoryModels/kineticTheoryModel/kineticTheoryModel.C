@@ -547,7 +547,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             )
           - fvm::Sp(-gammaCoeff, Theta_)
           - fvm::Sp(-J1, Theta_)
-          + J2
+          - J2
           )
          + neg(solveTheta)
          *(

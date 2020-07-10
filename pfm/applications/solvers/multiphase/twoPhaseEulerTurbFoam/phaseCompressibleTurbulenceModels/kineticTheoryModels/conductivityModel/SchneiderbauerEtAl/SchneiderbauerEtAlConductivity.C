@@ -90,7 +90,7 @@ Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::kappa
 
     volScalarField lambda
     (
-         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7))*L_)
     );
     
     dimensionedScalar eta(0.5*(1 + e));
