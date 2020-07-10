@@ -99,15 +99,24 @@ granularPressureCoeffPrime
     const dimensionedScalar& e
 ) const
 {
+    volScalarField lambda
+    (
+         scalar(1.0) + da/(6.0*sqrt(2.0)*(alpha1 + scalar(1.0e-7)))/L_
+    );
     volScalarField lambdaP
     (
-       2.0*sqr(da)/sqr(sqrt(2.0)*da+12.0*L_*alpha1)
+        - da/(6.0*sqrt(2.0)*sqr(alpha1 + scalar(1.0e-7))*L_)
     );
     return rho1
         *(
-            scalar(1.0)
-          - lambdaP
-          + 2.0*(scalar(1.0) + e)*(2.0*g0 + alpha1*g0prime)
+            2.0*(1.0 + e)*alpha1*g0
+          + 1.0/lambda
+          + alpha1
+           *(
+                2.0*(1.0 + e)*g0
+              + 2.0*(1.0 + e)*alpha1*g0prime
+              - lambdaP/sqr(lambdaP)
+            )
          );
 }
 
