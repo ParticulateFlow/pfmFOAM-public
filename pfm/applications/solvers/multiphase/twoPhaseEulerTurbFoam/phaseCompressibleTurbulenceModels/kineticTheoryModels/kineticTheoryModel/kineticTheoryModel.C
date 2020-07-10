@@ -339,7 +339,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     
     tmp<volScalarField> tpPrime
     (
-       neg0(alpha_ - alphaMinFriction_)
+      /* neg0(alpha_ - alphaMinFriction_)
        *Theta_
        *granularPressureModel_->granularPressureCoeffPrime
         (
@@ -350,7 +350,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             da,
             e_
         )
-      + pos(alpha_ - alphaMinFriction_)
+      + */pos(alpha_ - alphaMinFriction_)
        *frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
@@ -413,8 +413,23 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    tmp<volScalarField> tda(phase_.d());
+    const volScalarField& da = tda();
+    
     return
     (
+        fvc::grad
+        (
+            Theta_
+           *granularPressureModel_->granularPressureCoeff
+            (
+                alpha_,
+                gs0_,
+                rho_,
+                da,
+                e_
+             )
+        )
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
@@ -643,14 +658,14 @@ void Foam::RASModels::kineticTheoryModel::correct()
         );
 
         // Limit viscosity and add frictional viscosity
-        nut_.min(maxNut_);
-        nuFric_.min(maxNut_);
+        // nut_.min(maxNut_);
+        // nuFric_.min(maxNut_);
+        // nut_ = neg0(alpha - alphaMinFriction_)*nut_ + pos(alpha - alphaMinFriction_)*nuFric_;
         
-//        const scalar Pi = constant::mathematical::pi;
-//        volScalarField psi(scalar(0.5) + atan(262.5*(alpha_-alphaMinFriction_))/Pi);
-//        nut_ = (scalar(1.0) - psi)*nut_ + psi*nuFric_;
-  
-        nut_ = neg0(alpha - alphaMinFriction_)*nut_ + pos(alpha - alphaMinFriction_)*nuFric_;
+        // Limit viscosity and add frictional viscosity
+        nut_.min(maxNut_);
+        nuFric_ = min(nuFric_, maxNut_ - nut_);
+        nut_ += nuFric_;
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
