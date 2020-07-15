@@ -463,7 +463,6 @@ void Foam::twoPhaseSystem::solve()
                 Sp[celli] += dgdt_[celli]/max(alpha1[celli], 1e-4);
             }
         }
-        Info << "  Max(dgdt) = " << max(dgdt_).value() << endl;
         for
         (
             subCycle<volScalarField> alphaSubCycle(alpha1, nAlphaSubCycles);
