@@ -168,7 +168,7 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
             IOobject::groupName("k", granular.name())
         )
     );
-    const scalarField kpn(mag(this->patch().nf() & kp));
+    const scalarField kpn(mag(kp - (this->patch().nf() & kp)*this->patch().nf() ));
     
     const scalarField rhop
     (
