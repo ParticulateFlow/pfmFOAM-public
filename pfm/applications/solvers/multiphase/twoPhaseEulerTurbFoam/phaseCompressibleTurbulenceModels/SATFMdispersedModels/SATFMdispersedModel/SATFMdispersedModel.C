@@ -214,8 +214,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0),
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0)
     ),
 
     xiPhiS_
@@ -1536,19 +1535,22 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     nut_ += nuFric_;
     
     Info << "SA-TFM (dispersed Phase):" << nl
-         << "    max(nut)        = " << max(nut_).value() << nl
-         << "    max(nutFric)    = " << max(nuFric_).value() << nl
-         << "    max(phiP2/phi2) = " << max(alphaP2Mean_/sqr(alpha)).value() << nl
-         << "    max(k1)         = " << max(k_&eSum).value() << nl
-         << "    mean(k1x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
+         << "    max(nut)         = " << max(nut_).value() << nl
+         << "    max(nutFric)     = " << max(nuFric_).value() << nl
+         << "    max(phiP2/phi2)  = " << max(alphaP2Mean_/sqr(alpha)).value() << nl
+         << "    max(k1)          = " << max(k_&eSum).value() << nl
+         << "    mean(k1x)        = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
                                         /fvc::domainIntegrate(alpha).value()
-                                     << nl
-         << "    mean(k1y)       = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
+                                      << nl
+         << "    mean(k1y)        = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
                                         /fvc::domainIntegrate(alpha).value()
-                                     << nl
-         << "    mean(k1z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
+                                      << nl
+         << "    mean(k1z)        = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
-                                     << nl
+                                      << nl
+         << "    mean(phiP2/phi2) = " << fvc::domainIntegrate(alphaP2Mean_).value()
+                                        /fvc::domainIntegrate(sqr(alpha)).value()
+                                      << nl
          << endl;
 }
 
