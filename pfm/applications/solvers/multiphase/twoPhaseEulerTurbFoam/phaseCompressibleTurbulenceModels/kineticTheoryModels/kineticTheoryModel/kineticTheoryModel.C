@@ -423,7 +423,6 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
     
     return
     (
-     /*
         fvc::grad
         (
             Theta_
@@ -436,27 +435,7 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
                 e_
              )
         )
-     */
-      Theta_
-     *granularPressureModel_->granularPressureCoeffPrime
-      (
-          alpha_,
-          gs0_,
-          radialModel_->g0prime(alpha_, 0.99*alphaMax_, alphaMax_),
-          rho_,
-          da,
-          e_
-      )*fvc::grad(alpha_)
-     + granularPressureModel_->granularPressureCoeff
-        (
-             alpha_,
-             gs0_,
-             rho_,
-             da,
-             e_
-        )
-       *fvc::grad(Theta_)
-      + 2.0*pf_/devD * fvc::grad(devD)
+      //+ 2.0*pf_/devD * fvc::grad(devD)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
