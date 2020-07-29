@@ -437,8 +437,8 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
              )
         )
      */
-
-        granularPressureModel_->granularPressureCoeff
+        neg0(alpha_ - alphaMinFriction_)
+       *granularPressureModel_->granularPressureCoeff
         (
              alpha_,
              gs0_,
@@ -447,7 +447,8 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
              e_
         )
        *fvc::grad(Theta_)
-      + 2.0*pf_/devD * fvc::grad(devD)
+      + pos(alpha_ - alphaMinFriction_)
+       *2.0*pf_/devD * fvc::grad(devD)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
