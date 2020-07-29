@@ -415,6 +415,11 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
 {
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
+    volTensorField gradU(fvc::grad(phase_.U()));
+    boundGradU(gradU);
+    volSymmTensorField D(symm(gradU));
+    volScalarField devD(sqrt(dev(D)&&dev(D)));
+    devD.max(1.0e-7);
     
     return
     (
@@ -430,6 +435,7 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
                 e_
              )
         )
+      + 2.0*pf_/devD * fvc::grad(devD)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
