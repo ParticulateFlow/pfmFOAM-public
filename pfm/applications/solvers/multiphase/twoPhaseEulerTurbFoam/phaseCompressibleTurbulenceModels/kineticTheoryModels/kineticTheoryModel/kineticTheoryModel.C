@@ -339,8 +339,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     
     tmp<volScalarField> tpPrime
     (
-        neg0(alpha_ - alphaMinFriction_)
-       *Theta_
+        Theta_
        *granularPressureModel_->granularPressureCoeffPrime
         (
             alpha_,
@@ -350,8 +349,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             da,
             e_
         )
-      + pos(alpha_ - alphaMinFriction_)
-       *frictionalStressModel_->frictionalPressurePrime
+      + frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
@@ -437,8 +435,7 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
              )
         )
      */
-        neg0(alpha_ - alphaMinFriction_)
-       *granularPressureModel_->granularPressureCoeff
+        granularPressureModel_->granularPressureCoeff
         (
              alpha_,
              gs0_,
@@ -447,8 +444,7 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
              e_
         )
        *fvc::grad(Theta_)
-      + pos(alpha_ - alphaMinFriction_)
-       *2.0*pf_/devD * fvc::grad(devD)
+      + 2.0*pf_/devD * fvc::grad(devD)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
@@ -674,16 +670,11 @@ void Foam::RASModels::kineticTheoryModel::correct()
             da,
             dev(D)
         );
-
-        // Limit viscosity and add frictional viscosity
-         nut_.min(maxNut_);
-         nuFric_.min(maxNut_);
-         nut_ = neg0(alpha - alphaMinFriction_)*nut_ + pos(alpha - alphaMinFriction_)*nuFric_;
         
         // Limit viscosity and add frictional viscosity
-//        nut_.min(maxNut_);
-//        nuFric_ = min(nuFric_, maxNut_ - nut_);
-//        nut_ += nuFric_;
+        nut_.min(maxNut_);
+        nuFric_ = min(nuFric_, maxNut_ - nut_);
+        nut_ += nuFric_;
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
