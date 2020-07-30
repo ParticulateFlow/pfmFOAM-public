@@ -348,7 +348,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             e_
         )
      
-      + frictionalStressModel_->frictionalPressurePrime
+      + */frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
@@ -357,10 +357,6 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             rho,
             dev(D)
         )
-       */
-        /* Use Schaeffer Model for packing */
-        dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
-       *pow(Foam::max(alpha_ - 0.99*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -416,6 +412,10 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
 {
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
+    volTensorField gradU(fvc::grad(phase_.U()));
+    boundGradU(gradU);
+    volSymmTensorField D(symm(gradU));
+    volScalarField devD2(dev(D)&&dev(D));
     
     return
     (
@@ -430,8 +430,8 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
                 da,
                 e_
             )
-          + pf_
         )
+      + 2.0*pf_*fvc::grad(devD2)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
