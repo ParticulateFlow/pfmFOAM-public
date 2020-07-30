@@ -426,7 +426,7 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
            *granularPressureModel_->granularPressureCoeff
             (
                 alpha_,
-                gs0_,
+                radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
                 rho_,
                 da,
                 e_
