@@ -288,8 +288,8 @@ void Foam::RASModels::kineticTheoryModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e4;
-    scalar sMax =  1.0e4;
+    scalar sMin = -1.0e5;
+    scalar sMax =  1.0e5;
 
     R.max
     (
@@ -336,6 +336,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     
     tmp<volScalarField> tpPrime
     (
+     /*
         Theta_
        *granularPressureModel_->granularPressureCoeffPrime
         (
@@ -356,6 +357,9 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             rho,
             dev(D)
         )
+      */
+         dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
+        *pow(Foam::max(alpha_ - alphaMinFriction_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -419,7 +423,6 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
     
     return
     (
-     /*
         fvc::grad
         (
             Theta_
@@ -431,18 +434,8 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
                 da,
                 e_
             )
+          + pf_
         )
-     */
-        granularPressureModel_->granularPressureCoeff
-        (
-            alpha_,
-            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
-            rho_,
-            da,
-            e_
-        )
-       *fvc::grad(Theta_)
-      + 2.0*(pf_/devD)*fvc::grad(devD)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
