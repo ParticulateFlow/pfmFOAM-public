@@ -679,8 +679,8 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     
     if (!anIsoTropicNut_) {
         return
-        pos(alpha_ - residualAlpha_)*
-        (
+        pos(alpha_ - residualAlpha_)
+      * (
           - fvm::laplacian(rho_*nut_, U)
           - fvc::div
             (
@@ -692,17 +692,17 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * R1
-            )
-          + pos(alpha - alphaMinFriction_)
-          * fvc::div
-            (
-                pf_*dimensioned<tensor>("I", dimless, tensor::I)
-            )
+              )
+        )
+      + pos(alpha - alphaMinFriction_)
+      * fvc::div
+        (
+            pf_*dimensioned<tensor>("I", dimless, tensor::I)
         );
     } else {
         return
-        pos(alpha_ - residualAlpha_)*
-        (
+        pos(alpha_ - residualAlpha_)
+      * (
           - fvm::laplacian(rho_*nuFric_, U)
           - fvc::div
             (
@@ -715,11 +715,11 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * rho_
                * R1
             )
-          + pos(alpha - alphaMinFriction_)
-          * fvc::div
-            (
-                pf_*dimensioned<tensor>("I", dimless, tensor::I)
-            )
+        )
+      + pos(alpha - alphaMinFriction_)
+      * fvc::div
+        (
+            pf_*dimensioned<tensor>("I", dimless, tensor::I)
         );
     }
 }
