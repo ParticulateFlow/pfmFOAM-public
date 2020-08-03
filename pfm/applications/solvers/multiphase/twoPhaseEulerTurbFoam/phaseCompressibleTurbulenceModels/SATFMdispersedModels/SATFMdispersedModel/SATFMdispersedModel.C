@@ -694,7 +694,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * R1
               )
         )
-      + pos(alpha - alphaMinFriction_)
+      + pos(alpha_ - alphaMinFriction_)
       * fvc::div
         (
             pf_*dimensioned<tensor>("I", dimless, tensor::I)
@@ -716,7 +716,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * R1
             )
         )
-      + pos(alpha - alphaMinFriction_)
+      + pos(alpha_ - alphaMinFriction_)
       * fvc::div
         (
             pf_*dimensioned<tensor>("I", dimless, tensor::I)
