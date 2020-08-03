@@ -359,7 +359,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
         )
       */
          dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
-        *pow(Foam::max(alpha_ - alphaMinFriction_, scalar(0)), 9.0)
+        *pow(Foam::max(alpha_ - 0.99*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -415,11 +415,6 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
 {
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
-    volTensorField gradU(fvc::grad(phase_.U()));
-    boundGradU(gradU);
-    volSymmTensorField D(symm(gradU));
-    volScalarField devD(sqrt(dev(D)&&dev(D)));
-    devD.max(1.0e-7);
     
     return
     (
@@ -483,8 +478,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
     cellVolume.ref() = mesh_.V();
 
     // Calculating the radial distribution function
-    //gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
-    gs0_ = radialModel_->g0(alpha, 0.99*alphaMax_, alphaMax_);
+    gs0_ = radialModel_->g0(alpha, alphaMinFriction_, alphaMax_);
     
     volScalarField trD(fvc::div(phi_));
     
