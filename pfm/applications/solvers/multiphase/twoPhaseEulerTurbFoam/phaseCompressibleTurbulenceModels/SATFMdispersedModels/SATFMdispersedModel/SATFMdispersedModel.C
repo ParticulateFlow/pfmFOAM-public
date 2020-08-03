@@ -589,6 +589,7 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
 
     tmp<volScalarField> tpPrime
     (
+     /*
         frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
@@ -600,6 +601,9 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             devD// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
+      */
+       dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
+      *pow(Foam::max(alpha_ - 0.99*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -675,7 +679,9 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     
     if (!anIsoTropicNut_) {
         return
-        pos(alpha_ - residualAlpha_)*
+        pos(alpha_ - alphaMinFriction_)
+       *fvc::grad(pf_)
+      + pos(alpha_ - residualAlpha_)*
         (
           - fvm::laplacian(rho_*nut_, U)
           - fvc::div
@@ -692,7 +698,9 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         );
     } else {
         return
-        pos(alpha_ - residualAlpha_)*
+        pos(alpha_ - alphaMinFriction_)
+       *fvc::grad(pf_)
+      + pos(alpha_ - residualAlpha_)*
         (
           - fvm::laplacian(rho_*nuFric_, U)
           - fvc::div
