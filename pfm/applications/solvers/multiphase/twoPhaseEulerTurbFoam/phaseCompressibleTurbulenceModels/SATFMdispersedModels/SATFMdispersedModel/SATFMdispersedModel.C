@@ -679,9 +679,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     
     if (!anIsoTropicNut_) {
         return
-        pos(alpha_ - alphaMinFriction_)
-       *fvc::grad(pf_)
-      + pos(alpha_ - residualAlpha_)*
+        pos(alpha_ - residualAlpha_)*
         (
           - fvm::laplacian(rho_*nut_, U)
           - fvc::div
@@ -694,13 +692,12 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * R1
+               + pf_*dimensioned<tensor>("I", dimless, tensor::I)
             )
         );
     } else {
         return
-        pos(alpha_ - alphaMinFriction_)
-       *fvc::grad(pf_)
-      + pos(alpha_ - residualAlpha_)*
+        pos(alpha_ - residualAlpha_)*
         (
           - fvm::laplacian(rho_*nuFric_, U)
           - fvc::div
@@ -713,6 +710,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * R1
+               + pf_*dimensioned<tensor>("I", dimless, tensor::I)
             )
         );
     }
@@ -734,9 +732,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  0, 0.75*RMin, 0.75*RMin,
-                  0.75*RMin, 0, 0.75*RMin,
-                  0.75*RMin, 0.75*RMin, 0
+                  0, 0.99*RMin, 0.99*RMin,
+                  0.99*RMin, 0, 0.99*RMin,
+                  0.99*RMin, 0.99*RMin, 0
             )
         )
     );
@@ -749,9 +747,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  RMax, 0.75*RMax, 0.75*RMax,
-                  0.75*RMax, RMax, 0.75*RMax,
-                  0.75*RMax, 0.75*RMax, RMax
+                  RMax, 0.99*RMax, 0.99*RMax,
+                  0.99*RMax, RMax, 0.99*RMax,
+                  0.99*RMax, 0.99*RMax, RMax
             )
         )
     );
@@ -839,8 +837,8 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -0.75;
-    scalar xiMax = 0.75;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     R.max
     (
