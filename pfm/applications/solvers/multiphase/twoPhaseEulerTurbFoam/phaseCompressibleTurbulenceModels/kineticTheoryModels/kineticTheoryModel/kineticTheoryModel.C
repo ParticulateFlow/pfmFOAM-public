@@ -336,19 +336,18 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     
     tmp<volScalarField> tpPrime
     (
-     /*
         Theta_
        *granularPressureModel_->granularPressureCoeffPrime
         (
             alpha_,
-            radialModel_->g0(alpha_, 0.99*alphaMax_, alphaMax_),
-            radialModel_->g0prime(alpha_, 0.99*alphaMax_, alphaMax_),
+            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
+            radialModel_->g0prime(alpha_, alphaMinFriction_, alphaMax_),
             rho,
             da,
             e_
         )
      
-      + */frictionalStressModel_->frictionalPressurePrime
+      + frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
@@ -420,6 +419,7 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
     
     return
     (
+     /*
         fvc::grad
         (
             Theta_
@@ -432,6 +432,16 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
                 e_
             )
         )
+     */
+        granularPressureModel_->granularPressureCoeff
+        (
+            alpha_,
+            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
+            rho_,
+            da,
+            e_
+        )
+       *fvc::grad(Theta_)
       + 2.0*(pf_/devD)*fvc::grad(devD)
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
