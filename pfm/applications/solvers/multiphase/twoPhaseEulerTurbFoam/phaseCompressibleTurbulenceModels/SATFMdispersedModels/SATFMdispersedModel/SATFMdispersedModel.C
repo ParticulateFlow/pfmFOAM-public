@@ -692,7 +692,11 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * R1
-               + pf_*dimensioned<tensor>("I", dimless, tensor::I)
+            )
+          + pos(alpha - alphaMinFriction_)
+          * fvc::div
+            (
+                pf_*dimensioned<tensor>("I", dimless, tensor::I)
             )
         );
     } else {
@@ -701,16 +705,20 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         (
           - fvm::laplacian(rho_*nuFric_, U)
           - fvc::div
-           (
+            (
                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
-           )
+            )
           + fvc::div
             (
                  2.0
                * alpha_
                * rho_
                * R1
-               + pf_*dimensioned<tensor>("I", dimless, tensor::I)
+            )
+          + pos(alpha - alphaMinFriction_)
+          * fvc::div
+            (
+                pf_*dimensioned<tensor>("I", dimless, tensor::I)
             )
         );
     }
@@ -732,9 +740,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  0, 0.99*RMin, 0.99*RMin,
-                  0.99*RMin, 0, 0.99*RMin,
-                  0.99*RMin, 0.99*RMin, 0
+                  0, 0.75*RMin, 0.75*RMin,
+                  0.75*RMin, 0, 0.75*RMin,
+                  0.75*RMin, 0.75*RMin, 0
             )
         )
     );
@@ -747,9 +755,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  RMax, 0.99*RMax, 0.99*RMax,
-                  0.99*RMax, RMax, 0.99*RMax,
-                  0.99*RMax, 0.99*RMax, RMax
+                  RMax, 0.75*RMax, 0.75*RMax,
+                  0.75*RMax, RMax, 0.75*RMax,
+                  0.75*RMax, 0.75*RMax, RMax
             )
         )
     );
@@ -837,8 +845,8 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -0.99;
-    scalar xiMax = 0.99;
+    scalar xiMin = -0.75;
+    scalar xiMax = 0.75;
 
     R.max
     (
