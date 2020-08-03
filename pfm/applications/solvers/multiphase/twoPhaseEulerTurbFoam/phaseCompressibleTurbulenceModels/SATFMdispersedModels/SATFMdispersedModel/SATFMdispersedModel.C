@@ -673,17 +673,10 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volTensorField R1(R1_);
     boundStress(R1);
     
-    volTensorField gradU(fvc::grad(phase_.U()));
-    boundGradU(gradU);
-    volSymmTensorField D(symm(gradU));
-    volScalarField devD(sqrt(dev(D)&&dev(D)));
-    devD.max(1.0e-7);
-    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)*
         (
-            2.0*(pf_/devD)*fvc::grad(devD)
           - fvm::laplacian(rho_*nut_, U)
           - fvc::div
             (
@@ -701,7 +694,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)*
         (
-            2.0*(pf_/devD)*fvc::grad(devD)
           - fvm::laplacian(rho_*nuFric_, U)
           - fvc::div
            (
