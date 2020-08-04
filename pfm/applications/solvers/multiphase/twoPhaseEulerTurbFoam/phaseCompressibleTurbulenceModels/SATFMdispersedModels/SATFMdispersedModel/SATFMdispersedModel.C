@@ -603,7 +603,7 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
       * pos(alpha_-alphaMinFriction_)
      */
          dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
-        *pow(Foam::max(alpha_ - 0.95*alphaMax_, scalar(0)), 9.0)
+        *pow(Foam::max(alpha_ - 0.99*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
