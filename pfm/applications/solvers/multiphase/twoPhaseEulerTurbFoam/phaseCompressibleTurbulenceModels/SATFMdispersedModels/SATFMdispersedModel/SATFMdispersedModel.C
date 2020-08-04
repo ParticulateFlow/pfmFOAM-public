@@ -589,6 +589,7 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
 
     tmp<volScalarField> tpPrime
     (
+     /*
         frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
@@ -600,6 +601,9 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             devD// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
+     */
+         dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
+        *pow(Foam::max(alpha_ - 0.95*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -688,7 +692,8 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * R1
-              )
+               + pf_*tensor::I
+            )
          );
     } else {
         return
@@ -705,6 +710,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * alpha_
                * rho_
                * R1
+               + pf_*tensor::I
             )
          );
     }
