@@ -589,7 +589,6 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
 
     tmp<volScalarField> tpPrime
     (
-     /*
         frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
@@ -601,9 +600,6 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
             devD// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
         )
       * pos(alpha_-alphaMinFriction_)
-      */
-       dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
-      *pow(pos(alpha_-0.95*alphaMax_)*(alpha_ - 0.95*alphaMax_), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -693,12 +689,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * rho_
                * R1
               )
-        )
-      + pos(alpha_ - alphaMinFriction_)
-      * fvc::div
-        (
-            pf_*dimensioned<tensor>("I", dimless, tensor::I)
-        );
+         );
     } else {
         return
         pos(alpha_ - residualAlpha_)
@@ -715,12 +706,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                * rho_
                * R1
             )
-        )
-      + pos(alpha_ - alphaMinFriction_)
-      * fvc::div
-        (
-            pf_*dimensioned<tensor>("I", dimless, tensor::I)
-        );
+         );
     }
 }
 
@@ -740,9 +726,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  0, 0.75*RMin, 0.75*RMin,
-                  0.75*RMin, 0, 0.75*RMin,
-                  0.75*RMin, 0.75*RMin, 0
+                  0, 0.99*RMin, 0.99*RMin,
+                  0.99*RMin, 0, 0.99*RMin,
+                  0.99*RMin, 0.99*RMin, 0
             )
         )
     );
@@ -755,9 +741,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  RMax, 0.75*RMax, 0.75*RMax,
-                  0.75*RMax, RMax, 0.75*RMax,
-                  0.75*RMax, 0.75*RMax, RMax
+                  RMax, 0.99*RMax, 0.99*RMax,
+                  0.99*RMax, RMax, 0.99*RMax,
+                  0.99*RMax, 0.99*RMax, RMax
             )
         )
     );
@@ -845,8 +831,8 @@ void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -0.75;
-    scalar xiMax = 0.75;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     R.max
     (
