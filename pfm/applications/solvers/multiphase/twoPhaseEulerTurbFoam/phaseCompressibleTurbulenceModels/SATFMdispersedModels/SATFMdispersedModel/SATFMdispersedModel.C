@@ -1153,10 +1153,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_.min(sqrt(2.0));
         
         // xiPhiDivU
-        volScalarField divU(tr(gradU));
-        volTensorField gradUf(0.5*fvc::grad(Uf));
-        boundGradU(gradUf);
-        volScalarField divUf(tr(gradUf));
+        volScalarField divU(fvc::div(phi_));
+        //volScalarField divUf(0.5*fvc::div(Uf));
+        volScalarField divUf(filter_(divU));
         volScalarField xiPhiDivUnum
         (
             filter_(alpha*divU)
@@ -1424,10 +1423,16 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                      & (fvc::grad(alphaP2Mean_/alpha))
                     )
            */
+         /*
           - fvc::div(
                        alpha*sqrt(k())*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
+          */
+          - fvm::laplacian(
+                           sqrt(k())*lm_/(sigma_),
+                           alphaP2Mean_
+                         )
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
