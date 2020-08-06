@@ -1272,7 +1272,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-         /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -1283,12 +1282,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                            , k_
                            , "laplacian(kappa,k)"
                          )
-          */
+          /*
           - fvm::laplacian(
                              alpha*rho*sqrt(k())*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+          */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1424,10 +1424,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
            */
           - fvc::div(
-                       alpha*sqrt(k())*lm_/sigma_
+                       alpha*sqrt(km)*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
-          /*
+          
+           /*
           - fvm::laplacian(
                            sqrt(k())*lm_/(sigma_),
                            alphaP2Mean_
