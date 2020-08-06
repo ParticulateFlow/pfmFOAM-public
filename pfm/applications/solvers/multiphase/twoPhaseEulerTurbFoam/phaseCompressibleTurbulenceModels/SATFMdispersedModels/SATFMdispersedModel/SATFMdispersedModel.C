@@ -1154,8 +1154,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // xiPhiDivU
         volScalarField divU(fvc::div(phi_));
-        //volScalarField divUf(0.5*fvc::div(Uf));
-        volScalarField divUf(filter_(divU));
+        volScalarField divUf(0.5*fvc::div(Uf));
+        //volScalarField divUf(filter_(divU));
         volScalarField xiPhiDivUnum
         (
             filter_(alpha*divU)
@@ -1409,7 +1409,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
           // diffusion
-          /*
           - fvc::div(
                         (
                            alpha*lm_
@@ -1422,12 +1421,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        )
                      & (fvc::grad(alphaP2Mean_/alpha))
                     )
-           */
+          /*
           - fvc::div(
                        alpha*sqrt(km)*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
           
+           */
            /*
           - fvm::laplacian(
                            sqrt(k())*lm_/(sigma_),
