@@ -1369,7 +1369,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     nut_ = alpha*sqrt(min(k(),sqr(ut_)))*lm_;
     
     // compute fields for transport equation for phiP2
-    volScalarField divU(fvc::div(U));
+    volScalarField divU(fvc::div(phi_));
     volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/deltaF_;
     volScalarField denom = divU + dissPhiP2;
     volScalarField xiKgradAlpha = (
@@ -1379,7 +1379,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                  + xiPhiDivU_
                                   *alpha
-                                  *sqrt(2.0*mag(fvc::laplacian(km)));
+                                  *sqrt(mag(fvc::laplacian(km)));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
@@ -1433,7 +1433,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // production/dissipation
-          - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_) + divU,alphaP2Mean_)
+          - fvm::SuSp(divU,alphaP2Mean_)
+          - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
 
