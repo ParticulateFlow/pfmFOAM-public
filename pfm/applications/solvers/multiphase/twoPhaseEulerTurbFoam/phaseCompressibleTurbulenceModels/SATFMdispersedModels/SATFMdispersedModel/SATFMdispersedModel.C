@@ -1423,16 +1423,16 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                      & (fvc::grad(alphaP2Mean_/alpha))
                     )
            */
-         /*
           - fvc::div(
                        alpha*sqrt(k())*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
-          */
+          /*
           - fvm::laplacian(
                            sqrt(k())*lm_/(sigma_),
                            alphaP2Mean_
                          )
+           */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
