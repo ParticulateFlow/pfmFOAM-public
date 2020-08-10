@@ -1423,7 +1423,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
           /*
           - fvc::div(
-                       alpha*sqrt(km)*lm_/sigma_
+                       alpha*sqrt(k())*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
           
