@@ -412,6 +412,16 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
     return Ceps_*pow(k(),3.0/2.0)/lm_;
 }
 
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::SATFMcontinuousModel::pPressure() const
+{
+    const volScalarField& rho = phase_.rho();
+    
+    return
+    (
+        (2.0/3.0)*alpha_*rho*tr(R2_)
+    );
+}
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::R() const
@@ -513,7 +523,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                 2.0
               * alpha_
               * rho_
-              * R2_
+              * dev(R2_)
            )
         );
     } else {
@@ -529,7 +539,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * R2_
+               * dev(R2_)
             )
           + fvc::laplacian(rho_*nut_, U)
         );

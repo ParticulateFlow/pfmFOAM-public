@@ -86,11 +86,6 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
             
             surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
             
-            surfaceScalarField pPrimef
-            (
-                phase1.turbulence().pPrimef()*rAU1f
-            );
-            
             surfaceScalarField alpharAUf1
             (
                 fvc::interpolate(max(alpha1, phase1.residualAlpha())*rAU1)
@@ -103,9 +98,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
                 fvc::reconstruct
                 (
                     (
-                      - pPrimef*fvc::snGrad(alpha1)
-                      - (alpharAUf1)
-                      * (fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))
+                      - rAU1f*fvc::snGrad(phase1.turbulence().pPressure())
+                      - alpharAUf1*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))
                     ) * mesh.magSf() / rAU1f
                   // drag
                   + (fvc::interpolate(rAU1*Kd*U2)&mesh.Sf())/rAU1f
@@ -178,8 +172,8 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
                 fvc::reconstruct
                 (
                     (
-                      - (alpharAUf2)
-                      * (fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))
+                      - rAU2f*fvc::snGrad(phase2.turbulence().pPressure())
+                      - alpharAUf2*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))
                     ) * mesh.magSf() / rAU2f
                  // drag
                  + (fvc::interpolate(rAU2*Kd*U1)&mesh.Sf())/rAU2f

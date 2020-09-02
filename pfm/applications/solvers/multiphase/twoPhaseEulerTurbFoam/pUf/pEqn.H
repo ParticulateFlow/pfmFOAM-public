@@ -38,7 +38,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     Info << "Applying drag correction..." << nl
          << "    max(dragCorr) = " << max(dragCorrF).value() << nl
          << "    min(dragCorr) = " << min(dragCorrF).value() << endl;
-    KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
+    KdUdriftE = (KdUdrift + dragCorr*Kd*uSlipV);
     Kdf = Kdf*(scalar(1.0) - dragCorrF);
 }
 
@@ -78,20 +78,28 @@ tmp<surfaceScalarField> Ff2;
     // Phase-1 turbulent dispersion and particle-pressure diffusivity
     surfaceScalarField Df1
     (
-        fvc::interpolate(D + phase1.turbulence().pPrime())
+        fvc::interpolate(D)
+    );
+    surfaceScalarField Pf1
+    (
+        fvc::interpolate(phase1.turbulence().pPrime())
     );
 
     // Phase-2 turbulent dispersion and particle-pressure diffusivity
     surfaceScalarField Df2
     (
-        fvc::interpolate(D + phase2.turbulence().pPrime())
+        fvc::interpolate(D)
+    );
+    surfaceScalarField Pf2
+    (
+        fvc::interpolate(phase2.turbulence().pPrime())
     );
 
     // Cache the net diffusivity for implicit diffusion treatment in the
     // phase-fraction equation
     if (implicitPhasePressure)
     {
-        fluid.pPrimeByA() = rAUf1*Df1 + rAUf2*Df2;
+        fluid.pPrimeByA() = rAUf1*(Df1 + Pf1) + rAUf2*(Df2 + Pf2);
     }
 
     // Lift and wall-lubrication forces
@@ -100,13 +108,16 @@ tmp<surfaceScalarField> Ff2;
     // Phase-fraction face-gradient
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
 
+    // Pressure gradients
+    surfaceScalarField snGradPp1(fvc::snGrad(phase1.turbulence().pPressure())*mesh.magSf());
+    surfaceScalarField snGradPp2(fvc::snGrad(phase2.turbulence().pPressure())*mesh.magSf());
     // anisotropic part of drift velocity
     surfaceScalarField KdUdrfitEf(fvc::flux(KdUdriftE));
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + Ff - KdUdrfitEf;
+    Ff1 = Df1*snGradAlpha1 + snGradPp1 + Ff - KdUdrfitEf;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 - Ff + KdUdrfitEf;
+    Ff2 = -Df2*snGradAlpha1 + snGradPp2 - Ff + KdUdrfitEf;
 }
 
 

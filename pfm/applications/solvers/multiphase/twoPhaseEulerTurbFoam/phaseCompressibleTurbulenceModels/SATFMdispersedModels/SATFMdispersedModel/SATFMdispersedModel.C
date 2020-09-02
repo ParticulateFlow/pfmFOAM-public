@@ -583,27 +583,22 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
     // Get strain rate tensor for frictional pressure models
-    volTensorField gradU(fvc::grad(U_));
+    volTensorField gradU(fvc::grad(phase_.U()));
     boundGradU(gradU);
-    volSymmTensorField devD(dev(symm(gradU)));
-
+    volSymmTensorField D(symm(gradU));
+    
     tmp<volScalarField> tpPrime
     (
-     /*
-        frictionalStressModel_->frictionalPressurePrime
+        pos(alpha_ - alphaMinFriction_)
+       *frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
             alphaMax_,
             da,
             rho,
-            //strain-rate fluctuations --> Srivastrava (2003)
-            devD// + sqrt(k())*symmTensor::I/max(deltaF_,dimensionedScalar("small",dimensionSet(0,1,0,0,0),1e-5))
+            dev(D)
         )
-      * pos(alpha_-alphaMinFriction_)
-     */
-         dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
-        *pow(Foam::max(alpha_ - 0.99*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -620,13 +615,25 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
     return tpPrime;
 }
 
-
 Foam::tmp<Foam::surfaceScalarField>
 Foam::RASModels::SATFMdispersedModel::pPrimef() const
 {
     return fvc::interpolate(pPrime());
 }
 
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::SATFMdispersedModel::pPressure() const
+{
+    const volScalarField& rho = phase_.rho();
+    
+    return
+    (
+        pos(alpha_ - residualAlpha_)
+       *(2.0/3.0)*alpha_*rho*tr(R1_)
+      + pos(alpha_ - alphaMinFriction_)
+       *pf_
+    );
+}
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::devRhoReff() const
@@ -691,8 +698,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * R1
-               + pf_*tensor::I
+               * dev(R1)
             )
          );
     } else {
@@ -709,8 +715,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * R1
-               + pf_*tensor::I
+               * dev(R1)
             )
          );
     }
@@ -1435,9 +1440,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          )
            */
          ==
-          // some source terms are explicit since fvm::Sp()
-          // takes solely scalars as first argument.
-          // ----------------
           // production/dissipation
           - fvm::SuSp(divU,alphaP2Mean_)
           - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)

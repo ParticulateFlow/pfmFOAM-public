@@ -254,6 +254,9 @@ public:
 
         //- Return the source term for the momentum equation
         virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
+    
+        //- Return the phase-pressure'
+        virtual tmp<volScalarField> pPressure() const;
 
         //- Solve the SA-TFM equations and correct the viscosity
         virtual void correct();

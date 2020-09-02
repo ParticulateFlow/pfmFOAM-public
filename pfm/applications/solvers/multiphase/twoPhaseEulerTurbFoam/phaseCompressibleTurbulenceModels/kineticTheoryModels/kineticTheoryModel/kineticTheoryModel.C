@@ -347,8 +347,9 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             da,
             e_
         )
-     
-      + frictionalStressModel_->frictionalPressurePrime
+      */
+        pos(alpha_ -alphaMinFriction_)
+       *frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
             alphaMinFriction_,
@@ -357,9 +358,6 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             rho,
             dev(D)
         )
-      */
-         dimensionedScalar("1e25", dimensionSet(1, -1, -2, 0, 0), 1e25)
-        *pow(Foam::max(alpha_ - 0.99*alphaMax_, scalar(0)), 9.0)
     );
 
     volScalarField::Boundary& bpPrime =
@@ -376,11 +374,32 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     return tpPrime;
 }
 
-
 Foam::tmp<Foam::surfaceScalarField>
 Foam::RASModels::kineticTheoryModel::pPrimef() const
 {
     return fvc::interpolate(pPrime());
+}
+
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::kineticTheoryModel::pPressure() const
+{
+    const volScalarField& rho = phase_.rho();
+    tmp<volScalarField> tda(phase_.d());
+    const volScalarField& da = tda();
+    
+    return
+    (
+        Theta_
+       *granularPressureModel_->granularPressureCoeff
+        (
+            alpha_,
+            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
+            rho,
+            da,
+            e_
+        )
+      + pos(alpha_ - alphaMinFriction_)*pf_
+    );
 }
 
 
@@ -413,24 +432,8 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    tmp<volScalarField> tda(phase_.d());
-    const volScalarField& da = tda();
-    
     return
     (
-        fvc::grad
-        (
-            Theta_
-           *granularPressureModel_->granularPressureCoeff
-            (
-                alpha_,
-                radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
-                rho_,
-                da,
-                e_
-            )
-          + pf_
-        )
       - fvm::laplacian(rho_*nut_, U)
       - fvc::div
         (
