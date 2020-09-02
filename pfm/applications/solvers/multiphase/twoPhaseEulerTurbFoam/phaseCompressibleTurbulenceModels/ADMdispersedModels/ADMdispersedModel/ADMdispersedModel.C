@@ -357,7 +357,7 @@ Foam::RASModels::ADMdispersedModel::pPrimef() const
 }
 
 Foam::tmp<Foam::volScalarField>
-Foam::RASModels::SATFMdispersedModel::pPressure() const
+Foam::RASModels::ADMdispersedModel::pPressure() const
 {
     return
     (
