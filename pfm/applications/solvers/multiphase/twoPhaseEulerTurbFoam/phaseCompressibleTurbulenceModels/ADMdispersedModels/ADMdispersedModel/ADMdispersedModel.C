@@ -356,6 +356,16 @@ Foam::RASModels::ADMdispersedModel::pPrimef() const
     return fvc::interpolate(pPrime());
 }
 
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::SATFMdispersedModel::pPressure() const
+{
+    return
+    (
+        pos(alpha_ - alphaMinFriction_)
+       *pf_
+    );
+}
+
 
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::ADMdispersedModel::devRhoReff() const
