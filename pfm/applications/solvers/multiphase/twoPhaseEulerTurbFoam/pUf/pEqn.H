@@ -109,15 +109,16 @@ tmp<surfaceScalarField> Ff2;
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
 
     // Pressure gradients
-    surfaceScalarField snGradPp1(fvc::snGrad(phase1.turbulence().pPressure())*mesh.magSf());
-    surfaceScalarField snGradPp2(fvc::snGrad(phase2.turbulence().pPressure())*mesh.magSf());
+    // Pressure gradients
+    volVectorField gradPp1(fvc::grad(phase1.turbulence().pPressure()));
+    volVectorField gradPp2(fvc::grad(phase2.turbulence().pPressure()));
     // anisotropic part of drift velocity
     surfaceScalarField KdUdrfitEf(fvc::flux(KdUdriftE));
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + snGradPp1 + Ff - KdUdrfitEf;
+    Ff1 = Df1*snGradAlpha1 + fvc::flux(gradPp1) + Ff - KdUdrfitEf;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 + snGradPp2 - Ff + KdUdrfitEf;
+    Ff2 = -Df2*snGradAlpha1 + fvc::flux(gradPp2) - Ff + KdUdrfitEf;
 }
 
 

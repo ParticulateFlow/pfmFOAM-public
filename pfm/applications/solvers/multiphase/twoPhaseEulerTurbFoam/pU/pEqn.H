@@ -89,18 +89,15 @@ tmp<surfaceScalarField> phiF2;
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
     
     // Pressure gradients
-    surfaceScalarField snGradPp1(fvc::snGrad(phase1.turbulence().pPressure())*mesh.magSf());
-    surfaceScalarField snGradPp2(fvc::snGrad(phase2.turbulence().pPressure())*mesh.magSf());
-    
-    surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
-    surfaceScalarField rAU2f("rAU2f", fvc::interpolate(rAU2));
+    volVectorField gradPp1(fvc::grad(phase1.turbulence().pPressure()));
+    volVectorField gradPp2(fvc::grad(phase2.turbulence().pPressure()));
     
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF1 = Df1*snGradAlpha1 + rAU1f*snGradPp1 + fvc::flux(rAU1*(F - KdUdriftE));
+    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*(F - KdUdriftE + gradPp1));
     //phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F);
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF2 = - Df2*snGradAlpha1 + rAU2f*snGradPp2 - fvc::flux(rAU2*(F - KdUdriftE));
+    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*(F - KdUdriftE - gradPp2));
     //phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F);
 }
 
