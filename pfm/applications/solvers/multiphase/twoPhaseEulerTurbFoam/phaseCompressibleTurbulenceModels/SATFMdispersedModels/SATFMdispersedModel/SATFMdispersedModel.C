@@ -1253,7 +1253,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute CphiS
         CphiS_     = CphiSscalar_;
     }
-    
+    xiPhiDivU_ = xiPhiDivUScalar_/alphaMax_*(scalar(1.0) - alpha/alphaMax_);
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2MeanO)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2MeanO)/alpha2),residualAlpha_);
