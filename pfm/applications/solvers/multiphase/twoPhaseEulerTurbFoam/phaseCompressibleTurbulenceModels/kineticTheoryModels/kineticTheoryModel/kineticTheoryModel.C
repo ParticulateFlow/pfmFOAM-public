@@ -386,6 +386,10 @@ Foam::RASModels::kineticTheoryModel::pPressure() const
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
+    // Get strain rate tensor for frictional pressure models
+    volTensorField gradU(fvc::grad(phase_.U()));
+    boundGradU(gradU);
+    volSymmTensorField D(symm(gradU));
     
     return
     (
@@ -398,8 +402,17 @@ Foam::RASModels::kineticTheoryModel::pPressure() const
             da,
             e_
         )
-      + pos(alpha_ - alphaMinFriction_)*pf_
-    );
+      + pos(alpha_ - alphaMinFriction_)
+       *frictionalStressModel_->frictionalPressurePrime
+        (
+            phase_,
+            alphaMinFriction_,
+            alphaMax_,
+            da,
+            rho,
+            dev(D)
+        )
+      );
 }
 
 

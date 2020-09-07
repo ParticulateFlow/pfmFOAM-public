@@ -359,10 +359,26 @@ Foam::RASModels::ADMdispersedModel::pPrimef() const
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::ADMdispersedModel::pPressure() const
 {
+    const volScalarField& rho = phase_.rho();
+    tmp<volScalarField> tda(phase_.d());
+    const volScalarField& da = tda();
+
     return
     (
-        pos(alpha_ - alphaMinFriction_)
-       *pf_
+       pos(alpha_ - alphaMinFriction_)
+      *filter_
+       (
+           frictionalStressModel_->frictionalPressure
+           (
+               phase_,
+               alpha1star_,
+               alphaMinFriction_,
+               alphaMax_,
+               da,
+               rho,
+               dev(Dstar_)
+           )
+       )
     );
 }
 

@@ -625,13 +625,27 @@ Foam::tmp<Foam::volScalarField>
 Foam::RASModels::SATFMdispersedModel::pPressure() const
 {
     const volScalarField& rho = phase_.rho();
+    tmp<volScalarField> tda(phase_.d());
+    const volScalarField& da = tda();
+    // Get strain rate tensor for frictional pressure models
+    volTensorField gradU(fvc::grad(phase_.U()));
+    boundGradU(gradU);
+    volSymmTensorField D(symm(gradU));
     
     return
     (
         pos(alpha_ - residualAlpha_)
        *(2.0/3.0)*alpha_*rho*tr(R1_)
       + pos(alpha_ - alphaMinFriction_)
-       *pf_
+       *frictionalStressModel_->frictionalPressurePrime
+        (
+            phase_,
+            alphaMinFriction_,
+            alphaMax_,
+            da,
+            rho,
+            dev(D)
+        )
     );
 }
 
