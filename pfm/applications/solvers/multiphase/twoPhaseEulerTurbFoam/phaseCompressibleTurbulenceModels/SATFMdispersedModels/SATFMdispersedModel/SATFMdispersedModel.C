@@ -1441,7 +1441,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
            */
          ==
           // production/dissipation
-          - fvm::SuSp(2.0*divU,alphaP2Mean_)
+          // - fvm::SuSp(2.0*divU,alphaP2Mean_)
           - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
@@ -1537,8 +1537,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             forAll(curPatch, facei) {
                 label celli = curPatch.faceCells()[facei];
                 nutw[facei] = lm_[celli]
-                             *mag(k_[celli]&faceAreas[facei])
-                             /magFaceAreas[facei];
+                             *mag(k_[celli] - (k_[celli]&faceAreas[facei])*faceAreas[facei]/sqr(magFaceAreas[facei]));
             }
         }
     }
