@@ -1206,7 +1206,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 scalarField& xiPhiDivUnumw = xiPhiDivUnumf[patchi];
                 scalarField& xiPhiDivUdenw = xiPhiDivUdenf[patchi];
                 forAll(curPatch, facei) {
-                    xiPhiDivUnumw[facei] = -xiPhiDivUScalar_;
+                    xiPhiDivUnumw[facei] = xiPhiDivUScalar_.value();
                     xiPhiDivUdenw[facei] = 1;
                 }
             }
