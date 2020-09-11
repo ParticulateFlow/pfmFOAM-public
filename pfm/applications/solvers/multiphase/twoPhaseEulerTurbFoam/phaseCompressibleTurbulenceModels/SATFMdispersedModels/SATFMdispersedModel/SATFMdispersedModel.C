@@ -1206,14 +1206,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 scalarField& xiPhiDivUnumw = xiPhiDivUnumf[patchi];
                 scalarField& xiPhiDivUdenw = xiPhiDivUdenf[patchi];
                 forAll(curPatch, facei) {
-                    xiPhiDivUnumw[facei] = -1;
+                    xiPhiDivUnumw[facei] = -0.15;
                     xiPhiDivUdenw[facei] = 1;
                 }
             }
         }
         xiPhiDivU_ = filterS(xiPhiDivUnum*xiPhiDivUden)/filterS(sqr(xiPhiDivUden));
         xiPhiDivU_.max(-1.0);
-        xiPhiDivU_.min(0.5);
+        xiPhiDivU_.min(1.0);
         
         // compute mixing length dynamically
         /*
