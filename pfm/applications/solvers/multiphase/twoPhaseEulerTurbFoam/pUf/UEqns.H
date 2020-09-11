@@ -69,7 +69,7 @@ volVectorField uSlipV(U2 - U1);
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha2*(rho2-rhoMix)*gN
           // in case of periodic box, adjust CG-velocity
-          + alpha2*rho2*totalMomentum*dimensionedScalar("tau",dimensionSet(0,0,-1,0,0),9.81)
+          // + alpha2*rho2*totalMomentum*dimensionedScalar("tau",dimensionSet(0,0,-1,0,0),9.81)
           - fvOptions(alpha2, rho2, U2)
         );
         U2Eqn.relax();
