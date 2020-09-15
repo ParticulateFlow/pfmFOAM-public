@@ -1194,6 +1194,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
             )
         );
+        /*
         // wall treatment for xiPhiDivU_
         const fvPatchList& patches = mesh_.boundary();
         volScalarField::Boundary& xiPhiDivUnumf = xiPhiDivUnum.boundaryFieldRef();
@@ -1210,7 +1211,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     xiPhiDivUdenw[facei] = 1;
                 }
             }
-        }
+        }*/
         xiPhiDivU_ = filterS(xiPhiDivUnum*xiPhiDivUden)/filterS(sqr(xiPhiDivUden));
         xiPhiDivU_.max(-1.0);
         xiPhiDivU_.min(1.0);
