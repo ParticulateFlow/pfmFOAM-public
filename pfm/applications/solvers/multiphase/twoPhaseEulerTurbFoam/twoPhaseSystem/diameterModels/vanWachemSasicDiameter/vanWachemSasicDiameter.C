@@ -116,7 +116,16 @@ void Foam::diameterModels::vanWachemSasic::correct()
     volScalarField a1(0.5236*(rhoB_-rho2)*g_);
     dimensionedScalar k((1.0 - sqr(nu_))/(3.14*E_));
     volScalarField Us(sqrt(phase_.turbulence().k()));
-    volScalarField a2(-0.166*pow(3.14*pow(Us,6)*pow(rhoB_,3)/sqr(k),0.2)-0.1728*rho2*sqr(uSlip)*pow(alpha2,-4.8));
+    volScalarField a2a(-0.166*pow(3.14*pow(Us,6)*pow(rhoB_,3)/sqr(k),0.2));
+    volScalarField a2b(-0.1728*rho2*sqr(uSlip)*pow(alpha2,-4.8));
+    
+    // Apply drag correction
+    if (phase_.U().mesh().foundObject<volScalarField>("dragCorr")) {
+        const volScalarField& dragCorr = phase_.U().mesh().lookupObject<volScalarField>("dragCorr");
+        a2b *= (scalar(1.0) - dragCorr);
+    }
+    volScalarField a2(a2a+a2b);
+    
     dimensionedScalar a3(H_/(24.*sqr(delta_)));
     
     d_ = 1.01*d0_;
