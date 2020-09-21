@@ -1603,7 +1603,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     nuFric_ = min(nuFric_, maxNut_ - nut_);
-    nuFric_.min(maxNut_);
+    nuFric_.min(maxNut_); 
     nut_ += nuFric_;
     
     Info << "SA-TFM (dispersed Phase):" << nl
