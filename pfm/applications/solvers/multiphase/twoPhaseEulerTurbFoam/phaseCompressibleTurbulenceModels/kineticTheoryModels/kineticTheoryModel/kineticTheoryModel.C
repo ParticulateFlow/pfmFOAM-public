@@ -249,8 +249,7 @@ bool Foam::RASModels::kineticTheoryModel::read()
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::kineticTheoryModel::k() const
 {
-    NotImplemented;
-    return nut_;
+    return Theta_;
 }
 
 
