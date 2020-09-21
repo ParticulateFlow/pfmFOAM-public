@@ -501,6 +501,24 @@ Foam::RASModels::SATFMdispersedModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
+    dimensionedVector eX
+    (
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
+    );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     
@@ -508,16 +526,18 @@ Foam::RASModels::SATFMdispersedModel::k() const
     (
         
        1.5
-      *min(
-           max
-          (
-                (k_&eSum)
-              - mag(k_ & U_)
-              / (mag(U_)+uSmall)
-            ,
-                kSmall
-           )
-      ,3.0*maxK_)
+      *max
+      (
+            (k_&eSum)
+          - (
+                mag((k_&eX)*(U_*eX))
+              + mag((k_&eY)*(U_*eZ))
+              + mag((k_&eZ)*(U_*eZ))
+            )
+           /(mag(U_)+uSmall)
+        ,
+            kSmall
+       )
      );
     return kT;
 }
