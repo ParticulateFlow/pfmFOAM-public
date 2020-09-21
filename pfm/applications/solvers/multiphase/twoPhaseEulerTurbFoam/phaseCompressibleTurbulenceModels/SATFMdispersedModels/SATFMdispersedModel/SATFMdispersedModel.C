@@ -533,7 +533,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
                 (k_&eSum)
               - (
                     mag((k_&eX)*(U_*eX))
-                  + mag((k_&eY)*(U_*eZ))
+                  + mag((k_&eY)*(U_*eY))
                   + mag((k_&eZ)*(U_*eZ))
                 )
                /(mag(U_)+uSmall)
