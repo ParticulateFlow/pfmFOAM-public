@@ -1604,7 +1604,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          << "    max(nut)         = " << max(nut_).value() << nl
          << "    max(nutFric)     = " << max(nuFric_).value() << nl
          << "    max(phiP2/phi2)  = " << max(alphaP2Mean_/sqr(alpha)).value() << nl
-         << "    max(k1)          = " << max(k_&eSum).value() << nl
+         << "    max(k1)          = " << max(k()).value() << nl
          << "    mean(k1x)        = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                       << nl
