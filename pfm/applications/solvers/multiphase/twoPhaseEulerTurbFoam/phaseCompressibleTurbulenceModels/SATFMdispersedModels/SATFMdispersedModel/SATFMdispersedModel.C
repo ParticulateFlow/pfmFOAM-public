@@ -541,7 +541,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
                 kSmall
            )
         ,
-           3.0*sqr(ut_)
+           sqr(ut_)
         )
      );
     return kT;
