@@ -170,7 +170,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
     volScalarField alpha1(phase_);
     alpha1.max(0);
     volScalarField alpha2(1.0-alpha1);
-    
+    /*
     volScalarField cellVolume
     (
         IOobject
@@ -183,7 +183,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
         dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
     );
     cellVolume.ref() = phase_.U().mesh().V();
-    
+    */
     // slip velocity
     volScalarField uSlip(mag(Uc - phase_.U()));
     
@@ -214,7 +214,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
         scalar dx = 100.;
         int iter = 0;
         // Newton iterations
-        while ((mag(dx) > 5.0e-6) && (iter < 20) && ((d0_.value() - d_[cellI])*(d_[cellI] - cbrt(cellVolume[cellI]))>0.0)) {
+        while ((mag(dx) > 5.0e-6) && (iter < 20) && ((d0_.value() - d_[cellI])*(d_[cellI] - 10.0*d0_.value())>0.0)) {
             scalar f  = a1[cellI]*sqr(d_[cellI]) + a2a[cellI]*pow(d_[cellI],2.2) + a2b[cellI]*d_[cellI] + a3.value();
             scalar df = 2.0*a1[cellI]*d_[cellI] + 2.2*a2a[cellI]*pow(d_[cellI],1.2) + a2b[cellI];
             dx = -f/df;
@@ -225,7 +225,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
             // Info << "a1 = " << a1[cellI]*pow(d_[cellI],4) << ", a2:" << a2[cellI]*pow(d_[cellI],3)  << ", a3: " << (a3.value()*pow(d_[cellI],2)) << ", a4: " << a4[cellI] << endl;
             // Info << "a1 = " << a1[cellI] << ", a2:" << a2[cellI]  << ", a3: " << (a3.value()) << ", k: " << k.value() << ", E: " << E_.value() << ", nu: " << nu_.value() << ", f: " << f << ", df: " << df << endl;
         }
-        if ((d0_.value() - d_[cellI])*(d_[cellI] - cbrt(cellVolume[cellI]))<0.0) {
+        if ((d0_.value() - d_[cellI])*(d_[cellI] - 10.0*d0_.value())<0.0) {
             d_[cellI] = d0_.value();
         }
     }
