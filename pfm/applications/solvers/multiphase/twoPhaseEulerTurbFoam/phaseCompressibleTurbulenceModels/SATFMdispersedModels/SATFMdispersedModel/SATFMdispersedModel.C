@@ -521,7 +521,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
     );
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
-    
+    /*
     tmp<volScalarField> kT
     (
         
@@ -544,7 +544,8 @@ Foam::RASModels::SATFMdispersedModel::k() const
            sqr(ut_)
         )
      );
-    return kT;
+    return kT;*/
+    return k_&eSum;
 }
 
 
@@ -1519,7 +1520,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(k())*lm_;
+    //nut_ = alpha*sqrt(k())*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
@@ -1603,7 +1604,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     nuFric_ = min(nuFric_, maxNut_ - nut_);
-    nuFric_.min(maxNut_); 
+    nuFric_.min(maxNut_);
     nut_ += nuFric_;
     
     Info << "SA-TFM (dispersed Phase):" << nl
