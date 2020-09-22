@@ -86,7 +86,6 @@ Foam::diameterModels::vanWachemSasic::~vanWachemSasic()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-/*
 void Foam::diameterModels::vanWachemSasic::correct()
 {
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
@@ -129,7 +128,8 @@ void Foam::diameterModels::vanWachemSasic::correct()
     
     dimensionedScalar a3(H_/(24.*sqr(delta_)));
     
-    d_ = 1.01*d0_;
+    volScalarField d(d_);
+    d = 1.01*d0_;
     
     const cellList& cells = phase_.U().mesh().cells();
     forAll(cells,cellI)
@@ -140,26 +140,26 @@ void Foam::diameterModels::vanWachemSasic::correct()
         scalar dx = 100.;
         int iter = 0;
         // Newton iterations
-        while ((mag(dx) > 5.0e-6) && (iter < 20) && ((d0_.value() - d_[cellI])*(d_[cellI] - cbrt(cellVolume[cellI]))>0.0)) {
-            scalar f  = a1[cellI]*sqr(d_[cellI]) + a2[cellI]*d_[cellI] + a3.value();
-            scalar df = 2.0*a1[cellI]*d_[cellI] + a2[cellI];
+        while ((mag(dx) > 5.0e-6) && (iter < 20) && ((d0_.value() - d[cellI])*(d[cellI] - 0.33*cbrt(cellVolume[cellI]))>0.0)) {
+            scalar f  = a1[cellI]*sqr(d[cellI]) + a2[cellI]*d[cellI] + a3.value();
+            scalar df = 2.0*a1[cellI]*d[cellI] + a2[cellI];
             dx = -f/df;
-            d_[cellI] += dx;
+            d[cellI] += dx;
             iter++;
             // Info << "vanWachem & Sasic diameter model: dx = " << dx << ", iter:" << iter  << ", d: " << d_[cellI] << ", alpha: " << alpha1[cellI] << endl;
             // Info << "rho2 = " << rho2[cellI] << ", Uc:" << mag(Uc[cellI])  << ", Us: " << mag(Us[cellI]) << endl;
             // Info << "a1 = " << a1[cellI]*pow(d_[cellI],4) << ", a2:" << a2[cellI]*pow(d_[cellI],3)  << ", a3: " << (a3.value()*pow(d_[cellI],2)) << ", a4: " << a4[cellI] << endl;
             // Info << "a1 = " << a1[cellI] << ", a2:" << a2[cellI]  << ", a3: " << (a3.value()) << ", k: " << k.value() << ", E: " << E_.value() << ", nu: " << nu_.value() << ", f: " << f << ", df: " << df << endl;
         }
-        if ((d0_.value() - d_[cellI])*(d_[cellI] - cbrt(cellVolume[cellI]))<0.0) {
-            d_[cellI] = d0_.value();
+        if ((d0_.value() - d[cellI])*(d[cellI] - 0.33*cbrt(cellVolume[cellI]))<0.0) {
+            d[cellI] = d0_.value();
         }
     }
-    // d_.max(d0_.value());
-    // d_.min(10*d0_.value());
+    d_ = 0.9*d_ + 0.1*d;
+    d_.correctBoundaryConditions();
     Info << "vanWachem & Sasic diameter model: max(d) = " << max(d_).value() << ", min(d) = " << min(d_).value() << endl;
 }
-*/
+/*
 void Foam::diameterModels::vanWachemSasic::correct()
 {
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
@@ -232,8 +232,10 @@ void Foam::diameterModels::vanWachemSasic::correct()
         }
     }
     d_ = 0.9*d_ + 0.1*d;
+    d_.correctBoundaryConditions();
     Info << "vanWachem & Sasic diameter model: max(d) = " << max(d_).value() << ", min(d) = " << min(d_).value() << endl;
 }
+ */
 bool Foam::diameterModels::vanWachemSasic::read(const dictionary& phaseProperties)
 {
     diameterModel::read(phaseProperties);
