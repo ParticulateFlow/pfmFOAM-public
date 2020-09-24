@@ -133,7 +133,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
     det.max(0);
     
     volScalarField d
-    (
+    ( 
         posDet
        *(
             - a2
@@ -141,7 +141,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
         )
        /(2.0*a1)
     );
-    d *= pos(0.33*cbrt(cellVolume) - d);
+    d = min(0.33*cbrt(cellVolume),d);
     d.max(d0_.value());
     
     d_ = 0.9*d_ + 0.1*d;
