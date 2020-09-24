@@ -128,114 +128,27 @@ void Foam::diameterModels::vanWachemSasic::correct()
     
     dimensionedScalar a3(H_/(24.*sqr(delta_)));
     
-    volScalarField d(d_);
-    d = 1.01*d0_;
+    volScalarField det(sqr(a2) - 4.0*a1*a3);
+    volScalarField posDet(pos(det));
+    det.max(0);
     
-    const cellList& cells = phase_.U().mesh().cells();
-    forAll(cells,cellI)
-    {
-        
-        // Newton Method to find root in the interval [d_particle,cellSize]
-        // initial conditions
-        scalar dx = 100.;
-        int iter = 0;
-        // Newton iterations
-        while ((mag(dx) > 5.0e-6) && (iter < 20) && ((d0_.value() - d[cellI])*(d[cellI] - 0.33*cbrt(cellVolume[cellI]))>0.0)) {
-            scalar f  = a1[cellI]*sqr(d[cellI]) + a2[cellI]*d[cellI] + a3.value();
-            scalar df = 2.0*a1[cellI]*d[cellI] + a2[cellI];
-            dx = -f/df;
-            d[cellI] += dx;
-            iter++;
-            // Info << "vanWachem & Sasic diameter model: dx = " << dx << ", iter:" << iter  << ", d: " << d_[cellI] << ", alpha: " << alpha1[cellI] << endl;
-            // Info << "rho2 = " << rho2[cellI] << ", Uc:" << mag(Uc[cellI])  << ", Us: " << mag(Us[cellI]) << endl;
-            // Info << "a1 = " << a1[cellI]*pow(d_[cellI],4) << ", a2:" << a2[cellI]*pow(d_[cellI],3)  << ", a3: " << (a3.value()*pow(d_[cellI],2)) << ", a4: " << a4[cellI] << endl;
-            // Info << "a1 = " << a1[cellI] << ", a2:" << a2[cellI]  << ", a3: " << (a3.value()) << ", k: " << k.value() << ", E: " << E_.value() << ", nu: " << nu_.value() << ", f: " << f << ", df: " << df << endl;
-        }
-        if ((d0_.value() - d[cellI])*(d[cellI] - 0.33*cbrt(cellVolume[cellI]))<0.0) {
-            d[cellI] = d0_.value();
-        }
-    }
-    d_ = 0.9*d_ + 0.1*d;
-    d_.correctBoundaryConditions();
-    Info << "vanWachem & Sasic diameter model: max(d) = " << max(d_).value() << ", min(d) = " << min(d_).value() << endl;
-}
-/*
-void Foam::diameterModels::vanWachemSasic::correct()
-{
-    const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
-    // cont. Phase velocity
-    const volVectorField& Uc = fluid.otherPhase(phase_).U();
-    const volVectorField& Up = phase_.U();
-
-    volScalarField alpha1(phase_);
-    alpha1.max(0);
-    volScalarField alpha2(1.0-alpha1);
-    
-    volScalarField cellVolume
+    volScalarField d
     (
-        IOobject
-        (
-            "cellVolume",
-            phase_.U().mesh().time().timeName(),
-            phase_.U().mesh()
-        ),
-        phase_.U().mesh(),
-        dimensionedScalar("one", dimLength*dimLength*dimLength, 1)
+        posDet
+       *(
+            - a2
+            - sqrt(det)
+        )
+       /(2.0*a1)
     );
-    cellVolume.ref() = phase_.U().mesh().V();
+    d *= pos(0.33*cbrt(cellVolume) - d);
+    d.max(d0_.value());
     
-    // slip velocity
-    volScalarField uSlip(mag(Uc - Up));
-    
-    // get strain rate
-    volSymmTensorField D(dev(symm(fvc::grad(Up))));
-    
-    volScalarField a1(0.5236*(rhoB_-rho2)*g_);
-    dimensionedScalar k((1.0 - sqr(nu_))/(3.14*E_));
-    volScalarField a2a(-0.166*pow(3.14*pow((D&&D)*rhoB_,3)/sqr(k),0.2));
-    volScalarField a2b(-0.1728*rho2*sqr(uSlip)*pow(alpha2,-4.8));
-    
-    // Apply drag correction
-    if (phase_.U().mesh().foundObject<volScalarField>("dragCorr")) {
-        const volScalarField& dragCorr = phase_.U().mesh().lookupObject<volScalarField>("dragCorr");
-        a2b *= (scalar(1.0) - dragCorr);
-    }
-    
-    dimensionedScalar a3(H_/(24.*sqr(delta_)));
-    
-    volScalarField d(d_);
-    d = 1.01*d0_;
-    
-    const cellList& cells = phase_.U().mesh().cells();
-    forAll(cells,cellI)
-    {
-        
-        // Newton Method to find root in the interval [d_particle,cellSize]
-        // initial conditions
-        scalar dx = 100.;
-        int iter = 0;
-        // Newton iterations
-        while ((mag(dx) > 5.0e-6) && (iter < 20) && ((d0_.value() - d[cellI])*(d[cellI] - 0.33*cbrt(cellVolume[cellI]))>0.0)) {
-            scalar f  = a1[cellI]*sqr(d[cellI]) + a2a[cellI]*pow(d[cellI],2.2) + a2b[cellI]*d[cellI] + a3.value();
-            scalar df = 2.0*a1[cellI]*d[cellI] + 2.2*a2a[cellI]*pow(d[cellI],1.2) + a2b[cellI];
-            dx = -f/df;
-            d[cellI] += dx;
-            iter++;
-            // Info << "vanWachem & Sasic diameter model: dx = " << dx << ", iter:" << iter  << ", d: " << d_[cellI] << ", alpha: " << alpha1[cellI] << endl;
-            // Info << "rho2 = " << rho2[cellI] << ", Uc:" << mag(Uc[cellI])  << ", Us: " << mag(Us[cellI]) << endl;
-            // Info << "a1 = " << a1[cellI]*pow(d_[cellI],4) << ", a2:" << a2[cellI]*pow(d_[cellI],3)  << ", a3: " << (a3.value()*pow(d_[cellI],2)) << ", a4: " << a4[cellI] << endl;
-            // Info << "a1 = " << a1[cellI] << ", a2:" << a2[cellI]  << ", a3: " << (a3.value()) << ", k: " << k.value() << ", E: " << E_.value() << ", nu: " << nu_.value() << ", f: " << f << ", df: " << df << endl;
-        }
-        if ((d0_.value() - d[cellI])*(d[cellI] - 0.33*cbrt(cellVolume[cellI]))<0.0) {
-            d[cellI] = d0_.value();
-        }
-    }
     d_ = 0.9*d_ + 0.1*d;
     d_.correctBoundaryConditions();
     Info << "vanWachem & Sasic diameter model: max(d) = " << max(d_).value() << ", min(d) = " << min(d_).value() << endl;
 }
- */
+
 bool Foam::diameterModels::vanWachemSasic::read(const dictionary& phaseProperties)
 {
     diameterModel::read(phaseProperties);
