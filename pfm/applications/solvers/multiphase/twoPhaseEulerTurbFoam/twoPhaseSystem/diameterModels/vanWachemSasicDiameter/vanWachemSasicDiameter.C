@@ -133,7 +133,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
     det.max(0);
     
     volScalarField d
-    ( 
+    (
         posDet
        *(
             - a2
@@ -144,6 +144,7 @@ void Foam::diameterModels::vanWachemSasic::correct()
     d = min(0.33*cbrt(cellVolume),d);
     d.max(d0_.value());
     
+    // underrelaxation of diameter
     d_ = 0.9*d_ + 0.1*d;
     d_.correctBoundaryConditions();
     Info << "vanWachem & Sasic diameter model: max(d) = " << max(d_).value() << ", min(d) = " << min(d_).value() << endl;
