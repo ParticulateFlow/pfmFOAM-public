@@ -1200,12 +1200,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // xiPhiDivU
         volScalarField divU(fvc::div(phi_));
         //volScalarField divUf(0.5*fvc::div(Uf));
-        volScalarField divUf(filter_(alpha*divU)/alphaf);
+        // volScalarField divUf(filter_(alpha*divU)/alphaf);
+        volScalarField divUf(0.5*mag(fvc::laplacian(aUU)));
+        divUf.max(ROOTVSMALL);
         volScalarField xiPhiDivUnum
         (
             filter_(alpha*divU)
           - alphaf*filter_(divU)
         );
+        /*
         volScalarField xiPhiDivUden
         (
             sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
@@ -1219,6 +1222,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     dimensionedScalar("small",dimensionSet(0,0,-2,0,0),1.0e-7)
                 )
             )
+        );
+        */
+        volScalarField xiPhiDivUden
+        (
+            sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
+           *sqrt(divUf)
         );
         /*
         // wall treatment for xiPhiDivU_
@@ -1440,7 +1449,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                    )
                                  + xiPhiDivU_
                                   *alpha
-                                  *sqrt(2.0*mag(fvc::laplacian(km)));
+                                  *sqrt(mag(fvc::laplacian(km)));
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
