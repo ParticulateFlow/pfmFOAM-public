@@ -1458,18 +1458,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField phiPhiM(alpha1/(alphaMax_));
     volScalarField alphaL2
     (
-        min
-        (
-            sqr(alpha1)
-           *(scalar(1.0) + phiPhiM)
-           /(
-               scalar(1.0)
-             + phiPhiM
-             /(scalar(1.0) - phiPhiM)
-            )
-         ,
-            alpha1*alphaM
-         )
+        sqr(alpha1)
+       *(scalar(1.0) + phiPhiM)
+       /(
+           scalar(1.0)
+         + phiPhiM
+         /(scalar(1.0) - phiPhiM)
+        )
     );
 //    volScalarField alphaL2(alpha1*alphaM);
     alphaP2Mean_.max(SMALL);
