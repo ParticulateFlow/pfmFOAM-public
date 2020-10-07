@@ -247,6 +247,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         zeroGradientFvPatchField<scalar>::typeName
     ),
 
+   xiPhi2DivU_
+    (
+        IOobject
+        (
+            "xiPhi2DivU",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), -0.15),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     xiUU_
     (
         IOobject
@@ -1199,9 +1214,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // xiPhiDivU
         volScalarField divU(fvc::div(phi_));
-        //volScalarField divUf(0.5*fvc::div(Uf));
+        volScalarField divUf(0.5*fvc::div(Uf));
         // volScalarField divUf(filter_(alpha*divU)/alphaf);
-        volScalarField divUf(0.125*mag(fvc::laplacian(aUU)));
+        volScalarField divUfL(0.125*mag(fvc::laplacian(aUU)));
         divUf.max(ROOTVSMALL);
         volScalarField xiPhiDivUnum
         (
@@ -1227,29 +1242,33 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField xiPhiDivUden
         (
             sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
-           *sqrt(divUf)
+           *sqrt(divUfL)
         );
-        /*
-        // wall treatment for xiPhiDivU_
-        const fvPatchList& patches = mesh_.boundary();
-        volScalarField::Boundary& xiPhiDivUnumf = xiPhiDivUnum.boundaryFieldRef();
-        volScalarField::Boundary& xiPhiDivUdenf = xiPhiDivUden.boundaryFieldRef();
-        
-        forAll(patches, patchi) {
-            const fvPatch& curPatch = patches[patchi];
-
-            if (isA<wallFvPatch>(curPatch)) {
-                scalarField& xiPhiDivUnumw = xiPhiDivUnumf[patchi];
-                scalarField& xiPhiDivUdenw = xiPhiDivUdenf[patchi];
-                forAll(curPatch, facei) {
-                    xiPhiDivUnumw[facei] = xiPhiDivUScalar_.value();
-                    xiPhiDivUdenw[facei] = 1;
-                }
-            }
-        }*/
         xiPhiDivU_ = filterS(xiPhiDivUnum*xiPhiDivUden)/filterS(sqr(xiPhiDivUden));
         xiPhiDivU_.max(-1.0);
         xiPhiDivU_.min(1.0);
+        
+        //xiPhi2DivU
+        volScalarField xiPhi2DivUnum
+        (
+            filter_(sqr(alpha)*divU)
+          - alphaf
+           *(
+                2.0*filter_(alpha*divU)
+              - alphaf*filter_(divU)
+              - alphaf*divUf
+            )
+          - alphafP2*divUf
+        );
+        volScalarField xiPhi2DivUden
+        (
+            max(alphafP2-sqr(alphaf),sqr(residualAlpha_))
+           *sqrt(divUfL)
+        );
+        
+        xiPhi2DivU_ = filterS(xiPhi2DivUnum*xiPhi2DivUden)/filterS(sqr(xiPhi2DivUden));
+        xiPhi2DivU_.max(-1.0);
+        xiPhi2DivU_.min(1.0);
         
         // compute mixing length dynamically
         /*
@@ -1461,7 +1480,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         sqr(alpha1)
        *(scalar(1.0) + phiPhiM)
        /(
-           scalar(1.0)
+          scalar(1.0)
          + phiPhiM
          /(scalar(1.0) - phiPhiM)
         )
@@ -1504,7 +1523,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // production/dissipation
           //- fvm::SuSp(divU,alphaP2Mean_)
           - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::Sp(-dissPhiP2,alphaP2Mean_)
+          + fvm::SuSp(xiPhi2DivU_*sqrt(mag(fvc::laplacian(km))),alphaP2Mean_)
+          //+ fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();

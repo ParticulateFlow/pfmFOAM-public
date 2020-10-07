@@ -174,6 +174,10 @@ class SATFMdispersedModel
             //- correlation coefficient between solid volume fraction and velocity divergence
             volScalarField xiPhiDivU_;
     
+            //- correlation coefficient between solid volume fraction^2 and velocity divergence
+    
+            volScalarField xiPhi2DivU_;
+    
             //- auto correlation coefficient of solids velocity
             volTensorField xiUU_;
     
