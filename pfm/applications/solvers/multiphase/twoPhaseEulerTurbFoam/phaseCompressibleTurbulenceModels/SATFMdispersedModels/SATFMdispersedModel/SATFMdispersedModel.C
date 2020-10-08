@@ -1465,10 +1465,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                          ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
                                        + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
                                        + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
-                                   )
-                                 + xiPhiDivU_
-                                  *alpha
-                                  *sqrt(mag(fvc::laplacian(km)));
+                                   );
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
@@ -1508,22 +1505,22 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
           /*
           - fvc::div(
-                       alpha*sqrt(k())*lm_/sigma_
+                       alpha*sqrt(km)*lm_/sigma_
                      * fvc::grad(alphaP2Mean_/alpha)
                     )
           
            */
            /*
           - fvm::laplacian(
-                           sqrt(k())*lm_/(sigma_),
+                           sqrt(km)*lm_/(sigma_),
                            alphaP2Mean_
                          )
            */
          ==
           // production/dissipation
-          //- fvm::SuSp(divU,alphaP2Mean_)
+          - fvm::SuSp(divU,alphaP2Mean_)
           - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::SuSp(xiPhi2DivU_*sqrt(mag(fvc::laplacian(km))),alphaP2Mean_)
+          - fvm::SuSp((xiPhiDivU_*alpha/sqrt(alphaP2Mean_)-xiPhi2DivU_)*sqrt(mag(fvc::laplacian(km))),alphaP2Mean_)
           //+ fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
 
@@ -1544,7 +1541,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     // use k() for nut in stress tensor
-    //nut_ = alpha*sqrt(k())*lm_;
+    nut_ = alpha*sqrt(k())*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
