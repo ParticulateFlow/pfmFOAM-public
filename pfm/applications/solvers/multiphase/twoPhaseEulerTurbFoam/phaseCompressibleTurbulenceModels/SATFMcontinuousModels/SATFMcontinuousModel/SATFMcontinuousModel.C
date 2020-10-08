@@ -974,17 +974,17 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // dynamic procedure for Ceps
         /*
         volScalarField LijEps    = alpha*nuEff()*(magSqrDf - magSqr(Df));
-        volScalarField MijEps    = pow(alpha*Lij,1.5)/(2.0*lm_);
+        volScalarField MijEps    = pow(alpha*Lij,1.5)/(2.0*deltaF_);
         volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
         
         volScalarField CepsT     = filterS(LijEps*MijEps)/(MijMijEps);
         
-        Ceps_ = 0.33*(CepsT + mag(CepsT) + CepsScalar_);
+        Ceps_ = 0.5*(CepsT + mag(CepsT));
         
-        Ceps_.min(2.0);
-        */
-        Ceps_ = CepsScalar_;
+        Ceps_.min(10.0);
+         */
+        Ceps_ = CepsScalar_*(alpha);
         // Compute CphiG_
         CphiG_ = CphiGscalar_;
         
