@@ -887,29 +887,37 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         );
         volScalarField tmpA(alpha1fP2-sqr(alpha1f));
 
-        volScalarField tmpDen(tmpA*(filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf)));
-        tmpDen.max(ROOTVSMALL);
-        /*
-        volScalarField tmpDenX = tmpA
-                              * (
-                                    filter_(alpha*sqr(U&eX)) / alpha2f
-                                  - sqr(Uf&eX)
-                                );
-        volScalarField tmpDenY = tmpA
-                               * (
-                                    filter_(alpha*sqr(U&eY)) / alpha2f
-                                  - sqr(Uf&eY)
-                                 );
-        volScalarField tmpDenZ = tmpA
-                               * (
-                                    filter_(alpha*sqr(U&eZ)) / alpha2f
-                                  - sqr(Uf&eZ)
-                                );
+        // volScalarField tmpDen(tmpA*(filter_(alpha*magSqr(U)) / alpha2f - magSqr(Uf)));
+        // tmpDen.max(ROOTVSMALL);
+        volScalarField tmpDenX
+        (
+            tmpA
+          * (
+                filter_(alpha*sqr(U&eX)) / alpha2f
+              - sqr(Uf&eX)
+            )
+         );
+        volScalarField tmpDenY
+        (
+            tmpA
+          * (
+                filter_(alpha*sqr(U&eY)) / alpha2f
+              - sqr(Uf&eY)
+            )
+         );
+        volScalarField tmpDenZ
+        (
+            tmpA
+          * (
+                filter_(alpha*sqr(U&eZ)) / alpha2f
+              - sqr(Uf&eZ)
+            )
+         );
        
         tmpDenX.max(ROOTVSMALL);
         tmpDenY.max(ROOTVSMALL);
         tmpDenZ.max(ROOTVSMALL);
-        
+         
         xiPhiG_ =  eX
                  * (
                         ((xiPhiGNom&eX))/sqrt(tmpDenX)
@@ -922,6 +930,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         ((xiPhiGNom&eZ))/sqrt(tmpDenZ)
                     );
+        /*
         xiPhiG_ =  eX
                  * (
                         filterS((xiPhiGNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
@@ -935,7 +944,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                         filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
                     );
         */
-        xiPhiG_ =  3.0*filterS((xiPhiGNom)*sqrt(tmpDen))/filterS(tmpDen);
+        //xiPhiG_ =  3.0*filterS((xiPhiGNom)*sqrt(tmpDen))/filterS(tmpDen);
         // wall treatment for xiPhiG
         /*
         const fvPatchList& patches = mesh_.boundary();
