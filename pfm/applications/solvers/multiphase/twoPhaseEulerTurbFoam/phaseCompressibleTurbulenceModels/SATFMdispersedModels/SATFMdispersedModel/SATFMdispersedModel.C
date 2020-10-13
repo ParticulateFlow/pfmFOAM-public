@@ -672,11 +672,13 @@ Foam::RASModels::SATFMdispersedModel::pPressure() const
     volTensorField gradU(fvc::grad(phase_.U()));
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
+    volTensorField R1(R1_);
+    boundStress(R1);
     
     return
     (
         pos(alpha_ - residualAlpha_)
-       *(2.0/3.0)*alpha_*rho*tr(R1_)
+       *(2.0/3.0)*alpha_*rho*tr(R1)
       + pos(alpha_ - alphaMinFriction_)
        *frictionalStressModel_->frictionalPressurePrime
         (
@@ -1306,7 +1308,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         Ceps_.min(10.0);
         */
-        Ceps_ = pos(alpha_ - residualAlpha_)*CepsScalar_*alpha2
+        Ceps_ = pos(alpha_ - residualAlpha_)*CepsScalar_
               + neg(alpha_- residualAlpha_);
         // compute CphiS
         CphiS_ = CphiSscalar_;
@@ -1363,7 +1365,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           - fvc::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-         /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -1374,12 +1375,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                            , k_
                            , "laplacian(kappa,k)"
                          )
-          */
+          /*
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+          */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1472,7 +1474,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alpha1.min(0.99*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
     volScalarField phiPhiM(alpha1/(alphaMax_));
-    volScalarField alphaL
+    volScalarField alphaL2
     (
         sqr(alpha1)
        *(scalar(1.0) + phiPhiM)
@@ -1482,7 +1484,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          /(scalar(1.0) - phiPhiM)
         )
     );
-    volScalarField alphaL2(min(alpha1*alphaM,alphaL));
+    //volScalarField alphaL2(min(alpha1*alphaM,alphaL));
     alphaP2Mean_.max(SMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
@@ -1550,7 +1552,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(k())*lm_;
+    nut_ = alpha*sqrt(min(km,sqr(ut_)))*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
@@ -1606,7 +1608,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         pf_/rho,
         da,
         //strain-rate fluctuations --> Srivastrava (2003)
-        dev(D)// + sqrt(km)/lm_*symmTensor::I
+        dev(D) + sqrt(km)/lm_*symmTensor::I
     );
 
     // BCs for nut_
