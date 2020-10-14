@@ -672,14 +672,10 @@ Foam::RASModels::SATFMdispersedModel::pPressure() const
     volTensorField gradU(fvc::grad(phase_.U()));
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
-    volTensorField R1(R1_);
-    boundStress(R1);
     
     return
     (
-        pos(alpha_ - residualAlpha_)
-       *(2.0/3.0)*alpha_*rho*tr(R1)
-      + pos(alpha_ - alphaMinFriction_)
+        pos(alpha_ - alphaMinFriction_)
        *frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
@@ -755,7 +751,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * dev(R1)
+               * R1
             )
          );
     } else {
@@ -772,7 +768,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * dev(R1)
+               * R1
             )
          );
     }
@@ -1528,7 +1524,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     2.0*xiPhiDivU_*alpha/sqrt(alphaP2Mean_)
                   - xiPhi2DivU_
                 )
-               *sqrt(mag(fvc::laplacian(km)))
+               *sqrt(mag(fvc::laplacian(k_)))
             ,
                 alphaP2Mean_
             )

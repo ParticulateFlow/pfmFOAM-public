@@ -415,11 +415,22 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::SATFMcontinuousModel::pPressure() const
 {
-    const volScalarField& rho = phase_.rho();
-    
-    return
+    return tmp<Foam::volScalarField>
     (
-        (2.0/3.0)*alpha_*rho*tr(R2_)
+        new volScalarField
+        (
+            IOobject
+            (
+                "zero",
+                phase_.U().time().timeName(),
+                phase_.U().mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            phase_.U().mesh(),
+            dimensionedScalar("zero",dimensionSet(1, -1, -2, 0, 0, 0, 0),0.0)
+        )
     );
 }
 
@@ -523,7 +534,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                 2.0
               * alpha_
               * rho_
-              * dev(R2_)
+              * R2_
            )
         );
     } else {
@@ -539,7 +550,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
                  2.0
                * alpha_
                * rho_
-               * dev(R2_)
+               * R2_
             )
           + fvc::laplacian(rho_*nut_, U)
         );
@@ -917,7 +928,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         tmpDenX.max(ROOTVSMALL);
         tmpDenY.max(ROOTVSMALL);
         tmpDenZ.max(ROOTVSMALL);
-         
+        /*
         xiPhiG_ =  eX
                  * (
                         ((xiPhiGNom&eX))/sqrt(tmpDenX)
@@ -930,7 +941,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         ((xiPhiGNom&eZ))/sqrt(tmpDenZ)
                     );
-        /*
+        */
         xiPhiG_ =  eX
                  * (
                         filterS((xiPhiGNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
@@ -943,7 +954,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
                     );
-        */
         //xiPhiG_ =  3.0*filterS((xiPhiGNom)*sqrt(tmpDen))/filterS(tmpDen);
         // wall treatment for xiPhiG
         /*
@@ -1248,7 +1258,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     } else {
-        R2_  = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
+        R2_  = ((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
     }
     
     R2_.correctBoundaryConditions();
