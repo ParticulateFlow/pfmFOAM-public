@@ -956,7 +956,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
         //xiPhiG_ =  3.0*filterS((xiPhiGNom)*sqrt(tmpDen))/filterS(tmpDen);
         // wall treatment for xiPhiG
-        /*
         const fvPatchList& patches = mesh_.boundary();
         // volVectorField::Boundary& xiPhiGBf = xiPhiG_.boundaryFieldRef();
         
@@ -967,13 +966,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 // vectorField& xiPhiGw = xiPhiGBf[patchi];
                 forAll(curPatch, facei) {
                     label celli = curPatch.faceCells()[facei];
-                    xiPhiG_[celli] = -mag(xiPhiG_[celli])
-                                     *uSlip[celli]
-                                     /(mag(uSlip[celli])+SMALL);
+                    xiPhiG_[celli] = gN_.value()*mag(xiPhiG_[celli])/mag(gN_).value();
+                                     //*uSlip[celli]
+                                     //(mag(uSlip[celli])+SMALL);
                 }
             }
         }
-        */
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
         
