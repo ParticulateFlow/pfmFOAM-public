@@ -956,6 +956,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
         //xiPhiG_ =  3.0*filterS((xiPhiGNom)*sqrt(tmpDen))/filterS(tmpDen);
         // wall treatment for xiPhiG
+        /*
         const fvPatchList& patches = mesh_.boundary();
         // volVectorField::Boundary& xiPhiGBf = xiPhiG_.boundaryFieldRef();
         
@@ -972,7 +973,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        // xiPhiG_ = filterS(xiPhiG_);
+        */
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
         
