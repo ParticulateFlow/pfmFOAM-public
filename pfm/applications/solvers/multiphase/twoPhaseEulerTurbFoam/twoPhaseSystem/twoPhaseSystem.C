@@ -419,11 +419,12 @@ void Foam::twoPhaseSystem::solve()
     tmp<surfaceScalarField> alphaPhiDbyA0;
     if (pPrimeByA_.valid())
     {
+        /*
         alphaPhiDbyA0 =
             pPrimeByA_()
            *fvc::snGrad(alpha1, "bounded")*mesh_.magSf();
+        */
     }
-
     for (int acorr=0; acorr<nAlphaCorr; acorr++)
     {
         volScalarField::Internal Sp
@@ -486,13 +487,14 @@ void Foam::twoPhaseSystem::solve()
             );
 
             phase1_.correctInflowOutflow(alphaPhi1);
-
-            if (alphaPhiDbyA0.valid())
+            //if (alphaPhiDbyA0.valid())
+            if (pPrimeByA_.valid())
             {
                 alphaPhi1 +=
                     fvc::interpolate(max(alpha1, scalar(0)))
                    *fvc::interpolate(max(scalar(1) - alpha1, scalar(0)))
-                   *alphaPhiDbyA0();
+                   //*alphaPhiDbyA0();
+                   *pPrimeByA_();
             }
 
             MULES::explicitSolve
@@ -515,7 +517,7 @@ void Foam::twoPhaseSystem::solve()
             {
                 phase1_.alphaPhi() += alphaPhi1;
             }
-
+            /*
             if (alphaPhiDbyA0.valid())
             {
                 const surfaceScalarField alphaDbyA
@@ -535,6 +537,7 @@ void Foam::twoPhaseSystem::solve()
 
                 phase1_.alphaPhi() += alpha1Eqn.flux();
             }
+             */
         }
 
         if (nAlphaSubCycles > 1)

@@ -75,13 +75,6 @@ tmp<surfaceScalarField> phiF2;
         )
     );
 
-    // Cache the net diffusivity for implicit diffusion treatment in the
-    // phase-fraction equation
-    if (implicitPhasePressure)
-    {
-        fluid.pPrimeByA() = Df1 + Df2 + Pf1 + Pf2;
-    }
-
     // Lift and wall-lubrication forces
     volVectorField F(fluid.F());
 
@@ -89,16 +82,40 @@ tmp<surfaceScalarField> phiF2;
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
     
     // Pressure gradients
-    volVectorField gradPp1(fvc::grad(phase1.turbulence().pPressure()));
-    volVectorField gradPp2(fvc::grad(phase2.turbulence().pPressure()));
+    surfaceScalarField gradPp1
+    (
+        fvc::interpolate
+        (
+            rAU1
+           *fvc::grad(phase1.turbulence().pPressure())
+        )
+       &mesh.Sf()
+    );
+    surfaceScalarField gradPp2
+    (
+        fvc::interpolate
+        (
+            rAU2
+           *fvc::grad(phase2.turbulence().pPressure())
+        )
+       &mesh.Sf()
+    );
     
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*(F - KdUdriftE + gradPp1));
+    phiF1 = Df1*snGradAlpha1 + gradPp1 + fvc::flux(rAU1*(F - KdUdriftE));
     //phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F);
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*(F - KdUdriftE - gradPp2));
+    phiF2 = - Df2*snGradAlpha1 + gradPp2 - fvc::flux(rAU2*(F - KdUdriftE));
     //phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F);
+    
+    // Cache the net diffusivity for implicit diffusion treatment in the
+    // phase-fraction equation
+    if (implicitPhasePressure)
+    {
+        //fluid.pPrimeByA() = Df1 + Df2 + Pf1 + Pf2;
+        fluid.pPrimeByA() = gradPp1 + gradPp2;
+    }
 }
 
 
