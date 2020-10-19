@@ -517,27 +517,30 @@ void Foam::twoPhaseSystem::solve()
             {
                 phase1_.alphaPhi() += alphaPhi1;
             }
-            /*
             if (alphaPhiDbyA0.valid())
             {
+                /*
                 const surfaceScalarField alphaDbyA
                 (
                     fvc::interpolate(max(alpha1, scalar(0)))
                    *fvc::interpolate(max(scalar(1) - alpha1, scalar(0)))
                    *pPrimeByA_()
                 );
+                 */
 
                 fvScalarMatrix alpha1Eqn
                 (
                     fvm::ddt(alpha1) - fvc::ddt(alpha1)
-                  - fvm::laplacian(alphaDbyA, alpha1, "bounded")
+                 // - fvm::laplacian(alphaDbyA, alpha1, "bounded")
+                  - fvc::div(fvc::interpolate(max(alpha1, scalar(0)))
+                             *fvc::interpolate(max(scalar(1) - alpha1, scalar(0)))
+                             *pPrimeByA_())
                 );
 
                 alpha1Eqn.solve();
 
                 phase1_.alphaPhi() += alpha1Eqn.flux();
             }
-             */
         }
 
         if (nAlphaSubCycles > 1)
