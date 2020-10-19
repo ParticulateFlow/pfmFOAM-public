@@ -118,7 +118,12 @@ tmp<surfaceScalarField> Ff2;
     if (implicitPhasePressure)
     {
         //fluid.pPrimeByA() = rAUf1*(Df1 + Pf1) + rAUf2*(Df2 + Pf2);
-        fluid.pPrimeByA() = rAUf1*fvc::interpolate(gradPp1)&mesh.Sf();
+        fluid.pPrimeByA() =
+        (
+            rAUf1*fvc::interpolate(gradPp1)
+          + rAUf2*fvc::interpolate(gradPp2)
+        )
+        &mesh.Sf();
     }
 }
 

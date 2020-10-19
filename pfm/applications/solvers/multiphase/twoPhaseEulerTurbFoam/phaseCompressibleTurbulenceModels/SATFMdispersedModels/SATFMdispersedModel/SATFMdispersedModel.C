@@ -1051,7 +1051,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
 
     // simple filter for local smoothing
-    simpleFilter filterS(mesh_);
+    laplaceFilter filterS(mesh_,7.0);
     
     // get drag coefficient
     volScalarField beta
