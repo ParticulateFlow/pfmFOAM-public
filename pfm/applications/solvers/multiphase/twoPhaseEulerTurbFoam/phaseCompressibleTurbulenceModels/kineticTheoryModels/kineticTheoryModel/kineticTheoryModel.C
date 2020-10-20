@@ -402,7 +402,7 @@ Foam::RASModels::kineticTheoryModel::pPressure() const
             e_
         )
       + pos(alpha_ - alphaMinFriction_)
-       *frictionalStressModel_->frictionalPressurePrime
+       *frictionalStressModel_->frictionalPressure
         (
             phase_,
             alphaMinFriction_,

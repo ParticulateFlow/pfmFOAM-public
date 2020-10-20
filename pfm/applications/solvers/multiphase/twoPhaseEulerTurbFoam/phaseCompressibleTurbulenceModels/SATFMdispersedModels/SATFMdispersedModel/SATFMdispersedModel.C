@@ -676,7 +676,7 @@ Foam::RASModels::SATFMdispersedModel::pPressure() const
     return
     (
         pos(alpha_ - alphaMinFriction_)
-       *frictionalStressModel_->frictionalPressurePrime
+       *frictionalStressModel_->frictionalPressure
         (
             phase_,
             alphaMinFriction_,
@@ -1051,7 +1051,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
 
     // simple filter for local smoothing
-    laplaceFilter filterS(mesh_,7.0);
+    laplaceFilter filterS(mesh_,24.0);
     
     // get drag coefficient
     volScalarField beta
