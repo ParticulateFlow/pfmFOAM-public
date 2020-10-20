@@ -114,7 +114,12 @@ tmp<surfaceScalarField> phiF2;
     if (implicitPhasePressure)
     {
         //fluid.pPrimeByA() = Df1 + Df2 + Pf1 + Pf2;
-        fluid.pPrimeByA() = gradPp1 + gradPp2;
+        fluid.pPrimeByA() =
+        (
+            fvc::interpolate(rAU1)*fvc::snGrad(phase1.turbulence().pPressure(),"bounded")
+          + fvc::interpolate(rAU2)*fvc::snGrad(phase2.turbulence().pPressure(),"bounded")
+        )
+       *mesh.magSf();
     }
 }
 

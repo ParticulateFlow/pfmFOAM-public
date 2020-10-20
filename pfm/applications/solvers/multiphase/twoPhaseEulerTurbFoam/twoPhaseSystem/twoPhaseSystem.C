@@ -415,16 +415,15 @@ void Foam::twoPhaseSystem::solve()
     alpha1.correctBoundaryConditions();
 
     surfaceScalarField phir("phir", phi1 - phi2);
-    
+    /*
     tmp<surfaceScalarField> alphaPhiDbyA0;
     if (pPrimeByA_.valid())
     {
-        /*
         alphaPhiDbyA0 =
             pPrimeByA_()
            *fvc::snGrad(alpha1, "bounded")*mesh_.magSf();
-        */
     }
+     */
     for (int acorr=0; acorr<nAlphaCorr; acorr++)
     {
         volScalarField::Internal Sp
@@ -517,7 +516,8 @@ void Foam::twoPhaseSystem::solve()
             {
                 phase1_.alphaPhi() += alphaPhi1;
             }
-            if (alphaPhiDbyA0.valid())
+            //if (alphaPhiDbyA0.valid())
+            if (pPrimeByA_.valid())
             {
                 /*
                 const surfaceScalarField alphaDbyA
@@ -526,13 +526,12 @@ void Foam::twoPhaseSystem::solve()
                    *fvc::interpolate(max(scalar(1) - alpha1, scalar(0)))
                    *pPrimeByA_()
                 );
-                 */
-
+                */
                 fvScalarMatrix alpha1Eqn
                 (
                     fvm::ddt(alpha1) - fvc::ddt(alpha1)
                  // - fvm::laplacian(alphaDbyA, alpha1, "bounded")
-                  - fvc::div(fvc::interpolate(max(alpha1, scalar(0)))
+                    - fvc::div(fvc::interpolate(max(alpha1, scalar(0)))
                              *fvc::interpolate(max(scalar(1) - alpha1, scalar(0)))
                              *pPrimeByA_())
                 );
