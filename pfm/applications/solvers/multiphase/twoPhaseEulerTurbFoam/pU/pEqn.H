@@ -99,8 +99,8 @@ tmp<surfaceScalarField> phiF2;
            *fvc::grad(phase2.turbulence().pPressure())
         )
        &mesh.Sf()
-    );
-    
+    ); 
+
     // Phase-1 dispersion, lift and wall-lubrication flux
     phiF1 = Df1*snGradAlpha1 + gradPp1 + fvc::flux(rAU1*(F - KdUdriftE));
     //phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F);
@@ -113,13 +113,7 @@ tmp<surfaceScalarField> phiF2;
     // phase-fraction equation
     if (implicitPhasePressure)
     {
-        //fluid.pPrimeByA() = Df1 + Df2 + Pf1 + Pf2;
-        fluid.pPrimeByA() =
-        (
-            fvc::interpolate(rAU1)*fvc::snGrad(phase1.turbulence().pPressure(),"bounded")
-          + fvc::interpolate(rAU2)*fvc::snGrad(phase2.turbulence().pPressure(),"bounded")
-        )
-       *mesh.magSf();
+        fluid.pPrimeByA() = Df1 + Df2 + Pf1 + Pf2;
     }
 }
 
