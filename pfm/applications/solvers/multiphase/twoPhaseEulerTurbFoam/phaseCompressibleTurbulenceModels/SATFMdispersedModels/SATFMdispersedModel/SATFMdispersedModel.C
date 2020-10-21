@@ -229,7 +229,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedVector("value", dimensionSet(0, 0, 0, 0, 0), vector(-0.1,-0.1,-0.1)),
-        zeroGradientFvPatchField<scalar>::typeName
+        zeroGradientFvPatchField<vector>::typeName
     ),
 
     xiPhiDivU_
@@ -274,7 +274,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         ),
         U.mesh(),
         dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
-        zeroGradientFvPatchField<scalar>::typeName
+        zeroGradientFvPatchField<tensor>::typeName
     ),
 
 
@@ -446,7 +446,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         U.mesh(),
         dimensionedVector("zero", dimensionSet(0, 2, -3, 0, 0),
                            vector(0.0,0.0,0.0)),
-        zeroGradientFvPatchField<scalar>::typeName
+        zeroGradientFvPatchField<vector>::typeName
     ),
 
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
@@ -516,50 +516,6 @@ Foam::RASModels::SATFMdispersedModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    dimensionedVector eX
-    (
-        "eX",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,0,0)
-    );
-    dimensionedVector eY
-    (
-        "eY",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,1,0)
-    );
-    dimensionedVector eZ
-    (
-        "eZ",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(0,0,1)
-    );
-    dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
-    dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
-    /*
-    tmp<volScalarField> kT
-    (
-        
-       1.5
-      *min
-       (
-          max
-          (
-                (k_&eSum)
-              - (
-                    mag((k_&eX)*(U_*eX))
-                  + mag((k_&eY)*(U_*eY))
-                  + mag((k_&eZ)*(U_*eZ))
-                )
-               /(mag(U_)+uSmall)
-            ,
-                kSmall
-           )
-        ,
-           sqr(ut_)
-        )
-     );
-    return kT;*/
     return k_&eSum;
 }
 
@@ -567,12 +523,6 @@ Foam::RASModels::SATFMdispersedModel::k() const
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::SATFMdispersedModel::epsilon() const
 {
-    dimensionedVector eSum
-    (
-        "eSum",
-        dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,1,1)
-    );
     return Ceps_*pow(k(),3.0/2.0)/lm_;
 }
 
@@ -1051,7 +1001,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alphaP2MeanO = max(alphaP2Mean2_,alphaP2Mean_);
 
     // simple filter for local smoothing
-    laplaceFilter filterS(mesh_,24.0);
+    simpleFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -1136,7 +1086,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                         - alphaf*filter_(U)
                                       );
         volScalarField tmpA = alphafP2-sqr(alphaf);
-        tmpA.max(ROOTVSMALL);
+        
         volScalarField tmpDenX = tmpA
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
@@ -1153,9 +1103,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                   - sqr(Uf&eZ)
                                 );
        
-        tmpDenX.max(ROOTVSMALL);
-        tmpDenY.max(ROOTVSMALL);
-        tmpDenZ.max(ROOTVSMALL);
+        tmpDenX.max(SMALL);
+        tmpDenY.max(SMALL);
+        tmpDenZ.max(SMALL);
 
         xiPhiS_ =  eX
                  * (
@@ -1167,9 +1117,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     )
                  + eZ
                  * (
-                        filterS((xiPhiSNom&eZ)*sqrt(tmpDenY))/filterS(tmpDenZ)
+                        filterS((xiPhiSNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
                     );
-        
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
         
@@ -1214,8 +1163,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField divU(fvc::div(phi_));
         volScalarField divUf(0.5*fvc::div(Uf));
         // volScalarField divUf(filter_(alpha*divU)/alphaf);
+        divUf.max(SMALL);
         volScalarField divUfL(0.125*mag(fvc::laplacian(aUU)));
-        divUf.max(ROOTVSMALL);
+        divUfL.max(SMALL);
         volScalarField xiPhiDivUnum
         (
             filter_(alpha*divU)
@@ -1547,8 +1497,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
-    // use k() for nut in stress tensor
-    nut_ = alpha*sqrt(min(km,sqr(ut_)))*lm_;
+    // use k_normal for nut in stress tensor
+    volScalarField kT
+    (
+        1.5
+       *(
+            (k_&eSum)
+          - mag(k_ & U_)
+          / (mag(U_)+uSmall)
+        )
+    );
+    kT.max(kSmall.value());
+    nut_ = alpha*sqrt(kT)*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
