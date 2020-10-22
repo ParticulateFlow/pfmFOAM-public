@@ -1564,7 +1564,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         pf_/rho,
         da,
         //strain-rate fluctuations --> Srivastrava (2003)
-        dev(D) + sqrt(km)/lm_*symmTensor::I
+        dev(D)// + sqrt(km)/lm_*symmTensor::I
     );
 
     // BCs for nut_
