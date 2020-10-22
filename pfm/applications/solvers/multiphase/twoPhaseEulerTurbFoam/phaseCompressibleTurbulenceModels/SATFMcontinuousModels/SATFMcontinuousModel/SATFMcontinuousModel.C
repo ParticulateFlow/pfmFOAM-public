@@ -396,6 +396,7 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
 Foam::tmp<Foam::volVectorField>
 Foam::RASModels::SATFMcontinuousModel::divStress() const
 {
+    /*
     return tmp<Foam::volVectorField>
     (
         new volVectorField
@@ -412,6 +413,17 @@ Foam::RASModels::SATFMcontinuousModel::divStress() const
             phase_.U().mesh(),
             dimensionedVector("zero",dimensionSet(1, -2, -2, 0, 0, 0, 0),vector(0,0,0))
         )
+    );
+    */
+    return
+    (
+      fvc::div
+      (
+           2.0
+         * alpha_
+         * rho_
+         * R2_
+      )
     );
 }
 
@@ -510,13 +522,6 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
             (
                 (rho_*nuEff())*dev2(T(fvc::grad(U)))
             )
-         + fvc::div
-           (
-                2.0
-              * alpha_
-              * rho_
-              * R2_
-           )
         );
     } else {
         return
@@ -525,13 +530,6 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
           - fvc::div
             (
                 rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
-            )
-          + fvc::div
-            (
-                 2.0
-               * alpha_
-               * rho_
-               * R2_
             )
           + fvc::laplacian(rho_*nut_, U)
         );
