@@ -1161,14 +1161,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField divUf(0.5*fvc::div(Uf));
         // volScalarField divUf(filter_(alpha*divU)/alphaf);
         divUf.max(SMALL);
-        volScalarField divUfL(0.125*mag(fvc::laplacian(aUU)));
+        volScalarField divUfL(0.25*mag(fvc::laplacian(aUU)));
         divUfL.max(SMALL);
         volScalarField xiPhiDivUnum
         (
             filter_(alpha*divU)
           - alphaf*filter_(divU)
         );
-        /*
         volScalarField xiPhiDivUden
         (
             sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
@@ -1183,12 +1182,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
             )
         );
-        */
+        /*
         volScalarField xiPhiDivUden
         (
             sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
            *sqrt(divUfL)
         );
+        */
         xiPhiDivU_ = filterS(xiPhiDivUnum*xiPhiDivUden)/filterS(sqr(xiPhiDivUden));
         xiPhiDivU_.max(-1.0);
         xiPhiDivU_.min(1.0);
@@ -1212,8 +1212,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         );
         
         xiPhi2DivU_ = filterS(xiPhi2DivUnum*xiPhi2DivUden)/filterS(sqr(xiPhi2DivUden));
-        xiPhi2DivU_.max(-1.0);
-        xiPhi2DivU_.min(1.0);
+        xiPhi2DivU_.max(-2.0);
+        xiPhi2DivU_.min(2.0);
         
         // compute mixing length dynamically
         /*
