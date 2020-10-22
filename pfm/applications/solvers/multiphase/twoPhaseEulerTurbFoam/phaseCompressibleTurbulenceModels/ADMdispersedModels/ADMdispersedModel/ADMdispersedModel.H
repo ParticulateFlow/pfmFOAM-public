@@ -220,7 +220,7 @@ public:
         virtual tmp<surfaceScalarField> pPrimef() const;
     
         //- Return the phase-pressure'
-        virtual tmp<volScalarField> pPressure() const;
+        virtual tmp<volVectorField> divStress() const;
 
         //- Return the effective stress tensor
         virtual tmp<volSymmTensorField> devRhoReff() const;

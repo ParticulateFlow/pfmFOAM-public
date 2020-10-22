@@ -87,16 +87,17 @@ tmp<surfaceScalarField> phiF2;
         fvc::interpolate
         (
             rAU1
-           *fvc::grad(phase1.turbulence().pPressure())
+           *phase1.turbulence().divStress()
         )
        &mesh.Sf()
     );
+
     surfaceScalarField gradPp2
     (
         fvc::interpolate
         (
             rAU2
-           *fvc::grad(phase2.turbulence().pPressure())
+           *phase2.turbulence().divStress()
         )
        &mesh.Sf()
     ); 
@@ -108,7 +109,7 @@ tmp<surfaceScalarField> phiF2;
     // Phase-1 dispersion, lift and wall-lubrication flux
     phiF2 = - Df2*snGradAlpha1 + gradPp2 - fvc::flux(rAU2*(F - KdUdriftE));
     //phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F);
-    
+
     // Cache the net diffusivity for implicit diffusion treatment in the
     // phase-fraction equation
     if (implicitPhasePressure)

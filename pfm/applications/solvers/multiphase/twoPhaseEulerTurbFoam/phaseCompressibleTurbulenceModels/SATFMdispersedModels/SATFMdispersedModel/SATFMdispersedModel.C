@@ -612,8 +612,8 @@ Foam::RASModels::SATFMdispersedModel::pPrimef() const
     return fvc::interpolate(pPrime());
 }
 
-Foam::tmp<Foam::volScalarField>
-Foam::RASModels::SATFMdispersedModel::pPressure() const
+Foam::tmp<Foam::volVectorField>
+Foam::RASModels::SATFMdispersedModel::divStress() const
 {
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
@@ -623,18 +623,32 @@ Foam::RASModels::SATFMdispersedModel::pPressure() const
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
     
+    volTensorField R1(R1_);
+    boundStress(R1);
+    
     return
     (
         pos(alpha_ - alphaMinFriction_)
-       *frictionalStressModel_->frictionalPressure
+       *fvc::grad
         (
-            phase_,
-            alphaMinFriction_,
-            alphaMax_,
-            da,
-            rho,
-            dev(D)
-        )
+            frictionalStressModel_->frictionalPressure
+            (
+                phase_,
+                alphaMinFriction_,
+                alphaMax_,
+                da,
+                rho,
+                dev(D)
+            )
+         )
+     + pos(alpha_ - residualAlpha_)
+      *fvc::div
+       (
+           2.0
+         * alpha_
+         * rho_
+         * R1
+       )
     );
 }
 
@@ -684,9 +698,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    volTensorField R1(R1_);
-    boundStress(R1);
-    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)
@@ -695,13 +706,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvc::div
             (
                 (rho_*nut_)*dev2(T(fvc::grad(U)))
-            )
-          + fvc::div
-            (
-                 2.0
-               * alpha_
-               * rho_
-               * R1
             )
          );
     } else {
@@ -712,13 +716,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvc::div
             (
                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
-            )
-          + fvc::div
-            (
-                 2.0
-               * alpha_
-               * rho_
-               * R1
             )
          );
     }

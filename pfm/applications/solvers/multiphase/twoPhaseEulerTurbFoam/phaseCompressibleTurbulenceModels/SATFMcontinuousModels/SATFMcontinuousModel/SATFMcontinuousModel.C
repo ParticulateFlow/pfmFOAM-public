@@ -393,12 +393,12 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
     return Ceps_*pow(k(),3.0/2.0)/lm_;
 }
 
-Foam::tmp<Foam::volScalarField>
-Foam::RASModels::SATFMcontinuousModel::pPressure() const
+Foam::tmp<Foam::volVectorField>
+Foam::RASModels::SATFMcontinuousModel::divStress() const
 {
-    return tmp<Foam::volScalarField>
+    return tmp<Foam::volVectorField>
     (
-        new volScalarField
+        new volVectorField
         (
             IOobject
             (
@@ -410,7 +410,7 @@ Foam::RASModels::SATFMcontinuousModel::pPressure() const
                 false
             ),
             phase_.U().mesh(),
-            dimensionedScalar("zero",dimensionSet(1, -1, -2, 0, 0, 0, 0),0.0)
+            dimensionedVector("zero",dimensionSet(1, -2, -2, 0, 0, 0, 0),vector(0,0,0))
         )
     );
 }

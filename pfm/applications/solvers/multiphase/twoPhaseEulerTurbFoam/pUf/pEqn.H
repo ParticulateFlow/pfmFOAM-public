@@ -103,8 +103,8 @@ tmp<surfaceScalarField> Ff2;
 
     // Pressure gradients
     // Pressure gradients
-    volVectorField gradPp1(fvc::grad(phase1.turbulence().pPressure()));
-    volVectorField gradPp2(fvc::grad(phase2.turbulence().pPressure()));
+    volVectorField gradPp1(phase1.turbulence().divStress());
+    volVectorField gradPp2(phase2.turbulence().divStress());
     // anisotropic part of drift velocity
     surfaceScalarField KdUdrfitEf(fvc::flux(KdUdriftE));
     // Phase-1 dispersion, lift and wall-lubrication force
