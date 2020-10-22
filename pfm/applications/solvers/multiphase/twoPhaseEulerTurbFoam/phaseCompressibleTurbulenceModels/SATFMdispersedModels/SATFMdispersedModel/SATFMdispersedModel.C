@@ -1417,7 +1417,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alpha1.min(0.99*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
     volScalarField phiPhiM(alpha1/(alphaMax_));
-    /*
     volScalarField alphaL2
     (
         sqr(alpha1)
@@ -1427,8 +1426,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          + phiPhiM
          /(scalar(1.0) - phiPhiM)
         )
-    );*/
-    volScalarField alphaL2(alpha1*alphaM);
+    );
+    //volScalarField alphaL2(alpha1*alphaM);
     alphaP2Mean_.max(SMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
