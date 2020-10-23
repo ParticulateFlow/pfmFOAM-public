@@ -1212,8 +1212,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         );
         
         xiPhi2DivU_ = filterS(xiPhi2DivUnum*xiPhi2DivUden)/filterS(sqr(xiPhi2DivUden));
-        xiPhi2DivU_.max(-2.0);
-        xiPhi2DivU_.min(2.0);
+        xiPhi2DivU_.max(-1.0);
+        xiPhi2DivU_.min(1.0);
         
         // compute mixing length dynamically
         /*
