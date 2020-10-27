@@ -651,17 +651,6 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
          * R1
        )
     );
-    
-    volVectorField::Boundary& btDivStress =
-        tDivStress.ref().boundaryFieldRef();
-
-    forAll(btDivStress, patchi)
-    {
-        if (!btDivStress[patchi].coupled())
-        {
-            btDivStress[patchi] = vector(0,0,0);
-        }
-    }
 
     return tDivStress;
 }
