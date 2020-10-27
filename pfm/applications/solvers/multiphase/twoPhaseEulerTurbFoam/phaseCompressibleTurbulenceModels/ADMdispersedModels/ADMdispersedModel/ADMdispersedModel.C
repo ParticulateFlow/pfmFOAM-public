@@ -342,7 +342,7 @@ Foam::RASModels::ADMdispersedModel::pPrime() const
     {
         if (!bpPrime[patchi].coupled())
         {
-            bpPrime[patchi] == 0;
+            bpPrime[patchi] = 0;
         }
     }
 
@@ -363,7 +363,7 @@ Foam::RASModels::ADMdispersedModel::divStress() const
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
-    return
+    tmp<volVectorField> tDivStress
     (
        pos(alpha_ - alphaMinFriction_)
       *fvc::grad
@@ -383,6 +383,19 @@ Foam::RASModels::ADMdispersedModel::divStress() const
            )
         )
     );
+    
+    volVectorField::Boundary& btDivStress =
+        tDivStress.ref().boundaryFieldRef();
+
+    forAll(btDivStress, patchi)
+    {
+        if (!btDivStress[patchi].coupled())
+        {
+            btDivStress[patchi] = vector(0,0,0);
+        }
+    }
+
+    return tDivStress;
 }
 
 

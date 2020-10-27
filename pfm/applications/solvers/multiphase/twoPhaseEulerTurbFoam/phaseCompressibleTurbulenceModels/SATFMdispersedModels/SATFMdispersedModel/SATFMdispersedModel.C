@@ -599,7 +599,7 @@ Foam::RASModels::SATFMdispersedModel::pPrime() const
     {
         if (!bpPrime[patchi].coupled())
         {
-            bpPrime[patchi] == 0;
+            bpPrime[patchi] = 0;
         }
     }
 
@@ -625,8 +625,9 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
     
     volTensorField R1(R1_);
     boundStress(R1);
+    R1.correctBoundaryConditions();
     
-    return
+    tmp<volVectorField> tDivStress
     (
         pos(alpha_ - alphaMinFriction_)
        *fvc::grad
@@ -650,6 +651,19 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
          * R1
        )
     );
+    
+    volVectorField::Boundary& btDivStress =
+        tDivStress.ref().boundaryFieldRef();
+
+    forAll(btDivStress, patchi)
+    {
+        if (!btDivStress[patchi].coupled())
+        {
+            btDivStress[patchi] = vector(0,0,0);
+        }
+    }
+
+    return tDivStress;
 }
 
 Foam::tmp<Foam::volSymmTensorField>

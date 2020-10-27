@@ -335,7 +335,6 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     
     tmp<volScalarField> tpPrime
     (
-     /*
         Theta_
        *granularPressureModel_->granularPressureCoeffPrime
         (
@@ -346,8 +345,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             da,
             e_
         )
-      */
-        pos(alpha_ -alphaMinFriction_)
+      + pos(alpha_ -alphaMinFriction_)
        *frictionalStressModel_->frictionalPressurePrime
         (
             phase_,
@@ -366,7 +364,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
     {
         if (!bpPrime[patchi].coupled())
         {
-            bpPrime[patchi] == 0;
+            bpPrime[patchi] = 0;
         }
     }
 
@@ -379,8 +377,8 @@ Foam::RASModels::kineticTheoryModel::pPrimef() const
     return fvc::interpolate(pPrime());
 }
 
-Foam::tmp<Foam::volScalarField>
-Foam::RASModels::kineticTheoryModel::pPressure() const
+Foam::tmp<Foam::volVectorField>
+Foam::RASModels::kineticTheoryModel::divStress() const
 {
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
@@ -390,28 +388,47 @@ Foam::RASModels::kineticTheoryModel::pPressure() const
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
     
-    return
+    tmp<volVectorField> tDivStress
     (
-        Theta_
-       *granularPressureModel_->granularPressureCoeff
+        fvc::grad
         (
-            alpha_,
-            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
-            rho,
-            da,
-            e_
+            Theta_
+           *granularPressureModel_->granularPressureCoeff
+            (
+                alpha_,
+                radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
+                rho,
+                da,
+                e_
+            )
         )
       + pos(alpha_ - alphaMinFriction_)
-       *frictionalStressModel_->frictionalPressure
+       *fvc::grad
         (
-            phase_,
-            alphaMinFriction_,
-            alphaMax_,
-            da,
-            rho,
-            dev(D)
+            frictionalStressModel_->frictionalPressure
+            (
+                phase_,
+                alphaMinFriction_,
+                alphaMax_,
+                da,
+                rho,
+                dev(D)
+            )
         )
       );
+
+    volVectorField::Boundary& btDivStress =
+        tDivStress.ref().boundaryFieldRef();
+
+    forAll(btDivStress, patchi)
+    {
+        if (!btDivStress[patchi].coupled())
+        {
+            btDivStress[patchi] = vector(0,0,0);
+        }
+    }
+
+    return tDivStress;
 }
 
 
