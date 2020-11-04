@@ -106,12 +106,12 @@ tmp<surfaceScalarField> Ff2;
     volVectorField gradPp1(phase1.turbulence().divStress());
     volVectorField gradPp2(phase2.turbulence().divStress());
     // anisotropic part of drift velocity
-    surfaceScalarField KdUdrfitEf(fvc::flux(KdUdriftE));
+
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + fvc::flux(gradPp1) + Ff - KdUdrfitEf;
+    Ff1 = Df1*snGradAlpha1 + fvc::flux(gradPp1 - KdUdrfitE) + Ff;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 + fvc::flux(gradPp2) - Ff + KdUdrfitEf;
+    Ff2 = -Df2*snGradAlpha1 + fvc::flux(gradPp2 + KdUdrfitE) - Ff;
     
     // Cache the net diffusivity for implicit diffusion treatment in the
     // phase-fraction equation
