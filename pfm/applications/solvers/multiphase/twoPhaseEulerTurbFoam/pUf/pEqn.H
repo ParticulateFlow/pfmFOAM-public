@@ -108,10 +108,10 @@ tmp<surfaceScalarField> Ff2;
     // anisotropic part of drift velocity
 
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + fvc::flux(gradPp1 - KdUdrfitE) + Ff;
+    Ff1 = Df1*snGradAlpha1 + fvc::flux(gradPp1 - KdUdriftE) + Ff;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 + fvc::flux(gradPp2 + KdUdrfitE) - Ff;
+    Ff2 = -Df2*snGradAlpha1 + fvc::flux(gradPp2 + KdUdriftE) - Ff;
     
     // Cache the net diffusivity for implicit diffusion treatment in the
     // phase-fraction equation
