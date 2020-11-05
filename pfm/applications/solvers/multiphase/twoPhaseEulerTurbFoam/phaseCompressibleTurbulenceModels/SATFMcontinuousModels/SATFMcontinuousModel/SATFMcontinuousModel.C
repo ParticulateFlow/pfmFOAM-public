@@ -762,7 +762,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // simple filter for local smoothing
     //simpleFilter filterS(mesh_);
     simpleFilter filterS(mesh_);
-    
+ 
     volVectorField Uzero
     (
         IOobject
@@ -778,6 +778,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
      );
     Uzero.correctBoundaryConditions();
 
+    //const volVectorField& Uzero(U);
+    
     // get drag coefficient
     volScalarField beta
     (
