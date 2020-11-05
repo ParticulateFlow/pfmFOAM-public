@@ -938,6 +938,21 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // slip velocity
     volVectorField uSlip = Uc_ - U;
     
+    volVectorField UcZero
+    (
+        IOobject
+        (
+            "Uzero",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        Uc_,
+        zeroGradientFvPatchField<vector>::typeName
+     );
+    UcZero.correctBoundaryConditions();
+    
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
@@ -1071,33 +1086,34 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // compute nut
     nut_ = alpha*sqrt(km)*lm_;
     if (dynamicAdjustment_) {
-        volScalarField alphaf = filter_(alpha);
+        volScalarField alphaf(filter_(alpha));
         alphaf.max(residualAlpha_.value());
-        volScalarField alphafP2 = filter_(sqr(alpha));
+        volScalarField alphafP2(filter_(sqr(alpha)));
         alphafP2.max(sqr(residualAlpha_.value()));
-        volVectorField Uf = filter_(alpha*U)/alphaf;
-        volScalarField alpha2f = 1.0 - alphaf;
-        volVectorField Ucf = filter_(alpha2*Uc_)/alpha2f;
-        volScalarField aUU = filter_(alpha*magSqr(U))/alphaf - magSqr(Uf);
+        volScalarField alphafP2Mean(alphafP2 - sqr(alphaf));
+        alphafP2Mean.max(sqr(residualAlpha_.value()));
+        volVectorField Uf(filter_(alpha*U)/alphaf);
+        volScalarField alpha2f(1.0 - alphaf);
+        volVectorField Ucf(filter_(alpha2*UcZero)/alpha2f);
+        volScalarField aUU(filter_(alpha*magSqr(U))/alphaf - magSqr(Uf));
         
         //Compute xiPhiS
         volVectorField xiPhiSNom =   (
                                           filter_(alpha*U)
                                         - alphaf*filter_(U)
                                       );
-        volScalarField tmpA = alphafP2-sqr(alphaf);
         
-        volScalarField tmpDenX = tmpA
+        volScalarField tmpDenX = alphafP2Mean
                               * (
                                     filter_(alpha*sqr(U&eX)) / alphaf
                                   - sqr(Uf&eX)
                                 );
-        volScalarField tmpDenY = tmpA
+        volScalarField tmpDenY = alphafP2Mean
                                * (
                                     filter_(alpha*sqr(U&eY)) / alphaf
                                   - sqr(Uf&eY)
                                  );
-        volScalarField tmpDenZ = tmpA
+        volScalarField tmpDenZ = alphafP2Mean
                                * (
                                     filter_(alpha*sqr(U&eZ)) / alphaf
                                   - sqr(Uf&eZ)
@@ -1125,14 +1141,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute triple correlation
         volScalarField xiPhiGGnom
         (
-            filter_(alpha*magSqr(Uc_))
-          - alphaf*filter_(magSqr(Uc_))
-          - 2.0*(Ucf&(filter_(alpha*Uc_) - alphaf*filter_(Uc_)))
+            filter_(alpha*magSqr(UcZero))
+          - alphaf*filter_(magSqr(UcZero))
+          - 2.0*(Ucf&(filter_(alpha*UcZero) - alphaf*filter_(UcZero)))
         );
         volScalarField xiPhiGGden
         (
-            sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
-           *max(filter_(magSqr(Uc_)) - 2.0*(Ucf&filter_(Uc_)) + magSqr(Ucf),sqr(uSmall))
+            sqrt(alphafP2Mean)
+           *max(filter_(magSqr(UcZero)) - 2.0*(Ucf&filter_(UcZero)) + magSqr(Ucf),sqr(uSmall))
         );
         xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
         // smooth and limit xiPhiGG_
@@ -1142,12 +1158,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute correlation coefficient between gas phase and solid phase velocity
         volScalarField xiGSnum
         (
-            filter_(alpha*(Uc_&U))/alphaf
-          - (filter_(alpha*Uc_) & Uf)/alphaf
+            filter_(alpha*(UcZero&U))/alphaf
+          - (filter_(alpha*UcZero) & Uf)/alphaf
         );
         volScalarField xiGSden
         (
-            sqrt(max(filter_(alpha2*magSqr(Uc_))/alpha2f - magSqr(Ucf),kSmall))
+            sqrt(max(filter_(alpha2*magSqr(UcZero))/alpha2f - magSqr(Ucf),kSmall))
            *sqrt(max(aUU,kSmall))
         );
         
@@ -1160,7 +1176,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_.min(sqrt(2.0));
         
         // xiPhiDivU
-        volScalarField divU(fvc::div(phi_));
+        volScalarField divU(fvc::div(U));
         volScalarField divUf(0.5*fvc::div(Uf));
         // volScalarField divUf(filter_(alpha*divU)/alphaf);
         divUf.max(SMALL);
@@ -1171,9 +1187,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             filter_(alpha*divU)
           - alphaf*filter_(divU)
         );
+        /*
         volScalarField xiPhiDivUden
         (
-            sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
+            sqrt(alphafP2Mean)
            *sqrt
             (
                 max
@@ -1185,13 +1202,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 )
             )
         );
-        /*
+         */
         volScalarField xiPhiDivUden
         (
-            sqrt(max(alphafP2-sqr(alphaf),sqr(residualAlpha_)))
+            sqrt(alphafP2Mean)
            *sqrt(divUfL)
         );
-        */
+    
         xiPhiDivU_ = filterS(xiPhiDivUnum*xiPhiDivUden)/filterS(sqr(xiPhiDivUden));
         xiPhiDivU_.max(-1.0);
         xiPhiDivU_.min(1.0);
@@ -1210,7 +1227,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         );
         volScalarField xiPhi2DivUden
         (
-            max(alphafP2-sqr(alphaf),sqr(residualAlpha_))
+            alphafP2Mean
            *sqrt(divUfL)
         );
         
@@ -1419,9 +1436,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volScalarField alpha1(alpha);
     alpha1.min(0.99*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
-    /*
     volScalarField phiPhiM(alpha1/(alphaMax_));
-    volScalarField alphaL2
+    
+    volScalarField alphaL
     (
         sqr(alpha1)
        *(scalar(1.0) + phiPhiM)
@@ -1431,8 +1448,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          /(scalar(1.0) - phiPhiM)
         )
     );
-    */
-    volScalarField alphaL2(alpha1*alphaM);
+    
+    volScalarField alphaL2(min(alpha1*alphaM,alphaL));
     alphaP2Mean_.max(SMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
