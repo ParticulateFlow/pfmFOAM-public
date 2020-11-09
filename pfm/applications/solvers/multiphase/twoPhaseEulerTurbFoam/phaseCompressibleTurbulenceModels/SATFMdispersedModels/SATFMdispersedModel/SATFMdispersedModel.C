@@ -1614,6 +1614,20 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     nuFric_.min(maxNut_);
     nut_ += nuFric_;
     
+    volScalarField unity
+    (
+         IOobject
+         (
+              "unity",
+              U.time().timeName(),
+              U.mesh(),
+              IOobject::NO_READ,
+              IOobject::NO_WRITE
+         ),
+         U.mesh(),
+         dimensionedScalar("unity", dimless, 1.0)
+    );
+    
     Info << "SA-TFM (dispersed Phase):" << nl
          << "    max(nut)         = " << max(nut_).value() << nl
          << "    max(nutFric)     = " << max(nuFric_).value() << nl
@@ -1628,8 +1642,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          << "    mean(k1z)        = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                       << nl
-         << "    mean(phiP2/phi2) = " << fvc::domainIntegrate(alphaP2Mean_).value()
-                                        /fvc::domainIntegrate(sqr(alpha)).value()
+         << "    mean(phiP2/phi2) = " << fvc::domainIntegrate(alphaP2Mean_/sqr(alpha)).value()
+                                        /fvc::domainIntegrate(unity).value()
                                       << nl
          << endl;
 }
