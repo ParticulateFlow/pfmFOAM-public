@@ -29,7 +29,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     Info<< "Applying drag correction..." << endl;
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
     volVectorField uSlipV(U2 - U1);
-    KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
+    KdUdriftE = (KdUdrift + dragCorr*Kd*uSlipV);
     Kd *= (scalar(1.0) - dragCorr);
 }
 
@@ -54,7 +54,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
            *(
                 fvm::ddt(U1)
               + fvm::div(phi1, U1)
-              - fvm::Sp(fvc::div(phi1), U1)
+              - fvm::SuSp(fvc::div(phi1), U1)
               - DDtU2
             )
           // interphase force
@@ -129,7 +129,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
            *(
                 fvm::ddt(U2)
               + fvm::div(phi2, U2)
-              - fvm::Sp(fvc::div(phi2), U2)
+              - fvm::SuSp(fvc::div(phi2), U2)
               - DDtU1
             )
           // interphase force

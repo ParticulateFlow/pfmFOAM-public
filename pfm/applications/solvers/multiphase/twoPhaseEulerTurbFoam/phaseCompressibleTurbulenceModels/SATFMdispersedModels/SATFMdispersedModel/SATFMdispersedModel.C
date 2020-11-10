@@ -953,6 +953,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
      );
     UcZero.correctBoundaryConditions();
     
+    // const volVectorField& UcZero(Uc_);
+    
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
@@ -1363,7 +1365,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                       + sqrt((kC_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          + fvm::Sp(-2.0*beta,k_)
+          - fvm::Sp(2.0*beta,k_)
           // pressure dilation & dissipation
           // - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
           // - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
@@ -1372,7 +1374,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1440,7 +1442,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     volScalarField alphaL2
     (
-        6.0*sqr(alpha)
+        3.0*sqr(alpha)
        /(g0*(g0 + 2.0))
     );
     

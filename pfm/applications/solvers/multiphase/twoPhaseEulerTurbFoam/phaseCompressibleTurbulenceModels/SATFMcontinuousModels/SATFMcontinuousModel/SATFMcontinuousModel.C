@@ -762,7 +762,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // simple filter for local smoothing
     //simpleFilter filterS(mesh_);
     simpleFilter filterS(mesh_);
- 
+    
     volVectorField Uzero
     (
         IOobject
@@ -777,8 +777,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         zeroGradientFvPatchField<vector>::typeName
      );
     Uzero.correctBoundaryConditions();
-
-    //const volVectorField& Uzero(U);
+    
+    // const volVectorField& Uzero(U);
     
     // get drag coefficient
     volScalarField beta
@@ -1084,8 +1084,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                       + sqrt((kD_&eZ)*(k_&eZ))*eZ
                     )
                 )
-          + fvm::Sp(
-                     - 2.0
+          - fvm::Sp(
+                       2.0
                       *beta
                       *xiGatS_
                     ,
@@ -1099,7 +1099,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
           // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
           // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1234,7 +1234,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             }
         }
     } else {
-        R2_  = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
+        R2_  = ((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
     }
     
     R2_.correctBoundaryConditions();
