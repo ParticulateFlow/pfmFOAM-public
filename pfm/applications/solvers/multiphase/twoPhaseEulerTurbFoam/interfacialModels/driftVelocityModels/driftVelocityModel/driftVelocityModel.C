@@ -27,8 +27,6 @@ License
 #include "phasePair.H"
 #include "dragModel.H"
 #include "zeroGradientFvPatchField.H"
-#include "LESfilter.H"
-#include "simpleFilter.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
