@@ -807,8 +807,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -0.99;
-    scalar xiMax = 0.99;
+    scalar xiMin = -sqrt(2.0);
+    scalar xiMax = sqrt(2.0);
 
     xi.max
     (
@@ -1307,7 +1307,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
-            R1t -= 0.5*nut_*dev(gradU + gradU.T());
+            R1t -= 0.5*(nut_ - nuFric_)*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
@@ -1426,19 +1426,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // compute fields for transport equation for phiP2
     volScalarField divU(fvc::div(phi_));
-    volScalarField dissPhiP2 = CphiS_ * Ceps_ * sqrt(km)/deltaF_;
-    volScalarField denom = divU + dissPhiP2;
+    
     volScalarField xiKgradAlpha = (
-                                         ((sqrt(k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
-                                       + ((sqrt(k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
-                                       + ((sqrt(k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
+                                         ((sqrt(2.0*k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
+                                       + ((sqrt(2.0*k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
+                                       + ((sqrt(2.0*k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
                                    );
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
     alpha1.min(0.99*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
-    volScalarField g0(0.6/(1.0-alpha1/alphaMax_));
+    volScalarField g0(1.0/(1.0-sqr(alpha1/(alphaMax_))));
     
     volScalarField alphaL2
     (
@@ -1488,7 +1487,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             (
                 (
                     2.0*xiPhiDivU_*alpha/sqrt(alphaP2Mean_)
-                  - xiPhi2DivU_
+                  + xiPhi2DivU_
                 )
                *sqrt(mag(fvc::laplacian(k_)))
             ,
@@ -1500,9 +1499,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         phiP2Eqn.relax();
         phiP2Eqn.solve();
     } else {
+        volScalarField denom = divU + xiPhi2DivU_*sqrt(mag(fvc::laplacian(k_)));
         denom.max(SMALL);
-        alphaP2Mean_ =   8.0
-                       * sqr(xiKgradAlpha)
+        alphaP2Mean_ =   4.0
+                       * sqr(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(mag(fvc::laplacian(k_))))
                        / sqr(denom);
     }
     // limit alphaP2Mean
