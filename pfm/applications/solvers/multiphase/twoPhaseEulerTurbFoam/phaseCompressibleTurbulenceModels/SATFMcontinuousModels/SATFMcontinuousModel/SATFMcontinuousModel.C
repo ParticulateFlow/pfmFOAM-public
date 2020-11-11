@@ -1073,21 +1073,22 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // shear production
-          - 2.0*rho*shearProd_
+         - 2.0*rho*shearProd_
           // interfacial work (--> energy transfer)
-         + 2.0
+         + 2.0*beta
           *(
                 (xiGS_&eX)*sqrt((kD_&eX)*(k_&eX))*eX
               + (xiGS_&eY)*sqrt((kD_&eY)*(k_&eY))*eY
               + (xiGS_&eZ)*sqrt((kD_&eZ)*(k_&eZ))*eZ
             )
-          - fvm::Sp(
-                       2.0
-                      *beta
-                      *xiGatS_
-                    ,
-                      k_
-                   )
+          - fvm::Sp
+           (
+                2.0
+               *beta
+               *xiGatS_
+            ,
+               k_
+            )
           // drag production and pressure dilation
           - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
@@ -1161,7 +1162,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // Limit viscosity
     nut_.min(maxNut_);
     nut_.correctBoundaryConditions();
-       
+    
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
