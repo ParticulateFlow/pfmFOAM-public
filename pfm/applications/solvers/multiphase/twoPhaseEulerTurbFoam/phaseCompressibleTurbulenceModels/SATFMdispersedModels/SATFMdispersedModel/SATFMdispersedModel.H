@@ -186,7 +186,7 @@ class SATFMdispersedModel
             volScalarField xiPhiGG_;
 
             //- correlation coefficient between cont. phase and solid velocity
-            volScalarField xiGS_;
+            volVectorField xiGS_;
     
             //- correlation coefficient between cont. phase and solid velocity (seen by the gas phase)
             volScalarField xiGatS_;    

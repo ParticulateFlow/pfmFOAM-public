@@ -390,7 +390,7 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return Ceps_*pow(k(),3.0/2.0)/lm_;
+    return Ceps_*alpha_*pow(k(),3.0/2.0)/deltaF_;
 }
 
 Foam::tmp<Foam::volVectorField>
@@ -413,7 +413,7 @@ Foam::RASModels::SATFMcontinuousModel::divStress() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::R() const
 {
-    if (anIsoTropicNut_) {
+    if (!anIsoTropicNut_) {
         return tmp<volSymmTensorField>
         (
             new volSymmTensorField
@@ -427,7 +427,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * symm(R2_)
-              - (nuEff()-nut_)*(twoSymm(fvc::grad(U_)))
+              - nuEff()*(twoSymm(fvc::grad(U_)))
             )
         );
     } else {
@@ -444,7 +444,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * symm(R2_)
-              - (nuEff())*(twoSymm(fvc::grad(U_)))
+              - (nuEff() - nut_)*(twoSymm(fvc::grad(U_)))
             )
         );
     }
@@ -453,7 +453,7 @@ Foam::RASModels::SATFMcontinuousModel::R() const
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
 {
-    if (anIsoTropicNut_) {
+    if (!anIsoTropicNut_) {
         return tmp<volSymmTensorField>
         (
             new volSymmTensorField
@@ -467,7 +467,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * rho_* symm(R2_)
-              - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
+              - rho_*(nuEff())*dev(twoSymm(fvc::grad(U_)))
             )
         );
     } else {
@@ -484,7 +484,7 @@ Foam::RASModels::SATFMcontinuousModel::devRhoReff() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * rho_ * symm(R2_)
-              - rho_*(nuEff())*dev(twoSymm(fvc::grad(U_)))
+              - rho_*(nuEff()-nut_)*dev(twoSymm(fvc::grad(U_)))
             )
         );
     }
@@ -562,8 +562,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundxiPhiG
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -0.99;
-    scalar xiMax = 0.99;
+    scalar xiMin = -sqrt(2.0);
+    scalar xiMax =  sqrt(2.0);
 
     xi.max
     (
@@ -733,6 +733,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         tensor(0,0,0,0,0,0,0,0,0)
     );
     
+    volScalarField divU(fvc::div(phi_));
+    
     volTensorField gradU(fvc::grad(U_));
     boundGradU(gradU);
     volSymmTensorField D(dev(symm(gradU)));
@@ -753,7 +755,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                                      ("k." + fluid.otherPhase(phase_).name()));
     
     // get correlation coefficient between continuous and solid phase velocities
-    const volScalarField& xiGS_(mesh_.lookupObject<volScalarField>
+    const volVectorField& xiGS_(mesh_.lookupObject<volVectorField>
                              ("xiGS"));
     // get correction coefficient for k seen by the particles
     const volScalarField& xiGatS_(mesh_.lookupObject<volScalarField>
@@ -1008,7 +1010,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibriumK_) {
         // compute production term according to Reynolds-stress model
-        volTensorField R2t(R2_);
+        volTensorField R2t(alpha*R2_);
         if (!anIsoTropicNut_) {
             R2t -= 0.5*nut_*dev(gradU + gradU.T());
         }
@@ -1071,19 +1073,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // shear production
-          - 2.0*alpha
-               *rho
-               *shearProd_
+          - 2.0*rho*shearProd_
           // interfacial work (--> energy transfer)
-          + 2.0*beta
-               *(
-                    xiGS_
-                  * (
-                        sqrt((kD_&eX)*(k_&eX))*eX
-                      + sqrt((kD_&eY)*(k_&eY))*eY
-                      + sqrt((kD_&eZ)*(k_&eZ))*eZ
-                    )
-                )
+         + 2.0
+          *(
+                (xiGS_&eX)*sqrt((kD_&eX)*(k_&eX))*eX
+              + (xiGS_&eY)*sqrt((kD_&eY)*(k_&eY))*eY
+              + (xiGS_&eZ)*sqrt((kD_&eZ)*(k_&eZ))*eZ
+            )
           - fvm::Sp(
                        2.0
                       *beta
@@ -1125,7 +1122,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             + 2.0 * lm_[cellI]
                             * Foam::max(
                                  lm_[cellI]*SijSijV[cellI].component(i)
-                               + betaA[cellI]*xiGS_[cellI]*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
+                               + betaA[cellI]*xiGS_[cellI].component(i)*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
                                - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i) + pDil[cellI].component(i))
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
                                 , 0.
