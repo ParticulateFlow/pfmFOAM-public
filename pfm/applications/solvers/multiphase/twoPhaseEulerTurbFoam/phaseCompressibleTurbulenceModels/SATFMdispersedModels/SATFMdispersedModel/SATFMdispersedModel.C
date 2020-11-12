@@ -1346,7 +1346,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          // + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -1463,6 +1463,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
+          - fvm::Sp(fvc::div(phi1), alphaP2Mean_)
           // diffusion
           - fvc::div(
                         (
@@ -1476,19 +1477,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        )
                      & (fvc::grad(alphaP2Mean_/alpha))
                     )
-          /*
-          - fvc::div(
-                       alpha*sqrt(km)*lm_/sigma_
-                     * fvc::grad(alphaP2Mean_/alpha)
-                    )
-          
-           */
-           /*
-          - fvm::laplacian(
-                           sqrt(km)*lm_/(sigma_),
-                           alphaP2Mean_
-                         )
-           */
          ==
           // production/dissipation
           - fvm::SuSp(divU,alphaP2Mean_)
@@ -1515,7 +1503,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        * sqr(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(mag(fvc::laplacian(k_))))
                        / sqr(denom);
     }
-    // limit alphaP2Mean 
+    // limit alphaP2Mean
     alphaP2Mean_ = min(
                          alphaP2Mean_,
                          alphaL2
