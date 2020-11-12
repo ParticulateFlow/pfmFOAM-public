@@ -1457,7 +1457,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     );
     
     //volScalarField alphaL2(min(alpha1*alphaM,alphaL));
-    alphaP2Mean_.max(SMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
@@ -1510,11 +1509,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         phiP2Eqn.relax();
         phiP2Eqn.solve();
     } else {
-        volScalarField denom = divU + xiPhi2DivU_*sqrt(mag(fvc::laplacian(k_)));
-        denom.max(SMALL);
+        volScalarField denom2 = sqr(divU + xiPhi2DivU_*sqrt(mag(fvc::laplacian(k_))));
+        denom2.max(SMALL);
         alphaP2Mean_ =   4.0
                        * sqr(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(mag(fvc::laplacian(k_))))
-                       / sqr(denom);
+                       / denom2;
     }
     // limit alphaP2Mean
     alphaP2Mean_ = min(
