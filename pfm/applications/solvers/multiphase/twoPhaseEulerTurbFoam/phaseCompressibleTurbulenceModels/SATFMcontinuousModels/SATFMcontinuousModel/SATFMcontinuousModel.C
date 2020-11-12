@@ -103,13 +103,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("CmuW",0.6)
     ),
 
-    CphiGscalar_
-    (
-        "CphiGscalar",
-        dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("CphiG",0.2)
-    ),
-
     CepsScalar_
     (
         "CepsScalar",
@@ -189,19 +182,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         zeroGradientFvPatchField<tensor>::typeName
     ),
 
-    alphaP2Mean_
-    (
-        IOobject
-        (
-            IOobject::groupName("alphaP2Mean", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        U.mesh()
-    ),
-
     Cmu_
     (
         IOobject
@@ -242,20 +222,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         ),
         U.mesh(),
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.4)
-    ),
-
-    CphiG_
-    (
-        IOobject
-        (
-            IOobject::groupName("CphiG", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.2)
     ),
 
     deltaF_
@@ -352,7 +318,6 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         xiPhiContScalar_.readIfPresent(coeffDict());
         CmuScalar_.readIfPresent(coeffDict());
         CmuWScalar_.readIfPresent(coeffDict());
-        CphiGscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
         CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
@@ -923,26 +888,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
                     );
-        //xiPhiG_ =  3.0*filterS((xiPhiGNom)*sqrt(tmpDen))/filterS(tmpDen);
-        // wall treatment for xiPhiG
-        /*
-        const fvPatchList& patches = mesh_.boundary();
-        // volVectorField::Boundary& xiPhiGBf = xiPhiG_.boundaryFieldRef();
-        
-        forAll(patches, patchi) {
-            const fvPatch& curPatch = patches[patchi];
-
-            if (isA<wallFvPatch>(curPatch)) {
-                // vectorField& xiPhiGw = xiPhiGBf[patchi];
-                forAll(curPatch, facei) {
-                    label celli = curPatch.faceCells()[facei];
-                    xiPhiG_[celli] = gN_.value()*mag(xiPhiG_[celli])/mag(gN_).value();
-                                     // *uSlip[celli]
-                                     //(mag(uSlip[celli])+SMALL);
-                }
-            }
-        }
-         */
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
         
@@ -976,8 +921,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Ceps_.min(10.0);
          */
         Ceps_ = CepsScalar_;
-        // Compute CphiG_
-        CphiG_ = CphiGscalar_;
         
         // Currently no dynamic procedure for Cp
         /*
@@ -1002,7 +945,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         Cmu_    = CmuScalar_;
         Ceps_   = CepsScalar_;
         Cp_     = CpScalar_;
-        CphiG_  = CphiGscalar_;
     }
 
     // Compute k_
@@ -1050,7 +992,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          // + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -1144,9 +1086,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km = k_&eSum;
     km.max(kSmall.value());
     
-    // compute fields for transport equation for phiP2
-    alphaP2Mean_ = mesh_.lookupObject<volScalarField>("alphaP2Mean." + fluid.otherPhase(phase_).name());
-
     // use k_normal for nut in stress tensor
     volScalarField kT
     (

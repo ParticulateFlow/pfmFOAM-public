@@ -119,9 +119,6 @@ class SATFMcontinuousModel
             //- "Smagorinsky constant" near walls
             dimensionedScalar CmuWScalar_;
     
-            //- constant in alphaP2Mean equation
-            dimensionedScalar CphiGscalar_;
-    
             //- "dissipation constant"
             dimensionedScalar CepsScalar_;
     
@@ -149,9 +146,6 @@ class SATFMcontinuousModel
             //- auto correlation coefficient of solids velocity
             volTensorField xiUU_;
     
-            //- phiPrimeSquared (Variance of solids volume fraction)
-            volScalarField alphaP2Mean_;
-    
             //- smagorinsky constant
             volScalarField Cmu_;
     
@@ -160,9 +154,6 @@ class SATFMcontinuousModel
     
             //- pressure dilation constant
             volScalarField Cp_;
-    
-            //- constant for alpha2PMean
-            volScalarField CphiG_;
     
             //- grid size
             volScalarField deltaF_;

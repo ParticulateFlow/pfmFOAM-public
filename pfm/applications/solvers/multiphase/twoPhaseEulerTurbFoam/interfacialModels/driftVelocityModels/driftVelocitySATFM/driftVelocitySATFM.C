@@ -86,11 +86,8 @@ Foam::tmp<Foam::volVectorField>
 Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
 {
     const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
+    const volScalarField& alphaP2Mean(mesh.lookupObject<volScalarField>
                                ("alphaP2Mean." + pair_.dispersed().name()));
-
-    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
-                               ("alphaP2Mean." + pair_.continuous().name()));
 
     const volVectorField& xiPhiG_(mesh.lookupObject<volVectorField>
                                ("xiPhiG"));
@@ -115,8 +112,6 @@ Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(0,0,1)
     );
-
-    volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
 
     volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
     

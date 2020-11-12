@@ -83,18 +83,15 @@ Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhSATFM::Cp
 {
     // get alphaP2Mean from Turbulence Model
     const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
+    const volScalarField& alphaP2Mean1(mesh.lookupObject<volScalarField>
                                         ("alphaP2Mean." + pair_.dispersed().name()));
-
-    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
-                                        ("alphaP2Mean." + pair_.continuous().name()));
 
     volScalarField alpha1
     (
         max(pair_.dispersed(), residualAlpha_)
     );
     
-    volScalarField alphaP2Mean(min(0.9*sqr(alpha1),max(alphaP2Mean1_,alphaP2Mean2_)));
+    volScalarField alphaP2Mean(min(0.9*sqr(alpha1),alphaP2Mean1));
     
     volScalarField alpha2
     (
