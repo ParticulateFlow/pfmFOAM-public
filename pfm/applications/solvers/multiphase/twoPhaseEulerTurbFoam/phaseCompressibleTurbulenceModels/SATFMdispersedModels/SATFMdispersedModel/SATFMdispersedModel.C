@@ -1446,9 +1446,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     volScalarField alpha1(alpha);
-    alpha1.min(0.99*alphaMax_.value());
+    alpha1.min(0.999*alphaMax_.value());
     volScalarField alphaM(alphaMax_-alpha1);
-    volScalarField g0(1.0/(1.0-sqr(alpha1/(alphaMax_))));
+    volScalarField g0(1.0/(1.0-(alpha1/(alphaMax_))));
     
     volScalarField alphaL2
     (
@@ -1463,7 +1463,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
-          - fvm::Sp(fvc::div(phi1), alphaP2Mean_)
+          + fvm::SuSp(-fvc::div(phi1), alphaP2Mean_)
           // diffusion
           - fvc::div(
                         (
