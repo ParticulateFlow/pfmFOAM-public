@@ -1485,9 +1485,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
              + 2.0*xiKgradAlpha/sqrt(alphaP2Mean_)
              + (
                     2.0*xiPhiDivU_*alpha/sqrt(alphaP2Mean_)
-                  + xiPhi2DivU_
+                  - xiPhi2DivU_
                )
-              *sqrt(mag(fvc::laplacian(k_)))
+              *sqrt(mag(fvc::laplacian(k_))) 
             ,
                 alphaP2Mean_
             )
