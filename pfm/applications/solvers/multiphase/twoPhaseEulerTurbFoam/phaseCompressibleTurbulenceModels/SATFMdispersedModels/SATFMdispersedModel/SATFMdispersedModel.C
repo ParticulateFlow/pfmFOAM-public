@@ -1482,25 +1482,26 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp
             (
                 divU
-             + 2.0*xiKgradAlpha/sqrt(alphaP2Mean_)
-             + (
-                    2.0*xiPhiDivU_*alpha/sqrt(alphaP2Mean_)
-                  - xiPhi2DivU_
-               )
-              *sqrt(mag(fvc::laplacian(k_))) 
+             - xiPhi2DivU_*sqrt(mag(fvc::laplacian(km)))
             ,
                 alphaP2Mean_
             )
+          - 2.0
+           *(
+                xiKgradAlpha
+              + xiPhiDivU_*alpha*sqrt(mag(fvc::laplacian(km)))
+            )
+           *sqrt(alphaP2Mean_)
           //+ fvm::Sp(-dissPhiP2,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();
         phiP2Eqn.solve();
     } else {
-        volScalarField denom = divU + xiPhi2DivU_*sqrt(mag(fvc::laplacian(k_)));
+        volScalarField denom = divU + xiPhi2DivU_*sqrt(mag(fvc::laplacian(km)));
         denom.max(SMALL);
         alphaP2Mean_ =   4.0
-                       * sqr(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(mag(fvc::laplacian(k_))))
+                       * sqr(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(mag(fvc::laplacian(km))))
                        / sqr(denom);
     }
     // limit alphaP2Mean
