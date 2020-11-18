@@ -1482,7 +1482,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp
             (
                 divU
-             - xiPhi2DivU_*sqrt(mag(fvc::laplacian(km)))
+             + xiPhi2DivU_*sqrt(mag(fvc::laplacian(km)))
             ,
                 alphaP2Mean_
             )
