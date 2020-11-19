@@ -1425,9 +1425,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
     }
     // limit k_
-    km = k_&eSum;
-    km.max(kSmall.value());
-    volScalarField lapK(mag(fvc::laplacian(km)));
     boundNormalStress(k_);
     // correct BCs
     k_.correctBoundaryConditions();
@@ -1436,6 +1433,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // update km
     km = k_&eSum;
     km.max(kSmall.value());
+    // compute laplacian(k)
+    volScalarField lapK(mag(fvc::laplacian(km)));
     
     Info << "Computing nut (dispersed phase) ... " << endl;
     nut_ = alpha*sqrt(km)*lm_;
