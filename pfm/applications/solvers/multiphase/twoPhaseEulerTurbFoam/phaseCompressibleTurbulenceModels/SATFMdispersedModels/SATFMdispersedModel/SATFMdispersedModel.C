@@ -1346,7 +1346,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          + fvm::SuSp(-fvc::div(alphaRhoPhi), k_)
+          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -1467,24 +1467,25 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(phi1, alphaP2Mean_)
           + fvm::SuSp(-fvc::div(phi1), alphaP2Mean_)
           // diffusion
-          - fvc::div(
-                        (
-                           alpha*lm_
-                         * (
-                              (sqrt(k_&eX)*(eX*eX))
-                            + (sqrt(k_&eY)*(eY*eY))
-                            + (sqrt(k_&eZ)*(eZ*eZ))
-                           )
-                         / (sigma_)
-                       )
-                     & (fvc::grad(alphaP2Mean_/alpha))
-                    )
+          - fvc::div
+            (
+                (
+                   alpha*lm_
+                 * (
+                      (sqrt(k_&eX)*(eX*eX))
+                    + (sqrt(k_&eY)*(eY*eY))
+                    + (sqrt(k_&eZ)*(eZ*eZ))
+                   )
+                 / (sigma_)
+               )
+             & (fvc::grad(alphaP2Mean_)/alpha)
+            )
          ==
           // production/dissipation
           - fvm::SuSp
             (
                 divU
-             + xiPhi2DivU_*sqrt(lapK)
+              + xiPhi2DivU_*sqrt(lapK)
             ,
                 alphaP2Mean_
             )
