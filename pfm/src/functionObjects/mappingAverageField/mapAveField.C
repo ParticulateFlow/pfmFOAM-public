@@ -139,6 +139,55 @@ void Foam::functionObjects::mapAveField::writeMappedAverages()
     writeMappedFields();
 
 }
+// works only for scalars
+void Foam::functionObjects::mapAveField::calcNewField()
+{
+
+    word newFieldName;
+    wordList fieldsList_;
+    scalarList factorsList_;
+
+    IOdictionary mapFieldProperties
+    (
+        IOobject
+        (
+            "mapFieldsDict",
+            rMesh_.time().system(),
+            rMesh_,
+            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_WRITE
+        )
+    );
+
+    mapFieldProperties.lookup("fieldName") >> newFieldName;
+    mapFieldProperties.lookup("fieldsList") >> fieldsList_;
+    mapFieldProperties.lookup("prefactorsList") >> factorsList_;
+
+    const volScalarField& firstField = obrTgt_.lookupObject<volScalarField>(fieldsList_[0]);
+
+    volScalarField newField
+    (
+        IOobject
+        (
+            newFieldName,
+            rMesh_.time().timeName(),
+            rMesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        rMesh_,
+        dimensioned<scalar>(newFieldName,firstField.dimensions(),0.0)
+    );
+
+    forAll(fieldsList_,i)
+    {
+        volScalarField addField = obrTgt_.lookupObject<volScalarField>(fieldsList_[i]);
+        newField += factorsList_[i]*addField;
+    }
+
+    newField.write();
+
+}
 
 void Foam::functionObjects::mapAveField::findPais()
 {
@@ -234,6 +283,7 @@ Foam::functionObjects::mapAveField::mapAveField
 :
   fieldAverage(name, runTime, dict),
   mappingInitialised_(false),
+  addNewField_(false),
   Foam::fvMesh
     (
             IOobject
@@ -279,6 +329,8 @@ bool Foam::functionObjects::mapAveField::read(const dictionary& dict)
     mappingInitialised_=false;
 
     const fvMesh& mesh_ = refCast<const fvMesh>(obr_);
+
+    dict.lookup("addNewField") >> addNewField_;
 
     IOdictionary interpolationProperties
     (
@@ -381,6 +433,7 @@ bool Foam::functionObjects::mapAveField::read(const dictionary& dict)
         findPais();
     }
 
+
     return true;
 }
 
@@ -405,6 +458,11 @@ bool Foam::functionObjects::mapAveField::write()
 
     writeMappedAverages();
 
+    if(addNewField_)
+    {
+        calcNewField();
+    }
+
     writeAveragingProperties();
 
     if (restartOnOutput_)
@@ -412,6 +470,7 @@ bool Foam::functionObjects::mapAveField::write()
         restart(); //must be comment out when fieldAverage::write() is written
         addMappedfields();
     }
+
 
     //fieldAverage::write();  //if sourceMesh mean fields are needed as well
 

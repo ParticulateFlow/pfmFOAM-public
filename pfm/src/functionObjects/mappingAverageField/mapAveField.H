@@ -69,6 +69,7 @@ class mapAveField
  protected:
 
     bool mappingInitialised_;
+    bool addNewField_;
 
     const objectRegistry& obrTgt_;
     const fvMesh& rMesh_;
@@ -127,6 +128,8 @@ class mapAveField
     virtual void writeMappedAverages();
 
     void writeMappedFields() const;
+
+    void calcNewField();
 
     //- Write fields
     template<class Type>
