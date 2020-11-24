@@ -1458,27 +1458,38 @@ void Foam::RASModels::SATFMdispersedModel::correct()
        /(g0*(g0 + 2.0))
     );
     
+    volScalarField gradAlphaRhoU((fvc::grad(alpha*rho))&U);
     //volScalarField alphaL2(min(alpha1*alphaM,alphaL));
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
         (
-            fvm::ddt(alphaP2Mean_)
-          + fvm::div(phi1, alphaP2Mean_)
-          + fvm::SuSp(-fvc::div(phi1), alphaP2Mean_)
+         //   fvm::ddt(alphaP2Mean_)
+         // + fvm::div(phi1, alphaP2Mean_)
+          //+ fvm::SuSp(-fvc::div(phi1), alphaP2Mean_)
           // diffusion
-          - fvc::div
+            1.0/(alpha*rho)
+           *(
+                fvm::ddt(alpha,rho,alphaP2Mean_)
+              + fvm::div(alphaRhoPhi, alphaP2Mean_)
+              + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), alphaP2Mean_)
+            /*  - alphaP2Mean_
+               *(
+                    fvc::ddt(alpha,rho)
+                  + gradAlphaRhoU
+                )*/
+            )
+          - fvm::laplacian
             (
-                (
-                   alpha*lm_
-                 * (
-                      (sqrt(k_&eX)*(eX*eX))
-                    + (sqrt(k_&eY)*(eY*eY))
-                    + (sqrt(k_&eZ)*(eZ*eZ))
-                   )
-                 / (sigma_)
+               lm_
+             * (
+                  (sqrt(k_&eX)*(eX*eX))
+                + (sqrt(k_&eY)*(eY*eY))
+                + (sqrt(k_&eZ)*(eZ*eZ))
                )
-             & (fvc::grad(alphaP2Mean_)/alpha)
+             / (sigma_)
+             ,
+                alphaP2Mean_
             )
          ==
           // production/dissipation
@@ -1521,8 +1532,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         1.5
        *(
             (k_&eSum)
-          - mag(k_ & U_)
-          / (mag(U_)+uSmall)
+          - mag(k_ & U)
+          / (mag(U)+uSmall)
         )
     );
     kT.max(kSmall.value());
