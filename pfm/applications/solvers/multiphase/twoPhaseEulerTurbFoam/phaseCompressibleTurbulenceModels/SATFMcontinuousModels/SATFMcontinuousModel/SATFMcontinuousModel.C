@@ -993,6 +993,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+         /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -1003,13 +1004,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                            , k_
                            , "laplacian(kappa,k)"
                          )
-         /*
+         */
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
-          */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.

@@ -1348,7 +1348,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-          - fvm::laplacian(alpha*rho*lm_
+          /*
+           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
                                    + (sqrt(k_&eY)*(eY*eY))
@@ -1358,13 +1359,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                            , k_
                            , "laplacian(kappa,k)"
                          )
-          /*
+          */
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
-          */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1464,33 +1464,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
         (
-         //   fvm::ddt(alphaP2Mean_)
-         // + fvm::div(phi1, alphaP2Mean_)
-          //+ fvm::SuSp(-fvc::div(phi1), alphaP2Mean_)
-          // diffusion
-            1.0/(alpha*rho)
-           *(
-                fvm::ddt(alpha,rho,alphaP2Mean_)
-              + fvm::div(alphaRhoPhi, alphaP2Mean_)
-              + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), alphaP2Mean_)
-            /*  - alphaP2Mean_
-               *(
-                    fvc::ddt(alpha,rho)
-                  + gradAlphaRhoU
-                )*/
-            )
-          - fvm::laplacian
-            (
-               lm_
-             * (
-                  (sqrt(k_&eX)*(eX*eX))
-                + (sqrt(k_&eY)*(eY*eY))
-                + (sqrt(k_&eZ)*(eZ*eZ))
-               )
-             / (sigma_)
-             ,
-                alphaP2Mean_
-            )
+            fvm::ddt(alphaP2Mean_)
+          + fvm::div(phi1, alphaP2Mean_)
+          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
+          - fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
          ==
           // production/dissipation
           - fvm::SuSp
