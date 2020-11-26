@@ -1182,15 +1182,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
         xiGS_ = eX *
                 (
-                    filterS(sqrt(xiGSDenX)*(xiGSNom&eX))/filterS(xiGSDenX)
+                    filterS(sqrt(xiGSDenX)*abs(xiGSNom&eX))/filterS(xiGSDenX)
                 )
                 + eY *
                 (
-                    filterS(sqrt(xiGSDenY)*(xiGSNom&eY))/filterS(xiGSDenY)
+                    filterS(sqrt(xiGSDenY)*abs(xiGSNom&eY))/filterS(xiGSDenY)
                 )
                 + eZ *
                 (
-                    filterS(sqrt(xiGSDenZ)*(xiGSNom&eZ))/filterS(xiGSDenZ)
+                    filterS(sqrt(xiGSDenZ)*abs(xiGSNom&eZ))/filterS(xiGSDenZ)
                 );
 
         // smooth and regularize xiGS_ (xiGS_ is positive)
