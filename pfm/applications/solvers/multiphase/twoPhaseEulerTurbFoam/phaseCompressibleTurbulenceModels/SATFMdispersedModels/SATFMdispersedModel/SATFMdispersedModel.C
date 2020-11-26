@@ -1197,9 +1197,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         boundxiPhiS(xiGS_);
         
         // xiPhiDivU
-        volScalarField divUf(filter_(fvc::div(alpha*U))/alphaf);
-        // volScalarField divUf(0.5*fvc::div(Uf));
-        volScalarField divUfL(mag(fvc::div(fvc::grad(aUU))));
+        // volScalarField divUf(filter_(fvc::div(alpha*U))/alphaf);
+        volScalarField divUf(fvc::div(Uf));
+        volScalarField divUfL(mag(fvc::laplacian(aUU)));
         divUfL.max(SMALL);
         volScalarField xiPhiDivUnum
         (
@@ -1434,7 +1434,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km = k_&eSum;
     km.max(kSmall.value());
     // compute laplacian(k)
-    volScalarField lapK(mag(fvc::laplacian(km)));
+    volScalarField lapK(2.0*mag(fvc::laplacian(k_)));
     
     Info << "Computing nut (dispersed phase) ... " << endl;
     nut_ = alpha*sqrt(km)*lm_;
