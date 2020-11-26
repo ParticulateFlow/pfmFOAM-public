@@ -1197,10 +1197,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         boundxiPhiS(xiGS_);
         
         // xiPhiDivU
-        volScalarField divUf(0.5*fvc::div(Uf));
+        volScalarField divUf(fvc::div(Uf));
         // volScalarField divUf(filter_(alpha*divU)/alphaf);
-        divUf.max(SMALL);
-        volScalarField divUfL(0.25*mag(fvc::laplacian(aUU)));
+        volScalarField divUfL(mag(fvc::laplacian(aUU)));
         divUfL.max(SMALL);
         volScalarField xiPhiDivUnum
         (
@@ -1300,17 +1299,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         volVectorField xiPhiSDir = uSlip
                                   /max(mag(uSlip),uSmall);
-        xiPhiS_    = -(xiPhiSolidScalar_)*xiPhiSDir;
-        xiPhiDivU_ = xiPhiDivUScalar_;
-        xiPhiGG_   = scalar(0.0);
-        xiGS_      = xiGSScalar_*eSum;
-        Cmu_       = CmuScalar_;
-        Ceps_      = CepsScalar_;
-        Cp_        = CpScalar_;
+        xiPhiS_     = -(xiPhiSolidScalar_)*xiPhiSDir;
+        xiPhiDivU_  = xiPhiDivUScalar_/alphaMax_*(scalar(1.0) - alpha/alphaMax_);
+        xiPhi2DivU_ = -alpha/alphaMax_;
+        xiPhiGG_    = scalar(0.0);
+        xiGS_       = xiGSScalar_*eSum;
+        Cmu_        = CmuScalar_;
+        Ceps_       = CepsScalar_;
+        Cp_         = CpScalar_;
         // compute CphiS
-        CphiS_     = CphiSscalar_;
+        CphiS_      = CphiSscalar_;
     }
-    // xiPhiDivU_ = xiPhiDivUScalar_/alphaMax_*(scalar(1.0) - alpha/alphaMax_);
+
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2Mean_)
             / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2Mean_)/alpha2),residualAlpha_);
