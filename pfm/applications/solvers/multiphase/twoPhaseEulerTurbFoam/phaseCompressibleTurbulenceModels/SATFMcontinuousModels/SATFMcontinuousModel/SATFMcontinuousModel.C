@@ -992,7 +992,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          - fvm::SuSp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
          /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -1023,9 +1023,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
               + (xiGS_&eY)*sqrt((kD_&eY)*(k_&eY))*eY
               + (xiGS_&eZ)*sqrt((kD_&eZ)*(k_&eZ))*eZ
             )
-          - fvm::Sp
+          + fvm::Sp
            (
-                2.0
+              - 2.0
                *beta
                *xiGatS_
             ,
@@ -1039,7 +1039,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
           // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
           // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
-          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );

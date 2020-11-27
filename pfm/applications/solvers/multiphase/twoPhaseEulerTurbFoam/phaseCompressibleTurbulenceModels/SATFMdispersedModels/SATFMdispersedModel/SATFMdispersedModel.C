@@ -1346,7 +1346,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          - fvm::SuSp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           /*
            - fvm::laplacian(alpha*rho*lm_
@@ -1378,7 +1378,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               + (xiGS_&eY)*sqrt((kC_&eY)*(k_&eY))*eY
               + (xiGS_&eZ)*sqrt((kC_&eZ)*(k_&eZ))*eZ
             )
-          - fvm::Sp(2.0*beta,k_)
+          + fvm::Sp(-2.0*beta,k_)
           // pressure dilation & dissipation
           // - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
           // - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
@@ -1387,7 +1387,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
           - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
-          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1466,14 +1466,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
-          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
+          //- fvm::SuSp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
           - fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
          ==
           // production/dissipation
-          - fvm::SuSp
+            fvm::SuSp
             (
-                divU
-              + xiPhi2DivU_*sqrt(lapK)
+              - divU
+              - xiPhi2DivU_*sqrt(lapK)
             ,
                 alphaP2Mean_
             )
