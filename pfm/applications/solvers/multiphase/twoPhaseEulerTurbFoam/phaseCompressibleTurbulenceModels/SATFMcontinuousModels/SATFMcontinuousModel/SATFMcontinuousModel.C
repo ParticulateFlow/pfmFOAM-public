@@ -265,6 +265,21 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         U.mesh()
     ),
 
+    nutAnIso_
+    (
+        IOobject
+        (
+            IOobject::groupName("nutAnIso", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("value", dimensionSet(0, 1, -2, 0, 0), tensor(0,0,0, 0,0,0, 0,0,0)),
+        zeroGradientFvPatchField<tensor>::typeName
+    ),
+
     shearProd_
     (
         IOobject
@@ -465,11 +480,16 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     if (!anIsoTropicNut_) {
         return
         (
-          - fvm::laplacian(rho_*nuEff(), U)
+          - fvm::laplacian(rho_*nuEff() - nut_, U)
           - fvc::div
             (
-                (rho_*nuEff())*dev2(T(fvc::grad(U)))
+                rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
             )
+         - fvm::laplacian(rho_*nutAnIso_, U)
+         - fvc::div
+           (
+                rho_*(nutAnIso_&dev2(T(fvc::grad(U))))
+           )
         );
     } else {
         return
@@ -1135,7 +1155,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        
+        /*
         // set wall-bc for R
         const fvPatchList& patches = mesh_.boundary();
 
@@ -1173,8 +1193,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        */
     } else {
         R2_  = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
+        forAll(cells,cellI)
+        {
+            for (int i=0; i<3; i++) {
+                for (int j=0; j<3; j++) {
+                        nutAnIso_[cellI].component(j+i*3) =  alpha[cellI]*lm_[cellI]
+                                *sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)));
+                }
+            }
+        }
     }
     
     R2_.correctBoundaryConditions();
