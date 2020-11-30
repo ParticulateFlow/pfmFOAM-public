@@ -1434,7 +1434,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km = k_&eSum;
     km.max(kSmall.value());
     // compute laplacian(k)
-    volScalarField lapK(2.0*mag(fvc::laplacian(k_)));
+    volScalarField lapK(mag(fvc::laplacian(k_)));
     
     Info << "Computing nut (dispersed phase) ... " << endl;
     nut_ = alpha*sqrt(km)*lm_;
@@ -1470,10 +1470,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
          ==
           // production/dissipation
-            fvm::SuSp
+          - fvm::SuSp
             (
-              - divU
-              - xiPhi2DivU_*sqrt(lapK)
+                divU
+              + xiPhi2DivU_*sqrt(lapK)
             ,
                 alphaP2Mean_
             )
@@ -1504,6 +1504,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.correctBoundaryConditions();
     
     // use k_normal for nut in stress tensor
+    /*
     volScalarField kT
     (
         1.5
@@ -1514,7 +1515,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         )
     );
     kT.max(kSmall.value());
-    nut_ = alpha*sqrt(kT)*lm_;
+    */
+    nut_ = alpha*sqrt(km)*lm_;
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);

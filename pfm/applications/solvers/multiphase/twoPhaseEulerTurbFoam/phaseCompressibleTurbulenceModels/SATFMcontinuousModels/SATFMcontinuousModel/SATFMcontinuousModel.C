@@ -992,7 +992,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          - fvm::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          + fvm::SuSp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
          /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
@@ -1087,6 +1087,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     km.max(kSmall.value());
     
     // use k_normal for nut in stress tensor
+    /*
     volScalarField kT
     (
         1.5
@@ -1097,7 +1098,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         )
     );
     kT.max(kSmall.value());
-    nut_ = alpha*sqrt(kT)*lm_;
+    */
+    nut_ = alpha*sqrt(km)*lm_;
     // Limit viscosity
     nut_.min(maxNut_);
     nut_.correctBoundaryConditions();

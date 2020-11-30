@@ -572,23 +572,23 @@ void Foam::RASModels::kineticTheoryModel::correct()
            *(
                 fvm::ddt(alpha, rho, Theta_)
               + fvm::div(alphaRhoPhi, Theta_)
-              - fvm::Sp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
+              + fvm::Sp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
-          - fvm::SuSp(-PsCoeff*trD, Theta_)
+          + fvm::SuSp(PsCoeff*trD, Theta_)
           - rho
            *(
                 lambda_*sqr(trD)
               + 2.0*nut_*(dev(D)&&gradU)
             )
           - fvm::Sp(-gammaCoeff, Theta_)
-          - fvm::SuSp(J2-J1, Theta_)
+          + fvm::SuSp(J1 - J2, Theta_)
           )
          + neg(solveTheta)
          *(
             fvm::Sp(dimensionedScalar("units",dimensionSet(1,-3,-1,0,0),scalar(1.0)), Theta_)
           )
-         + fvOptions(alpha, rho, Theta_)
+         - fvOptions(alpha, rho, Theta_)
         );
 
         ThetaEqn.relax();
