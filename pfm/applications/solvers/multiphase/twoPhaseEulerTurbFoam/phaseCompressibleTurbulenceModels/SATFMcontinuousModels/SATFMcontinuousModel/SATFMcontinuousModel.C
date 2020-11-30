@@ -474,12 +474,13 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     } else {
         return
         (
-          - fvm::laplacian(rho_*(nuEff()), U)
+         // - fvm::laplacian(rho_*(nuEff()), U)
+          - fvm::laplacian(rho_*(nuEff() - nut_), U)
           - fvc::div
             (
                 rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
             )
-          + fvc::laplacian(rho_*nut_, U)
+         // + fvc::laplacian(rho_*nut_, U)
         );
     }
 }
