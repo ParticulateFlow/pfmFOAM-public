@@ -276,7 +276,7 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 1, -2, 0, 0), tensor(0,0,0, 0,0,0, 0,0,0)),
+        dimensionedTensor("value", dimensionSet(0, 2, -1, 0, 0), tensor(0,0,0, 0,0,0, 0,0,0)),
         zeroGradientFvPatchField<tensor>::typeName
     ),
 
@@ -480,7 +480,7 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     if (!anIsoTropicNut_) {
         return
         (
-          - fvm::laplacian(rho_*nuEff() - nut_, U)
+          - fvm::laplacian(rho_*(nuEff() - nut_), U)
           - fvc::div
             (
                 rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
@@ -1195,7 +1195,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         */
     } else {
-        R2_  = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
+        R2_ = ((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
@@ -1205,6 +1205,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        nutAnIso_.correctBoundaryConditions();
     }
     
     R2_.correctBoundaryConditions();
