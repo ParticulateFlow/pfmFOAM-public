@@ -1194,7 +1194,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         */
     } else {
-        R2_ = ((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
+        R2_ = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
         forAll(cells,cellI)
         {
             for (int i=0; i<3; i++) {
