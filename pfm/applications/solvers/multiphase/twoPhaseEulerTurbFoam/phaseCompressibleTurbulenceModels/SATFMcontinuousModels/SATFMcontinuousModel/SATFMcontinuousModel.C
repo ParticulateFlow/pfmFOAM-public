@@ -896,7 +896,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         tmpDenX.max(SMALL);
         tmpDenY.max(SMALL);
         tmpDenZ.max(SMALL);
-
         xiPhiG_ =  eX
                  * (
                         filterS((xiPhiGNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
@@ -1013,7 +1012,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          + fvm::SuSp((fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
          /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
