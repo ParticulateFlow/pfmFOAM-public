@@ -93,7 +93,6 @@ Foam::driftVelocityModels::driftVelocitySATFM::udrift() const
                                ("xiPhiG"));
     const volVectorField& kC_(mesh.lookupObject<volVectorField>
                                  ("k." + pair_.continuous().name()));
-    
     dimensionedVector eX
     (
         "eX",
