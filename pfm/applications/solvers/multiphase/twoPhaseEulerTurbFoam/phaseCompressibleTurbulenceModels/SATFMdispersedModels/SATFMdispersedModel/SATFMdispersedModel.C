@@ -1535,8 +1535,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         )
     );
     kT.max(kSmall.value());
-    */
     nut_ = alpha*sqrt(km)*lm_;
+    */
        
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
@@ -1574,7 +1574,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             for (int i=0; i<3; i++) {
                 for (int j=0; j<3; j++) {
                         nutAnIso_[cellI].component(j+i*3) =  alpha[cellI]*lm_[cellI]
-                                *sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)));
+                    *sqrt(sqrt(Foam::min(k_[cellI].component(i),ut_.value()*ut_.value())
+                              *Foam::min(k_[cellI].component(j),ut_.value()*ut_.value())
+                              )
+                         );
                 }
             }
         }
