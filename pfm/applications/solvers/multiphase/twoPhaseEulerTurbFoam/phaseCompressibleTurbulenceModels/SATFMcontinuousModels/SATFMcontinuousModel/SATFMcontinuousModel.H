@@ -164,9 +164,6 @@ class SATFMcontinuousModel
             //- Reynolds stress tensor
             volTensorField R2_;
     
-            //- AnIso Nut
-            volTensorField nutAnIso_;
-    
             //- shear production
             volVectorField shearProd_;
 

@@ -214,9 +214,6 @@ class SATFMdispersedModel
     
             //- Reynolds stress tensor
             volTensorField R1_;
-           
-            //- anisotropic Nut
-            volTensorField nutAnIso_;
     
             //- shear production
             volVectorField shearProd_;

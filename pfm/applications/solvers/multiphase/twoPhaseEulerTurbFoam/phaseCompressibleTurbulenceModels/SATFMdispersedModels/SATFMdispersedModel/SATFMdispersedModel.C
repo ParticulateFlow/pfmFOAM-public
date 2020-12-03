@@ -433,21 +433,6 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         U.mesh()
     ),
 
-    nutAnIso_
-    (
-        IOobject
-        (
-            IOobject::groupName("nutAnIso", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 2, -1, 0, 0), tensor(0,0,0, 0,0,0, 0,0,0)),
-        zeroGradientFvPatchField<tensor>::typeName
-    ),
-
     shearProd_
     (
         IOobject
@@ -541,7 +526,7 @@ Foam::RASModels::SATFMdispersedModel::epsilon() const
     return Ceps_*alpha_*pow(k(),3.0/2.0)/deltaF_;
 }
 
-
+// R without friction
 Foam::tmp<Foam::volSymmTensorField>
 Foam::RASModels::SATFMdispersedModel::R() const
 {
@@ -559,7 +544,7 @@ Foam::RASModels::SATFMdispersedModel::R() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * symm(R1_)
-              - (nut_ - nuFric_)*dev(twoSymm(fvc::grad(U_)))
+              - nut_*dev(twoSymm(fvc::grad(U_)))
             )
         );
     } else {
@@ -687,7 +672,7 @@ Foam::RASModels::SATFMdispersedModel::devRhoReff() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * rho_ * symm(R1_)
-              - (rho_*nut_)*dev(twoSymm(fvc::grad(U_)))
+              - (rho_*(nut_ + nuFric_)*dev(twoSymm(fvc::grad(U_)))
               + pf_*symmTensor::I
             )
         );
@@ -719,20 +704,24 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    volScalarField nut
+    (
+        min
+        (
+            nut_,
+            alpha*ut_*lm_
+        )
+    );
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)
       * (
-          - fvm::laplacian(rho_*nuFric_, U)
+          - fvm::laplacian(rho_*(nuFric_ + nut), U)
           - fvc::div
             (
-                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
+                (rho_*(nuFric_ + nut))*dev2(T(fvc::grad(U)))
             )
-          - fvm::laplacian(rho_*nutAnIso_, U)
-          - fvc::div
-            (
-                rho_*(nutAnIso_&dev2(T(fvc::grad(U))))
-            )
+
          );
     } else {
         return
@@ -1383,7 +1372,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volTensorField R1t(alpha*R1_);
         if (!anIsoTropicNut_) {
-            R1t -= 0.5*(nut_ - nuFric_)*dev(gradU + gradU.T());
+            R1t -= 0.5*nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
@@ -1559,21 +1548,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
-    // use k_normal for nut in stress tensor
-    /*
-    volScalarField kT
-    (
-        1.5
-       *(
-            (k_&eSum)
-          - mag(k_ & U)
-          / (mag(U)+uSmall)
-        )
-    );
-    kT.max(kSmall.value());
-    nut_ = alpha*sqrt(km)*lm_;
-    */
-       
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1605,19 +1579,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         }
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
-        forAll(cells,cellI)
-        {
-            for (int i=0; i<3; i++) {
-                for (int j=0; j<3; j++) {
-                        nutAnIso_[cellI].component(j+i*3) =  alpha[cellI]*lm_[cellI]
-                    *sqrt(sqrt(Foam::min(k_[cellI].component(i),ut_.value()*ut_.value())
-                              *Foam::min(k_[cellI].component(j),ut_.value()*ut_.value())
-                              )
-                         );
-                }
-            }
-        }
-        nutAnIso_.correctBoundaryConditions();
     }
     
     R1_.correctBoundaryConditions();
@@ -1668,9 +1629,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
-    nuFric_ = min(nuFric_, maxNut_ - nut_);
     nuFric_.min(maxNut_);
-    nut_ += nuFric_;
     
     volScalarField unity
     (
