@@ -38,7 +38,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     Info << "Applying drag correction..." << nl
          << "    max(dragCorr) = " << max(dragCorrF).value() << nl
          << "    min(dragCorr) = " << min(dragCorrF).value() << endl;
-    KdUdriftE = (KdUdrift + dragCorr*Kd*uSlipV);
+    KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
     Kdf = Kdf*(scalar(1.0) - dragCorrF);
 }
 
