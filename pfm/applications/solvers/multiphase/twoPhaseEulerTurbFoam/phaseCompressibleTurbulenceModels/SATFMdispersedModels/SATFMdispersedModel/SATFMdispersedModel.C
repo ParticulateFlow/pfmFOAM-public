@@ -672,7 +672,7 @@ Foam::RASModels::SATFMdispersedModel::devRhoReff() const
                     IOobject::NO_WRITE
                 ),
                 2.0 * alpha_ * rho_ * symm(R1_)
-              - (rho_*(nut_ + nuFric_)*dev(twoSymm(fvc::grad(U_)))
+              - rho_*(nut_ + nuFric_)*dev(twoSymm(fvc::grad(U_)))
               + pf_*symmTensor::I
             )
         );
@@ -709,7 +709,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         min
         (
             nut_,
-            alpha*ut_*lm_
+            max(alpha_,1.0e-7)*ut_*lm_
         )
     );
     if (!anIsoTropicNut_) {
@@ -1370,7 +1370,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibriumK_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2Mean_);
         
-        volTensorField R1t(alpha*R1_);
+        volTensorField R1t(R1_);
         if (!anIsoTropicNut_) {
             R1t -= 0.5*nut_*dev(gradU + gradU.T());
         }
@@ -1378,7 +1378,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
         
         // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-        shearProd_ =  (
+        shearProd_ =  alpha
+                     *(
                          (gradUR1&&(eX*eX))*(eX)
                        + (gradUR1&&(eY*eY))*(eY)
                        + (gradUR1&&(eZ*eZ))*(eZ)

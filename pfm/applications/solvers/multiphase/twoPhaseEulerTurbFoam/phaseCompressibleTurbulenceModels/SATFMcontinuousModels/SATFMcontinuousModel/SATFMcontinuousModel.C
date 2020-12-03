@@ -952,31 +952,14 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibriumK_) {
         // compute production term according to Reynolds-stress model
-        volTensorField R2t(alpha*R2_);
+        volTensorField R2t(R2_);
         if (!anIsoTropicNut_) {
             R2t -= 0.5*nut_*dev(gradU + gradU.T());
         }
         volTensorField gradUR2 = 0.5*((R2t&gradU) + ((gradU.T())&(R2t.T())));
 
-        //volTensorField gradUR2 = 0.5*((R2_&gradU) + ((R2_.T())&(gradU.T())));
-        /*
-        shearProd_ = pos(mag(wD) - deltaF)
+        shearProd_ = alpha
                     *(
-                         (gradUR2&&(eX*eX))*(eX)
-                       + (gradUR2&&(eY*eY))*(eY)
-                       + (gradUR2&&(eZ*eZ))*(eZ)
-                      )
-                    // special treatment of P_k near walls
-                   - neg(mag(wD) - deltaF)
-                    *lm_
-                    *(
-                         (sqr(U&eX)*sqrt(k_&eX))*eX
-                       + (sqr(U&eY)*sqrt(k_&eY))*eY
-                       + (sqr(U&eZ)*sqrt(k_&eZ))*eZ
-                      )
-                     /sqr(deltaF_);
-        */
-        shearProd_ = (
                            (gradUR2&&(eX*eX))*(eX)
                          + (gradUR2&&(eY*eY))*(eY)
                          + (gradUR2&&(eZ*eZ))*(eZ)
