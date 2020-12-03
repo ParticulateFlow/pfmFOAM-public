@@ -1256,8 +1256,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // xiPhiDivU
         // volScalarField divUf(filter_(fvc::div(alpha*U))/alphaf);
-        volScalarField divUf(fvc::div(Uf));
-        volScalarField divUfL(mag(fvc::laplacian(aUU)));
+        volScalarField divUf(0.5*fvc::div(Uf));
+        volScalarField divUfL(0.25*mag(fvc::laplacian(aUU)));
         divUfL.max(SMALL);
         volScalarField xiPhiDivUnum
         (
