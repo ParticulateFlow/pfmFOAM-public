@@ -240,6 +240,7 @@ protected:
     void boundNormalStress(volVectorField& k) const;
     void boundStress(volTensorField& R) const;
     void boundxiPhiS(volVectorField& xi) const;
+    void boundxiGS(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
     void boundGradU(volTensorField& S) const;
 public:

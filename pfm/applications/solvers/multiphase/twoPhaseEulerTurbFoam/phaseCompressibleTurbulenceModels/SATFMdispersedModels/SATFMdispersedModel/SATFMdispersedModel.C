@@ -863,6 +863,44 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     );
 }
 
+void Foam::RASModels::SATFMdispersedModel::boundxiGS
+(
+    volVectorField& xi
+) const
+{
+    scalar xiMin = 0;
+    scalar xiMax = sqrt(2.0);
+
+    xi.max
+    (
+        dimensionedVector
+        (
+            "minXi",
+            xi.dimensions(),
+            vector
+            (
+                xiMin,
+                xiMin,
+                xiMin
+            )
+        )
+    );
+    xi.min
+    (
+        dimensionedVector
+        (
+            "maxXi",
+            xi.dimensions(),
+            vector
+            (
+                xiMax,
+                xiMax,
+                xiMax
+            )
+        )
+    );
+}
+
 void Foam::RASModels::SATFMdispersedModel::boundCorrTensor
 (
     volTensorField& R
@@ -1214,7 +1252,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 );
 
         // smooth and regularize xiGS_ (xiGS_ is positive)
-        boundxiPhiS(xiGS_);
+        boundxiGS(xiGS_);
         
         // xiPhiDivU
         // volScalarField divUf(filter_(fvc::div(alpha*U))/alphaf);
