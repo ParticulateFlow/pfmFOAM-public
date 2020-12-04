@@ -704,15 +704,28 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    volScalarField nut
-    (
-        min
-        (
-            nut_,
-            max(alpha_,1.0e-7)*ut_*lm_
-        )
-    );
     if (!anIsoTropicNut_) {
+        dimensionedVector eSum
+        (
+            "eSum",
+            dimensionSet(0, 0, 0, 0, 0, 0, 0),
+            vector(1,1,1)
+        );
+        volScalarField nut
+        (
+            max(alpha_,1.0e-7)
+           *sqrt
+            (
+                min
+                (
+                    sqr(ut_),
+                    (k_&eSum) - mag(k_&U)/(mag(U) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7))
+                )
+             )
+            *lm_
+        );
+        nut.min(maxNut_.value());
+        
         return
         pos(alpha_ - residualAlpha_)
       * (
@@ -1245,8 +1258,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         // xiPhiDivU
         // volScalarField divUf(filter_(fvc::div(alpha*U))/alphaf);
-        volScalarField divUf(0.5*fvc::div(Uf));
-        volScalarField divUfL(0.25*mag(fvc::laplacian(aUU)));
+        volScalarField divUf(fvc::div(Uf));
+        volScalarField divUfL(mag(fvc::laplacian(aUU)));
         divUfL.max(SMALL);
         volScalarField xiPhiDivUnum
         (
@@ -1396,7 +1409,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-          /*
            - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -1407,12 +1419,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                            , k_
                            , "laplacian(kappa,k)"
                          )
-          */
+          /*
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+         */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1496,7 +1509,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     
-    volScalarField alphaM(sqr(alpha/alphaMax_));
+    volScalarField alphaM(sqr(alpha/(0.9*alphaMax_)));
     alphaM.min(0.9999);
     volScalarField g0(1.0/(1.0-alphaM));
     
@@ -1536,9 +1549,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         phiP2Eqn.solve();
     } else {
         volScalarField denom(divU + xiPhi2DivU_*sqrt(lapK));
-        denom.max(SMALL);
+        volScalarField nom(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(lapK));
+        volScalarField sqrDenom(sqr(denom));
+        sqrDenom.max(VSMALL);
         alphaP2Mean_ =   4.0
-                       * sqr(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(lapK))
+                       * sqr(nom)
                        / sqr(denom);
     }
     // limit alphaP2Mean

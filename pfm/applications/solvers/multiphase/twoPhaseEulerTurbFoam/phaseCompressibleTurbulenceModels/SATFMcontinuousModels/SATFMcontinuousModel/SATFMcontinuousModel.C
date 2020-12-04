@@ -463,12 +463,28 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
 ) const
 {
     if (!anIsoTropicNut_) {
+        dimensionedVector eSum
+        (
+            "eSum",
+            dimensionSet(0, 0, 0, 0, 0, 0, 0),
+            vector(1,1,1)
+        );
+        volScalarField nut
+        (
+            alpha_
+           *sqrt
+            (
+                (k_&eSum) - mag(k_&U)/(mag(U) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7))
+            )
+            *lm_
+        );
+        nut.min(maxNut_.value());
         return
         (
-          - fvm::laplacian(rho_*(nuEff()), U)
+          - fvm::laplacian(rho_*(nuEff() - nut_ + nut), U)
           - fvc::div
             (
-                rho_*(nuEff())*dev2(T(fvc::grad(U)))
+                rho_*(nuEff() - nut_ + nut)*dev2(T(fvc::grad(U)))
             )
         );
     } else {
@@ -976,7 +992,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
-         /*
           - fvm::laplacian(alpha*rho*lm_
                                 * (
                                      (sqrt(k_&eX)*(eX*eX))
@@ -987,12 +1002,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                            , k_
                            , "laplacian(kappa,k)"
                          )
-         */
+         /*
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+         */
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
