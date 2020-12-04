@@ -103,13 +103,11 @@ tmp<surfaceScalarField> phiF2;
     ); 
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    //phiF1 = Df1*snGradAlpha1 + gradPp1 + fvc::flux(rAU1*(F - KdUdriftE));
-    phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*(F - KdUdriftE));
+    phiF1 = Df1*snGradAlpha1 + gradPp1 + fvc::flux(rAU1*(F - KdUdriftE));
     //phiF1 = Df1*snGradAlpha1 + fvc::flux(rAU1*F);
 
     // Phase-1 dispersion, lift and wall-lubrication flux
-    // phiF2 = - Df2*snGradAlpha1 + gradPp2 - fvc::flux(rAU2*(F - KdUdriftE));
-    phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*(F - KdUdriftE));
+    phiF2 = - Df2*snGradAlpha1 + gradPp2 - fvc::flux(rAU2*(F - KdUdriftE));
     //phiF2 = - Df2*snGradAlpha1 - fvc::flux(rAU2*F);
 
     // Cache the net diffusivity for implicit diffusion treatment in the
