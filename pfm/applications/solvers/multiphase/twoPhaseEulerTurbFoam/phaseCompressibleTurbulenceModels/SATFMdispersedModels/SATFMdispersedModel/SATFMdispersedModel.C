@@ -749,9 +749,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  0, 0.99*RMin, 0.99*RMin,
-                  0.99*RMin, 0, 0.99*RMin,
-                  0.99*RMin, 0.99*RMin, 0
+                     0, RMin, RMin,
+                  RMin,    0, RMin,
+                  RMin, RMin,    0
             )
         )
     );
@@ -764,9 +764,9 @@ void Foam::RASModels::SATFMdispersedModel::boundStress
             R.dimensions(),
             tensor
             (
-                  RMax, 0.99*RMax, 0.99*RMax,
-                  0.99*RMax, RMax, 0.99*RMax,
-                  0.99*RMax, 0.99*RMax, RMax
+                RMax, RMax, RMax,
+                RMax, RMax, RMax,
+                RMax, RMax, RMax
             )
         )
     );
@@ -1491,7 +1491,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     
-    volScalarField alphaM(alpha/alphaMax_);
+    volScalarField alphaM(alpha/(0.95*alphaMax_));
     alphaM.min(0.9999);
     volScalarField g0(0.6/(1.0-alphaM));
     
@@ -1515,11 +1515,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             (
                 divU
               + xiPhi2DivU_*sqrt(lapK)
+              + 2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_)
             ,
                 alphaP2Mean_
             )
-          - fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
-          - fvm::Sp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          //- fvm::Sp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + 2.0*nut_*magSqr(gradAlpha)
         );
 
