@@ -164,9 +164,6 @@ class SATFMcontinuousModel
             //- Reynolds stress tensor
             volTensorField R2_;
     
-            //- shear production
-            volVectorField shearProd_;
-
 
     // Private Member Functions
 

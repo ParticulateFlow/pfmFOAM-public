@@ -433,22 +433,6 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         U.mesh()
     ),
 
-    shearProd_
-    (
-        IOobject
-        (
-            IOobject::groupName("shearProd", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedVector("zero", dimensionSet(0, 2, -3, 0, 0),
-                           vector(0.0,0.0,0.0)),
-        zeroGradientFvPatchField<vector>::typeName
-    ),
-
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
 
@@ -947,8 +931,8 @@ void Foam::RASModels::SATFMdispersedModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e3;
-    scalar sMax =  1.0e3;
+    scalar sMin = -1.0e4;
+    scalar sMax =  1.0e4;
 
     R.max
     (
@@ -1070,7 +1054,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                             + ((SijSij&eY)&eSum)*eY
                             + ((SijSij&eZ)&eSum)*eZ;
     // gradient of solids volume fraction
-    volVectorField gradAlpha  = fvc::grad(alpha);
+    volVectorField gradAlpha  = fvc::grad(alpha_);
     
     // get turbulent kinetic energy of continuous-phase
     const volVectorField& kC_(mesh_.lookupObject<volVectorField>
@@ -1383,21 +1367,19 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     if (!equilibriumK_) {
         volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2Mean_);
         
-        volTensorField R1t(R1_);
+        volTensorField R1t(alpha*R1_);
         if (!anIsoTropicNut_) {
             R1t -= 0.5*nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
-        volTensorField gradUR1 = 0.5*((R1t&gradU) + ((gradU.T())&(R1t.T())));
+        volTensorField gradUR1((R1t&gradU) + ((gradU.T())&(R1t.T())));
         
-        // volTensorField gradUR1 = 0.5*((R1_&gradU) + (R1_.T()&gradU.T()));
-        shearProd_ =  alpha
-                     *(
-                         (gradUR1&&(eX*eX))*(eX)
-                       + (gradUR1&&(eY*eY))*(eY)
-                       + (gradUR1&&(eZ*eZ))*(eZ)
-                      );
-        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
+        volVectorField shearProd
+        (
+            (gradUR1&&(eX*eX))*(eX)
+          + (gradUR1&&(eY*eY))*(eY)
+          + (gradUR1&&(eZ*eZ))*(eZ)
+        );
         
         fv::options& fvOptions(fv::options::New(mesh_));
         
@@ -1431,7 +1413,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // shear production
-          - 2.0*rho*shearProd_
+          - rho*shearProd
           // interfacial work (--> energy transfer)
           + 2.0*beta
            *(
@@ -1509,7 +1491,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     
-    volScalarField alphaM(sqr(alpha/(0.9*alphaMax_)));
+    volScalarField alphaM(sqr(alpha/(0.95*alphaMax_)));
     alphaM.min(0.9999);
     volScalarField g0(1.0/(1.0-alphaM));
     
@@ -1518,7 +1500,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         3.0*sqr(alpha)
        /(g0*(g0 + 2.0))
     );
-    
+    alphaP2Mean_.max(VSMALL);
     if (!equilibriumPhiP2_) {
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
@@ -1536,13 +1518,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             ,
                 alphaP2Mean_
             )
-          - 2.0
-           *(
-                xiKgradAlpha
-              + xiPhiDivU_*alpha*sqrt(lapK)
-            )
-           *sqrt(alphaP2Mean_)
-          //+ fvm::Sp(-dissPhiP2,alphaP2Mean_)
+          - fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
+          - fvm::Sp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + 2.0*nut_*magSqr(gradAlpha)
         );
 
         phiP2Eqn.relax();
@@ -1561,7 +1539,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          alphaP2Mean_,
                          alphaL2
                       );
-    alphaP2Mean_.max(VSMALL);
+    alphaP2Mean_.max(SMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
     if (anIsoTropicNut_) {

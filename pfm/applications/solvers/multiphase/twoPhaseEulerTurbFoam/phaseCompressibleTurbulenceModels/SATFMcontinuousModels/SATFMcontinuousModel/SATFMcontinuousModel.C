@@ -265,22 +265,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         U.mesh()
     ),
 
-    shearProd_
-    (
-        IOobject
-        (
-            IOobject::groupName("shearProd", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedVector("zero", dimensionSet(0, 2, -3, 0, 0),
-                           vector(0.0,0.0,0.0)),
-        zeroGradientFvPatchField<vector>::typeName
-    ),
-
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
 
@@ -621,8 +605,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e3;
-    scalar sMax =  1.0e3;
+    scalar sMin = -1.0e4;
+    scalar sMax =  1.0e4;
 
     R.max
     (
@@ -968,18 +952,19 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
     if (!equilibriumK_) {
         // compute production term according to Reynolds-stress model
-        volTensorField R2t(R2_);
+        volTensorField R2t(alpha*R2_);
         if (!anIsoTropicNut_) {
             R2t -= 0.5*nut_*dev(gradU + gradU.T());
         }
-        volTensorField gradUR2 = 0.5*((R2t&gradU) + ((gradU.T())&(R2t.T())));
+        // compute production term according to Reynolds-stress model
+        volTensorField gradUR2((R2t&gradU) + ((gradU.T())&(R2t.T())));
 
-        shearProd_ = alpha
-                    *(
-                           (gradUR2&&(eX*eX))*(eX)
-                         + (gradUR2&&(eY*eY))*(eY)
-                         + (gradUR2&&(eZ*eZ))*(eZ)
-                      );
+        volVectorField shearProd
+        (
+            (gradUR2&&(eX*eX))*(eX)
+          + (gradUR2&&(eY*eY))*(eY)
+          + (gradUR2&&(eZ*eZ))*(eZ)
+        );
         // compute prefactor for dissipation term
         // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
@@ -1014,7 +999,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // takes solely scalars as first argument.
           // ----------------
           // shear production
-         - 2.0*rho*shearProd_
+         - rho*shearProd
           // interfacial work (--> energy transfer)
          + 2.0*beta
           *(

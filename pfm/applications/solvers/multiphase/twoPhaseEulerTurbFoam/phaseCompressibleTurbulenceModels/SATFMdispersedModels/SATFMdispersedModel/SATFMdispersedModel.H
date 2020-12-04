@@ -215,9 +215,6 @@ class SATFMdispersedModel
             //- Reynolds stress tensor
             volTensorField R1_;
     
-            //- shear production
-            volVectorField shearProd_;
-    
     // Private Member Functions
 
         void correctNut()
