@@ -757,8 +757,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             phase_
         ).Ki()
     );
-    beta *= alpha1;
-    beta.max(1.0e-7);
+    beta *= alpha1*pos(alpha1 - residualAlpha_);
+    beta.max(SMALL);
     
     volScalarField betaA = beta/(rho*alpha);
     
@@ -949,7 +949,16 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
     // Compute k_
     // ---------------------------
-    volVectorField pDil = Cp_*sqr(alpha)*alpha1*(rho1-rho)*gN_/beta;
+    volVectorField pDil
+    (
+        pos(alpha1 - residualAlpha_)
+       *Cp_
+       *sqr(alpha)
+       *alpha1
+       *(rho1-rho)
+       *gN_
+       /beta
+    );
     if (!equilibriumK_) {
         // compute production term according to Reynolds-stress model
         volTensorField R2t(alpha*R2_);

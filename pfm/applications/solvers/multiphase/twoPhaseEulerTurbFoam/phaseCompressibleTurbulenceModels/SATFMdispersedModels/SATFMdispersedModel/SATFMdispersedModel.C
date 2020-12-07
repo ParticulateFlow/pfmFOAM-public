@@ -1072,6 +1072,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fluid.otherPhase(phase_)
         ).Ki()
     );
+    beta *= pos(alpha - residualAlpha_);
     volScalarField betaA = beta/(rho);
     beta *= alpha;
     // compute total k
