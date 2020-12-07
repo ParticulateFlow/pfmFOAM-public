@@ -931,8 +931,8 @@ void Foam::RASModels::SATFMdispersedModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e2;
-    scalar sMax =  1.0e2;
+    scalar sMin = -1.0e3;
+    scalar sMax =  1.0e3;
 
     R.max
     (
@@ -976,8 +976,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const surfaceScalarField& phi1 = phi_;
     const volVectorField& U = U_;
-    
-    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
     
     // cont. Phase velocity
     const volVectorField& Uc_ = fluid.otherPhase(phase_).U();
@@ -1390,16 +1388,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-           - fvm::laplacian(alpha*rho*lm_
-                                * (
-                                     (sqrt(k_&eX)*(eX*eX))
-                                   + (sqrt(k_&eY)*(eY*eY))
-                                   + (sqrt(k_&eZ)*(eZ*eZ))
-                                   )
-                                 / (sigma_)
-                           , k_
-                           , "laplacian(kappa,k)"
-                         )
+           - fvm::laplacian
+             (
+                 alpha*rho*lm_
+               * (
+                     (sqrt(k_&eX)*(eX*eX))
+                   + (sqrt(k_&eY)*(eY*eY))
+                   + (sqrt(k_&eZ)*(eZ*eZ))
+                 )
+               / (sigma_)
+               , k_
+               , "laplacian(kappa,k)"
+             )
           /*
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),

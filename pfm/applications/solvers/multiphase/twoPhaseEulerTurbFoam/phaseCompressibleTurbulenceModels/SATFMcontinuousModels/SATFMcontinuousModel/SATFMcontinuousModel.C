@@ -605,8 +605,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e2;
-    scalar sMax =  1.0e2;
+    scalar sMin = -1.0e3;
+    scalar sMax =  1.0e3;
 
     R.max
     (
@@ -963,7 +963,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute production term according to Reynolds-stress model
         volTensorField R2t(alpha*R2_);
         if (!anIsoTropicNut_) {
-            R2t -= 0.5*nut_*dev(gradU + gradU.T());
+            R2t -= 0.5*nuEff()*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR2((R2t&gradU) + ((gradU.T())&(R2t.T())));
@@ -986,16 +986,18 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
-          - fvm::laplacian(alpha*rho*lm_
-                                * (
-                                     (sqrt(k_&eX)*(eX*eX))
-                                   + (sqrt(k_&eY)*(eY*eY))
-                                   + (sqrt(k_&eZ)*(eZ*eZ))
-                                   )
-                                 / (sigma_)
-                           , k_
-                           , "laplacian(kappa,k)"
-                         )
+          - fvm::laplacian
+            (
+                alpha*rho*lm_
+              * (
+                   (sqrt(k_&eX)*(eX*eX))
+                 + (sqrt(k_&eY)*(eY*eY))
+                 + (sqrt(k_&eZ)*(eZ*eZ))
+                )
+              / (sigma_)
+              , k_
+              , "laplacian(kappa,k)"
+            )
          /*
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
