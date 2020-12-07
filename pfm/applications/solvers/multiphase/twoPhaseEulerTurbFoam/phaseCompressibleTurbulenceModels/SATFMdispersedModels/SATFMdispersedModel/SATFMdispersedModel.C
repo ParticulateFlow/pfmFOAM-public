@@ -1513,6 +1513,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             )
           //- fvm::Sp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + 2.0*nut_*magSqr(gradAlpha)
+          + fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();

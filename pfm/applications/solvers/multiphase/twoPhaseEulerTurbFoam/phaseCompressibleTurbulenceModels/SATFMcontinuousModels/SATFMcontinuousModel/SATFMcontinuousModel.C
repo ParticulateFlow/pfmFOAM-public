@@ -772,6 +772,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         ).KdUdrift()
     );
     
+    KdUdrift *= pos(alpha1 - residualAlpha_);
+    
     // compute total k
     volScalarField km(k_&eSum);
     km.max(kSmall.value());
