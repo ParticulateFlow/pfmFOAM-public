@@ -1366,8 +1366,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // Compute k_
     // ---------------------------
     if (!equilibriumK_) {
-        volVectorField pDil = Cp_*alpha*(rho-rho2)*gN_*sqrt(2.0*alphaP2Mean_);
-        
         volTensorField R1t(alpha*R1_);
         if (!anIsoTropicNut_) {
             R1t -= 0.5*nut_*dev(gradU + gradU.T());
@@ -1423,13 +1421,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               + (xiGS_&eZ)*sqrt((kC_&eZ)*(k_&eZ))*eZ
             )
           + fvm::Sp(-2.0*beta,k_)
-          // pressure dilation & dissipation
-          // - (coeffDissipation*(k_&eX) + (pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
-          // - (coeffDissipation*(k_&eY) + (pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
-          // - (coeffDissipation*(k_&eZ) + (pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
-          - ((pDil&eX)*(xiPhiS_&eX))*sqrt(k_&eX)*eX
-          - ((pDil&eY)*(xiPhiS_&eY))*sqrt(k_&eY)*eY
-          - ((pDil&eZ)*(xiPhiS_&eZ))*sqrt(k_&eZ)*eZ
           // dissipation
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
@@ -1478,7 +1469,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     km = k_&eSum;
     km.max(kSmall.value());
     // compute laplacian(k)
-    volScalarField lapK(mag(fvc::laplacian(k_)));
+    volScalarField lapK(mag(fvc::laplacian(km)));
     
     Info << "Computing nut (dispersed phase) ... " << endl;
     nut_ = alpha*sqrt(km)*lm_;
