@@ -946,7 +946,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute production term according to Reynolds-stress model
         volTensorField R2t(alpha*R2_);
         if (!anIsoTropicNut_) {
-            R2t -= 0.5*nuEff()*dev(gradU + gradU.T());
+            R2t -= nuEff()*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR2((R2t&gradU) + ((gradU.T())&(R2t.T())));
