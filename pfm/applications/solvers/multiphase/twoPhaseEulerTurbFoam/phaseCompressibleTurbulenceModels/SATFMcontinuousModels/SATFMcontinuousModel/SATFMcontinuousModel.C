@@ -447,28 +447,12 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
 ) const
 {
     if (!anIsoTropicNut_) {
-        dimensionedVector eSum
-        (
-            "eSum",
-            dimensionSet(0, 0, 0, 0, 0, 0, 0),
-            vector(1,1,1)
-        );
-        volScalarField nut
-        (
-            alpha_
-           *sqrt
-            (
-                (k_&eSum) - mag(k_&U)/(mag(U) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7))
-            )
-            *lm_
-        );
-        nut.min(maxNut_.value());
         return
         (
-          - fvm::laplacian(rho_*(nuEff() - nut_ + nut), U)
+          - fvm::laplacian(rho_*(nuEff()), U)
           - fvc::div
             (
-                rho_*(nuEff() - nut_ + nut)*dev2(T(fvc::grad(U)))
+                rho_*(nuEff())*dev2(T(fvc::grad(U)))
             )
         );
     } else {
@@ -646,9 +630,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(min(max(alpha_, 1.e-7),1.0));
+    volScalarField alpha(Foam::min(Foam::max(alpha_, 1.e-7),1.0));
     // solid volume fraction
-    volScalarField alpha1 = max(1.0 - alpha,1.e-7);
+    volScalarField alpha1 = Foam::max(1.0 - alpha,1.e-7);
     const volScalarField& rho = phase_.rho();
     const volScalarField& rho1 = fluid.otherPhase(phase_).rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
@@ -757,7 +741,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             phase_
         ).Ki()
     );
-    beta *= alpha1*pos(alpha1 - residualAlpha_);
+    beta *= alpha1;
     beta.max(SMALL);
     
     volScalarField betaA = beta/(rho*alpha);
@@ -772,10 +756,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         ).KdUdrift()
     );
     
-    KdUdrift *= pos(alpha1 - residualAlpha_);
-    
     // compute total k
-    volScalarField km(k_&eSum);
+    volScalarField km(k());
     km.max(kSmall.value());
     
     // local reference to deltaF
@@ -804,9 +786,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volScalarField wD = wallDist(mesh_).y();
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    deltaF_ = neg(wD)*deltaF + pos(wD)*Foam::min(deltaF,wD);
     // compute mixing length
-    lm_ =  neg(wD)*Cmu_*deltaF + pos(wD)*min(Cmu_*deltaF,CmuWScalar_*wD);
+    lm_ =  neg(wD)*Cmu_*deltaF + pos(wD)*Foam::min(Cmu_*deltaF,CmuWScalar_*wD);
     // correction for cyclic patches
     {
         const fvPatchList& patches = mesh_.boundary();
@@ -953,8 +935,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // ---------------------------
     volVectorField pDil
     (
-        pos(alpha1 - residualAlpha_)
-       *Cp_
+        Cp_
        *sqr(alpha)
        *alpha1
        *(rho1-rho)
@@ -976,8 +957,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + (gradUR2&&(eY*eY))*(eY)
           + (gradUR2&&(eZ*eZ))*(eZ)
         );
-        // compute prefactor for dissipation term
-        // volScalarField coeffDissipation(Ceps_*alpha*rho/lm_);
         
         fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -1033,9 +1012,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
           // dissipation
-          // - coeffDissipation*(sqrt(k_&eX)*(k_&eX))*eX
-          // - coeffDissipation*(sqrt(k_&eY)*(k_&eY))*eY
-          // - coeffDissipation*(sqrt(k_&eZ)*(k_&eZ))*eZ
           + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
@@ -1080,7 +1056,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     //- compute variance of solids volume fraction
     //--------------------------------------------
     // update km
-    km = k_&eSum;
+    km = k();
     km.max(kSmall.value());
     
     // use k_normal for nut in stress tensor

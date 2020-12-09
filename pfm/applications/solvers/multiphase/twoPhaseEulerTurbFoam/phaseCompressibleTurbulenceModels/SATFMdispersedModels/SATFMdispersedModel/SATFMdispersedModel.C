@@ -689,34 +689,13 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
 ) const
 {
     if (!anIsoTropicNut_) {
-        dimensionedVector eSum
-        (
-            "eSum",
-            dimensionSet(0, 0, 0, 0, 0, 0, 0),
-            vector(1,1,1)
-        );
-        volScalarField nut
-        (
-            max(alpha_,1.0e-7)
-           *sqrt
-            (
-                min
-                (
-                    sqr(ut_),
-                    (k_&eSum) - mag(k_&U)/(mag(U) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0),1.e-7))
-                )
-             )
-            *lm_
-        );
-        nut.min(maxNut_.value());
-        
         return
         pos(alpha_ - residualAlpha_)
       * (
-          - fvm::laplacian(rho_*(nuFric_ + nut), U)
+          - fvm::laplacian(rho_*(nuFric_ + nut_), U)
           - fvc::div
             (
-                (rho_*(nuFric_ + nut))*dev2(T(fvc::grad(U)))
+                (rho_*(nuFric_ + nut_))*dev2(T(fvc::grad(U)))
             )
 
          );
@@ -970,7 +949,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(min(max(alpha_, 1.e-7),alphaMax_));
+    volScalarField alpha(Foam::min(Foam::max(alpha_, 1.e-7),alphaMax_));
     volScalarField alpha2 = 1.0 - alpha;
     const volScalarField& rho = phase_.rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
@@ -1070,11 +1049,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fluid.otherPhase(phase_)
         ).Ki()
     );
-    beta *= pos(alpha - residualAlpha_);
     volScalarField betaA = beta/(rho);
     beta *= alpha;
     // compute total k
-    volScalarField km(k_&eSum);
+    volScalarField km(k());
     km.max(kSmall.value());
     
     
@@ -1105,9 +1083,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // correction for cases w/o walls
     // (since wall distance is then negative)
-    deltaF_ = neg(wD)*deltaF + pos(wD)*min(deltaF,wD);
+    deltaF_ = neg(wD)*deltaF + pos(wD)*Foam::min(deltaF,wD);
     // compute mixing length
-    lm_ =  neg(wD)*Cmu_*deltaF + pos(wD)*min(Cmu_*deltaF,CmuWScalar_*wD);
+    lm_ =  neg(wD)*Cmu_*deltaF + pos(wD)*Foam::min(Cmu_*deltaF,CmuWScalar_*wD);
     // correction for cyclic patches
     {
         const fvPatchList& patches = mesh_.boundary();
@@ -1340,8 +1318,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Set Cp
         Cp_     = CpScalar_;
     } else {
-        volVectorField xiPhiSDir = uSlip
-                                  /max(mag(uSlip),uSmall);
+        volVectorField xiPhiSDir = uSlip/Foam::max(mag(uSlip),uSmall);
         xiPhiS_     = -(xiPhiSolidScalar_)*xiPhiSDir;
         xiPhiDivU_  = xiPhiDivUScalar_/alphaMax_*(scalar(1.0) - alpha/alphaMax_);
         xiPhi2DivU_ = -alpha/alphaMax_;
@@ -1356,7 +1333,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2Mean_)
-            / max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2Mean_)/alpha2),residualAlpha_);
+              /Foam::max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2Mean_)/alpha2),residualAlpha_);
     xiGatS_.max(SMALL);
     xiGatS_.min(2.0);
 
@@ -1466,7 +1443,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     //- compute variance of solids volume fraction
     // update km
-    km = k_&eSum;
+    km = k();
     km.max(kSmall.value());
     // compute laplacian(k)
     volScalarField lapK(mag(fvc::laplacian(km)));
@@ -1506,12 +1483,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp
             (
                 divU
-              + xiPhi2DivU_*sqrt(lapK)
+              + 2.0*xiPhi2DivU_*sqrt(lapK)
               + 2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_)
             ,
                 alphaP2Mean_
             )
-          //- fvm::Sp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          // - fvm::Sp(xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + 2.0*nut_*magSqr(gradAlpha)
           + fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
         );
@@ -1528,7 +1505,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                        / sqr(denom);
     }
     // limit alphaP2Mean
-    alphaP2Mean_ = min(
+    alphaP2Mean_ = Foam::min(
                          alphaP2Mean_,
                          alphaL2
                       );
