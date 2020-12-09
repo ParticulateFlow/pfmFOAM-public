@@ -1012,13 +1012,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         vector(1,1,1)
     );
     
-    dimensionedTensor zeroR
-    (
-        "eSum",
-        dimensionSet(0, 2, -2, 0, 0, 0, 0),
-        tensor(0,0,0,0,0,0,0,0,0)
-    );
-    
     volScalarField divU(fvc::div(phi_));
     volTensorField gradU(fvc::grad(U_));
     boundGradU(gradU);
@@ -1483,14 +1476,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           - fvm::SuSp
             (
                 divU
-              + 2.0*xiPhi2DivU_*sqrt(lapK)
+              + xiPhi2DivU_*sqrt(lapK)
               + 2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_)
             ,
                 alphaP2Mean_
             )
-          // - fvm::Sp(xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + 2.0*nut_*magSqr(gradAlpha)
-          + fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
+          - fvm::SuSp(xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + nut_*magSqr(gradAlpha)
+          //+ fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
         );
 
         phiP2Eqn.relax();
