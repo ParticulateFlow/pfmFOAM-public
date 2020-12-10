@@ -1031,7 +1031,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                      ("k." + fluid.otherPhase(phase_).name()));
 
     // simple filter for local smoothing
-    simpleFilter filterS(mesh_);
+    //simpleFilter filterS(mesh_);
+    simpleTestFilter filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -1106,53 +1107,64 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField alphafP2(filter_(sqr(alpha)));
         alphafP2.max(sqr(residualAlpha_.value()));
         volScalarField alphafP2Mean(alphafP2 - sqr(alphaf));
-        alphafP2Mean.max(sqr(residualAlpha_.value()));
+        alphafP2Mean.max(SMALL);
         volVectorField Uf(filter_(alpha*U)/alphaf);
         volScalarField alpha2f(1.0 - alphaf);
         volVectorField Ucf(filter_(alpha2*UcZero)/alpha2f);
         volScalarField aUU(filter_(alpha*magSqr(U))/alphaf - magSqr(Uf));
+        aUU.max(SMALL);
         
         //Compute xiPhiS
         volVectorField xiPhiSNom =   (
                                           filter_(alpha*U)
                                         - alphaf*filter_(U)
                                       );
+    
+         volScalarField tmpDenX
+         (
+            alphafP2Mean
+          * (
+                filter_(alpha*sqr(U&eX)) / alphaf
+              - sqr(Uf&eX)
+            )
+         );
+         volScalarField tmpDenY
+         (
+            alphafP2Mean
+          * (
+                filter_(alpha*sqr(U&eY)) / alphaf
+              - sqr(Uf&eY)
+            )
+         );
+         volScalarField tmpDenZ
+         (
+            alphafP2Mean
+          * (
+               filter_(alpha*sqr(U&eZ)) / alphaf
+             - sqr(Uf&eZ)
+            )
+         );
         
-        volScalarField tmpDenX = alphafP2Mean
-                              * (
-                                    filter_(alpha*sqr(U&eX)) / alphaf
-                                  - sqr(Uf&eX)
-                                );
-        volScalarField tmpDenY = alphafP2Mean
-                               * (
-                                    filter_(alpha*sqr(U&eY)) / alphaf
-                                  - sqr(Uf&eY)
-                                 );
-        volScalarField tmpDenZ = alphafP2Mean
-                               * (
-                                    filter_(alpha*sqr(U&eZ)) / alphaf
-                                  - sqr(Uf&eZ)
-                                );
-       
-        tmpDenX.max(SMALL);
-        tmpDenY.max(SMALL);
-        tmpDenZ.max(SMALL);
+         tmpDenX.max(SMALL);
+         tmpDenY.max(SMALL);
+         tmpDenZ.max(SMALL);
 
-        xiPhiS_ =  eX
-                 * (
-                        filterS((xiPhiSNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
-                    )
-                 + eY
-                 * (
-                        filterS((xiPhiSNom&eY)*sqrt(tmpDenY))/filterS(tmpDenY)
-                    )
-                 + eZ
-                 * (
-                        filterS((xiPhiSNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
-                    );
+         xiPhiS_ =  eX
+                  * (
+                         filterS((xiPhiSNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
+                     )
+                  + eY
+                  * (
+                         filterS((xiPhiSNom&eY)*sqrt(tmpDenY))/filterS(tmpDenY)
+                     )
+                  + eZ
+                  * (
+                         filterS((xiPhiSNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
+                     );
+         
         // limit xiPhiS_
         boundxiPhiS(xiPhiS_);
-        
+
         // compute triple correlation
         volScalarField xiPhiGGnom
         (
@@ -1163,7 +1175,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volScalarField xiPhiGGden
         (
             sqrt(alphafP2Mean)
-           *max(filter_(magSqr(UcZero)) - 2.0*(Ucf&filter_(UcZero)) + magSqr(Ucf),sqr(uSmall))
+           *Foam::max(filter_(magSqr(UcZero)) - 2.0*(Ucf&filter_(UcZero)) + magSqr(Ucf),sqr(uSmall))
         );
         xiPhiGG_ = filterS(xiPhiGGnom*xiPhiGGden)/filterS(sqr(xiPhiGGden));
         // smooth and limit xiPhiGG_
@@ -1470,19 +1482,25 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
           //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
-          - fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
+          //- fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
+          - fvm::laplacian
+            (
+                lm_
+              * (
+                    (sqrt(k_&eX)*(eX*eX))
+                  + (sqrt(k_&eY)*(eY*eY))
+                  + (sqrt(k_&eZ)*(eZ*eZ))
+                )
+              / (sigma_)
+              , alphaP2Mean_
+            )
          ==
           // production/dissipation
-          - fvm::SuSp
-            (
-                divU
-              + xiPhi2DivU_*sqrt(lapK)
-              + 2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_)
-            ,
-                alphaP2Mean_
-            )
-          - fvm::SuSp(xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + nut_*magSqr(gradAlpha)
+          - fvm::SuSp(divU,alphaP2Mean_)
+          - fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
+          - fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
+          - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          //+ nut_*magSqr(gradAlpha)
           //+ fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
         );
 

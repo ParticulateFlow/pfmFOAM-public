@@ -713,7 +713,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // simple filter for local smoothing
     //simpleFilter filterS(mesh_);
-    simpleFilter filterS(mesh_);
+    simpleTestFilter filterS(mesh_);
     /*
     volVectorField Uzero
     (
@@ -828,13 +828,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             filter_(alpha1*Uzero)
           - alpha1f*filter_(Uzero)
         );
-        volScalarField tmpA(alpha1fP2-sqr(alpha1f));
+        volScalarField alphafP2Mean(alpha1fP2-sqr(alpha1f));
+        alphafP2Mean.max(SMALL);
 
-        // volScalarField tmpDen(tmpA*(filter_(alpha*magSqr(Uzero)) / alpha2f - magSqr(Uf)));
-        // tmpDen.max(ROOTVSMALL);
         volScalarField tmpDenX
         (
-            tmpA
+            alphafP2Mean
           * (
                 filter_(alpha*sqr(Uzero&eX)) / alpha2f
               - sqr(Uf&eX)
@@ -842,7 +841,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          );
         volScalarField tmpDenY
         (
-            tmpA
+            alphafP2Mean
           * (
                 filter_(alpha*sqr(Uzero&eY)) / alpha2f
               - sqr(Uf&eY)
@@ -850,7 +849,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          );
         volScalarField tmpDenZ
         (
-            tmpA
+            alphafP2Mean
           * (
                 filter_(alpha*sqr(Uzero&eZ)) / alpha2f
               - sqr(Uf&eZ)
@@ -874,7 +873,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
         // limit xiPhiG_
         boundxiPhiG(xiPhiG_);
-        
+
         // compute mixing length dynamically
         /*
         volScalarField Lij      = filter_(alpha*magSqr(Uzero))/alpha2f - magSqr(Uf);
@@ -911,7 +910,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
         volScalarField rhom = rho*alpha + alpha1*rho1;
         volVectorField gradp = fvc::grad(p_rgh);
-
         Cp_ = filterS((gradp&gN_)*rhom)/filterS(sqr(rhom)*magSqr(gN_))
             + dimensionedScalar("unity",dimensionSet(0,0,0,0,0),1.0);
         Cp_ = 0.33*(Cp_ + mag(Cp_) + CpScalar_);
