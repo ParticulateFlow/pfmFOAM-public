@@ -326,7 +326,13 @@ Foam::RASModels::SATFMcontinuousModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return k_&eSum;
+    tmp<volScalarField> kT
+    (
+
+        (k_&eSum) - (k_&U_)/(mag(U_) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0,0,0),1.0e-7))
+    );
+    
+    return kT;
 }
 
 
@@ -458,13 +464,9 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     } else {
         return
         (
-         // - fvm::laplacian(rho_*(nuEff()), U)
-          - fvm::laplacian(rho_*(nuEff() - nut_), U)
-          - fvc::div
-            (
-                rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
-            )
-         // + fvc::laplacian(rho_*nut_, U)
+            fvc::laplacian(rho_*nut_, U)
+          - fvc::div(rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U))))
+          - fvm::laplacian(rho_*nuEff(), U)
         );
     }
 }
@@ -713,7 +715,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // simple filter for local smoothing
     //simpleFilter filterS(mesh_);
-    simpleTestFilter filterS(mesh_);
+    simpleFilterADM filterS(mesh_);
     /*
     volVectorField Uzero
     (
@@ -1105,7 +1107,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        /*
         // set wall-bc for R
         const fvPatchList& patches = mesh_.boundary();
 
@@ -1143,7 +1144,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
-        */
     } else {
         R2_ = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
     }

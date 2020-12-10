@@ -500,7 +500,16 @@ Foam::RASModels::SATFMdispersedModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
-    return k_&eSum;
+    tmp<volScalarField> kT
+    (
+        Foam::min
+        (
+            (k_&eSum) - (k_&U_)/(mag(U_) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0,0,0),1.0e-7))
+           ,sqr(ut_)
+        )
+    );
+    
+    return kT;
 }
 
 
@@ -703,7 +712,8 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)
       * (
-          - fvm::laplacian(rho_*nuFric_, U)
+            fvc::laplacian(rho_*nut_, U)
+          - fvm::laplacian(rho_*(nut_ + nuFric_), U)
           - fvc::div
             (
                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
@@ -1032,7 +1042,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     // simple filter for local smoothing
     //simpleFilter filterS(mesh_);
-    simpleTestFilter filterS(mesh_);
+    simpleFilterADM filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -1549,6 +1559,42 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                     } else {
                         R1_[cellI].component(j+i*3) =  sqrt(k_[cellI].component(i)*k_[cellI].component(j));
                     }
+                }
+            }
+        }
+        const fvPatchList& patches = mesh_.boundary();
+
+        volTensorField::Boundary& RBf = R1_.boundaryFieldRef();
+
+        forAll(patches, patchi) {
+            const fvPatch& curPatch = patches[patchi];
+
+            if (isA<wallFvPatch>(curPatch)) {
+                tensorField& Rw = RBf[patchi];
+
+                const scalarField& nutw = nut_.boundaryField()[patchi];
+
+                const vectorField snGradU
+                (
+                    U.boundaryField()[patchi].snGrad()
+                );
+
+                const vectorField& faceAreas
+                    = mesh_.Sf().boundaryField()[patchi];
+
+                const scalarField& magFaceAreas
+                    = mesh_.magSf().boundaryField()[patchi];
+
+                forAll(curPatch, facei)
+                {
+                    // Calculate near-wall velocity gradient
+                    const tensor gradUw
+                        = (faceAreas[facei]/magFaceAreas[facei])*snGradU[facei];
+
+                    // Set the wall Reynolds-stress to the near-wall shear-stress
+                    // Note: the spherical part of the normal stress is included in
+                    // the pressure
+                    Rw[facei] = -nutw[facei]*(gradUw + gradUw.T());
                 }
             }
         }

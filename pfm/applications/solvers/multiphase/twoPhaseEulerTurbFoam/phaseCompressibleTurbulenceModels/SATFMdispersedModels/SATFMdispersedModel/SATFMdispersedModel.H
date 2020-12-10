@@ -56,7 +56,7 @@ SourceFiles
 // h-files for LES filters
 #include "LESfilter.H"
 #include "simpleFilter.H"
-#include "simpleTestFilter.H"
+#include "simpleFilterADM.H"
 #include "laplaceFilter.H"
 #include "wallFvPatch.H"
 #include "cyclicAMIFvsPatchField.H"
