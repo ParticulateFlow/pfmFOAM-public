@@ -500,6 +500,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(1,1,1)
     );
+    /*
     tmp<volScalarField> kT
     (
         Foam::min
@@ -510,6 +511,8 @@ Foam::RASModels::SATFMdispersedModel::k() const
     );
     
     return kT;
+    */
+    return k_&eSum;
 }
 
 
@@ -805,8 +808,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -sqrt(2.0);
-    scalar xiMax = sqrt(2.0);
+    scalar xiMin = -1.0;
+    scalar xiMax = 1.0;
 
     xi.max
     (
@@ -844,7 +847,7 @@ void Foam::RASModels::SATFMdispersedModel::boundxiGS
 ) const
 {
     scalar xiMin = 0;
-    scalar xiMax = sqrt(2.0);
+    scalar xiMax = 1.0;
 
     xi.max
     (
@@ -1265,8 +1268,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         );
     
         xiPhiDivU_ = filterS(xiPhiDivUnum*xiPhiDivUden)/filterS(sqr(xiPhiDivUden));
-        xiPhiDivU_.max(-sqrt(2.0));
-        xiPhiDivU_.min(sqrt(2.0));
+        xiPhiDivU_.max(-1.0);
+        xiPhiDivU_.min(1.0);
         
         //xiPhi2DivU
         volScalarField xiPhi2DivUnum
@@ -1287,8 +1290,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         );
         
         xiPhi2DivU_ = filterS(xiPhi2DivUnum*xiPhi2DivUden)/filterS(sqr(xiPhi2DivUden));
-        xiPhi2DivU_.max(-sqrt(2.0));
-        xiPhi2DivU_.min(sqrt(2.0));
+        xiPhi2DivU_.max(-1.0);
+        xiPhi2DivU_.min(1.0);
         
         // compute mixing length dynamically
         /*
@@ -1380,6 +1383,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
+         /*
            - fvm::laplacian
              (
                  alpha*rho*lm_
@@ -1392,13 +1396,16 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                , k_
                , "laplacian(kappa,k)"
              )
-          /*
-          - fvm::laplacian(
+          */
+           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
-         */
+           // interfacial work (--> energy transfer)
+           + fvm::Sp(2.0*beta,k_)
+           // dissipation
+           + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1412,9 +1419,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               + (xiGS_&eY)*sqrt((kC_&eY)*(k_&eY))*eY
               + (xiGS_&eZ)*sqrt((kC_&eZ)*(k_&eZ))*eZ
             )
-          + fvm::Sp(-2.0*beta,k_)
-          // dissipation
-          + fvm::Sp(-Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
         );
@@ -1475,7 +1479,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     
-    volScalarField alphaM(alpha/(0.95*alphaMax_));
+    volScalarField alphaM(alpha/(alphaMax_));
     alphaM.min(0.9999);
     volScalarField g0(1.0/(1.0-sqr(alphaM)));
     
@@ -1492,7 +1496,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
           //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
-          //- fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
+          - fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
+          /*
           - fvm::laplacian
             (
                 lm_
@@ -1504,13 +1509,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               / (sigma_)
               , alphaP2Mean_
             )
-         ==
+           */
           // production/dissipation
-          - fvm::SuSp(divU,alphaP2Mean_)
-          - fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
-          - fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
-          - fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          //+ nut_*magSqr(gradAlpha)
+          + fvm::SuSp(divU,alphaP2Mean_)
+          + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
+          + fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::SuSp(xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+         ==
+            nut_*magSqr(gradAlpha)
           //+ fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
         );
 
@@ -1600,9 +1606,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         }
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
+        R1_.correctBoundaryConditions();
     }
     
-    R1_.correctBoundaryConditions();
+   
     
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
@@ -1625,28 +1632,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         //strain-rate fluctuations --> Srivastrava (2003)
         dev(D)// + sqrt(km)/lm_*symmTensor::I
     );
-
-    // BCs for nut_
-    const fvPatchList& patches = mesh_.boundary();
-    volScalarField::Boundary& nutBf = nut_.boundaryFieldRef();
-    
-    forAll(patches, patchi) {
-        const fvPatch& curPatch = patches[patchi];
-
-        if (isA<wallFvPatch>(curPatch)) {
-            scalarField& nutw = nutBf[patchi];
-            const vectorField& faceAreas
-                = mesh_.Sf().boundaryField()[patchi];
-            const scalarField& magFaceAreas
-                = mesh_.magSf().boundaryField()[patchi];
-            
-            forAll(curPatch, facei) {
-                label celli = curPatch.faceCells()[facei];
-                nutw[facei] = lm_[celli]
-                             *mag(k_[celli] - (k_[celli]&faceAreas[facei])*faceAreas[facei]/sqr(magFaceAreas[facei]));
-            }
-        }
-    }
 
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
