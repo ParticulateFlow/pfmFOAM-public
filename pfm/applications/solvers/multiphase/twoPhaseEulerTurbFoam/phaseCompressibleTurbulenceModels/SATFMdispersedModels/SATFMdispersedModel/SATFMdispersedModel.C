@@ -1514,10 +1514,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::SuSp(divU,alphaP2Mean_)
           + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
           + fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::SuSp(xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
          ==
-            nut_*magSqr(gradAlpha)
-          //+ fvm::Sp(-CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
+            CphiS_*nut_*magSqr(gradAlpha)
         );
 
         phiP2Eqn.relax();
