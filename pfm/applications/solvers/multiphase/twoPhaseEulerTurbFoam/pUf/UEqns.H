@@ -19,7 +19,7 @@ if (periodicBox) {
                 /fvc::domainIntegrate(alpha1*rho1+alpha2*rho2);
 }
 
-volVectorField uSlipV(U2 - U1);
+volVectorField KdUdrift(fluid.KdUdrift());
 
 {
     volScalarField Vm(fluid.Vm());
@@ -44,6 +44,8 @@ volVectorField uSlipV(U2 - U1);
           + MRF.DDt(alpha1*rho1, U1)
           + phase1.turbulence().divDevRhoReff(U1)
           + Vm*(UgradU1 - (UgradU2 & U2))
+          // drift velocity
+          - KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha1*(rho1-rhoMix)*gN
@@ -64,7 +66,9 @@ volVectorField uSlipV(U2 - U1);
           + fvm::SuSp(-fvc::div(alphaRhoPhi2), U2)
           + MRF.DDt(alpha2*rho2, U2)
           + phase2.turbulence().divDevRhoReff(U2)
-          + Vm*(UgradU2 - (UgradU1 & U1))     
+          + Vm*(UgradU2 - (UgradU1 & U1))
+          // drift velocity
+          + KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha2*(rho2-rhoMix)*gN

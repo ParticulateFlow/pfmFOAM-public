@@ -24,6 +24,7 @@ surfaceScalarField alphaRhof20
 
 // Drag coefficient
 surfaceScalarField Kdf("Kdf", fluid.Kdf());
+/*
 // drift velocity
 volVectorField KdUdrift(fluid.KdUdrift());
 // in the case of no drift vel model, KdUdriftE is 0
@@ -41,6 +42,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
     Kdf = Kdf*(scalar(1.0) - dragCorrF);
 }
+*/
 
 // Virtual-mass coefficient
 surfaceScalarField Vmf("Vmf", fluid.Vmf());
@@ -106,10 +108,12 @@ tmp<surfaceScalarField> Ff2;
     surfaceScalarField gradP2(fvc::snGrad(phase2.turbulence().normalStress())*mesh.magSf());
 
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + gradP1 - fvc::flux(KdUdriftE) + Ff;
+    //Ff1 = Df1*snGradAlpha1 + gradP1 - fvc::flux(KdUdriftE) + Ff;
+    Ff1 = Df1*snGradAlpha1 + gradP1 + Ff;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 + gradP2 + fvc::flux(KdUdriftE) - Ff;
+    //Ff1 = Df1*snGradAlpha1 + gradP1 - fvc::flux(KdUdriftE) + Ff;
+    Ff1 = Df1*snGradAlpha1 + gradP1 + Ff;
     
     // Cache the net diffusivity for implicit diffusion treatment in the
     // phase-fraction equation
