@@ -125,10 +125,14 @@ Foam::driftVelocityModel::KdUdrift() const
     );
     
     volVectorField ud(udrift());
-
-    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
+    
+    volVectorField uSlipV(pair_.continuous().U().oldTime() - pair_.dispersed().U().oldTime());
     volScalarField uSlip(mag(uSlipV));
     uSlip.max(SMALL);
+    
+    dragCorr_ = -((ud&uSlipV)/sqr(uSlip));
+    dragCorr_.min(0.999);
+    dragCorr_.max(-0.999);
     
     // limit turbulent dispersion force according to
     // Parmentier et al., AIChE J., 2012
@@ -140,8 +144,6 @@ Foam::driftVelocityModel::KdUdrift() const
     ud =  ((ud&eX)*min(0.99*mag(uSlipV&eX)/(mag(ud&eX)+uSmall),1.0))*eX
         + ((ud&eY)*min(0.99*mag(uSlipV&eY)/(mag(ud&eY)+uSmall),1.0))*eY
         + ((ud&eZ)*min(0.99*mag(uSlipV&eZ)/(mag(ud&eZ)+uSmall),1.0))*eZ;
-
-    dragCorr_ = -((ud&uSlipV)/sqr(uSlip));
     
     // multiply drift velocity by drag coefficient
     return
