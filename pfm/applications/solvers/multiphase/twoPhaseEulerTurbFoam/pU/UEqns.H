@@ -48,7 +48,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           + fvm::SuSp(-contErr1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
-          + fvm::Sp(Kd, U1);
+          + fvm::Sp(Kd, U1)
          ==
           // Virtual mass force
           - Vm
