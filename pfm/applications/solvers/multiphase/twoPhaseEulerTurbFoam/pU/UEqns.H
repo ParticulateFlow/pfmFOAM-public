@@ -48,6 +48,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           + fvm::SuSp(-contErr1, U1)
           + MRF.DDt(alpha1*rho1 + Vm, U1)
           + phase1.turbulence().divDevRhoReff(U1)
+          + fvm::Sp(Kd, U1);
          ==
           // Virtual mass force
           - Vm
@@ -67,7 +68,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           + fvOptions(alpha1, rho1, U1)
         );
         U1Eqn.relax();
-        U1Eqn += fvm::Sp(Kd, U1);
+        //U1Eqn += fvm::Sp(Kd, U1);
         fvOptions.constrain(U1Eqn);
         
         // improved momentum predictor
@@ -123,6 +124,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           + fvm::SuSp(-contErr2, U2)
           + MRF.DDt(alpha2*rho2 + Vm, U2)
           + phase2.turbulence().divDevRhoReff(U2)
+          + fvm::Sp(Kd, U2)
         ==
           // Virtual mass force
           - Vm
@@ -142,7 +144,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           + fvOptions(alpha2, rho2, U2)
         );
         U2Eqn.relax();
-        U2Eqn += fvm::Sp(Kd, U2);
+        //U2Eqn += fvm::Sp(Kd, U2);
         fvOptions.constrain(U2Eqn);
         
         // improved momentum predictor
