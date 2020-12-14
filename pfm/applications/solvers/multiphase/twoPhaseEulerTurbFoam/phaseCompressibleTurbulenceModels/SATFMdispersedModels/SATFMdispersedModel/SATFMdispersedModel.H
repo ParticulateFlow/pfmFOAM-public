@@ -201,9 +201,6 @@ class SATFMdispersedModel
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField Ceps_;
     
-            //- pressure dilation constant
-            volScalarField Cp_;
-    
             //- constant for the computation of alphaP2Mean
             volScalarField CphiS_;
     

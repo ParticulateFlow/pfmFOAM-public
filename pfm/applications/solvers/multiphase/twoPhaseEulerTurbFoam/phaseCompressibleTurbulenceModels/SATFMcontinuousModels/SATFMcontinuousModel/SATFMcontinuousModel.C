@@ -735,8 +735,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                              ("xiGatS"));
     
     // simple filter for local smoothing
-    //simpleFilter filterS(mesh_);
-    simpleFilterADM filterS(mesh_);
+    simpleFilter filterS(mesh_);
+    //simpleFilterADM filterS(mesh_);
     /*
     volVectorField Uzero
     (

@@ -364,20 +364,6 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
     ),
 
-    Cp_
-    (
-        IOobject
-        (
-            IOobject::groupName("Cp", phase.name()),
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
-    ),
-
     CphiS_
     (
         IOobject
@@ -475,7 +461,6 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         CmuWScalar_.readIfPresent(coeffDict());
         CphiSscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
-        CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         gN_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
@@ -1064,8 +1049,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                                      ("k." + fluid.otherPhase(phase_).name()));
 
     // simple filter for local smoothing
-    //simpleFilter filterS(mesh_);
-    simpleFilterADM filterS(mesh_);
+    simpleFilter filterS(mesh_);
+    //simpleFilterADM filterS(mesh_);
     
     // get drag coefficient
     volScalarField beta
@@ -1353,8 +1338,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               + neg(alpha_- residualAlpha_);
         // compute CphiS
         CphiS_ = CphiSscalar_;
-        // Set Cp
-        Cp_     = CpScalar_;
     } else {
         volVectorField xiPhiSDir = uSlip/Foam::max(mag(uSlip),uSmall);
         xiPhiS_     = -(xiPhiSolidScalar_)*xiPhiSDir;
@@ -1364,7 +1347,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_       = xiGSScalar_*eSum;
         Cmu_        = CmuScalar_;
         Ceps_       = CepsScalar_;
-        Cp_         = CpScalar_;
         // compute CphiS
         CphiS_      = CphiSscalar_;
     }
