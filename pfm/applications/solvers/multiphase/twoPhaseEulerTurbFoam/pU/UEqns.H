@@ -24,7 +24,7 @@ Kd = fluid.Kd();
 volVectorField KdUdrift(fluid.KdUdrift());
 // in the case of no drift vel model, KdUdriftE is 0
 volVectorField KdUdriftE(0.0*KdUdrift);
-
+/*
 if (mesh.foundObject<volScalarField>("dragCorr")) {
     Info<< "Applying drag correction..." << endl;
     const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
@@ -32,6 +32,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
     KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
     Kd *= (scalar(1.0) - dragCorr);
 }
+*/
 
 {
 

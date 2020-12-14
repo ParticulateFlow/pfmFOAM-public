@@ -126,7 +126,7 @@ Foam::driftVelocityModel::KdUdrift() const
     
     volVectorField ud(udrift());
     
-    volVectorField uSlipV(pair_.continuous().U().oldTime() - pair_.dispersed().U().oldTime());
+    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
     volScalarField uSlip(mag(uSlipV));
     uSlip.max(SMALL);
     
