@@ -838,7 +838,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         );
         volScalarField alphafP2Mean(alpha1fP2-sqr(alpha1f));
         alphafP2Mean.max(ROOTVSMALL);
-        volScalarField aUU(filter_(alpha*sqr(Uzero)) / alpha2f - sqr(Uf));
+        volScalarField aUU(filter_(alpha*magSqr(Uzero)) / alpha2f - magSqr(Uf));
         aUU.max(ROOTVSMALL);
         /*
         volScalarField tmpDenX
