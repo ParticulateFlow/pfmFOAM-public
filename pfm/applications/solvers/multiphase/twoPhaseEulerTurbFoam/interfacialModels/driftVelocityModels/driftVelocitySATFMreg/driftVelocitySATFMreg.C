@@ -102,7 +102,7 @@ Foam::driftVelocityModels::driftVelocitySATFMreg::udrift() const
 
     volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
     
-    volVectorField kSqrt =  xiPhiG_*(kC_&eSum);
+    volVectorField kSqrt =  xiPhiG_*sqrt(kC_&eSum);
     
     volScalarField alphaP2MeanN = sqrt(2.0 * alphaP2Mean)
                                 /(alpha1*(scalar(1.0)-alpha1));
