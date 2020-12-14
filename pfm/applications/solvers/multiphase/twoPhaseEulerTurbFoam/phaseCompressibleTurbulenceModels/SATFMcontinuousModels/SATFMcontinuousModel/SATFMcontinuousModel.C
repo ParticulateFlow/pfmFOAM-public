@@ -723,7 +723,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // simple filter for local smoothing
     simpleFilter filterS(mesh_);
     //simpleFilterADM filterS(mesh_);
-    /*
+
     volVectorField Uzero
     (
         IOobject
@@ -738,8 +738,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         zeroGradientFvPatchField<vector>::typeName
      );
     Uzero.correctBoundaryConditions();
-    */
-    const volVectorField& Uzero(U);
+    // const volVectorField& Uzero(U);
     
     // get drag coefficient
     volScalarField beta
@@ -838,8 +837,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - alpha1f*filter_(Uzero)
         );
         volScalarField alphafP2Mean(alpha1fP2-sqr(alpha1f));
-        alphafP2Mean.max(SMALL);
-
+        alphafP2Mean.max(ROOTVSMALL);
+        volScalarField aUU(filter_(alpha*sqr(Uzero)) / alpha2f - sqr(Uf));
+        aUU.max(ROOTVSMALL)
+        /*
         volScalarField tmpDenX
         (
             alphafP2Mean
@@ -880,7 +881,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                  * (
                         filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
                     );
+        */
         // limit xiPhiG_
+        xiPhiG_ =  filterS(xiPhiGNom*sqrt(alpha1fP2*aUU))/filterS(alpha1fP2*aUU);
         boundxiPhiG(xiPhiG_);
 
         // compute mixing length dynamically
