@@ -883,7 +883,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     );
         */
         // limit xiPhiG_
-        xiPhiG_ =  filterS(xiPhiGNom*sqrt(alpha1fP2*aUU))/filterS(alpha1fP2*aUU);
+        xiPhiG_ =  2.0*filterS(xiPhiGNom*sqrt(alpha1fP2*aUU))/filterS(alpha1fP2*aUU);
         boundxiPhiG(xiPhiG_);
 
         // compute mixing length dynamically
