@@ -618,11 +618,11 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
     volTensorField gradU(fvc::grad(phase_.U()));
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
-    
+    /*
     volTensorField R1(R1_);
     boundStress(R1);
     R1.correctBoundaryConditions();
-    
+    */
     tmp<volVectorField> tDivStress
     (
         pos(alpha_ - alphaMinFriction_)
@@ -638,6 +638,7 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
                 dev(D)
             )
          )
+     /*
      + pos(alpha_ - residualAlpha_)
       *fvc::div
        (
@@ -646,6 +647,7 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
          * rho_
          * R1
        )
+     */
     );
 
     return tDivStress;
@@ -700,6 +702,10 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    volTensorField R1(R1_);
+    boundStress(R1);
+    R1.correctBoundaryConditions();
+    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)
@@ -708,6 +714,13 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvc::div
             (
                 (rho_*(nuFric_ + nut_))*dev2(T(fvc::grad(U)))
+            )
+          + fvc::div
+            (
+                2.0
+              * alpha_
+              * rho_
+              * R1
             )
 
          );
@@ -720,6 +733,13 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvc::div
             (
                (rho_*nuFric_)*dev2(T(fvc::grad(U)))
+            )
+          + fvc::div
+            (
+                2.0
+              * alpha_
+              * rho_
+              * R1
             )
          );
     }

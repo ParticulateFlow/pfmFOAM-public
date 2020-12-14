@@ -354,6 +354,7 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
 Foam::tmp<Foam::volVectorField>
 Foam::RASModels::SATFMcontinuousModel::divStress() const
 {
+    /*
     tmp<volVectorField> tDivStress
     (
       fvc::div
@@ -366,6 +367,23 @@ Foam::RASModels::SATFMcontinuousModel::divStress() const
     );
     
     return tDivStress;
+    */
+    return tmp<volVectorField>
+    (
+        new volVectorField
+        (
+            IOobject
+            (
+                IOobject::groupName("divStress0", U_.group()),
+                runTime_.timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh_,
+            dimensionedVector("zero", dimensionSet(1,-2,-2,0,0,0,0),vector(0,0,0))
+        )
+    );
 }
 
 Foam::tmp<Foam::volSymmTensorField>
