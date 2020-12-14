@@ -150,7 +150,7 @@ public:
         virtual tmp<surfaceScalarField> pPrimef() const;
     
         //- Return the particle-pressure
-        virtual tmp<volVectorField> divStress() const;
+        virtual tmp<volScalarField> normalStress() const;
 };
 
 

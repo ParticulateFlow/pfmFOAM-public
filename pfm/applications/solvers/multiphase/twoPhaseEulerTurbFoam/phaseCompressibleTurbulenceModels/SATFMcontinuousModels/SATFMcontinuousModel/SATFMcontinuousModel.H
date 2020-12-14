@@ -246,7 +246,7 @@ public:
         virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
     
         //- Return the phase-pressure'
-        virtual tmp<volVectorField> divStress() const;
+        virtual tmp<volScalarField> normalStress() const;
 
         //- Solve the SA-TFM equations and correct the viscosity
         virtual void correct();

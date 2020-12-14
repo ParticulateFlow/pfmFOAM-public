@@ -94,24 +94,22 @@ tmp<surfaceScalarField> Ff2;
     (
         fvc::interpolate(phase2.turbulence().pPrime())
     );
-
+    
     // Lift and wall-lubrication forces
     surfaceScalarField Ff(fluid.Ff());
 
     // Phase-fraction face-gradient
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
-
-    // Pressure gradients
-    // Pressure gradients
-    volVectorField gradPp1(phase1.turbulence().divStress());
-    volVectorField gradPp2(phase2.turbulence().divStress());
-    // anisotropic part of drift velocity
+    
+    // pressure gradients
+    surfaceScalarField gradP1(fvc::snGrad(phase1.turbulence().normalStress())*mesh.magSf());
+    surfaceScalarField gradP2(fvc::snGrad(phase2.turbulence().normalStress())*mesh.magSf());
 
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + fvc::flux(gradPp1 - KdUdriftE) + Ff;
+    Ff1 = Df1*snGradAlpha1 + gradP1 - fvc::flux(KdUdriftE) + Ff;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 + fvc::flux(gradPp2 + KdUdriftE) - Ff;
+    Ff2 = -Df2*snGradAlpha1 + gradP2 + fvc::flux(KdUdriftE) - Ff;
     
     // Cache the net diffusivity for implicit diffusion treatment in the
     // phase-fraction equation

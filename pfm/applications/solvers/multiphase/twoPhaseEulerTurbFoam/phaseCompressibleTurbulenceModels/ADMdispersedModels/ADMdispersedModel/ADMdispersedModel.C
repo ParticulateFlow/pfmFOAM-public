@@ -356,35 +356,32 @@ Foam::RASModels::ADMdispersedModel::pPrimef() const
     return fvc::interpolate(pPrime());
 }
 
-Foam::tmp<Foam::volVectorField>
-Foam::RASModels::ADMdispersedModel::divStress() const
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::ADMdispersedModel::normalStress() const
 {
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
     const volScalarField& da = tda();
 
-    tmp<volVectorField> tDivStress
+    tmp<volScalarField> tNormalStress
     (
        pos(alpha_ - alphaMinFriction_)
-      *fvc::grad
+      *filter_
        (
-           filter_
+           frictionalStressModel_->frictionalPressure
            (
-               frictionalStressModel_->frictionalPressure
-               (
-                   phase_,
-                   alpha1star_,
-                   alphaMinFriction_,
-                   alphaMax_,
-                   da,
-                   rho,
-                   dev(Dstar_)
-               )
+               phase_,
+               alpha1star_,
+               alphaMinFriction_,
+               alphaMax_,
+               da,
+               rho,
+               dev(Dstar_)
            )
-        )
+       )
     );
 
-    return tDivStress;
+    return tNormalStress;
 }
 
 

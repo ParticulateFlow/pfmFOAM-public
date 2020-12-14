@@ -82,24 +82,20 @@ tmp<surfaceScalarField> phiF2;
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
     
     // Pressure gradients
+    surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
+    surfaceScalarField rAU2f("rAU2f", fvc::interpolate(rAU2));
     surfaceScalarField gradPp1
     (
-        fvc::interpolate
-        (
-            rAU1
-           *phase1.turbulence().divStress()
-        )
-       &mesh.Sf()
+        rAU1f
+       *(fvc::snGrad(phase1.turbulence().normalStress()))
+       *mesh.magSf()
     );
 
     surfaceScalarField gradPp2
     (
-        fvc::interpolate
-        (
-            rAU2
-           *phase2.turbulence().divStress()
-        )
-       &mesh.Sf()
+        rAU2f
+       *(fvc::snGrad(phase2.turbulence().normalStress()))
+       *mesh.magSf()
     ); 
 
     // Phase-1 dispersion, lift and wall-lubrication flux

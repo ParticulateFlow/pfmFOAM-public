@@ -99,7 +99,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
                 fvc::reconstruct
                 (
                     (
-                      - (fvc::interpolate(rAU1*phase1.turbulence().divStress())&mesh.Sf())
+                      - rAU1f*(fvc::snGrad(phase1.turbulence().normalStress()))*mesh.magSf()
                       - alpharAUf1*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho())) * mesh.magSf()
                     )/ rAU1f
                   // drag
@@ -174,7 +174,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
                 fvc::reconstruct
                 (
                     (
-                      - (fvc::interpolate(rAU2*phase2.turbulence().divStress())&mesh.Sf())
+                      - rAU2f*(fvc::snGrad(phase2.turbulence().normalStress()))*mesh.magSf()
                       - alpharAUf2*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))* mesh.magSf()
                     ) / rAU2f
                  // drag

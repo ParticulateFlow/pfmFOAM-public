@@ -377,8 +377,8 @@ Foam::RASModels::kineticTheoryModel::pPrimef() const
     return fvc::interpolate(pPrime());
 }
 
-Foam::tmp<Foam::volVectorField>
-Foam::RASModels::kineticTheoryModel::divStress() const
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::kineticTheoryModel::normalStress() const
 {
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
@@ -388,36 +388,30 @@ Foam::RASModels::kineticTheoryModel::divStress() const
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
     
-    tmp<volVectorField> tDivStress
+    tmp<volScalarField> tNormalStress
     (
-        fvc::grad
+        Theta_
+       *granularPressureModel_->granularPressureCoeff
         (
-            Theta_
-           *granularPressureModel_->granularPressureCoeff
-            (
-                alpha_,
-                radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
-                rho,
-                da,
-                e_
-            )
+            alpha_,
+            radialModel_->g0(alpha_, alphaMinFriction_, alphaMax_),
+            rho,
+            da,
+            e_
         )
       + pos(alpha_ - alphaMinFriction_)
-       *fvc::grad
+       *frictionalStressModel_->frictionalPressure
         (
-            frictionalStressModel_->frictionalPressure
-            (
-                phase_,
-                alphaMinFriction_,
-                alphaMax_,
-                da,
-                rho,
-                dev(D)
-            )
+            phase_,
+            alphaMinFriction_,
+            alphaMax_,
+            da,
+            rho,
+            dev(D)
         )
       );
 
-    return tDivStress;
+    return tNormalStress;
 }
 
 

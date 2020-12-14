@@ -292,7 +292,7 @@ public:
         virtual tmp<volScalarField> pPrime() const;
     
         //- Return the phase-pressure'
-        virtual tmp<volVectorField> divStress() const;
+        virtual tmp<volScalarField> normalStress() const;
 
         //- Return the face-phase-pressure'
         // (derivative of phase-pressure w.r.t. phase-fraction)

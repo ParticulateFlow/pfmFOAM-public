@@ -123,23 +123,23 @@ Foam::PhaseCompressibleTurbulenceModel<TransportModel>::pPrime() const
 }
 
 template<class TransportModel>
-Foam::tmp<Foam::volVectorField>
-Foam::PhaseCompressibleTurbulenceModel<TransportModel>::divStress() const
+Foam::tmp<Foam::volScalarField>
+Foam::PhaseCompressibleTurbulenceModel<TransportModel>::normalStress() const
 {
-    return tmp<volVectorField>
+    return tmp<volScalarField>
     (
-        new volVectorField
+        new volScalarField
         (
             IOobject
             (
-                IOobject::groupName("divStress", this->alphaRhoPhi_.group()),
+                IOobject::groupName("normalStress", this->alphaRhoPhi_.group()),
                 this->runTime_.timeName(),
                 this->mesh_,
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
             this->mesh_,
-            dimensionedVector("divStress", dimensionSet(1,-2,-2,0,0), vector(0.0,0.0,0.0))
+            dimensionedScalar("normalStress", dimensionSet(1,-1,-2,0,0), 0.0)
         )
     );
 }

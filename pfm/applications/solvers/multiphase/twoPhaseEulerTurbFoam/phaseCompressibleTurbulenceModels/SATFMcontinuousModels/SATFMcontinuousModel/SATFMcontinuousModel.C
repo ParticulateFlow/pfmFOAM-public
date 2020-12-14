@@ -351,37 +351,23 @@ Foam::RASModels::SATFMcontinuousModel::epsilon() const
     return Ceps_*alpha_*pow(k(),3.0/2.0)/deltaF_;
 }
 
-Foam::tmp<Foam::volVectorField>
-Foam::RASModels::SATFMcontinuousModel::divStress() const
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::SATFMcontinuousModel::normalStress() const
 {
-    /*
-    tmp<volVectorField> tDivStress
+    return tmp<volScalarField>
     (
-      fvc::div
-      (
-           2.0
-         * alpha_
-         * rho_
-         * R2_
-      )
-    );
-    
-    return tDivStress;
-    */
-    return tmp<volVectorField>
-    (
-        new volVectorField
+        new volScalarField
         (
             IOobject
             (
-                IOobject::groupName("divStress0", U_.group()),
+                IOobject::groupName("normalStress0", U_.group()),
                 runTime_.timeName(),
                 mesh_,
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
             mesh_,
-            dimensionedVector("zero", dimensionSet(1,-2,-2,0,0,0,0),vector(0,0,0))
+            dimensionedScalar("zero", dimensionSet(1,-1,-2,0,0,0,0),0.0)
         )
     );
 }

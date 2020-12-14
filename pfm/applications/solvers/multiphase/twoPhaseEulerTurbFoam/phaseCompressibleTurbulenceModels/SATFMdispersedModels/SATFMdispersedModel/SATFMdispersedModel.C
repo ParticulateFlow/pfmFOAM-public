@@ -593,8 +593,8 @@ Foam::RASModels::SATFMdispersedModel::pPrimef() const
     return fvc::interpolate(pPrime());
 }
 
-Foam::tmp<Foam::volVectorField>
-Foam::RASModels::SATFMdispersedModel::divStress() const
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::SATFMdispersedModel::normalStress() const
 {
     const volScalarField& rho = phase_.rho();
     tmp<volScalarField> tda(phase_.d());
@@ -603,39 +603,22 @@ Foam::RASModels::SATFMdispersedModel::divStress() const
     volTensorField gradU(fvc::grad(phase_.U()));
     boundGradU(gradU);
     volSymmTensorField D(symm(gradU));
-    /*
-    volTensorField R1(R1_);
-    boundStress(R1);
-    R1.correctBoundaryConditions();
-    */
-    tmp<volVectorField> tDivStress
+
+    tmp<volScalarField> tNormalStress
     (
         pos(alpha_ - alphaMinFriction_)
-       *fvc::grad
+       *frictionalStressModel_->frictionalPressure
         (
-            frictionalStressModel_->frictionalPressure
-            (
-                phase_,
-                alphaMinFriction_,
-                alphaMax_,
-                da,
-                rho,
-                dev(D)
-            )
-         )
-     /*
-     + pos(alpha_ - residualAlpha_)
-      *fvc::div
-       (
-           2.0
-         * alpha_
-         * rho_
-         * R1
-       )
-     */
+            phase_,
+            alphaMinFriction_,
+            alphaMax_,
+            da,
+            rho,
+            dev(D)
+        )
     );
 
-    return tDivStress;
+    return tNormalStress;
 }
 
 Foam::tmp<Foam::volSymmTensorField>
