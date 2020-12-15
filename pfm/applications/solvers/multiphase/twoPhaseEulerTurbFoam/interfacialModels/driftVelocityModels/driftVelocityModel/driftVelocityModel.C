@@ -134,7 +134,7 @@ Foam::driftVelocityModel::KdUdrift() const
     // Parmentier et al., AIChE J., 2012
     volScalarField magUd = mag(ud);
     magUd.max(SMALL);
-    ud *= min(magUd,sqrt(2.0)*uSlip)/magUd;
+    ud *= min(magUd,uSlip)/magUd;
     /*
     ud =  ((ud&eX)*min(0.99*mag(uSlipV&eX)/(mag(ud&eX)+uSmall),1.0))*eX
         + ((ud&eY)*min(0.99*mag(uSlipV&eY)/(mag(ud&eY)+uSmall),1.0))*eY
