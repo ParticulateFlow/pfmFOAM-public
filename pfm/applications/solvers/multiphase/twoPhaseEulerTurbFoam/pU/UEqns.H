@@ -22,17 +22,6 @@ if (periodicBox) {
 
 Kd = fluid.Kd();
 volVectorField KdUdrift(fluid.KdUdrift());
-// in the case of no drift vel model, KdUdriftE is 0
-// volVectorField KdUdriftE(0.0*KdUdrift);
-/*
-if (mesh.foundObject<volScalarField>("dragCorr")) {
-    Info<< "Applying drag correction..." << endl;
-    const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
-    volVectorField uSlipV(U2 - U1);
-    KdUdriftE = 0*(KdUdrift + dragCorr*Kd*uSlipV);
-    Kd *= (scalar(1.0) - dragCorr);
-}
-*/
 
 {
 
@@ -62,7 +51,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           // interphase force
           - CpIPh*fvc::grad(p)
           // drift velocity
-          + KdUdrift
+          // + KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha1*(rho1-rhoMix)*gN
@@ -110,7 +99,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
                   // gravity
                   + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
                   // drift velocity
-                  //+ (fvc::interpolate(KdUdriftE*rAU1)&mesh.Sf())/rAU1f
+                  + (fvc::interpolate(KdUdrift*rAU1)&mesh.Sf())/rAU1f
                 )
             );
 
@@ -140,7 +129,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
           // interphase force
           + CpIPh*fvc::grad(p)
           // drift velocity
-          - KdUdrift
+          // - KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha2*(rho2-rhoMix)*gN
@@ -187,7 +176,7 @@ if (mesh.foundObject<volScalarField>("dragCorr")) {
                  // gravity
                  + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
                  // drift velocity
-                 //- (fvc::interpolate(KdUdriftE*rAU2)&mesh.Sf())/rAU2f
+                 - (fvc::interpolate(KdUdrift*rAU2)&mesh.Sf())/rAU2f
                 )
             );
 

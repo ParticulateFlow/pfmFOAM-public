@@ -45,7 +45,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
           + phase1.turbulence().divDevRhoReff(U1)
           + Vm*(UgradU1 - (UgradU2 & U2))
           // drift velocity
-          - KdUdrift
+          // - KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha1*(rho1-rhoMix)*gN
@@ -68,7 +68,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
           + phase2.turbulence().divDevRhoReff(U2)
           + Vm*(UgradU2 - (UgradU1 & U1))
           // drift velocity
-          + KdUdrift
+          //+ KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           - alpha2*(rho2-rhoMix)*gN
