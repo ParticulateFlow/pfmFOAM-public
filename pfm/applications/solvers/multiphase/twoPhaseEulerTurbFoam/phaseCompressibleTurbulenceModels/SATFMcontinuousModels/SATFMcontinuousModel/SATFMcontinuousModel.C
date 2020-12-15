@@ -838,52 +838,44 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         );
         volScalarField alphafP2Mean(alpha1fP2-sqr(alpha1f));
         alphafP2Mean.max(ROOTVSMALL);
-        volScalarField aUU(filter_(alpha*magSqr(Uzero)) / alpha2f - magSqr(Uf));
-        aUU.max(ROOTVSMALL);
-        /*
+        // volScalarField aUU(filter_(alpha*magSqr(Uzero)) / alpha2f - magSqr(Uf));
+        // aUU.max(ROOTVSMALL);
+        
         volScalarField tmpDenX
         (
-            alphafP2Mean
-          * (
-                filter_(alpha*sqr(Uzero&eX)) / alpha2f
-              - sqr(Uf&eX)
-            )
+            filter_(alpha*sqr(Uzero&eX)) / alpha2f
+          - sqr(Uf&eX)
          );
         volScalarField tmpDenY
         (
-            alphafP2Mean
-          * (
-                filter_(alpha*sqr(Uzero&eY)) / alpha2f
-              - sqr(Uf&eY)
-            )
+            filter_(alpha*sqr(Uzero&eY)) / alpha2f
+          - sqr(Uf&eY)
          );
         volScalarField tmpDenZ
         (
-            alphafP2Mean
-          * (
-                filter_(alpha*sqr(Uzero&eZ)) / alpha2f
-              - sqr(Uf&eZ)
-            )
+            filter_(alpha*sqr(Uzero&eZ)) / alpha2f
+          - sqr(Uf&eZ)
          );
        
-        tmpDenX.max(SMALL);
-        tmpDenY.max(SMALL);
-        tmpDenZ.max(SMALL);
+        tmpDenX.max(ROOTVSMALL);
+        tmpDenY.max(ROOTVSMALL);
+        tmpDenZ.max(ROOTVSMALL);
         xiPhiG_ =  eX
                  * (
-                        filterS((xiPhiGNom&eX)*sqrt(tmpDenX))/filterS(tmpDenX)
+                        filterS((xiPhiGNom&eX)*sqrt(alphafP2Mean*tmpDenX))
+                       /filterS(alphafP2Mean*tmpDenX)
                     )
                  + eY
                  * (
-                        filterS((xiPhiGNom&eY)*sqrt(tmpDenY))/filterS(tmpDenY)
+                        filterS((xiPhiGNom&eY)*sqrt(alphafP2Mean*tmpDenY))
+                       /filterS(alphafP2Mean*tmpDenY)
                     )
                  + eZ
                  * (
-                        filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ))/filterS(tmpDenZ)
+                        filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ*alphafP2Mean))
+                       /filterS(alphafP2Mean*tmpDenZ)
                     );
-        */
         // limit xiPhiG_
-        xiPhiG_ =  2.0*filterS(xiPhiGNom*sqrt(alpha1fP2*aUU))/filterS(alpha1fP2*aUU);
         boundxiPhiG(xiPhiG_);
 
         // compute mixing length dynamically
