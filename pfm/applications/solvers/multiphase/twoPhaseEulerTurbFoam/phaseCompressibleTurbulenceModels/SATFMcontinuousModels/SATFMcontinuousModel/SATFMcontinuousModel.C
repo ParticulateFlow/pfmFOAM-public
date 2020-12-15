@@ -948,7 +948,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute production term according to Reynolds-stress model
         volTensorField R2t(alpha*R2_);
         if (!anIsoTropicNut_) {
-            R2t -= nuEff()*dev(gradU + gradU.T());
+            R2t -= nut_*dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR2((R2t&gradU) + ((gradU.T())&(R2t.T())));
@@ -969,7 +969,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
-         /*
           - fvm::laplacian
             (
                 alpha*rho*lm_
@@ -982,12 +981,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
               , k_
               , "laplacian(kappa,k)"
             )
-         */
+         /*
           - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+          */
           // interfacial work (--> energy transfer)
           + fvm::Sp(2.0*beta*xiGatS_,k_)
           // dissipation

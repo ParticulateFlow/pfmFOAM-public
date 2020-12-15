@@ -155,13 +155,6 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
     ),
 
-    gN_
-    (
-        "g",
-        dimensionSet(0,1,-2,0,0),
-        coeffDict_.lookupOrDefault<vector>("g",vector(0,0,-9.81))
-    ),
-
     maxK_
     (
         "maxK",
@@ -462,7 +455,6 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         CphiSscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
-        gN_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         ut_.readIfPresent(coeffDict());
         frictionalStressModel_->read();
@@ -1368,7 +1360,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-         /*
            - fvm::laplacian
              (
                  alpha*rho*lm_
@@ -1381,12 +1372,13 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                , k_
                , "laplacian(kappa,k)"
              )
-          */
+          /*
            - fvm::laplacian(
                              alpha*rho*sqrt(km)*lm_/(sigma_),
                              k_,
                              "laplacian(kappa,k)"
                          )
+          */
            // interfacial work (--> energy transfer)
            + fvm::Sp(2.0*beta,k_)
            // dissipation
@@ -1481,8 +1473,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
           //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
-          - fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
-          /*
+          //- fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
           - fvm::laplacian
             (
                 lm_
@@ -1494,7 +1485,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               / (sigma_)
               , alphaP2Mean_
             )
-           */
           // production/dissipation
           + fvm::SuSp(divU,alphaP2Mean_)
           + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
