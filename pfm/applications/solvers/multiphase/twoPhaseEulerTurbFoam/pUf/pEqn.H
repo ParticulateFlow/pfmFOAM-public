@@ -93,7 +93,7 @@ tmp<surfaceScalarField> Ff2;
     //Ff1 = Df1*snGradAlpha1 + gradP1 + Ff;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff1 = -Df2*snGradAlpha1 + gradP2 + fvc::flux(KdUdrift) - Ff;;
+    Ff2 = -Df2*snGradAlpha1 + gradP2 + fvc::flux(KdUdrift) - Ff;
     // Ff2 = -Df2*snGradAlpha1 + gradP2 - Ff;
     
     // Cache the net diffusivity for implicit diffusion treatment in the
