@@ -70,6 +70,16 @@ Foam::driftVelocityModels::driftVelocitySATFMreg::driftVelocitySATFMreg
             "residualAlpha",
             pair_.dispersed().residualAlpha().value()
         )
+    ),
+    blendingSlip_
+    (
+        "blendingSlip",
+        dimless,
+        dict.lookupOrDefault<scalar>
+        (
+            "blendingSlip",
+            0.5
+        )
     )
 {}
 
@@ -93,23 +103,45 @@ Foam::driftVelocityModels::driftVelocitySATFMreg::udrift() const
                                ("xiPhiG"));
     const volVectorField& kC_(mesh.lookupObject<volVectorField>
                                  ("k." + pair_.continuous().name()));
-    dimensionedVector eSum
+    dimensionedVector eX
     (
         "eX",
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
-        vector(1,1,1)
+        vector(1,0,0)
     );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
+    
+    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
 
     volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
     
-    volVectorField kSqrt =  xiPhiG_*sqrt(kC_&eSum);
-    
+    volVectorField kSqrt =  (xiPhiG_ & eX)*sqrt(mag(kC_ & eX))*eX
+                          + (xiPhiG_ & eY)*sqrt(mag(kC_ & eY))*eY
+                          + (xiPhiG_ & eZ)*sqrt(mag(kC_ & eZ))*eZ;
     volScalarField alphaP2MeanN = sqrt(2.0 * alphaP2Mean)
                                 /(alpha1*(scalar(1.0)-alpha1));
     
     return pos(pair_.dispersed() - residualAlpha_)
          * alphaP2MeanN
-         * kSqrt;
+         * (
+                blendingSlip_
+               *kSqrt
+              - (1.0 - blendingSlip_)
+               *mag(kSqrt)
+               *uSlipV
+               /(mag(uSlipV) + dimensionedScalar("uSmall",dimensionSet(0,1,-1,0,0,0,0),1.0e-7))
+           );
 
 }
 

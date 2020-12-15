@@ -68,6 +68,7 @@ class driftVelocitySATFMreg
     
     //- Residual phase fraction
     const dimensionedScalar residualAlpha_;
+    const dimensionedScalar blendingSlip_;
 
 public:
 
