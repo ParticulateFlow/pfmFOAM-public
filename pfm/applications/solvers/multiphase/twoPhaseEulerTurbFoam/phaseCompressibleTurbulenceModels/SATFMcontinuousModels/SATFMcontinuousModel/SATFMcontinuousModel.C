@@ -265,6 +265,21 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         U.mesh()
     ),
 
+    nutA_
+    (
+        IOobject
+        (
+            IOobject::groupName("nutA", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("value", dimensionSet(0, 2, -1, 0, 0), tensor(0,0,0,0,0,0,0,0,0)),
+        zeroGradientFvPatchField<tensor>::typeName
+    ),
+
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
 
@@ -462,10 +477,15 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     if (!anIsoTropicNut_) {
         return
         (
-          - fvm::laplacian(rho_*(nuEff()), U)
+          - fvm::laplacian(rho_*(nuEff() - nut_), U)
           - fvc::div
             (
-                rho_*(nuEff())*dev2(T(fvc::grad(U)))
+                rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U)))
+            )
+          - fvm::laplacian(rho_*nutA_, U)
+          - fvc::div
+            (
+                rho_*(nutA_&dev2(T(fvc::grad(U))))
             )
         );
     } else {
@@ -820,6 +840,17 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     
     // compute nut
     nut_ = alpha*sqrt(km)*lm_;
+    // anisotropic viscosity
+    forAll(cells,cellI)
+    {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                nutA_[cellI].component(j+i*3) = alpha[cellI]*lm_[cellI]*sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)));
+            }
+        }
+    }
+    nutA_.correctBoundaryConditions();
+    
     if (dynamicAdjustment_) {
         // precompute \bar phi
         volScalarField alpha2f = filter_(alpha);
@@ -948,7 +979,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         // compute production term according to Reynolds-stress model
         volTensorField R2t(alpha*R2_);
         if (!anIsoTropicNut_) {
-            R2t -= nut_*dev(gradU + gradU.T());
+            R2t -= nutA_&dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR2((R2t&gradU) + ((gradU.T())&(R2t.T())));
@@ -969,26 +1000,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
-          - fvm::laplacian
-            (
-                alpha*rho*lm_
-              * (
-                   (sqrt(k_&eX)*(eX*eX))
-                 + (sqrt(k_&eY)*(eY*eY))
-                 + (sqrt(k_&eZ)*(eZ*eZ))
-                )
-              / (sigma_)
-              , k_
-              , "laplacian(kappa,k)"
-            )
-         /*
-          - fvm::laplacian(
-                             alpha*rho*sqrt(km)*lm_/(sigma_),
-                             k_,
-                             "laplacian(kappa,k)"
-                         )
-          */
-          // interfacial work (--> energy transfer)
+          // diffusion with anisotropic diffusivity
+          - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
           + fvm::Sp(2.0*beta*xiGatS_,k_)
           // dissipation
           + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
@@ -1143,6 +1156,21 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         R2_ = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
         R2_.correctBoundaryConditions();
     }
+    // update anisotropic viscosity
+    forAll(cells,cellI)
+    {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                nutA_[cellI].component(j+i*3) =
+                Foam::min
+                (
+                    alpha[cellI]*lm_[cellI]*sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)))
+                   ,maxNut_.value()
+                );
+            }
+        }
+    }
+    nutA_.correctBoundaryConditions();
     
 
     

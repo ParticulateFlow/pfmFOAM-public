@@ -210,6 +210,9 @@ class SATFMdispersedModel
             //- Reynolds stress tensor
             volTensorField R1_;
     
+            //- anisotropic viscosity
+            volTensorField nutA_;
+    
     // Private Member Functions
 
         void correctNut()

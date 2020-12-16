@@ -165,6 +165,9 @@ class SATFMcontinuousModel
             //- Reynolds stress tensor
             volTensorField R2_;
     
+            //- anisotropic viscosity
+            volTensorField nutA_;
+    
 
     // Private Member Functions
 

@@ -412,6 +412,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         U.mesh()
     ),
 
+    nutA_
+    (
+        IOobject
+        (
+            IOobject::groupName("nutA", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("value", dimensionSet(0, 2, -1, 0, 0), tensor(0,0,0,0,0,0,0,0,0)),
+        zeroGradientFvPatchField<tensor>::typeName
+    ),
+
     filterPtr_(LESfilter::New(U.mesh(), coeffDict_)),
     filter_(filterPtr_())
 
@@ -670,10 +685,15 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)
       * (
-          - fvm::laplacian(rho_*(nuFric_ + nut_), U)
+          - fvm::laplacian(rho_*nuFric_, U)
+          - fvm::laplacian(rho_*nutA_, U)
           - fvc::div
             (
-                (rho_*(nuFric_ + nut_))*dev2(T(fvc::grad(U)))
+                rho_*nuFric_*dev2(T(fvc::grad(U)))
+            )
+          - fvc::div
+            (
+                rho_*(nutA_&dev2(T(fvc::grad(U))))
             )
           + fvc::div
             (
@@ -682,7 +702,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
               * rho_
               * R1
             )
-
          );
     } else {
         return
@@ -692,7 +711,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
           - fvm::laplacian(rho_*(nut_ + nuFric_), U)
           - fvc::div
             (
-               (rho_*nuFric_)*dev2(T(fvc::grad(U)))
+               rho_*nuFric_*dev2(T(fvc::grad(U)))
             )
           + fvc::div
             (
@@ -1094,6 +1113,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     // compute nut
     nut_ = alpha*sqrt(km)*lm_;
+    // anisotropic viscosity
+    forAll(cells,cellI)
+    {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                nutA_[cellI].component(j+i*3) = alpha[cellI]*lm_[cellI]*sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)));
+            }
+        }
+    }
+    nutA_.correctBoundaryConditions();
+    
     if (dynamicAdjustment_) {
         volScalarField alphaf(filter_(alpha));
         alphaf.max(residualAlpha_.value());
@@ -1334,11 +1364,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     
     // Compute k_
-    // ---------------------------
+    // ---------------------------------------------------
     if (!equilibriumK_) {
         volTensorField R1t(alpha*R1_);
         if (!anIsoTropicNut_) {
-            R1t -= nut_*dev(gradU + gradU.T());
+            R1t -= nutA_&dev(gradU + gradU.T());
         }
         // compute production term according to Reynolds-stress model
         volTensorField gradUR1((R1t&gradU) + ((gradU.T())&(R1t.T())));
@@ -1360,29 +1390,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::div(alphaRhoPhi, k_)
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
-           - fvm::laplacian
-             (
-                 alpha*rho*lm_
-               * (
-                     (sqrt(k_&eX)*(eX*eX))
-                   + (sqrt(k_&eY)*(eY*eY))
-                   + (sqrt(k_&eZ)*(eZ*eZ))
-                 )
-               / (sigma_)
-               , k_
-               , "laplacian(kappa,k)"
-             )
-          /*
-           - fvm::laplacian(
-                             alpha*rho*sqrt(km)*lm_/(sigma_),
-                             k_,
-                             "laplacian(kappa,k)"
-                         )
-          */
-           // interfacial work (--> energy transfer)
-           + fvm::Sp(2.0*beta,k_)
-           // dissipation
-           + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
+          // interfacial work (--> energy transfer)
+          + fvm::Sp(2.0*beta,k_)
+          // dissipation
+          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1441,79 +1453,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // update km
     km = k();
     km.max(kSmall.value());
-    // compute laplacian(k)
-    volScalarField lapK(mag(fvc::laplacian(km)));
     
     Info << "Computing nut (dispersed phase) ... " << endl;
     nut_ = alpha*sqrt(km)*lm_;
     
-    // compute fields for transport equation for phiP2
-    volScalarField xiKgradAlpha = (
-                                         ((sqrt(2.0*k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
-                                       + ((sqrt(2.0*k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
-                                       + ((sqrt(2.0*k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
-                                   );
-    
-    Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
-    
-    volScalarField alphaM(alpha/(alphaMax_));
-    alphaM.min(0.9999);
-    volScalarField g0(1.0/(1.0-sqr(alphaM)));
-    
-    volScalarField alphaL2
-    (
-        3.0*sqr(alpha)
-       /(g0*(g0 + 2.0))
-    );
-    alphaP2Mean_.max(VSMALL);
-    if (!equilibriumPhiP2_) {
-        // Construct the transport equation for alphaP2Mean
-        fvScalarMatrix phiP2Eqn
-        (
-            fvm::ddt(alphaP2Mean_)
-          + fvm::div(phi1, alphaP2Mean_)
-          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
-          //- fvm::laplacian(lm_*sqrt(km)/(sigma_),alphaP2Mean_)
-          - fvm::laplacian
-            (
-                lm_
-              * (
-                    (sqrt(k_&eX)*(eX*eX))
-                  + (sqrt(k_&eY)*(eY*eY))
-                  + (sqrt(k_&eZ)*(eZ*eZ))
-                )
-              / (sigma_)
-              , alphaP2Mean_
-            )
-          // production/dissipation
-          + fvm::SuSp(divU,alphaP2Mean_)
-          + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
-          + fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
-         ==
-            CphiS_*nut_*magSqr(gradAlpha)
-        );
-
-        phiP2Eqn.relax();
-        phiP2Eqn.solve();
-    } else {
-        volScalarField denom(divU + xiPhi2DivU_*sqrt(lapK));
-        volScalarField nom(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(lapK));
-        volScalarField sqrDenom(sqr(denom));
-        sqrDenom.max(VSMALL);
-        alphaP2Mean_ =   4.0
-                       * sqr(nom)
-                       / sqr(denom);
-    }
-    // limit alphaP2Mean
-    alphaP2Mean_ = Foam::min(
-                         alphaP2Mean_,
-                         alphaL2
-                      );
-    alphaP2Mean_.max(SMALL);
-    alphaP2Mean_.correctBoundaryConditions();
-    
+    // Reynolds stress
+    // -------------------------------------------------------------------
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
@@ -1583,8 +1528,85 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
         R1_.correctBoundaryConditions();
     }
+    // update anisotropic viscosity
+    forAll(cells,cellI)
+    {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                nutA_[cellI].component(j+i*3) =
+                alpha[cellI]*lm_[cellI]
+                *sqrt
+                 (
+                    Foam::min
+                    (
+                        sqrt(k_[cellI].component(i)*k_[cellI].component(j))
+                       ,ut_.value()
+                    )
+                 );
+            }
+        }
+    }
+    nutA_.correctBoundaryConditions();
     
-   
+    // alphaP2Mean Equation
+    // -------------------------------------------------------------------
+    // compute laplacian(k)
+    volScalarField lapK(mag(fvc::laplacian(km)));
+    // compute fields for transport equation for phiP2
+    volScalarField xiKgradAlpha = (
+                                         ((sqrt(2.0*k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
+                                       + ((sqrt(2.0*k_&eY) * (gradAlpha&eY) * (xiPhiS_&eY)))
+                                       + ((sqrt(2.0*k_&eZ) * (gradAlpha&eZ) * (xiPhiS_&eZ)))
+                                   );
+    
+    Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
+    
+    volScalarField alphaM(alpha/(alphaMax_));
+    alphaM.min(0.9999);
+    volScalarField g0(1.0/(1.0-sqr(alphaM)));
+    
+    volScalarField alphaL2
+    (
+        3.0*sqr(alpha)
+       /(g0*(g0 + 2.0))
+    );
+    alphaP2Mean_.max(VSMALL);
+    if (!equilibriumPhiP2_) {
+        // Construct the transport equation for alphaP2Mean
+        fvScalarMatrix phiP2Eqn
+        (
+            fvm::ddt(alphaP2Mean_)
+          + fvm::div(phi1, alphaP2Mean_)
+          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi))/(alpha*rho), alphaP2Mean_)
+          - fvm::laplacian(nutA_/(alpha*sigma_), alphaP2Mean_)
+          // production/dissipation
+          + fvm::SuSp(divU,alphaP2Mean_)
+          + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
+          + fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
+         ==
+            CphiS_*nut_*magSqr(gradAlpha)
+        );
+
+        phiP2Eqn.relax();
+        phiP2Eqn.solve();
+    } else {
+        volScalarField denom(divU + xiPhi2DivU_*sqrt(lapK));
+        volScalarField nom(xiKgradAlpha + xiPhiDivU_*alpha*sqrt(lapK));
+        volScalarField sqrDenom(sqr(denom));
+        sqrDenom.max(VSMALL);
+        alphaP2Mean_ =   4.0
+                       * sqr(nom)
+                       / sqr(denom);
+    }
+    // limit alphaP2Mean
+    alphaP2Mean_ = Foam::min(
+                         alphaP2Mean_,
+                         alphaL2
+                      );
+    alphaP2Mean_.max(SMALL);
+    alphaP2Mean_.correctBoundaryConditions();
     
     // Frictional pressure
     pf_ = frictionalStressModel_->frictionalPressure
