@@ -821,8 +821,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -sqrt(2.0);
-    scalar xiMax =  sqrt(2.0);
+    scalar xiMin = -1.0;
+    scalar xiMax =  1.0;
 
     xi.max
     (
@@ -860,7 +860,7 @@ void Foam::RASModels::SATFMdispersedModel::boundxiGS
 ) const
 {
     scalar xiMin = 0;
-    scalar xiMax = sqrt(2.0);
+    scalar xiMax = 1.0;
 
     xi.max
     (
