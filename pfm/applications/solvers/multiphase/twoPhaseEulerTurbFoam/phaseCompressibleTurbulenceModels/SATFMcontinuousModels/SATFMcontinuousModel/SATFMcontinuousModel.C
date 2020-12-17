@@ -845,7 +845,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     {
         for (int i=0; i<3; i++) {
             for (int j=0; j<3; j++) {
-                nutA_[cellI].component(j+i*3) = alpha[cellI]*lm_[cellI]*sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)));
+                nutA_[cellI].component(j+i*3) =
+                Foam::min
+                (
+                    alpha[cellI]*lm_[cellI]*sqrt(sqrt(k_[cellI].component(i)*k_[cellI].component(j)))
+                   ,maxNut_.value()
+                );
             }
         }
     }
