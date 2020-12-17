@@ -189,6 +189,7 @@ protected:
     void boundxiPhiG(volVectorField& xi) const;
     void boundCorrTensor(volTensorField& R) const;
     void boundGradU(volTensorField& S) const;
+    void boundStress(volTensorField& R) const;
     
 public:
 

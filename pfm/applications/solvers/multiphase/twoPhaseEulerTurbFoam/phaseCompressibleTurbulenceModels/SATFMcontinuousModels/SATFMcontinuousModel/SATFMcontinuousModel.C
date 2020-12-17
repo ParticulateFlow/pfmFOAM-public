@@ -474,6 +474,10 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     volVectorField& U
 ) const
 {
+    volTensorField R2(R2_);
+    boundStress(R2);
+    R2.correctBoundaryConditions();
+    
     if (!anIsoTropicNut_) {
         return
         (
@@ -487,6 +491,13 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
             (
                 rho_*(nutA_&dev2(T(fvc::grad(U))))
             )
+          + fvc::div
+            (
+                2.0
+              * alpha_
+              * rho_
+              * R2
+            )
         );
     } else {
         return
@@ -494,6 +505,13 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
             fvc::laplacian(rho_*nut_, U)
           - fvc::div(rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U))))
           - fvm::laplacian(rho_*nuEff(), U)
+          + fvc::div
+            (
+                2.0
+              * alpha_
+              * rho_
+              * R2
+            )
         );
     }
 }
@@ -647,6 +665,45 @@ void Foam::RASModels::SATFMcontinuousModel::boundGradU
                   sMax, sMax, sMax,
                   sMax, sMax, sMax,
                   sMax, sMax, sMax
+            )
+        )
+    );
+}
+
+void Foam::RASModels::SATFMcontinuousModel::boundStress
+(
+    volTensorField& R
+) const
+{
+    scalar RMin = -10.0*maxNut_.value();
+    scalar RMax = -RMin;
+
+    R.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                     0, RMin, RMin,
+                  RMin,    0, RMin,
+                  RMin, RMin,    0
+            )
+        )
+    );
+    
+    R.min
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R.dimensions(),
+            tensor
+            (
+                RMax, RMax, RMax,
+                RMax, RMax, RMax,
+                RMax, RMax, RMax
             )
         )
     );
