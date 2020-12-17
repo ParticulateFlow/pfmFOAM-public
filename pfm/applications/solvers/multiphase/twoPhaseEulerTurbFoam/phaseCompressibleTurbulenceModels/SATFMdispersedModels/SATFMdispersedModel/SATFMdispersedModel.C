@@ -1622,7 +1622,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          alphaP2Mean_,
                          alphaL2
                       );
-    alphaP2Mean_.max(SMALL);
+    alphaP2Mean_.max(VSMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
     // Frictional pressure

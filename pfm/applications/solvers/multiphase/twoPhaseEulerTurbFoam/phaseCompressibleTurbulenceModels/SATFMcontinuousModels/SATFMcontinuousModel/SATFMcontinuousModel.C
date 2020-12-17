@@ -868,7 +868,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - alpha1f*filter_(Uzero)
         );
         volScalarField alphafP2Mean(alpha1fP2-sqr(alpha1f));
-        alphafP2Mean.max(ROOTVSMALL);
+        alphafP2Mean.max(SMALL);
         // volScalarField aUU(filter_(alpha*magSqr(Uzero)) / alpha2f - magSqr(Uf));
         // aUU.max(ROOTVSMALL);
         
@@ -888,9 +888,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - sqr(Uf&eZ)
          );
        
-        tmpDenX.max(ROOTVSMALL);
-        tmpDenY.max(ROOTVSMALL);
-        tmpDenZ.max(ROOTVSMALL);
+        tmpDenX.max(SMALL);
+        tmpDenY.max(SMALL);
+        tmpDenZ.max(SMALL);
         xiPhiG_ =  eX
                  * (
                         filterS((xiPhiGNom&eX)*sqrt(alphafP2Mean*tmpDenX))
@@ -903,7 +903,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                     )
                  + eZ
                  * (
-                        filterS((xiPhiGNom&eZ)*sqrt(tmpDenZ*alphafP2Mean))
+                        filterS((xiPhiGNom&eZ)*sqrt(alphafP2Mean*tmpDenZ))
                        /filterS(alphafP2Mean*tmpDenZ)
                     );
         // limit xiPhiG_
