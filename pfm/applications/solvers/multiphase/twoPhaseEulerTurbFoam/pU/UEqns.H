@@ -29,7 +29,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
     surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
 
     volScalarField Vm(fluid.Vm());
-    // volScalarField CpIPh(fluid.CpIPh());
+    volScalarField CpIPh(fluid.CpIPh());
 
     {
         U1Eqn =
@@ -79,9 +79,9 @@ volVectorField KdUdrift(fluid.KdUdrift());
             
             surfaceScalarField rAU1f("rAU1f", fvc::interpolate(rAU1));
             
-            surfaceScalarField alpharAUf1
+            surfaceScalarField alphaCprAUf1
             (
-                fvc::interpolate(max(alpha1, phase1.residualAlpha())*rAU1)
+                fvc::interpolate(max(alpha1 + CpIPh, phase1.residualAlpha())*rAU1)
             );
             
             solve
@@ -92,7 +92,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 (
                     (
                       - rAU1f*(fvc::snGrad(phase1.turbulence().normalStress()))*mesh.magSf()
-                      - alpharAUf1*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho())) * mesh.magSf()
+                      - alphaCprAUf1*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho())) * mesh.magSf()
                     )/ rAU1f
                   // drag
                   + (fvc::interpolate(rAU1*Kd*U2)&mesh.Sf())/rAU1f
@@ -157,9 +157,9 @@ volVectorField KdUdrift(fluid.KdUdrift());
             
             surfaceScalarField rAU2f("rAU2f", fvc::interpolate(rAU2));
 
-            surfaceScalarField alpharAUf2
+            surfaceScalarField alphaCprAUf2
             (
-                fvc::interpolate(max(alpha2, phase2.residualAlpha())*rAU2)
+                fvc::interpolate(max(alpha2 - CpIPh, phase2.residualAlpha())*rAU2)
             );
             solve
             (
@@ -169,7 +169,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 (
                     (
                       - rAU2f*(fvc::snGrad(phase2.turbulence().normalStress()))*mesh.magSf()
-                      - alpharAUf2*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))* mesh.magSf()
+                      - alphaCprAUf2*(fvc::snGrad(p_rgh) + ghf*fvc::snGrad(fluid.rho()))* mesh.magSf()
                     ) / rAU2f
                  // drag
                  + (fvc::interpolate(rAU2*Kd*U1)&mesh.Sf())/rAU2f
