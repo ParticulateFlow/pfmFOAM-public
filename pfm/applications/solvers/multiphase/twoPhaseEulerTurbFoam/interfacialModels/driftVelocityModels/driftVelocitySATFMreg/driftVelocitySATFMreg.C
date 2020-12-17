@@ -122,7 +122,7 @@ Foam::driftVelocityModels::driftVelocitySATFMreg::udrift() const
         vector(0,0,1)
     );
     
-    volVectorField uSlipV(pair_.continuous().U().oldTime() - pair_.dispersed().U().oldTime());
+    volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
 
     volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
     
