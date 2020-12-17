@@ -29,7 +29,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
     surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
 
     volScalarField Vm(fluid.Vm());
-    volScalarField CpIPh(fluid.CpIPh());
+    // volScalarField CpIPh(fluid.CpIPh());
 
     {
         U1Eqn =
@@ -99,7 +99,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                   // gravity
                   + fvc::interpolate(alpha1*rho1*rAU1)*(g&mesh.Sf())/rAU1f
                   // drift velocity
-                  // + (fvc::interpolate(KdUdrift*rAU1)&mesh.Sf())/rAU1f
+                  + (fvc::interpolate(KdUdrift*rAU1)&mesh.Sf())/rAU1f
                 )
             );
 
@@ -127,7 +127,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
               - DDtU1
             )
           // interphase force
-          + CpIPh*fvc::grad(p)
+          // + CpIPh*fvc::grad(p)
           // drift velocity
           // - KdUdrift
           // own gravity for periodic box
@@ -176,7 +176,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
                  // gravity
                  + fvc::interpolate(alpha2*rho2*rAU2)*(g&mesh.Sf())/rAU2f
                  // drift velocity
-                 //- (fvc::interpolate(KdUdrift*rAU2)&mesh.Sf())/rAU2f
+                 - (fvc::interpolate(KdUdrift*rAU2)&mesh.Sf())/rAU2f
                 )
             );
 

@@ -1,6 +1,7 @@
 Info<< "Pressure correction" << endl;
 surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
 surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
+surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(fluid.CpIPh()));
 
 volScalarField rAU1
 (
@@ -160,12 +161,19 @@ while (pimple.correct())
         ghf*fvc::snGrad(rho)*mesh.magSf()
     );
     
+    surfaceScalarField snGradP
+    (
+        "snGradP",
+        fvc::snGrad(p)*mesh.magSf()
+    );
+    
     surfaceScalarField phig1
     (
         alpharAUf1
        *(
            ghSnGradRho
          - alphaf2*fvc::interpolate(rho1 - rho2)*(g & mesh.Sf())
+         + CpIPhf*snGradP / max(alphaf1,phase1.residualAlpha())
         )
     );
 
@@ -175,14 +183,15 @@ while (pimple.correct())
        *(
            ghSnGradRho
          - alphaf1*fvc::interpolate(rho2 - rho1)*(g & mesh.Sf())
+         - CpIPhf*snGradP/alphaf2
         )
     );
 
 
     // ddtPhiCorr filter -- only apply in pure(ish) phases
     surfaceScalarField alphaf1Bar(fvc::interpolate(fvc::average(alphaf1)));
-    surfaceScalarField phiCorrCoeff1(pos0(alphaf1Bar - phase1.residualAlpha()));
-    surfaceScalarField phiCorrCoeff2(pos0(phase1.residualAlpha() - alphaf1Bar));
+    surfaceScalarField phiCorrCoeff1(pos0(alphaf1Bar - 0.99));
+    surfaceScalarField phiCorrCoeff2(pos0(0.99 - alphaf1Bar));
 
     {
         surfaceScalarField::Boundary& phiCorrCoeff1Bf =
