@@ -1388,7 +1388,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alpha, rho, k_)
           + fvm::div(alphaRhoPhi, k_)
-          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
+          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
           // interfacial work (--> energy transfer)
