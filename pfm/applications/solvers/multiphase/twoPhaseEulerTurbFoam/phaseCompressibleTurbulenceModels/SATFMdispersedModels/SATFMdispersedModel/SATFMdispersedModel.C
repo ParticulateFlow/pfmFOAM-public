@@ -1587,7 +1587,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     
     volScalarField alphaM(alpha/(alphaMinFriction_));
-    alphaM.min(0.9999);
+    alphaM.min(0.99999999999);
     volScalarField g0(1.0/(1.0-sqr(alphaM)));
     
     volScalarField alphaL2
@@ -1630,7 +1630,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                          alphaP2Mean_,
                          alphaL2
                       );
-    alphaP2Mean_.max(ROOTVSMALL);
+    alphaP2Mean_.max(SMALL);
     alphaP2Mean_.correctBoundaryConditions();
     
     // Frictional pressure
