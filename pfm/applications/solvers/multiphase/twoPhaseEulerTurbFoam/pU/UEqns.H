@@ -51,7 +51,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
           // interphase force
           - CpIPh*fvc::grad(p)
           // drift velocity
-          + KdUdrift
+          // + KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha1*(rho1-rhoMix)*gN
@@ -129,7 +129,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
           // interphase force
           + CpIPh*fvc::grad(p)
           // drift velocity
-          - KdUdrift
+          // - KdUdrift
           // own gravity for periodic box
           // (gN = 0, if pimple switch "periodicBox" is false)
           + alpha2*(rho2-rhoMix)*gN

@@ -628,8 +628,7 @@ Foam::RASModels::SATFMdispersedModel::normalStress() const
 
     tmp<volScalarField> tNormalStress
     (
-        pos(alpha_ - alphaMinFriction_)
-       *frictionalStressModel_->frictionalPressure
+        frictionalStressModel_->frictionalPressure
         (
             phase_,
             alphaMinFriction_,
