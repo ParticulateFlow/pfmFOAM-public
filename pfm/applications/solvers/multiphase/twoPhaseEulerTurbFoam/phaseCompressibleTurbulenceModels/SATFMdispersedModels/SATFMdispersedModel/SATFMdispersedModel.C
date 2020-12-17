@@ -132,20 +132,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     (
         "CphiSscalar",
         dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("CphiS",0.3)
+        coeffDict_.lookupOrDefault<scalar>("CphiS",0.0)
     ),
+
+    CphiS2scalar_
+    (
+        "CphiSscalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("CphiS2",0.0)
+    ),
+
     CepsScalar_
     (
         "CepsScalar",
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Ceps",1.0)
-    ),
-
-    CpScalar_
-    (
-        "CpScalar",
-        dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("Cp",0.4)
     ),
 
     sigma_
@@ -368,7 +369,21 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::NO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.1)
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.0)
+    ),
+
+    CphiS2_
+    (
+        IOobject
+        (
+            IOobject::groupName("CphiS2", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.0)
     ),
 
     deltaF_
@@ -1343,6 +1358,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               + neg(alpha_- residualAlpha_);
         // compute CphiS
         CphiS_ = CphiSscalar_;
+        CphiS2_      = CphiS2scalar_;
     } else {
         volVectorField xiPhiSDir = uSlip/Foam::max(mag(uSlip),uSmall);
         xiPhiS_     = -(xiPhiSolidScalar_)*xiPhiSDir;
@@ -1354,6 +1370,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         Ceps_       = CepsScalar_;
         // compute CphiS
         CphiS_      = CphiSscalar_;
+        CphiS2_      = CphiS2scalar_;
     }
 
     // compute xiGatS
@@ -1586,7 +1603,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
          ==
-            CphiS_*nut_*magSqr(gradAlpha)
+            CphiS2_*nut_*magSqr(gradAlpha)
         );
 
         phiP2Eqn.relax();

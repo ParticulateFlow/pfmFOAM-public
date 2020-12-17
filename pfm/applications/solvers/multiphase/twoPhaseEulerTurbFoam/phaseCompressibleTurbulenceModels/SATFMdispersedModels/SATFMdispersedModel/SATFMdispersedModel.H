@@ -137,13 +137,12 @@ class SATFMdispersedModel
             dimensionedScalar CmuWScalar_;
     
             //- constant in alphaP2Mean equation
-            dimensionedScalar CphiSscalar_;    
+            dimensionedScalar CphiSscalar_;
+            dimensionedScalar CphiS2scalar_;
     
             //- "Smagorinsky constant"
             dimensionedScalar CepsScalar_;
     
-            //- "pressure dilation constant"
-            dimensionedScalar CpScalar_;
     
             //- turbulent schmidt number
             dimensionedScalar sigma_;
@@ -200,6 +199,7 @@ class SATFMdispersedModel
     
             //- constant for the computation of alphaP2Mean
             volScalarField CphiS_;
+            volScalarField CphiS2_;
     
             //- grid size
             volScalarField deltaF_;
