@@ -49,7 +49,7 @@ volVectorField KdUdrift(fluid.KdUdrift());
               - DDtU2
             )
           // interphase force
-          - CpIPh*fvc::grad(p)
+          //- CpIPh*fvc::grad(p)
           // drift velocity
           // + KdUdrift
           // own gravity for periodic box
