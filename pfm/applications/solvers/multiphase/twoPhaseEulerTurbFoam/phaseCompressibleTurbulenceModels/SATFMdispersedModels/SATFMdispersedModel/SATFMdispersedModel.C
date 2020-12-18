@@ -1554,8 +1554,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          */
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
-        R1_.correctBoundaryConditions();
     }
+    R1_.correctBoundaryConditions();
     // update anisotropic viscosity
     forAll(cells,cellI)
     {
