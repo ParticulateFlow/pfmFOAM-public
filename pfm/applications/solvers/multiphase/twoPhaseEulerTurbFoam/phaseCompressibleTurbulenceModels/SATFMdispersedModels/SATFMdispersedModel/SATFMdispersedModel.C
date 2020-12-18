@@ -1513,6 +1513,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
+        /*
+        // BC for R
         const fvPatchList& patches = mesh_.boundary();
 
         volTensorField::Boundary& RBf = R1_.boundaryFieldRef();
@@ -1549,6 +1551,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
+         */
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
         R1_.correctBoundaryConditions();

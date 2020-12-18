@@ -1177,6 +1177,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        /*
         // set wall-bc for R
         const fvPatchList& patches = mesh_.boundary();
 
@@ -1214,6 +1215,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 }
             }
         }
+        */
     } else {
         R2_ = 0*((k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ));
         R2_.correctBoundaryConditions();
