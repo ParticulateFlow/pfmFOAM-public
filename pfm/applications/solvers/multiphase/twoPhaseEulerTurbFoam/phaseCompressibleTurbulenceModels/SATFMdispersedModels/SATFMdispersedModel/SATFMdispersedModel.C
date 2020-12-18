@@ -691,10 +691,6 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
     volVectorField& U
 ) const
 {
-    volTensorField R1(R1_);
-    boundStress(R1);
-    R1.correctBoundaryConditions();
-    
     if (!anIsoTropicNut_) {
         return
         pos(alpha_ - residualAlpha_)
@@ -714,7 +710,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                 2.0
               * alpha_
               * rho_
-              * R1
+              * R1_
             )
          );
     } else {
@@ -732,7 +728,7 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
                 2.0
               * alpha_
               * rho_
-              * R1
+              * R1_
             )
          );
     }
@@ -1555,6 +1551,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
+    boundStress(R1_);
     R1_.correctBoundaryConditions();
     // update anisotropic viscosity
     forAll(cells,cellI)
