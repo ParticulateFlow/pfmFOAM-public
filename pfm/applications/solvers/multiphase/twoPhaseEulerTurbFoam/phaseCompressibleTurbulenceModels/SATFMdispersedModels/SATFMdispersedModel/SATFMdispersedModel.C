@@ -1225,6 +1225,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiPhiGG_.min(0.99);
         
         // compute correlation coefficient between gas phase and solid phase velocity
+        /*
         volVectorField xiGSNom =  (
                                         ((filter_((U&eX)*(UcZero&eX)*alpha)/alphaf)- ((Uf&eX)*filter_((UcZero&eX)*alpha)/alphaf))*eX
                                        +((filter_((U&eY)*(UcZero&eY)*alpha)/alphaf) - ((Uf&eY)*filter_((UcZero&eY)*alpha)/alphaf))*eY
@@ -1260,7 +1261,21 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 (
                     filterS(sqrt(xiGSDenZ)*mag(xiGSNom&eZ))/filterS(xiGSDenZ)
                 );
-
+        */
+        volScalarField xiGSnum
+        (
+            filter_(alpha*(UcZero&U))/alphaf
+          - (filter_(alpha*UcZero) & Uf)/alphaf
+        );
+        volScalarField xiGSden
+        (
+            (filter_(alpha2*magSqr(UcZero))/alpha2f - magSqr(Ucf))
+           *aUU
+        );
+        xiGSden.max(SMALL);
+        volScalarField xiGSs(filterS(xiGSnum*sqrt(xiGSden))/filterS(xiGSden));
+        
+        xiGS_ = xiGSs*eSum;
         // smooth and regularize xiGS_ (xiGS_ is positive)
         boundxiGS(xiGS_);
         
@@ -1611,7 +1626,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
           + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
          ==
-            CphiS2_*nut_*magSqr(gradAlpha)
+            CphiS2_*((nutA_&gradAlpha)&gradAlpha)/alpha
         );
 
         phiP2Eqn.relax();
