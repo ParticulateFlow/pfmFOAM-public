@@ -1039,17 +1039,22 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     boundGradU(gradU);
     volSymmTensorField D(dev(symm(gradU)));
     // compute S_{ij}S_{ij} (no summation over j!!)
-    volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
-                           + magSqr(gradU&eY)*(eY*eY)
-                           + magSqr(gradU&eZ)*(eZ*eZ);
-    volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
-                            + ((SijSij&eY)&eSum)*eY
-                            + ((SijSij&eZ)&eSum)*eZ;
+    volTensorField SijSij
+    (   magSqr(gradU&eX)*(eX*eX)
+      + magSqr(gradU&eY)*(eY*eY)
+      + magSqr(gradU&eZ)*(eZ*eZ)
+    );
+    volVectorField SijSijV
+    (
+        ((SijSij&eX)&eSum)*eX
+      + ((SijSij&eY)&eSum)*eY
+      + ((SijSij&eZ)&eSum)*eZ
+     );
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha_);
     
     // get turbulent kinetic energy of continuous-phase
-    const volVectorField& kC_(mesh_.lookupObject<volVectorField>
+    const volVectorField& kC(mesh_.lookupObject<volVectorField>
                                      ("k." + fluid.otherPhase(phase_).name()));
 
     // simple filter for local smoothing
@@ -1063,10 +1068,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             phase_,
             fluid.otherPhase(phase_)
-        ).Ki()
+        ).K()
     );
-    volScalarField betaA = beta/(rho);
-    beta *= alpha;
+    volScalarField betaA = beta/(alpha*rho);
     // compute total k
     volScalarField km(k());
     km.max(kSmall.value());
@@ -1411,9 +1415,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volVectorField shearProd
         (
-            (gradUR1&&(eX*eX))*(eX)
-          + (gradUR1&&(eY*eY))*(eY)
-          + (gradUR1&&(eZ*eZ))*(eZ)
+            mag(gradUR1&&(eX*eX))*(eX)
+          - mag(gradUR1&&(eY*eY))*(eY)
+          - mag(gradUR1&&(eZ*eZ))*(eZ)
         );
         
         fv::options& fvOptions(fv::options::New(mesh_));
@@ -1440,9 +1444,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // interfacial work (--> energy transfer)
           + 2.0*beta
            *(
-                (xiGS_&eX)*sqrt((kC_&eX)*(k_&eX))*eX
-              + (xiGS_&eY)*sqrt((kC_&eY)*(k_&eY))*eY
-              + (xiGS_&eZ)*sqrt((kC_&eZ)*(k_&eZ))*eZ
+                (xiGS_&eX)*sqrt((kC&eX)*(k_&eX))*eX
+              + (xiGS_&eY)*sqrt((kC&eY)*(k_&eY))*eY
+              + (xiGS_&eZ)*sqrt((kC&eZ)*(k_&eZ))*eZ
             )
           // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
           + fvOptions(alpha, rho, k_)
@@ -1470,7 +1474,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                             + 2.0 * lm_[cellI]
                             * Foam::max(
                                  lm_[cellI]*SijSijV[cellI].component(i)
-                               + xiGS_[cellI].component(i)*betaA[cellI]*Foam::sqrt(Foam::max(kC_[cellI].component(i),kSmall.value()))
+                               + xiGS_[cellI].component(i)*betaA[cellI]*Foam::sqrt(Foam::max(kC[cellI].component(i),kSmall.value()))
                                 ,0.0
                               )
                            )

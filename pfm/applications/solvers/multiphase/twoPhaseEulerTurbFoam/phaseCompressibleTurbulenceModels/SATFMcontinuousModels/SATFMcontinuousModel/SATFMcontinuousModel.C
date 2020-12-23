@@ -772,20 +772,24 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     volSymmTensorField D(dev(symm(gradU)));
 
     // compute S_{ij}S_{ij} (no summation over j!!)
-    volTensorField SijSij =  magSqr(gradU&eX)*(eX*eX)
-                           + magSqr(gradU&eY)*(eY*eY)
-                           + magSqr(gradU&eZ)*(eZ*eZ);
-    volVectorField SijSijV =  ((SijSij&eX)&eSum)*eX
-                            + ((SijSij&eY)&eSum)*eY
-                            + ((SijSij&eZ)&eSum)*eZ;
-
+    volTensorField SijSij
+    (   magSqr(gradU&eX)*(eX*eX)
+      + magSqr(gradU&eY)*(eY*eY)
+      + magSqr(gradU&eZ)*(eZ*eZ)
+    );
+    volVectorField SijSijV
+    (
+        ((SijSij&eX)&eSum)*eX
+      + ((SijSij&eY)&eSum)*eY
+      + ((SijSij&eZ)&eSum)*eZ
+     );
     // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
     
     // get turbulent kinetic energy of continuous-phase
-    const volVectorField& kD_(mesh_.lookupObject<volVectorField>
+    const volVectorField& kDt(mesh_.lookupObject<volVectorField>
                                      ("k." + fluid.otherPhase(phase_).name()));
-    
+    const volVectorField& kD(kDt.oldTime());
     // get correlation coefficient between continuous and solid phase velocities
     const volVectorField& xiGS_(mesh_.lookupObject<volVectorField>
                              ("xiGS"));
@@ -820,9 +824,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         (
             fluid.otherPhase(phase_),
             phase_
-        ).Ki()
+        ).K()
     );
-    beta *= alpha1;
     beta.max(SMALL);
     
     volScalarField betaA = beta/(rho*alpha);
@@ -1044,9 +1047,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         volVectorField shearProd
         (
-            (gradUR2&&(eX*eX))*(eX)
-          + (gradUR2&&(eY*eY))*(eY)
-          + (gradUR2&&(eZ*eZ))*(eZ)
+          - mag(gradUR2&&(eX*eX))*(eX)
+          - mag(gradUR2&&(eY*eY))*(eY)
+          - mag(gradUR2&&(eZ*eZ))*(eZ)
         );
         
         fv::options& fvOptions(fv::options::New(mesh_));
@@ -1072,9 +1075,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          // interfacial work (--> energy transfer)
          + 2.0*beta
           *(
-                (xiGS_&eX)*sqrt((kD_&eX)*(k_&eX))*eX
-              + (xiGS_&eY)*sqrt((kD_&eY)*(k_&eY))*eY
-              + (xiGS_&eZ)*sqrt((kD_&eZ)*(k_&eZ))*eZ
+                (xiGS_&eX)*sqrt((kD&eX)*(k_&eX))*eX
+              + (xiGS_&eY)*sqrt((kD&eY)*(k_&eY))*eY
+              + (xiGS_&eZ)*sqrt((kD&eZ)*(k_&eZ))*eZ
             )
           // drag production and pressure dilation
           - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
@@ -1104,7 +1107,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                             + 2.0 * lm_[cellI]
                             * Foam::max(
                                  lm_[cellI]*SijSijV[cellI].component(i)
-                               + betaA[cellI]*xiGS_[cellI].component(i)*Foam::sqrt(Foam::max(kD_[cellI].component(i),kSmall.value()))
+                               + betaA[cellI]*xiGS_[cellI].component(i)*Foam::sqrt(Foam::max(kD[cellI].component(i),kSmall.value()))
                                - KdUdrift[cellI].component(i)*(uSlip[cellI].component(i) + pDil[cellI].component(i))
                                         /(2.0*alpha[cellI]*rho[cellI]*Foam::sqrt(Foam::max(k_[cellI].component(i),kSmall.value())))
                                 , 0.
