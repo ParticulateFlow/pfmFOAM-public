@@ -1642,7 +1642,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         sqrDenom.max(VSMALL);
         alphaP2Mean_ =   4.0
                        * sqr(nom)
-                       / sqr(denom);
+                       / sqrDenom;
     }
     // limit alphaP2Mean
     alphaP2Mean_ = Foam::min(
