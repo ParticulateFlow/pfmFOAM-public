@@ -932,8 +932,8 @@ void Foam::RASModels::SATFMdispersedModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e3;
-    scalar sMax =  1.0e3;
+    scalar sMin = -1.0e4;
+    scalar sMax =  1.0e4;
 
     R.max
     (
