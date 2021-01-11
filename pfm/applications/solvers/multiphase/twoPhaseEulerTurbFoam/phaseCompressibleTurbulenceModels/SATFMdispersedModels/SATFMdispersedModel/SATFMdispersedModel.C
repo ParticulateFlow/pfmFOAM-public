@@ -1508,7 +1508,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volTensorField xiUUnom = (filter_(alpha*(U*U))/alphaf - Uf*Uf);
         volScalarField xiUUden = max(tr(xiUUnom),kSmall);
         
-        xiUU_ = fvc::average(xiUUnom*xiUUden)/fvc::average(sqr(xiUUden));
+        xiUU_ = filterS(xiUUnom*xiUUden)/filterS(sqr(xiUUden));
         
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
