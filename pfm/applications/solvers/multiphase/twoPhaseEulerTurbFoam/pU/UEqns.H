@@ -21,7 +21,10 @@ if (periodicBox) {
 }
 
 Kd = fluid.Kd();
-volVectorField KdUdrift(fluid.KdUdrift());
+volVectorField KdUdriftT(fluid.KdUdrift());
+volScalarField uSlip(mag(U2-U1));
+uSlip.max(SMALL);
+volVectorField KdUdrift((KdUdriftT&(U2-U1))*(U2-U1)/sqr(uSlip));
 
 {
 
