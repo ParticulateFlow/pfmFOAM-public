@@ -137,8 +137,8 @@ Foam::driftVelocityModels::driftVelocitySATFMreg::udrift() const
          * (
                 blendingSlip_
                *kSqrt
-              + (scalar(1.0) - blendingSlip_)
-               *sign(kSqrt&uSlipV)
+              - (scalar(1.0) - blendingSlip_)
+              // *(-sign(kSqrt&uSlipV))
                *mag(kSqrt)
                *uSlipV
                /(mag(uSlipV) + dimensionedScalar("uSmall",dimensionSet(0,1,-1,0,0,0,0),1.0e-7))
