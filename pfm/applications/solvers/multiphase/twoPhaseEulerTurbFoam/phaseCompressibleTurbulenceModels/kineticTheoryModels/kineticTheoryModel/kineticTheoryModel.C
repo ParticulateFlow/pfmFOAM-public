@@ -559,9 +559,6 @@ void Foam::RASModels::kineticTheoryModel::correct()
         volScalarField solveTheta(alpha - residualAlpha_);
         fvScalarMatrix ThetaEqn
         (
-         pos0(solveTheta)
-        *(
-         
             1.5
            *(
                 fvm::ddt(alpha, rho, Theta_)
@@ -575,14 +572,10 @@ void Foam::RASModels::kineticTheoryModel::correct()
                 lambda_*sqr(trD)
               + 2.0*nut_*(dev(D)&&gradU)
             )
-          - fvm::Sp(-gammaCoeff, Theta_)
+          + fvm::Sp(gammaCoeff, Theta_)
           + fvm::SuSp(J1 - J2, Theta_)
-          )
-         + neg(solveTheta)
-         *(
-            fvm::Sp(dimensionedScalar("units",dimensionSet(1,-3,-1,0,0),scalar(1.0)), Theta_)
-          )
-         - fvOptions(alpha, rho, Theta_)
+         ==
+            fvOptions(alpha, rho, Theta_)
         );
 
         ThetaEqn.relax();
