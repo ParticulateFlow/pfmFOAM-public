@@ -99,7 +99,7 @@ particleThetaSoleimaniSchneiderbauerFvPatchScalarField
     muF_(readScalar(dict.lookup("muF"))),
     sigma_(readScalar(dict.lookup("sigma"))),
     residualAlpha_(dict.lookupOrDefault<scalar>("residualAlpha",1e-8)),
-    residualKappa_(dict.lookupOrDefault<scalar>("residualKappa",1e-15)),
+    residualKappa_(dict.lookupOrDefault<scalar>("residualKappa",1e-12)),
     residualTheta_(dict.lookupOrDefault<scalar>("residualTheta",1e-8)),
     residualU_(dict.lookupOrDefault<scalar>("residualU",1e-8)),
     mu0_(7.0/2.0*(1.0 + restitutionCoefficient_)/(1.0 + tangentialRestitutionCoeff_)*muF_),
@@ -255,6 +255,8 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
        .subDict("kineticTheoryCoeffs")
        .lookup("alphaMax")
     );
+    
+    Info << "Update BC Theta" << nl;
 
     // Impact angle
     const scalarField Imp
