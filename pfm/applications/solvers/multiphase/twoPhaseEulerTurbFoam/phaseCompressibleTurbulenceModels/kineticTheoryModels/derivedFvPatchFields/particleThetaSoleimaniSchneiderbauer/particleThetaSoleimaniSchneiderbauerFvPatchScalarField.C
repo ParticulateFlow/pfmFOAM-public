@@ -208,10 +208,10 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     const scalarField magUc(mag(Uc));
 
     // Wall normal cell velocity
-    const scalarField Un(this->patch().nf() & Uc);
+    const scalarField Un(-(this->patch().nf() & Uc));
 
     // Tangential cell velocity
-    const scalarField Utc(mag(Uc - this->patch().nf()*Un));
+    const scalarField Utc(mag(Uc + this->patch().nf()*Un));
 
     const scalarField rhop
     (
@@ -263,8 +263,8 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
         (
             atan
             (
-                ((sqrt(1.5*Thetap))/2 + mag(Un))
-                /max(Utc, residualU_)
+                max(sqrt(1.5*Thetap)/2 + Un, scalar(0.0))
+               /max(Utc, residualU_)
             )
         )
     );
@@ -272,7 +272,7 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     // Virtual wall angle
     const scalarField gamma
     (
-        0*degToRad
+        degToRad
         (
             2*0.398942*sigma_
            *(
@@ -286,13 +286,13 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     const scalarField u
     (
         Utc*cos(gamma)
-      - mag(Un)*sin(gamma)
+      - Un*sin(gamma)
     );
 
     const scalarField v
     (
        - Utc*sin(gamma)
-       - mag(Un)*cos(gamma)
+       + Un*cos(gamma)
     );
 
     const scalarField us((u + mu0_*v)/(sqrt(2.0*Thetap)*mu0_));
@@ -351,7 +351,7 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
         )
       - sqrt(2.0*constant::mathematical::pi)*muF_*u*erf(Ul)
     );
-
+/*
     const scalarField D01
     (
       - alphap*rhop*gs0p*eta_*sqrt(Thetap)
@@ -360,7 +360,7 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
             exp(-sqr(Ul))*(muF_*A)
         )
     );
-
+*/
     const scalarField D0
     (
       - alphap*rhop*gs0p*eta_*sqrt(Thetap)
@@ -373,10 +373,10 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
 
     const scalarField N0(eta_*rhop*alphap*gs0p*Thetap);
     const scalarField D(D0/N0*N);
+    
+    this->gradient() = -((tauw*(u) - N*(v)) + D)/(max(kappap, residualKappa_));
 
-    this->gradient() = -(-(tauw*(u) - N*(v)) + D)/(max(kappap, residualKappa_));
-
-    Info<< "  Thetap: " << min(Thetap) << " - " << max(Thetap) << endl;
+    Info<< "  theta-grad: " << min(this->gradient()) << " - " << max(this->gradient()) << endl;
 
     fixedGradientFvPatchScalarField::updateCoeffs();
 }

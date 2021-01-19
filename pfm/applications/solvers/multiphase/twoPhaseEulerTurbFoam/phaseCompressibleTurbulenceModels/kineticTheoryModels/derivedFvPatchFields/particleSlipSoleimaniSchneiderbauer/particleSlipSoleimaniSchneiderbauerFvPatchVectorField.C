@@ -136,7 +136,6 @@ particleSlipSoleimaniSchneiderbauerFvPatchVectorField
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 // Update the coefficients associated with the patch field
 void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
 {
@@ -179,10 +178,10 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     const scalarField magUc(mag(Uc));
 
     // Wall normal cell velocity
-    const scalarField Un(this->patch().nf() & Uc);
+    const scalarField Un(-(this->patch().nf() & Uc));
 
     // Tangential cell velocity
-    const scalarField Utc(mag(Uc - this->patch().nf()*Un));
+    const scalarField Utc(mag(Uc + this->patch().nf()*Un));
 
     
     const scalarField rhop
@@ -207,7 +206,16 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
             IOobject::groupName("nut", granular.name())
         )
     );
-    const scalarField muEffp = nu*rhop;
+    
+    const scalarField nuF
+    (
+        patch().lookupPatchField<volScalarField, scalar>
+        (
+            IOobject::groupName("nut", granular.name())
+        )
+    );
+    const scalarField muP = nu*rhop;
+    const scalarField muFP = nuF*rhop;
 
     word ThetaName(IOobject::groupName("Theta", granular.name()));
 
@@ -250,8 +258,8 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
         (
             atan
             (
-                ((sqrt(1.5*Thetap))/2 + mag(Un))
-                /max(Utc, residualU_)
+                max(sqrt(1.5*Thetap)/2 + Un, scalar(0.0))
+               /max(Utc, residualU_)
             )
         )
     );
@@ -259,7 +267,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     // Virtual wall angle
     const scalarField gamma
     (
-        0*degToRad
+        degToRad
         (
             2*0.398942*sigma_
            *(
@@ -273,13 +281,13 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     const scalarField u
     (
         Utc*cos(gamma)
-      - mag(Un)*sin(gamma)
+      - Un*sin(gamma)
     );
 
     const scalarField v
     (
        - Utc*sin(gamma)
-       - mag(Un)*cos(gamma)
+       + Un*cos(gamma)
     ); 
 
     const scalarField us
@@ -345,8 +353,8 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
         (
             min
             (
-                -(tauw-pfW*muF_)/max(Utc*(muEffp)*patch().deltaCoeffs(),
-                                    scalar(1e-10)),
+                -(tauw)/max(Utc*(muP)*patch().deltaCoeffs(),scalar(1e-10))
+                -(pfW)/max(Utc*(muFP)*patch().deltaCoeffs(),scalar(1e-10)),
                 scalar(1)
             ),
             scalar(0)
