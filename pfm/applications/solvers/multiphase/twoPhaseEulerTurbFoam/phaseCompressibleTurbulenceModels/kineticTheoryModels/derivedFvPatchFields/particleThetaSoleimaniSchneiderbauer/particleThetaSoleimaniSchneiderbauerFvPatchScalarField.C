@@ -272,7 +272,7 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     // Virtual wall angle
     const scalarField gamma
     (
-        degToRad
+        0*degToRad
         (
             2*0.398942*sigma_
            *(
