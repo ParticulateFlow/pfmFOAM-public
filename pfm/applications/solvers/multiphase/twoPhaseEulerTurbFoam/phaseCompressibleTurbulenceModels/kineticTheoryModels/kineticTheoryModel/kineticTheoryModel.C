@@ -514,6 +514,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
         )
     );
     
+    Info << "Kinetic Theory:" << endl;
+    
     if (!equilibrium_)
     {
         // Particle viscosity (Table 3.2, p.47)
@@ -633,8 +635,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
     Theta_.max(ThetaSmall.value());
     Theta_.min(100);
-    Info << "Kinetic Theory:" << nl
-         << "    max(Theta) = " << max(Theta_).value() << endl;
+    
+    Info << "    max(Theta) = " << max(Theta_).value() << endl;
     {
         // particle viscosity (Table 3.2, p.47)
         nut_ = viscosityModel_->nu(alpha, Theta_, gs0_, rho, da, e_);
