@@ -631,10 +631,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
     }
 
-    Theta_.max(SMALL);
+    Theta_.max(ThetaSmall.value());
     Theta_.min(100);
     Info << "Kinetic Theory:" << nl
-         << "Theta:" << nl
          << "    max(Theta) = " << max(Theta_).value() << endl;
     {
         // particle viscosity (Table 3.2, p.47)
