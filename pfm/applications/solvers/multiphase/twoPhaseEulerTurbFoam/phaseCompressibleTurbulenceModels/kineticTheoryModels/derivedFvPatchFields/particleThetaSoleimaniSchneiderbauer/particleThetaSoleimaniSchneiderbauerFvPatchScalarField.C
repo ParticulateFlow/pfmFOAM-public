@@ -255,8 +255,6 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
        .subDict("kineticTheoryCoeffs")
        .lookup("alphaMax")
     );
-    
-    Info << "Update BC Theta" << nl;
 
     // Impact angle
     const scalarField Imp

@@ -633,7 +633,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
     Theta_.max(SMALL);
     Theta_.min(100);
-
+    Info << "Kinetic Theory:" << nl
+         << "Theta:" << nl
+         << "    max(Theta) = " << max(Theta_).value() << endl;
     {
         // particle viscosity (Table 3.2, p.47)
         nut_ = viscosityModel_->nu(alpha, Theta_, gs0_, rho, da, e_);
@@ -668,12 +670,11 @@ void Foam::RASModels::kineticTheoryModel::correct()
         nut_.min(maxNut_);
         nuFric_.min(maxNut_);
         
-        Info<< "Kinetic Theory:" << nl
-            << "    max(nut) = " << max(nut_).value() << nl
-            << "    max(nutFric) = " << max(nuFric_).value() << endl;
         
-        Info<< "Theta:" << nl
-            << "    max(Theta) = " << max(Theta_).value() << endl;
+        Info << "    max(nut) = " << max(nut_).value() << nl
+             << "    max(nutFric) = " << max(nuFric_).value() << endl;
+        
+
     }
 
     if (debug)
