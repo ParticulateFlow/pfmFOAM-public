@@ -276,7 +276,7 @@ Foam::RASModels::kineticTheoryModel::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-          - (nut_)*dev(twoSymm(fvc::grad(U_)))
+          - (nut_ + nuFric_)*dev(twoSymm(fvc::grad(U_)))
           - (lambda_*fvc::div(phi_))*symmTensor::I
         )
     );
@@ -287,8 +287,8 @@ void Foam::RASModels::kineticTheoryModel::boundGradU
     volTensorField& R
 ) const
 {
-    scalar sMin = -1.0e5;
-    scalar sMax =  1.0e5;
+    scalar sMin = -1.0e3;
+    scalar sMax =  1.0e3;
 
     R.max
     (
@@ -430,7 +430,7 @@ Foam::RASModels::kineticTheoryModel::devRhoReff() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-          - (rho_*nut_)
+          - (rho_*(nut_ + nuFric_))
            *dev(twoSymm(fvc::grad(U_)))
           - ((rho_*lambda_)*fvc::div(phi_))*symmTensor::I
         )
@@ -446,10 +446,10 @@ Foam::RASModels::kineticTheoryModel::divDevRhoReff
 {
     return
     (
-      - fvm::laplacian(rho_*nut_, U)
+      - fvm::laplacian(rho_*(nut_ + nuFric_), U)
       - fvc::div
         (
-            (rho_*nut_)*dev2(T(fvc::grad(U)))
+            (rho_*(nut_ + nuFric_))*dev2(T(fvc::grad(U)))
           + ((rho_*lambda_)*fvc::div(phi_))
            *dimensioned<symmTensor>("I", dimless, symmTensor::I)
         )
@@ -666,8 +666,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
         
         // Limit viscosity and add frictional viscosity
         nut_.min(maxNut_);
-        nuFric_ = min(nuFric_, maxNut_ - nut_);
-        nut_ += nuFric_;
+        nuFric_.min(maxNut_);
         
         Info<< "Kinetic Theory:" << nl
             << "    max(nut) = " << max(nut_).value() << nl
