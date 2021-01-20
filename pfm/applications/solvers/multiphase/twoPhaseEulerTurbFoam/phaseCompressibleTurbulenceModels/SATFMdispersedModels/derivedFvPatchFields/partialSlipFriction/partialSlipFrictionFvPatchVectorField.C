@@ -241,8 +241,8 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
 
     \*=======================================================================*/    
 
-    this->valueFraction() = c/(c + patch().deltaCoeffs());
-    /*    max
+    this->valueFraction() =
+        max
         (
             min
             (
@@ -253,9 +253,10 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
             ),
             scalar(0)
         );
-     */
     Info<< "  tauW: "  << min(tauw) << " - " << max(tauw) << endl;
-    Info<< "  pfW: "   << min(pfW) << " - " << max(pfW) << endl;
+    Info<< "  c: "     << min(c)    << " - " << max(c) << endl;
+    Info<< "  nut: "   << min(nu)   << " - " << max(nu) << endl;
+    Info<< "  pfW: "   << min(pfW)  << " - " << max(pfW) << endl;
     Info<< "  valueFraction(): " << min(this->valueFraction()) 
         << " - " << max(this->valueFraction()) << endl;
         

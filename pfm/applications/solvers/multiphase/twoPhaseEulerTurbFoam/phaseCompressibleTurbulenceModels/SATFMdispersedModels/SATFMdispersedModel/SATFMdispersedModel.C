@@ -1675,7 +1675,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     );
 
     // Limit viscosity and add frictional viscosity
-    nut_.max(VSMALL);
     nut_.min(maxNut_);
     nuFric_.min(maxNut_);
     
