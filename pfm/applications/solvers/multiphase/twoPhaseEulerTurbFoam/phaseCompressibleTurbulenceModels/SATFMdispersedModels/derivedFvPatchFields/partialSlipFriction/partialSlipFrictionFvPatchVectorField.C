@@ -206,9 +206,9 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
         alphap
        *sqrt(2.0*kpn)
        *muW_
-       /max(6.0*nu, small)
+       /max(6.0*nu, VSMALL)
     );
-    const scalarField tauw = -c*nu;
+    const scalarField tauw = -c*nu*rhop;
 
     /*=======================================================================*\
 
@@ -241,8 +241,8 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
 
     \*=======================================================================*/    
 
-    this->valueFraction() = 
-        max
+    this->valueFraction() = c/(c + patch().deltaCoeffs());
+    /*    max
         (
             min
             (
@@ -253,7 +253,7 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
             ),
             scalar(0)
         );
-
+     */
     Info<< "  tauW: "  << min(tauw) << " - " << max(tauw) << endl;
     Info<< "  pfW: "   << min(pfW) << " - " << max(pfW) << endl;
     Info<< "  valueFraction(): " << min(this->valueFraction()) 
