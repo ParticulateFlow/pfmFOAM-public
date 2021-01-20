@@ -192,9 +192,17 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
             IOobject::groupName("nut", granular.name())
         )
     );
-    const scalarField muEffp = nu*rhop;
+    const scalarField nuF
+    (
+        patch().lookupPatchField<volScalarField, scalar>
+        (
+            IOobject::groupName("nuFric", granular.name())
+        )
+    );
+    const scalarField muP = nu*rhop;
+    const scalarField muFP = nuF*rhop;
     
-    const scalarField tauw = (pfW+2.0*alphap*rhop*kpn)*muW_;
+    const scalarField tauw = (2.0*alphap*rhop*kpn)*muW_;
     //const scalarField tauw = pfW*muW_;
 
     /*=======================================================================*\
@@ -233,8 +241,10 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
         (
             min
             (
-                tauw
-               /max(Utc*(muEffp)*patch().deltaCoeffs(),scalar(1e-10)),
+              - tauw
+               /max(Utc*(muP)*patch().deltaCoeffs(),scalar(1e-10))
+              - pfW*muW_
+               /max(Utc*(muFP)*patch().deltaCoeffs(),scalar(1e-10)),
                 scalar(1)
             ),
             scalar(0)
