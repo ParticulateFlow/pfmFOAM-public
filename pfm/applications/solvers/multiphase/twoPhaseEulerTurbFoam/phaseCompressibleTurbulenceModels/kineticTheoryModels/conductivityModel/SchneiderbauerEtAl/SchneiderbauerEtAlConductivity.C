@@ -109,6 +109,7 @@ Foam::kineticTheoryModels::conductivityModels::SchneiderbauerEtAl::kappa
             alphaRhoTheta*g0
          + 1.2*Kd*kappa
           /((alpha1 + scalar(1.0e-7))*rho1)
+         + dimensionedScalar("small",dimensionSet(1,-1,-2,0,0),1e-7)
         )
     );
 
