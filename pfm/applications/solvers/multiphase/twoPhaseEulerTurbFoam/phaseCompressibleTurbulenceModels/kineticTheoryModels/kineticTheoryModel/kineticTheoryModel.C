@@ -461,7 +461,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
 {
     // Local references
     const twoPhaseSystem& fluid = refCast<const twoPhaseSystem>(phase_.fluid());
-    volScalarField alpha(max(alpha_, scalar(0)));
+    volScalarField alpha(max(alpha_, residualAlpha_));
     const volScalarField& rho = phase_.rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const volVectorField& U = U_;
