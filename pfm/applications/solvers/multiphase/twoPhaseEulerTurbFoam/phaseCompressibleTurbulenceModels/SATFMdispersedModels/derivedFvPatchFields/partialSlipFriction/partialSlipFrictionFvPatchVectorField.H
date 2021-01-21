@@ -46,7 +46,8 @@ Description
     wall
     {
         type            partialSlipFriction;
-        muw             0.2;
+        muW             0.2;
+        value           $internalField;
     }
 
 SourceFiles

@@ -1487,7 +1487,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // limit k_
     boundNormalStress(k_);
     // correct BCs
-    k_.correctBoundaryConditions();
+    //k_.correctBoundaryConditions();
 
     //- compute variance of solids volume fraction
     // update km
