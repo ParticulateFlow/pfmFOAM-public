@@ -1496,6 +1496,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing nut (dispersed phase) ... " << endl;
     nut_ = alpha*sqrt(km)*lm_;
+    nut_.correctBoundaryConditions();
     
     // Reynolds stress
     // -------------------------------------------------------------------
