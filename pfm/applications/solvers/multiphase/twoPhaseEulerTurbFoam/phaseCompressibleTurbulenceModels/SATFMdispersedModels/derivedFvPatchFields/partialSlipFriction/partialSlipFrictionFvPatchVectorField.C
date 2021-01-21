@@ -206,7 +206,7 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
         alphap
        *sqrt(2.0*kpn)
        *muW_
-       /max(6.0*nu, VSMALL)
+       /max(6.0*nu, SMALL)
     );
     const scalarField tauw = -c*nu*rhop;
 
