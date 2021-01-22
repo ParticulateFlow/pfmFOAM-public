@@ -75,8 +75,11 @@ class particleKFvPatchVectorField
 
         //- Wall friction coefficient for non-sliding particles
 	    scalar muW_;
+    
+        //- dissipation coefficient
+        scalar CepsW_;
 
-        //- Standard deviation (roughness)
+        //- turbulent schmidt number
         scalar sigma_;
 
         //- Residual volume fraction

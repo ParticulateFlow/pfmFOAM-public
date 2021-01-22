@@ -50,6 +50,7 @@ particleKFvPatchVectorField
 :
     fixedGradientFvPatchVectorField(p, iF),
     muW_(0),
+    CepsW_(0),
     sigma_(1),
     residualAlpha_(1e-7)
 {}
@@ -66,6 +67,7 @@ particleKFvPatchVectorField
 :
     fixedGradientFvPatchVectorField(ptsssf, p, iF, mapper),
     muW_(ptsssf.muW_),
+    CepsW_(ptsssf.CepsW_),
     sigma_(ptsssf.sigma_),
     residualAlpha_(ptsssf.residualAlpha_)
 {}
@@ -81,6 +83,7 @@ particleKFvPatchVectorField
 :
     fixedGradientFvPatchVectorField(p, iF),
     muW_(readScalar(dict.lookup("muW"))),
+    CepsW_(readScalar(dict.lookup("CepsW"))),
     sigma_(dict.lookupOrDefault<scalar>("sigma",1)),
     residualAlpha_(dict.lookupOrDefault<scalar>("residualAlpha",1e-7))
 {
@@ -107,6 +110,7 @@ particleKFvPatchVectorField
 :
     fixedGradientFvPatchVectorField(ptsssf, iF),
     muW_(ptsssf.muW_),
+    CepsW_(ptsssf.CepsW_),
     sigma_(ptsssf.sigma_),
     residualAlpha_(ptsssf.residualAlpha_)
 {}
@@ -159,21 +163,6 @@ void particleKFvPatchVectorField::updateCoeffs()
         fluid.phase1().name() == internalField().group()
       ? fluid.phase1()
       : fluid.phase2()
-    );
-
-    // lookup for CmuW
-    dimensionedScalar CmuW
-    (
-        "CmuW",
-        dimless,
-        db()
-       .lookupObject<IOdictionary>
-        (
-            IOobject::groupName("turbulenceProperties", granular.name())
-        )
-       .subDict("RAS")
-       .subDict("SATFMdispersedCoeffs")
-       .lookup("CmuW")
     );
     
     // lookup all the fields on this patch
@@ -229,29 +218,48 @@ void particleKFvPatchVectorField::updateCoeffs()
         rhop*nu/sigma_
     );
     
+    // lookup the packed volume fraction
+    dimensionedScalar alphaMax
+    (
+        "alphaMax",
+        dimless,
+        db()
+       .lookupObject<IOdictionary>
+        (
+            IOobject::groupName("turbulenceProperties", granular.name())
+        )
+       .subDict("RAS")
+       .subDict("kineticTheoryCoeffs")
+       .lookup("alphaMax")
+    );
+    
     const vectorField tauwUD
     (
-        alphap
+        constant::mathematical::pi
+       *sqrt(2.0)
+       *alphap
        *rhop
        *(
-            sqrt(1.0/18.0)
-           *muW_
+            muW_
            *(
                 (sqr(Utc&eX)*sqrt(mag(kpn&eX)))*eX
               + (sqr(Utc&eY)*sqrt(mag(kpn&eY)))*eY
               + (sqr(Utc&eZ)*sqrt(mag(kpn&eZ)))*eZ
             )
-          - pow(CmuW.value(),0.75)
+           /6.0
+          - CepsW_
            *(
                 (mag(kpn&eX)*sqrt(mag(kpn&eX)))*eX
               + (mag(kpn&eY)*sqrt(mag(kpn&eY)))*eY
               + (mag(kpn&eZ)*sqrt(mag(kpn&eZ)))*eZ
             )
+           /4.0
          )
+        /alphaMax.value()
     );
     
     this->gradient() = tauwUD/(max(kappap, SMALL));
-
+    /*
     Info << "particleKBC: "
          << "    k-grad: "
          << min(this->gradient())
@@ -264,6 +272,7 @@ void particleKFvPatchVectorField::updateCoeffs()
          << " - "
          << max(kpn)
          << endl;
+    */
     fixedGradientFvPatchVectorField::updateCoeffs();
 }
 
@@ -275,6 +284,8 @@ write(Ostream& os) const
     fvPatchField<vector>::write(os);
     os.writeKeyword("muW")
         << muW_ << token::END_STATEMENT << nl;
+    os.writeKeyword("CepsW")
+        << CepsW_ << token::END_STATEMENT << nl;
     os.writeKeyword("sigma")
         << sigma_ << token::END_STATEMENT << nl;
     writeEntry("value",os);
