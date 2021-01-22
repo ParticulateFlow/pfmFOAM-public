@@ -183,10 +183,10 @@ void particleKFvPatchVectorField::updateCoeffs()
     const vectorField Uc(Up.patchInternalField());
 
     // Wall normal cell velocity
-    const scalarField Un(this->patch().nf() & Uc);
+    const vectorField Un(-(this->patch().nf() & Uc)*this->patch().nf());
 
     // Tangential cell velocity
-    const vectorField Utc(Uc - this->patch().nf()*Un);
+    const vectorField Utc(Uc + Un);
 
     const vectorField kp
     (
@@ -195,7 +195,7 @@ void particleKFvPatchVectorField::updateCoeffs()
             IOobject::groupName("k", granular.name())
         )
     );
-    const vectorField kpn(kp - (this->patch().nf() & kp)*(this->patch().nf()));
+    const scalarField kpn(mag(this->patch().nf() & kp));
     
     const scalarField rhop
     (
@@ -236,22 +236,23 @@ void particleKFvPatchVectorField::updateCoeffs()
     const vectorField tauwUD
     (
         constant::mathematical::pi
-       *sqrt(2.0)
        *alphap
        *rhop
+       *sqrt(2.0*kpn)
        *(
             muW_
            *(
-                (sqr(Utc&eX)*sqrt(mag(kpn&eX)))*eX
-              + (sqr(Utc&eY)*sqrt(mag(kpn&eY)))*eY
-              + (sqr(Utc&eZ)*sqrt(mag(kpn&eZ)))*eZ
+                (sqr(Utc&eX))*eX
+              + (sqr(Utc&eY))*eY
+              + (sqr(Utc&eZ))*eZ
             )
            /6.0
           - CepsW_
+           *kpn
            *(
-                (mag(kpn&eX)*sqrt(mag(kpn&eX)))*eX
-              + (mag(kpn&eY)*sqrt(mag(kpn&eY)))*eY
-              + (mag(kpn&eZ)*sqrt(mag(kpn&eZ)))*eZ
+                mag(this->patch().nf()&eX)*eX
+              + mag(this->patch().nf()&eY)*eY
+              + mag(this->patch().nf()&eZ)*eZ
             )
            /4.0
          )
