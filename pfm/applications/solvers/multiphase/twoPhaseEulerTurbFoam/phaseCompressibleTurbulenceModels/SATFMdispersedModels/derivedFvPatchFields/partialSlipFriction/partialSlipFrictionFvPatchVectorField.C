@@ -201,12 +201,28 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
     );
     const scalarField muFP = nuF*rhop;
     
+    // lookup the packed volume fraction
+    dimensionedScalar alphaMax
+    (
+        "alphaMax",
+        dimless,
+        db()
+       .lookupObject<IOdictionary>
+        (
+            IOobject::groupName("turbulenceProperties", granular.name())
+        )
+       .subDict("RAS")
+       .subDict("SATFMdispersedCoeffs")
+       .lookup("alphaMax")
+    );
+    
     const scalarField c
     (
-        alphap
+        constant::mathematical::pi
+       *alphap
        *sqrt(2.0*kpn)
        *muW_
-       /max(6.0*nu, SMALL)
+       /max(6.0*nu*alphaMax.value(), SMALL)
     );
     const scalarField tauw = -c*nu*rhop;
 
@@ -253,10 +269,12 @@ void partialSlipFrictionFvPatchVectorField::updateCoeffs()
             ),
             scalar(0)
         );
+    /*
     Info<< "  tauW: "  << min(tauw) << " - " << max(tauw) << endl;
     Info<< "  c: "     << min(c)    << " - " << max(c) << endl;
     Info<< "  nut: "   << min(nu)   << " - " << max(nu) << endl;
     Info<< "  pfW: "   << min(pfW)  << " - " << max(pfW) << endl;
+    */
     Info<< "  valueFraction(): " << min(this->valueFraction()) 
         << " - " << max(this->valueFraction()) << endl;
         
