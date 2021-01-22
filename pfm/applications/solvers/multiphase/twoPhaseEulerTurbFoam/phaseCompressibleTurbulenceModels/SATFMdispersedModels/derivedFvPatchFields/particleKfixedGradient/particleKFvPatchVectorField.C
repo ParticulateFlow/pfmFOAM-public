@@ -238,9 +238,9 @@ void particleKFvPatchVectorField::updateCoeffs()
         constant::mathematical::pi
        *alphap
        *rhop
-       *sqrt(2.0*kpn)
        *(
             muW_
+           *sqrt(2.0*kpn)
            *(
                 (sqr(Utc&eX))*eX
               + (sqr(Utc&eY))*eY
@@ -248,11 +248,11 @@ void particleKFvPatchVectorField::updateCoeffs()
             )
            /6.0
           - CepsW_
-           *kpn
+           *sqrt(2.0*mag(kp))
            *(
-                mag(this->patch().nf()&eX)*eX
-              + mag(this->patch().nf()&eY)*eY
-              + mag(this->patch().nf()&eZ)*eZ
+                mag(kp&eX)*eX
+              + mag(kp&eY)*eY
+              + mag(kp&eZ)*eZ
             )
            /4.0
          )
