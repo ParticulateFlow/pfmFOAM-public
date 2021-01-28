@@ -111,6 +111,9 @@ class SATFMdispersedModel
 
             //- Maximum packing phase-fraction
             dimensionedScalar alphaMax_;
+    
+            //- above alphaMaxTurb_ alphaP2Mean is 0
+            dimensionedScalar alphaMaxTurb_;
 
             //- Min value for which the frictional stresses are zero
             dimensionedScalar alphaMinFriction_;

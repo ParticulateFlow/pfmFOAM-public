@@ -1065,7 +1065,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
           + fvm::Sp(2.0*beta*xiGatS_,k_)
           // dissipation
-          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.

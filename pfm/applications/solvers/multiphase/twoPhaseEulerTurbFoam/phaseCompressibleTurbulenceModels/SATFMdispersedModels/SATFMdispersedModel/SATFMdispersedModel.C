@@ -73,6 +73,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
     anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
     alphaMax_("alphaMax", dimless, coeffDict_),
+    alphaMaxTurb_("alphaMaxTurb", dimless, coeffDict_),
     alphaMinFriction_
     (
         "alphaMinFriction",
@@ -476,6 +477,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         coeffDict().lookup("dynamicAdjustment") >> dynamicAdjustment_;
         coeffDict().lookup("anIsoTropicNut") >> anIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
+        alphaMaxTurb_.readIfPresent(coeffDict());
         alphaMinFriction_.readIfPresent(coeffDict());
         xiPhiSolidScalar_.readIfPresent(coeffDict());
         xiPhiDivUScalar_.readIfPresent(coeffDict());
@@ -1434,7 +1436,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // interfacial work (--> energy transfer)
           + fvm::Sp(2.0*beta,k_)
           // dissipation
-          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/deltaF_,k_)
+          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
          ==
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
@@ -1529,50 +1531,35 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 }
             }
         }
-        /*
-        // BC for R
-        const fvPatchList& patches = mesh_.boundary();
-
-        volTensorField::Boundary& RBf = R1_.boundaryFieldRef();
-
-        forAll(patches, patchi) {
-            const fvPatch& curPatch = patches[patchi];
-
-            if (isA<wallFvPatch>(curPatch)) {
-                tensorField& Rw = RBf[patchi];
-
-                const scalarField& nutw = nut_.boundaryField()[patchi];
-
-                const vectorField snGradU
-                (
-                    U.boundaryField()[patchi].snGrad()
-                );
-
-                const vectorField& faceAreas
-                    = mesh_.Sf().boundaryField()[patchi];
-
-                const scalarField& magFaceAreas
-                    = mesh_.magSf().boundaryField()[patchi];
-
-                forAll(curPatch, facei)
-                {
-                    // Calculate near-wall velocity gradient
-                    const tensor gradUw
-                        = (faceAreas[facei]/magFaceAreas[facei])*snGradU[facei];
-
-                    // Set the wall Reynolds-stress to the near-wall shear-stress
-                    // Note: the spherical part of the normal stress is included in
-                    // the pressure
-                    Rw[facei] = -nutw[facei]*(gradUw + gradUw.T());
-                }
-            }
-        }
-         */
     } else {
         R1_  = (k_&eX)*(eX*eX) + (k_&eY)*(eY*eY) + (k_&eZ)*(eZ*eZ);
     }
     boundStress(R1_);
-    R1_.correctBoundaryConditions();
+
+    // wall BC for R
+    const fvPatchList& patches = mesh_.boundary();
+
+    volTensorField::Boundary& RBf = R1_.boundaryFieldRef();
+
+    forAll(patches, patchi) {
+        const fvPatch& curPatch = patches[patchi];
+
+        if (isA<wallFvPatch>(curPatch)) {
+            tensorField& Rw = RBf[patchi];
+
+            const vectorField& nf
+                = curPatch.nf();
+
+            forAll(curPatch, facei)
+            {
+                label faceCelli = curPatch.faceCells()[facei];
+                tensor n2(sqr(nf[facei]));
+                tensor transform(tensor::I - 2.0*n2);
+                Rw[facei] = 0.5*(transform&R1_[faceCelli]&transform)-(n2&R1_[faceCelli]&n2);
+            }
+        }
+    }
+
     // update anisotropic viscosity
     forAll(cells,cellI)
     {
@@ -1606,7 +1593,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     Info << "Computing alphaP2Mean (dispersed phase) ... " << endl;
     
-    volScalarField alphaM(alpha/(alphaMinFriction_));
+    volScalarField alphaM(alpha/(alphaMaxTurb_));
     alphaM.min(0.99999999999);
     volScalarField g0(1.0/(1.0-sqr(alphaM)));
     
@@ -1629,7 +1616,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
           + fvm::SuSp(2.0*xiPhiDivU_*alpha*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
           + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/deltaF_,alphaP2Mean_)
+          + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/lm_,alphaP2Mean_)
          ==
             CphiS2_*((nutA_&gradAlpha)&gradAlpha)/alpha
         );
