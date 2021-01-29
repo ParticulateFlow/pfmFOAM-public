@@ -376,7 +376,7 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     
     this->gradient() = -((tauw*(u) - N*(v)) + D)/(max(kappap, residualKappa_));
 
-    Info<< "  theta-grad: " << min(this->gradient()) << " - " << max(this->gradient()) << endl;
+    // Info<< "  theta-grad: " << min(this->gradient()) << " - " << max(this->gradient()) << endl;
 
     fixedGradientFvPatchScalarField::updateCoeffs();
 }
