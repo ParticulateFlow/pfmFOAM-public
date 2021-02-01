@@ -23,6 +23,7 @@ surfaceScalarField alphaRhof20
 );
 
 // Drag coefficient
+Kd = fluid.Kd();
 surfaceScalarField Kdf("Kdf", fluid.Kdf());
 
 // Virtual-mass coefficient
