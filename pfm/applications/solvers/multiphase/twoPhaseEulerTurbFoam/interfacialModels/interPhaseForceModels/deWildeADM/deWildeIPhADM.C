@@ -27,7 +27,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "deWildeADM.H"
+#include "deWildeIPhADM.H"
 #include "phasePair.H"
 #include "addToRunTimeSelectionTable.H"
 
@@ -35,13 +35,13 @@ License
 
 namespace Foam
 {
-namespace virtualMassModels
+namespace interPhaseForceModels
 {
-    defineTypeNameAndDebug(deWildeADM, 0);
+    defineTypeNameAndDebug(deWildeIPhADM, 0);
     addToRunTimeSelectionTable
     (
-        virtualMassModel,
-        deWildeADM,
+        interPhaseForceModel,
+        deWildeIPhADM,
         dictionary
     );
 }
@@ -50,14 +50,14 @@ namespace virtualMassModels
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWildeADM::deWildeADM
+Foam::interPhaseForceModels::deWildeIPhADM::deWildeIPhADM
 (
     const dictionary& dict,
     const phasePair& pair,
     const bool registerObject
 )
 :
-    virtualMassModel(dict, pair, registerObject),
+    interPhaseForceModel(dict, pair, registerObject),
     residualAlpha_
     (
         "residualAlpha",
@@ -73,13 +73,13 @@ Foam::virtualMassModels::deWildeADM::deWildeADM
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::virtualMassModels::deWildeADM::~deWildeADM()
+Foam::interPhaseForceModels::deWildeIPhADM::~deWildeIPhADM()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeADM::Cvm() const
+Foam::tmp<Foam::volScalarField> Foam::interPhaseForceModels::deWildeIPhADM::Cp() const
 {
     // get alphaP2Mean from Turbulence Model
     const fvMesh& mesh_(pair_.phase1().mesh());
@@ -95,7 +95,7 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeADM::Cvm() const
     );
     
     // limit alphaP2Mean to prevent unphysical values of Vm0
-    volScalarField alphaP2Mean = min(0.5*alpha1*alpha2,alphaP2Mean_);
+    volScalarField alphaP2Mean = min(0.9*sqr(alpha1),alphaP2Mean_);
     
     volScalarField rho1
     (
@@ -110,14 +110,20 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeADM::Cvm() const
     (
         alpha1*rho1 + alpha2*rho2
     );
-    volScalarField Vm0
+    volScalarField oneMinMg
     (
-        alphaP2Mean/(max(alpha1*alpha2-alphaP2Mean,sqr(residualAlpha_)))
-       *((alpha1*alpha2*rho1*rho2)/(rho*rho))
+        alpha2*(scalar(1.0) - rho2/rho)
     );
-   
+    
+    oneMinMg.max(0);
+
+    volScalarField Cp
+    (
+        min(alphaP2Mean*rho1/rho,oneMinMg)
+    );
+
     return
-        pos(pair_.dispersed() - residualAlpha_)*Vm0*rho/(alpha1*rho2);
+        pos(pair_.dispersed() - residualAlpha_)*Cp;
 }
 
 

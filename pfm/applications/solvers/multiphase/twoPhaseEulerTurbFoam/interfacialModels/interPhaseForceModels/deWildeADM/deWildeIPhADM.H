@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::virtualMassModels::deWildeADM
+    Foam::interPhaseForceModels::deWildeIPhADM
 
 (c) Simon Schneiderbauer 2019
     Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
@@ -37,14 +37,14 @@ Description
     \endverbatim
 
 SourceFiles
-    deWildeADM.C
+    deWildeIPhADM.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef deWildeADM_H
-#define deWildeADM_H
+#ifndef deWildeIPhADM_H
+#define deWildeIPhADM_H
 
-#include "virtualMassModel.H"
+#include "interPhaseForceModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,16 +53,16 @@ namespace Foam
 
 class phasePair;
 
-namespace virtualMassModels
+namespace interPhaseForceModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class deWildeADM Declaration
+                           Class deWildeIPhADM Declaration
 \*---------------------------------------------------------------------------*/
 
-class deWildeADM
+class deWildeIPhADM
 :
-    public virtualMassModel
+    public interPhaseForceModel
 {
     //- Residual phase fraction
     const dimensionedScalar residualAlpha_;
@@ -70,13 +70,13 @@ class deWildeADM
 public:
 
     //- Runtime type information
-    TypeName("deWildeADM");
+    TypeName("deWildeIPhADM");
 
 
     // Constructors
 
         //- Construct from a dictionary and a phase pair
-        deWildeADM
+        deWildeIPhADM
         (
             const dictionary& dict,
             const phasePair& pair,
@@ -85,19 +85,19 @@ public:
 
 
     //- Destructor
-    virtual ~deWildeADM();
+    virtual ~deWildeIPhADM();
 
 
     // Member Functions
 
         //- Virtual mass coefficient
-        virtual tmp<volScalarField> Cvm() const;
+        virtual tmp<volScalarField> Cp() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace virtualMassModels
+} // End namespace interPhaseForceModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
