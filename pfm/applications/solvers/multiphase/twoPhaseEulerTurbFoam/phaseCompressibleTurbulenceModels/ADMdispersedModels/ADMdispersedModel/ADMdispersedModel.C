@@ -29,6 +29,7 @@ License
 #include "fvOptions.H"
 #include "fixedValueFvsPatchFields.H"
 #include "zeroGradientFvPatchFields.H"
+#include "wallFvPatch.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -518,7 +519,30 @@ void Foam::RASModels::ADMdispersedModel::correct()
     
     // limit Reynolds stress
     boundNormalStress(R1ADM_);
-    R1ADM_.correctBoundaryConditions();
+    
+    // wall BC for R
+    const fvPatchList& patches = mesh_.boundary();
+
+    volTensorField::Boundary& RBf = R1ADM_.boundaryFieldRef();
+
+    forAll(patches, patchi) {
+        const fvPatch& curPatch = patches[patchi];
+
+        if (isA<wallFvPatch>(curPatch)) {
+            tensorField& Rw = RBf[patchi];
+
+            const vectorField& nf
+                = curPatch.nf();
+
+            forAll(curPatch, facei)
+            {
+                label faceCelli = curPatch.faceCells()[facei];
+                tensor n2(sqr(nf[facei]));
+                tensor transform(tensor::I - 2.0*n2);
+                Rw[facei] = 0.5*(transform&R1ADM_[faceCelli]&transform)-(n2&R1ADM_[faceCelli]&n2);
+            }
+        }
+    }
     
     // compute turbulent kinetic energy
     k_ = tr(R1ADM_)/(rho*max(a1sF,residualAlpha_));
