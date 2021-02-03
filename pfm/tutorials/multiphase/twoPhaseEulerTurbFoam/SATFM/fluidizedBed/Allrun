@@ -10,8 +10,8 @@ runApplication blockMesh
 runApplication setFields
 
 # decompose domain
-runApplication decomposePar
+# runApplication decomposePar
 
 # run twoPhaseEulerTurbFoam
-runParallel $(getApplication)
+runApplication $(getApplication)
 

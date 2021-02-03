@@ -26,25 +26,37 @@ RAS
     
     SATFMdispersedCoeffs
     {
-        equilibrium             on;  // equilibrium assumption: production of k == dissipation
-        dynamicAdjustment       off;  // dynamic adjustment of model coefficient and correlation coefficients
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
+        dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
+	    anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
         
-        alphaMax                0.6;   // maximum dispersed phase volume fraction
-        alphaMinFriction        0.4; // friction stresses are solely computed for alpha > alphaMinFriction
-        residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
+        alphaMax                0.6;  // maximum dispersed phase volume fraction
+        alphaMinFriction        0.4;  // friction stresses are solely computed for alpha > alphaMinFriction
+        alphaMaxTurb            0.55; // alphaP2Mean = 0 for alpha > alphaMaxTurb
+        residualAlpha           1e-3; // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
         
-        xiPhiS                  0.10; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
-        Cmu                     0.25; // smagorinsky constant for turbulent viscosity   
-        Ceps                    1.00; // constant for mixing length model of turbulent dissipation rate
-        CphiS                   0.40; // constant appearing in the equation for alphaP2Mean
+        maxK                    10.0; // Limits Reynolds stresses
+        maxNut                  0.1;
+        ut                      0.96; // 0.96
 
-        maxK                    0.1; // Limits Reynolds stresses
+        xiPhiS                 -0.50; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
+        xiPhiDivU              -0.15; // correlation coefficient in alphaP2Mean equation
+        xiGS                    0.9;  // correlation coefficient between dispersed phase velocity and continuous phase velocity
+        Cmu                     0.1;  // smagorinsky constant for turbulent viscosity   
+        CmuW                    0.2;  // smagorinsky constant for turbulent viscosity near walls
+        Ceps                    0.2;  // constant for mixing length model of turbulent dissipation rate
+        Sigma                   1.0;  // turbulent schmidt number        
+        CphiS                   0.0;  // constant in alphaP2Mean equation
+        CphiS2                  0.0;  // constant in alphaP2Mean equation    
+
         
-		filter                  simple; // test filter for dynamic adjustment of model constants    
-		laplaceAnIso2ndCoeffs   
-		{
-			widthCoeff		6.0;
-		}
+        
+        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants    
+        laplaceAnIso2ndCoeffs   
+        {
+            widthCoeff		6.0;
+        }
 		
 		frictionalStressModel   SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
         SchneiderbauerEtAlCoeffs
@@ -53,79 +65,10 @@ RAS
             muSt             0.38;
             muC              0.64;
             I0               0.279;
-            aQSk		   	 1000;
-	    	alphaDeltaMin    0.0025;
+            aQSk		   	 0;
+	    	alphaDeltaMin    0.01;
+	    	Rc               0; //Rolling Friction
         }		
-    }
-    ADMdispersedCoeffs
-    {
-        alphaMax                0.6;   // maximum dispersed phase volume fraction
-        alphaMinFriction        0.001; // friction stresses are solely computed for alpha > alphaMinFriction
-        residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
-        maxK                    0.04;  // Limits Reynolds stresses
-        deconOrder              2;     // deconvolution Order
-
-		filter                  laplaceAnIso2nd; // filter for ADM    
-		laplaceAnIso2ndCoeffs   
-		{
-			widthCoeff		24.0;
-		}
-		
-        regularizationModel     none;  // regularization model (e.g. Stolz)
-        StolzCoeffs
-        {
-        	smagConst       0.25;
-        	lengthConst     0.3;	
-        	filter          laplaceAnIso2nd; // filter for Stolz    
-        	laplaceAnIso2ndCoeffs   
-        	{
-        		widthCoeff		24.0;
-        	}
-        }
-        
-        frictionalStressModel   SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
-        SchneiderbauerEtAlCoeffs
-        {
-            b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 1000;
-	    	alphaDeltaMin    0.0025;
-        }		
-    }
-    kineticTheoryCoeffs
-    {
-        equilibrium             on;
-        e                       0.85;
-        alphaMax                0.6;
-        alphaMinFriction        0.4;
-        residualAlpha           1e-6;
-
-        viscosityModel          Gidaspow;
-        conductivityModel       Gidaspow;
-        granularPressureModel   Lun;
-        frictionalStressModel   SchneiderbauerEtAl;
-        radialModel             CarnahanStarling;
-
-        SchneiderbauerEtAlCoeffs
-        {
-            b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 1000;
-	    	alphaDeltaMin    0.0025;
-        }		
-    }
-
-
-    phasePressureCoeffs
-    {
-        preAlphaExp     500;
-        expMax          1000;
-        alphaMax        0.62;
-        g0              1000;
     }
 }
 

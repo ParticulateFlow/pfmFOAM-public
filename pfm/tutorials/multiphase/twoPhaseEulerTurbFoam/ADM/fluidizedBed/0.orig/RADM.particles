@@ -32,7 +32,8 @@ boundaryField
 
     w_FB
     {
-		type               zeroGradient;
+		type               calculated;
+		value              $internalField;
     }
 
 }

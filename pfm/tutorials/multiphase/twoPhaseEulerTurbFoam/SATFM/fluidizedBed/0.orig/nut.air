@@ -16,26 +16,27 @@ FoamFile
 
 dimensions      [0 2 -1 0 0 0 0];
 
-internalField   uniform 1e-8; 
+internalField   uniform 0; 
 
 boundaryField
 {
     vin_DB
     {
-        type               calculated;
+        type               fixedValue;
         value              $internalField;
     }
 
     pout
     {
-        type               calculated;
+        type               inletOutlet;
+        phi                phi.air;
+        inletValue         $internalField;
         value              $internalField;
     }
 
     w_FB
     {
-        type               calculated;
-        value              $internalField;
+        type               zeroGradient;
     }
 
 }
