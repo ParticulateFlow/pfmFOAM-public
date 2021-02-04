@@ -21,6 +21,21 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
+ (c) Simon Schneiderbauer 2021
+     Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
+     Johannes Kepler University, Linz, Austria
+
+ Description
+     Combination of Schneiderbauer et al. and Chialvo et al. frictional model
+
+     Reference:
+     \verbatim
+        Chialvo, S., J. Sun, S. Sundaresan. Phys. Rev. E, 2012, 85, 021305 (2012).
+        Schneiderbauer, S., A. Aigner, S. Pirker. Chem. Eng. Sci., 2012, 80, 279–292.
+     \endverbatim
+ 
+ 
+
 \*---------------------------------------------------------------------------*/
 
 #include "SchneiderbauerEtAlFrictionalStress.H"
@@ -62,7 +77,9 @@ SchneiderbauerEtAl::SchneiderbauerEtAl
     muSt_("muSt", dimless, coeffDict_),
     muC_("muC", dimless, coeffDict_),
     I0_("I0", dimless, coeffDict_),
-    aQSk_("aQSk", dimensionSet(1, 0, -2, 0, 0), coeffDict_),
+    aQSk_("aQSk", dimless, coeffDict_),
+    aInt_("aInt", dimless, coeffDict_),
+    k_("k", dimensionSet(1,0,-2,0,0), coeffDict_),
     alphaDeltaMin_("alphaDeltaMin", dimless, coeffDict_),
     Rc_("Rc", dimless, coeffDict_)
 {
@@ -92,15 +109,38 @@ SchneiderbauerEtAl::frictionalPressure
 ) const
 {
         const volScalarField& alpha = phase;
-        // Equ. (32)
+        volScalarField DD
+        (
+            max(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+        );
+        volScalarField pInt
+        (
+           aInt_
+           *k_
+           *sqrt(sqrt(DD)*dp/sqrt(k_/(rho*dp)))
+           /dp
+         );
+
         return
              pos(alpha - alphaMinFriction)
             *neg(alpha - alphaMax)
-            *2.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e3))
-            /sqr(Foam::max(alphaMax - alpha, alphaDeltaMin_))
+            /(
+                sqr(Foam::max(alphaMax - alpha,alphaDeltaMin_))
+               /(
+                    2.0
+                   *rho
+                   *sqr(b_*dp)
+                   *DD
+                )
+              + 1.0
+               /pInt
+            )
           +
              pos(alpha - alphaMax)
-            *aQSk_*pow(Foam::max(alpha - alphaMax, scalar(0)), 0.66)/dp;
+            *(
+                aQSk_*k_*pow(Foam::max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
+              + pInt
+             );
 }
 
 
@@ -117,7 +157,8 @@ SchneiderbauerEtAl::frictionalPressurePrime
 ) const
 {
         const volScalarField& alpha = phase;
-
+        // pPrime does not contain pInt contribution
+        // pPrime is solely used, if implicitPhasePressure is true
         return
              pos(alpha - alphaMinFriction)
             *neg(alpha - alphaMax)
@@ -125,7 +166,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
             /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_))
        +
              pos(alpha - alphaMax)
-            *0.66*aQSk_/(pow(Foam::max(alpha - alphaMax, scalar(1e-8)), 0.33)*dp);
+            *0.66*aQSk_*k_/(pow(Foam::max(alpha - alphaMax, scalar(1e-8)), 0.33)*dp);
 }
 
 
@@ -238,6 +279,8 @@ SchneiderbauerEtAl::read()
 
     I0_.read(coeffDict_);
     aQSk_.read(coeffDict_);
+    aInt_.read(coeffDict_);
+    k_.read(coeffDict_);
     
     alphaDeltaMin_.read(coeffDict_);
     Rc_.read(coeffDict_);

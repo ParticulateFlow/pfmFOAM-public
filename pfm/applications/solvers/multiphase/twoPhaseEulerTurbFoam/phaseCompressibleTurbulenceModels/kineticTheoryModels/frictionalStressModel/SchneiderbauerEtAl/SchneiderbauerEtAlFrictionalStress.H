@@ -70,9 +70,15 @@ class SchneiderbauerEtAl
         //- inertial number
         dimensionedScalar I0_;
     
-        //- alpha_QS times spring constant k
+        //- alpha_QS
         dimensionedScalar aQSk_;
-
+    
+        //- alpha_int
+        dimensionedScalar aInt_;
+    
+        //-spring stiffness
+        dimensionedScalar k_;
+    
         //- Lower limit for (alphaMax - alpha1)
         dimensionedScalar alphaDeltaMin_;
     
