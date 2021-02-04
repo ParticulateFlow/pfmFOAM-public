@@ -102,7 +102,6 @@ volVectorField KdUdrift(fluid.KdUdrift());
                   + (fvc::interpolate(KdUdrift*rAU1)&mesh.Sf())/rAU1f
                 )
             );
-
         }
         
         U1.correctBoundaryConditions();
