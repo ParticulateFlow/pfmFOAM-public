@@ -114,7 +114,7 @@ SchneiderbauerEtAl::frictionalPressure
             min
             (
                 max(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-               ,1.0e1
+               ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e2)
             )
         );
         volScalarField pInt
