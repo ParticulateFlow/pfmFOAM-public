@@ -109,3 +109,17 @@ volScalarField unity
      mesh,
      dimensionedScalar("unity", dimless, 1.0)
 );
+
+volScalarField Kd
+(
+     IOobject
+     (
+          "Kd",
+          runTime.timeName(),
+          mesh,
+          IOobject::NO_READ,
+          IOobject::NO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("zero", dimensionSet(1,-3,-1,0,0), 0.0)
+);

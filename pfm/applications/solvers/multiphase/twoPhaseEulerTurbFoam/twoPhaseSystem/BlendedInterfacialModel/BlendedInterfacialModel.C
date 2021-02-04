@@ -442,6 +442,7 @@ Foam::BlendedInterfacialModel<modelType>::D() const
 
     return x;
 }
+
 // Blending for drift velocity
 template<class modelType>
 Foam::tmp<Foam::volVectorField>
@@ -496,6 +497,68 @@ Foam::BlendedInterfacialModel<modelType>::KdUdrift()
     {
         correctFixedFluxBCs(x.ref());
     }
+    return x;
+}
+
+// Blending for interPhase force
+template<class modelType>
+Foam::tmp<Foam::volScalarField>
+Foam::BlendedInterfacialModel<modelType>::CpIPh() const
+{
+    tmp<volScalarField> f1, f2;
+
+    if (model_.valid() || model1In2_.valid())
+    {
+        f1 = blending_.f1(pair1In2_.dispersed(), pair2In1_.dispersed());
+    }
+
+    if (model_.valid() || model2In1_.valid())
+    {
+        f2 = blending_.f2(pair1In2_.dispersed(), pair2In1_.dispersed());
+    }
+
+    tmp<volScalarField> x
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                modelType::typeName + ":CpIPh",
+                pair_.phase1().mesh().time().timeName(),
+                pair_.phase1().mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            pair_.phase1().mesh(),
+            dimensionedScalar("zero", modelType::dimL, 0)
+        )
+    );
+
+    if (model_.valid())
+    {
+        x.ref() += model_->CpIPh()*(f1() - f2());
+    }
+
+    if (model1In2_.valid())
+    {
+        x.ref() += model1In2_->CpIPh()*(1 - f1);
+    }
+
+    if (model2In1_.valid())
+    {
+        x.ref() += model2In1_->CpIPh()*f2;
+    }
+
+    if
+    (
+        correctFixedFluxBCs_
+     && (model_.valid() || model1In2_.valid() || model2In1_.valid())
+    )
+    {
+        correctFixedFluxBCs(x.ref());
+    }
+
     return x;
 }
 

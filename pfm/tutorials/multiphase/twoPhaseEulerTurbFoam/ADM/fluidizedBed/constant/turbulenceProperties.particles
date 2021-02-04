@@ -27,7 +27,7 @@ RAS
     ADMdispersedCoeffs
     {
         alphaMax                0.6;   // maximum dispersed phase volume fraction
-        alphaMinFriction        0.001; // friction stresses are solely computed for alpha > alphaMinFriction
+        alphaMinFriction        0.4; // friction stresses are solely computed for alpha > alphaMinFriction
         residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
         maxK                    0.04;  // Limits Reynolds stresses
         deconOrder              2;     // deconvolution Order
@@ -43,7 +43,7 @@ RAS
         {
         	smagConst       0.25;
         	lengthConst     0.3;	
-        	filter          simpleADM; // filter for Stolz    
+        	filter          laplaceAnIso2nd; // filter for Stolz    
         	laplaceAnIso2ndCoeffs   // coeffs for laplaceAnIso2nd
         	{
         		widthCoeff		24.0;
@@ -60,39 +60,6 @@ RAS
             aQSk		   	 1000;
 	    	alphaDeltaMin    0.0025;
         }		
-    }
-    kineticTheoryCoeffs
-    {
-        equilibrium             on;
-        e                       0.85;
-        alphaMax                0.6;
-        alphaMinFriction        0.4;
-        residualAlpha           1e-6;
-
-        viscosityModel          Gidaspow;
-        conductivityModel       Gidaspow;
-        granularPressureModel   Lun;
-        frictionalStressModel   SchneiderbauerEtAl;
-        radialModel             CarnahanStarling;
-
-        SchneiderbauerEtAlCoeffs
-        {
-            b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 1000;
-	    	alphaDeltaMin    0.0025;
-        }		
-    }
-
-
-    phasePressureCoeffs
-    {
-        preAlphaExp     500;
-        expMax          1000;
-        alphaMax        0.62;
-        g0              1000;
     }
 }
 

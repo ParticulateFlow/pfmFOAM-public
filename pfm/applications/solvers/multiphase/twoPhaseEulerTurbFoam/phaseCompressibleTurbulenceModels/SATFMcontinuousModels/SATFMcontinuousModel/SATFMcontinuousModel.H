@@ -56,6 +56,12 @@ SourceFiles
 #include "frictionalStressModel.H"
 // h-files for LES filters
 #include "LESfilter.H"
+#include "simpleFilter.H"
+#include "simpleFilterADM.H"
+#include "laplaceFilter.H"
+#include "wallFvPatch.H"
+#include "cyclicAMIFvsPatchField.H"
+#include "cyclicACMIFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -85,11 +91,19 @@ class SATFMcontinuousModel
         // SA-TFM Model coefficients
 
             //- Use equilibrium approximation: generation == dissipation
-            Switch equilibrium_;
+            Switch equilibriumK_;
+            Switch equilibriumPhiP2_;
     
             //- Use dynamic adjustment of several model parameters and
             //  correlation coefficients
             Switch dynamicAdjustment_;
+    
+            //- switch between isotropic and anisotropic treatment of
+            //  shear component of mesoscale stress tensor
+            Switch anIsoTropicNut_;
+    
+            //- Maximum packing phase-fraction
+            dimensionedScalar alphaMax_;    
 
             //- Residual phase fraction
             dimensionedScalar residualAlpha_;
@@ -100,14 +114,11 @@ class SATFMcontinuousModel
             //- correlation coefficient between solid volume fraction and cont. velocity
             dimensionedScalar xiPhiContScalar_;
     
-            //- correlation coefficient between cont. phase and solid velocity
-            dimensionedScalar xiGSScalar_;
-    
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
-            //- constant in alphaP2Mean equation
-            dimensionedScalar CphiGscalar_;
+            //- "Smagorinsky constant" near walls
+            dimensionedScalar CmuWScalar_;
     
             //- "dissipation constant"
             dimensionedScalar CepsScalar_;
@@ -116,12 +127,14 @@ class SATFMcontinuousModel
             dimensionedScalar CpScalar_;
     
             //- turbulent schmidt number
-            dimensionedScalar sigma_;    
+            dimensionedScalar sigma_;
+    
+            //- gravity vector
+            dimensionedVector gN_;
     
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
-
-
+    
         // SA-TFM fields
 
             //- normal components of Reynoldsstress tensor
@@ -131,17 +144,8 @@ class SATFMcontinuousModel
             //- correlation coefficient between solid volume fraction and cont. velocity
             volVectorField xiPhiG_;
     
-            //- triple correlation coefficient between solid volume fraction and cont. velocity
-            volScalarField xiPhiGG_;
-
-            //- correlation coefficient between cont. phase and solid velocity
-            volScalarField xiGS_;
-    
-            //- correlation coefficient between cont. phase and solid velocity (seen by the gas phase)
-            volScalarField xiGatS_;
-    
-            //- phiPrimeSquared (Variance of solids volume fraction)
-            volScalarField alphaP2Mean_;
+            //- auto correlation coefficient of solids velocity
+            volTensorField xiUU_;
     
             //- smagorinsky constant
             volScalarField Cmu_;
@@ -154,7 +158,16 @@ class SATFMcontinuousModel
     
             //- grid size
             volScalarField deltaF_;
-
+    
+            //- mixing length
+            volScalarField lm_;
+    
+            //- Reynolds stress tensor
+            volTensorField R2_;
+    
+            //- anisotropic viscosity
+            volTensorField nutA_;
+    
 
     // Private Member Functions
 
@@ -174,6 +187,9 @@ protected:
     //- bound k
     void boundNormalStress(volVectorField& R) const;
     void boundxiPhiG(volVectorField& xi) const;
+    void boundCorrTensor(volTensorField& R) const;
+    void boundGradU(volTensorField& S) const;
+    void boundStress(volTensorField& R) const;
     
 public:
 
@@ -209,13 +225,13 @@ public:
         //- Return the effective viscosity
         virtual tmp<volScalarField> nuEff() const
         {
-            return this->nut();
+            return this->nut() + this->nu()*alpha_;
         }
 
         //- Return the effective viscosity on patch
         virtual tmp<scalarField> nuEff(const label patchi) const
         {
-            return this->nut(patchi);
+            return this->nut(patchi) + this->nu(patchi)*alpha_;
         }
 
         //- Return the turbulence kinetic energy
@@ -232,6 +248,9 @@ public:
 
         //- Return the source term for the momentum equation
         virtual tmp<fvVectorMatrix> divDevRhoReff(volVectorField& U) const;
+    
+        //- Return the phase-pressure'
+        virtual tmp<volScalarField> normalStress() const;
 
         //- Solve the SA-TFM equations and correct the viscosity
         virtual void correct();

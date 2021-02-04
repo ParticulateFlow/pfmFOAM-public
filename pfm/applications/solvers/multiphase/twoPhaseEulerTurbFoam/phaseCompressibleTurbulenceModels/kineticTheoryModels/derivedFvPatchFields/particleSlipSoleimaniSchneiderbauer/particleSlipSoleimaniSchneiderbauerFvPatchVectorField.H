@@ -181,7 +181,7 @@ public:
         }
 
 
-    // Member functions
+    // Member functions  
 
         //- Update the coefficients associated with the patch field
         virtual void updateCoeffs();

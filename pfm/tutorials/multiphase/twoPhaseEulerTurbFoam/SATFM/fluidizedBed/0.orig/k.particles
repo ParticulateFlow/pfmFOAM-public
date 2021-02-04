@@ -22,17 +22,23 @@ boundaryField
 {
     vin_DB
     {
-		type               zeroGradient;
+        type               zeroGradient;
     }
 
     pout
     {
-		type               zeroGradient;
+        type               zeroGradient;
     }
 
     w_FB
     {
-		type               zeroGradient;
+        type               zeroGradient;
+// production - dissipation corresponding to partial slip BC
+//        type           		   particleK;
+//        muW                    0.2;
+//        CepsW                  1.0;
+//        sigma                  1;
+//        value                  $internalField;     
     }
 
 }

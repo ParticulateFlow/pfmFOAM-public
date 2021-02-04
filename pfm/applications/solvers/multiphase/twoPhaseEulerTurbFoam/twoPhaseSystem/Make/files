@@ -3,6 +3,7 @@ diameterModels/diameterModel/diameterModel.C
 diameterModels/diameterModel/newDiameterModel.C
 diameterModels/constantDiameter/constantDiameter.C
 diameterModels/isothermalDiameter/isothermalDiameter.C
+diameterModels/vanWachemSasicDiameter/vanWachemSasicDiameter.C
 
 diameterModels/IATE/IATE.C
 diameterModels/IATE/IATEsources/IATEsource/IATEsource.C

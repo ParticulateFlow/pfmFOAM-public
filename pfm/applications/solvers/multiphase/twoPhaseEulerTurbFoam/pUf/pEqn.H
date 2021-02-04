@@ -1,5 +1,6 @@
 surfaceScalarField alphaf1("alphaf1", fvc::interpolate(alpha1));
 surfaceScalarField alphaf2("alphaf2", scalar(1) - alphaf1);
+surfaceScalarField CpIPhf("CpIPhf", fvc::interpolate(fluid.CpIPh()));
 
 surfaceScalarField alphaRhof10
 (
@@ -22,6 +23,7 @@ surfaceScalarField alphaRhof20
 );
 
 // Drag coefficient
+Kd = fluid.Kd();
 surfaceScalarField Kdf("Kdf", fluid.Kdf());
 
 // Virtual-mass coefficient
@@ -60,33 +62,47 @@ tmp<surfaceScalarField> Ff2;
     // Phase-1 turbulent dispersion and particle-pressure diffusivity
     surfaceScalarField Df1
     (
-        fvc::interpolate(D + phase1.turbulence().pPrime())
+        fvc::interpolate(D)
+    );
+    surfaceScalarField Pf1
+    (
+        fvc::interpolate(phase1.turbulence().pPrime())
     );
 
     // Phase-2 turbulent dispersion and particle-pressure diffusivity
     surfaceScalarField Df2
     (
-        fvc::interpolate(D + phase2.turbulence().pPrime())
+        fvc::interpolate(D)
     );
-
-    // Cache the net diffusivity for implicit diffusion treatment in the
-    // phase-fraction equation
-    if (implicitPhasePressure)
-    {
-        fluid.pPrimeByA() = rAUf1*Df1 + rAUf2*Df2;
-    }
-
+    surfaceScalarField Pf2
+    (
+        fvc::interpolate(phase2.turbulence().pPrime())
+    );
+    
     // Lift and wall-lubrication forces
     surfaceScalarField Ff(fluid.Ff());
 
     // Phase-fraction face-gradient
     surfaceScalarField snGradAlpha1(fvc::snGrad(alpha1)*mesh.magSf());
+    
+    // pressure gradients
+    surfaceScalarField gradP1(fvc::snGrad(phase1.turbulence().normalStress())*mesh.magSf());
+    surfaceScalarField gradP2(fvc::snGrad(phase2.turbulence().normalStress())*mesh.magSf());
 
     // Phase-1 dispersion, lift and wall-lubrication force
-    Ff1 = Df1*snGradAlpha1 + Ff;
+    Ff1 = Df1*snGradAlpha1 + gradP1 - fvc::flux(KdUdrift) + Ff;
+    //Ff1 = Df1*snGradAlpha1 + gradP1 + Ff;
 
     // Phase-2 dispersion, lift and wall-lubrication force
-    Ff2 = -Df2*snGradAlpha1 - Ff;
+    Ff2 = -Df2*snGradAlpha1 + gradP2 + fvc::flux(KdUdrift) - Ff;
+    // Ff2 = -Df2*snGradAlpha1 + gradP2 - Ff;
+    
+    // Cache the net diffusivity for implicit diffusion treatment in the
+    // phase-fraction equation
+    if (implicitPhasePressure)
+    {
+        fluid.pPrimeByA() = rAUf1*(Df1 + Pf1) + rAUf2*(Df2 + Pf2);
+    }
 }
 
 
@@ -124,6 +140,12 @@ while (pimple.correct())
         "ghSnGradRho",
         ghf*fvc::snGrad(rho)*mesh.magSf()
     );
+    
+    surfaceScalarField snGradP
+    (
+        "snGradP",
+        fvc::snGrad(p)*mesh.magSf()
+    );
 
     // Phase-1 buoyancy flux
     surfaceScalarField phig1
@@ -133,6 +155,7 @@ while (pimple.correct())
        *(
             ghSnGradRho
           - alphaf2*(rhof1 - rhof2)*(g & mesh.Sf())
+          + CpIPhf*snGradP / max(alphaf1,phase1.residualAlpha())
         )
     );
 
@@ -144,6 +167,7 @@ while (pimple.correct())
        *(
             ghSnGradRho
           - alphaf1*(rhof2 - rhof1)*(g & mesh.Sf())
+          - CpIPhf*snGradP/alphaf2
         )
     );
 
@@ -233,14 +257,14 @@ while (pimple.correct())
         pEqnComp1 =
             (
                 contErr1
-              - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
+              - fvc::SuSp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
             )/rho1
           + correction
             (
                 (alpha1/rho1)*
                 (
                     psi1*fvm::ddt(p_rgh)
-                  + fvm::div(phid1, p_rgh) - fvm::Sp(fvc::div(phid1), p_rgh)
+                  + fvm::div(phid1, p_rgh) - fvm::SuSp(fvc::div(phid1), p_rgh)
                 )
             );
         pEqnComp1.ref().relax();
@@ -248,14 +272,14 @@ while (pimple.correct())
         pEqnComp2 =
             (
                 contErr2
-              - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
+              - fvc::SuSp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
             )/rho2
           + correction
             (
                 (alpha2/rho2)*
                 (
                     psi2*fvm::ddt(p_rgh)
-                  + fvm::div(phid2, p_rgh) - fvm::Sp(fvc::div(phid2), p_rgh)
+                  + fvm::div(phid2, p_rgh) - fvm::SuSp(fvc::div(phid2), p_rgh)
                 )
             );
         pEqnComp2.ref().relax();
@@ -265,14 +289,14 @@ while (pimple.correct())
         pEqnComp1 =
             (
                 contErr1
-              - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
+              - fvc::SuSp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
             )/rho1
           + (alpha1*psi1/rho1)*correction(fvm::ddt(p_rgh));
 
         pEqnComp2 =
             (
                 contErr2
-              - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
+              - fvc::SuSp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
             )/rho2
           + (alpha2*psi2/rho2)*correction(fvm::ddt(p_rgh));
     }

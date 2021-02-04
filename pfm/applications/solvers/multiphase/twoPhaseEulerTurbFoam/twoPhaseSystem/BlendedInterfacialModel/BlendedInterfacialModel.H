@@ -138,6 +138,9 @@ public:
     
         //- Return the drift velocity correction
         tmp<volVectorField> KdUdrift();
+    
+        //- Return interPhase force correction
+        tmp<volScalarField> CpIPh() const;
 };
 
 
