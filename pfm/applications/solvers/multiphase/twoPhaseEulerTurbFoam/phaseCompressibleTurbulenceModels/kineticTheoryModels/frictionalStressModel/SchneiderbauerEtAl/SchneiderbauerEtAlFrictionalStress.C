@@ -161,12 +161,8 @@ SchneiderbauerEtAl::frictionalPressurePrime
         // pPrime is solely used, if implicitPhasePressure is true
         return
              pos(alpha - alphaMinFriction)
-            *neg(alpha - alphaMax)
             *4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e3))
             /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_))
-       +
-             pos(alpha - alphaMax)
-            *0.66*aQSk_*k_/(pow(Foam::max(alpha - alphaMax, scalar(1e-8)), 0.33)*dp);
 }
 
 
