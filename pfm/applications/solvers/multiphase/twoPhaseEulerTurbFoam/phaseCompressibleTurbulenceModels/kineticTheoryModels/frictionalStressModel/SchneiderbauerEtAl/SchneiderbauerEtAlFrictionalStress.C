@@ -111,7 +111,11 @@ SchneiderbauerEtAl::frictionalPressure
         const volScalarField& alpha = phase;
         volScalarField DD
         (
-            max(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+            min
+            (
+                max(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+               ,1.0e1
+            )
         );
         volScalarField pInt
         (
@@ -161,7 +165,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
         // pPrime is solely used, if implicitPhasePressure is true
         return
              pos(alpha - alphaMinFriction)
-            *4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e3))
+            *4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e2))
             /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
 }
 
