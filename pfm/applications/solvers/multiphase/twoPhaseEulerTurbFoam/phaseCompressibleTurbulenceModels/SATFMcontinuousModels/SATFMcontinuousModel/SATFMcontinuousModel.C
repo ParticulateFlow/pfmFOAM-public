@@ -593,8 +593,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -0.75;
-    scalar xiMax = 0.75;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     R.max
     (
