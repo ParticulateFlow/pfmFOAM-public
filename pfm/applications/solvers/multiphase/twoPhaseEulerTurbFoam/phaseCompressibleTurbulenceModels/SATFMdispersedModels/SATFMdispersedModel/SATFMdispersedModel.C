@@ -1601,6 +1601,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     (
         3.0*sqr(alpha)
        /(g0*(g0 + 2.0))
+     + 0.03*alpha*Foam::max(alphaMaxTurb_ - alpha,scalar(0))
     );
     alphaP2Mean_.max(VSMALL);
     if (!equilibriumPhiP2_) {
