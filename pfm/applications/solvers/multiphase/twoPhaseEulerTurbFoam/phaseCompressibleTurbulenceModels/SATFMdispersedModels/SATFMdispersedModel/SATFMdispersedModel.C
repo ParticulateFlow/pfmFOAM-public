@@ -1595,7 +1595,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     volScalarField alphaM(alpha/(alphaMaxTurb_));
     alphaM.min(0.99999999999);
-    volScalarField g0(1.0/(1.0-alphaM));
+    volScalarField g0(1.0/(1.0-pow(alphaM,4.0/3.0)));
     
     volScalarField alphaL2
     (
