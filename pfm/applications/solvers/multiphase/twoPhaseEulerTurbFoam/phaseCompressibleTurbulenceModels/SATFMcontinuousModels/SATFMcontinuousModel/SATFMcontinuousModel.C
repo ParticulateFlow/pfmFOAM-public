@@ -1063,10 +1063,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
-          + fvm::Sp(2.0*beta*xiGatS_,k_)
-          // dissipation
-          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-         ==
+        );
+        
+        kEqn.relax();
+        
+        kEqn -=
+        (
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
           // ----------------
@@ -1078,15 +1080,20 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
                 (xiGS_&eX)*sqrt((kD&eX)*(k_&eX))*eX
               + (xiGS_&eY)*sqrt((kD&eY)*(k_&eY))*eY
               + (xiGS_&eZ)*sqrt((kD&eZ)*(k_&eZ))*eZ
+              - xiGatS_*k_
             )
           // drag production and pressure dilation
           - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
+          // dissipation
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // stabilization
+          + 2.0*beta*k_
+          - fvm::Sp(2.0*beta,k_)
           + fvOptions(alpha, rho, k_)
         );
 
-        kEqn.relax();
         fvOptions.constrain(kEqn);
         kEqn.solve();
         fvOptions.correct(k_);

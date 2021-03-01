@@ -1433,11 +1433,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
-          // interfacial work (--> energy transfer)
-          + fvm::Sp(2.0*beta,k_)
-          // dissipation
-          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-         ==
+        );
+        
+        kEqn.relax();
+        
+        kEqn -=
+        (
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
           // ----------------
@@ -1449,12 +1450,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 (xiGS_&eX)*sqrt((kC&eX)*(k_&eX))*eX
               + (xiGS_&eY)*sqrt((kC&eY)*(k_&eY))*eY
               + (xiGS_&eZ)*sqrt((kC&eZ)*(k_&eZ))*eZ
+              - k_
             )
-          // + fvm::Sp(-Ceps_*alpha*rho*sqrt(D&&D),k_)
+          // dissipation
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // stabilization
+          + 2.0*beta*k_
+          - fvm::Sp(2.0*beta,k_)
           + fvOptions(alpha, rho, k_)
         );
-
-        kEqn.relax();
         fvOptions.constrain(kEqn);
         kEqn.solve();
         fvOptions.correct(k_);
