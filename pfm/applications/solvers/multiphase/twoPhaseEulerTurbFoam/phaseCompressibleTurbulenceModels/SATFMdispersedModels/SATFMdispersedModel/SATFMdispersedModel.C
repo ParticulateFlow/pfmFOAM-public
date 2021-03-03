@@ -1447,10 +1447,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // interfacial work (--> energy transfer)
           + 2.0*beta
            *(
-                (xiGS_&eX)*sqrt((kC&eX)*(k_&eX))*eX
-              + (xiGS_&eY)*sqrt((kC&eY)*(k_&eY))*eY
-              + (xiGS_&eZ)*sqrt((kC&eZ)*(k_&eZ))*eZ
-              - k_
+                (xiGS_&eX)*sqrt((kC.oldTime()&eX)*(k_.oldTime()&eX))*eX
+              + (xiGS_&eY)*sqrt((kC.oldTime()&eY)*(k_.oldTime()&eY))*eY
+              + (xiGS_&eZ)*sqrt((kC.oldTime()&eZ)*(k_.oldTime()&eZ))*eZ
+              - k_.oldTime()
             )
           // dissipation
           - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)

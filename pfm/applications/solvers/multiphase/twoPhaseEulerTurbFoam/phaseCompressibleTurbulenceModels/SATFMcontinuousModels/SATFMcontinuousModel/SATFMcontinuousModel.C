@@ -1077,10 +1077,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          // interfacial work (--> energy transfer)
          + 2.0*beta
           *(
-                (xiGS_&eX)*sqrt((kD&eX)*(k_&eX))*eX
-              + (xiGS_&eY)*sqrt((kD&eY)*(k_&eY))*eY
-              + (xiGS_&eZ)*sqrt((kD&eZ)*(k_&eZ))*eZ
-              - xiGatS_*k_
+                (xiGS_&eX)*sqrt((kD.oldTime()&eX)*(k_&eX))*eX
+              + (xiGS_&eY)*sqrt((kD.oldTime()&eY)*(k_&eY))*eY
+              + (xiGS_&eZ)*sqrt((kD.oldTime()&eZ)*(k_&eZ))*eZ
+              - xiGatS_*k_.oldTime()
             )
           // drag production and pressure dilation
           - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
@@ -1089,8 +1089,8 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // dissipation
           - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
           // stabilization
-          + 2.0*beta*k_
-          - fvm::Sp(2.0*beta,k_)
+          + 2.0*beta*xiGatS_*k_
+          - fvm::Sp(2.0*beta*xiGatS_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
