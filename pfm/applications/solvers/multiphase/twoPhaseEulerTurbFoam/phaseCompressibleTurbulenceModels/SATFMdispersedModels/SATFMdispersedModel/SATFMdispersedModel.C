@@ -1599,13 +1599,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     volScalarField alphaM(alpha/(alphaMaxTurb_));
     alphaM.min(0.99999999999);
-    volScalarField g0(1.0/(1.0-pow(alphaM,4.0/3.0)));
+    volScalarField g0(1.0/(1.0-pow(alphaM,1.0/3.0)));
     
     volScalarField alphaL2
     (
-        3.0*sqr(alpha)
+        9.0*sqr(alpha)
        /(g0*(g0 + 2.0))
-     + 0.03*alpha*Foam::max(alphaMaxTurb_ - alpha,scalar(0))
     );
     alphaP2Mean_.max(VSMALL);
     if (!equilibriumPhiP2_) {
