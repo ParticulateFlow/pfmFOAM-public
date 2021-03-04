@@ -74,6 +74,11 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
     anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
     alphaMax_("alphaMax", dimless, coeffDict_),
     alphaMaxTurb_("alphaMaxTurb", dimless, coeffDict_),
+    limitAlphaP2Mean_(
+        "limitAlphaP2Mean",
+        dimless,
+        coeffDict_.lookupOrDefault<scalar>("limitAlphaP2Mean",0.4)
+    ),
     alphaMinFriction_
     (
         "alphaMinFriction",
@@ -478,6 +483,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         coeffDict().lookup("anIsoTropicNut") >> anIsoTropicNut_;
         alphaMax_.readIfPresent(coeffDict());
         alphaMaxTurb_.readIfPresent(coeffDict());
+        limitAlphaP2Mean_.readIfPresent(coeffDict());
         alphaMinFriction_.readIfPresent(coeffDict());
         xiPhiSolidScalar_.readIfPresent(coeffDict());
         xiPhiDivUScalar_.readIfPresent(coeffDict());
@@ -1600,7 +1606,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     
     volScalarField alphaM(alpha/(alphaMaxTurb_));
     alphaM.min(0.99999999999);
-    volScalarField g0(0.33/(1.0-pow(alphaM,1.0/3.0)));
+    volScalarField g0(limitAlphaP2Mean_/(1.0-pow(alphaM,1.0/3.0)));
     
     volScalarField alphaL2
     (
