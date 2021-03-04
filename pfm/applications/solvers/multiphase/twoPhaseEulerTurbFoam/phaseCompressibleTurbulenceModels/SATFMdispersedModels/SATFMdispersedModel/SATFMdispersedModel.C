@@ -1056,9 +1056,10 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     volVectorField gradAlpha  = fvc::grad(alpha_);
     
     // get turbulent kinetic energy of continuous-phase
-    const volVectorField& kC(mesh_.lookupObject<volVectorField>
+    const volVectorField& kCt(mesh_.lookupObject<volVectorField>
                                      ("k." + fluid.otherPhase(phase_).name()));
-
+    const volVectorField& kC(kCt.oldTime());
+    
     // simple filter for local smoothing
     simpleFilter filterS(mesh_);
     //simpleFilterADM filterS(mesh_);
@@ -1447,9 +1448,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
           // interfacial work (--> energy transfer)
           + 2.0*beta
            *(
-                (xiGS_&eX)*sqrt((kC.oldTime()&eX)*(k_.oldTime()&eX))*eX
-              + (xiGS_&eY)*sqrt((kC.oldTime()&eY)*(k_.oldTime()&eY))*eY
-              + (xiGS_&eZ)*sqrt((kC.oldTime()&eZ)*(k_.oldTime()&eZ))*eZ
+                (xiGS_&eX)*sqrt((kC&eX)*(k_.oldTime()&eX))*eX
+              + (xiGS_&eY)*sqrt((kC&eY)*(k_.oldTime()&eY))*eY
+              + (xiGS_&eZ)*sqrt((kC&eZ)*(k_.oldTime()&eZ))*eZ
               - k_.oldTime()
             )
           // dissipation

@@ -1077,9 +1077,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          // interfacial work (--> energy transfer)
          + 2.0*beta
           *(
-                (xiGS_&eX)*sqrt((kD.oldTime()&eX)*(k_.oldTime()&eX))*eX
-              + (xiGS_&eY)*sqrt((kD.oldTime()&eY)*(k_.oldTime()&eY))*eY
-              + (xiGS_&eZ)*sqrt((kD.oldTime()&eZ)*(k_.oldTime()&eZ))*eZ
+                (xiGS_&eX)*sqrt((kD&eX)*(k_.oldTime()&eX))*eX
+              + (xiGS_&eY)*sqrt((kD&eY)*(k_.oldTime()&eY))*eY
+              + (xiGS_&eZ)*sqrt((kD&eZ)*(k_.oldTime()&eZ))*eZ
               - xiGatS_*k_.oldTime()
             )
           // drag production and pressure dilation
