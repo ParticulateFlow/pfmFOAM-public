@@ -725,8 +725,9 @@ Foam::RASModels::SATFMdispersedModel::divDevRhoReff
         return
         pos(alpha_ - residualAlpha_)
       * (
-            fvc::laplacian(rho_*nut_, U)
-          - fvm::laplacian(rho_*(nut_ + nuFric_), U)
+//            fvc::laplacian(rho_*nut_, U)
+//          - fvm::laplacian(rho_*(nut_ + nuFric_), U)
+          - fvm::laplacian(rho_*(nuFric_), U)
           - fvc::div
             (
                rho_*nuFric_*dev2(T(fvc::grad(U)))
