@@ -1567,7 +1567,12 @@ void Foam::RASModels::SATFMdispersedModel::correct()
                 label faceCelli = curPatch.faceCells()[facei];
                 tensor n2(sqr(nf[facei]));
                 tensor transform(tensor::I - 2.0*n2);
-                Rw[facei] = 0.5*(R1_[faceCelli] + (transform&R1_[faceCelli]&transform))-(n2&R1_[faceCelli]&n2);
+                Rw[facei] = 0.5
+                           *(
+                                R1_[faceCelli]
+                             + (transform&R1_[faceCelli]&transform)
+                            )
+                           -(n2&R1_[faceCelli]&n2);
             }
         }
     }
