@@ -1425,9 +1425,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         
         volVectorField shearProd
         (
-            mag(gradUR1&&(eX*eX))*(eX)
-          - mag(gradUR1&&(eY*eY))*(eY)
-          - mag(gradUR1&&(eZ*eZ))*(eZ)
+            (gradUR1&&(eX*eX))*(eX)
+          + (gradUR1&&(eY*eY))*(eY)
+          + (gradUR1&&(eZ*eZ))*(eZ)
         );
         
         fv::options& fvOptions(fv::options::New(mesh_));
