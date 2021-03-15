@@ -180,12 +180,13 @@ void particleKFvPatchVectorField::updateCoeffs()
     const tmp<volVectorField> tU = granular.U();
     const volVectorField& U = tU();
     const fvPatchVectorField& Up = U.boundaryField()[patchi];
+    const vectorField Uc(Up.patchInternalField());
 
     // Wall normal cell velocity
-    const vectorField Un(-(this->patch().nf() & Up)*this->patch().nf());
+    const vectorField Un(-(this->patch().nf() & Uc)*this->patch().nf());
 
     // Tangential cell velocity
-    const vectorField Utp(Up + Un);
+    const vectorField Utp(Uc + Un);
 
     const vectorField kp
     (
