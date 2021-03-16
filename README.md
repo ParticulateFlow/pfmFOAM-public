@@ -12,5 +12,5 @@ OpenFOAM based developments made by the [Department of Particulate Flow Modellin
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 - This software is distributed under the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.html).
-- Copyright © 2019 JKU Linz
+- Copyright © 2019- JKU Linz
 - Some parts of this code are based on OpenFOAM® and Copyright on these parts is held by the OpenFOAM® Foundation (www.openfoam.org) and potentially other parties.
