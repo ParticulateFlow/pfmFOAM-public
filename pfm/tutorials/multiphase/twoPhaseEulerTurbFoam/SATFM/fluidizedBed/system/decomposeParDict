@@ -9,4 +9,4 @@ FoamFile
 
 numberOfSubdomains 4;
 
-method          scotch; 
+method          scotch;

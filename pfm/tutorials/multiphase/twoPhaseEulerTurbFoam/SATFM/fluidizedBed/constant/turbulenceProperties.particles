@@ -23,19 +23,19 @@ RAS
 
     turbulence      on;
     printCoeffs     on;
-    
+
     SATFMdispersedCoeffs
     {
         equilibriumK            off;  // equilibrium assumption: production of k == dissipation
         equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
         dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
-	    anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
-        
+        anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
+
         alphaMax                0.6;  // maximum dispersed phase volume fraction
         alphaMinFriction        0.4;  // friction stresses are solely computed for alpha > alphaMinFriction
         alphaMaxTurb            0.55; // alphaP2Mean = 0 for alpha > alphaMaxTurb
         residualAlpha           1e-3; // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
-        
+
         maxK                    10.0; // Limits Reynolds stresses
         maxNut                  0.1;
         ut                      0.96; // 0.96
@@ -43,32 +43,31 @@ RAS
         xiPhiS                 -0.50; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
         xiPhiDivU              -0.15; // correlation coefficient in alphaP2Mean equation
         xiGS                    0.9;  // correlation coefficient between dispersed phase velocity and continuous phase velocity
-        Cmu                     0.1;  // smagorinsky constant for turbulent viscosity   
+        Cmu                     0.1;  // smagorinsky constant for turbulent viscosity
         CmuW                    0.2;  // smagorinsky constant for turbulent viscosity near walls
         Ceps                    0.2;  // constant for mixing length model of turbulent dissipation rate
-        Sigma                   1.0;  // turbulent schmidt number        
+        Sigma                   1.0;  // turbulent schmidt number
         CphiS                   0.0;  // constant in alphaP2Mean equation
-        CphiS2                  0.0;  // constant in alphaP2Mean equation    
+        CphiS2                  0.0;  // constant in alphaP2Mean equation
 
-        
-        
-        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants    
+
+        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants
         laplaceAnIso2ndCoeffs   
         {
-            widthCoeff		6.0;
+            widthCoeff          6.0;
         }
-		
-		frictionalStressModel   SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
+
+        frictionalStressModel   SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
         SchneiderbauerEtAlCoeffs
         {
             b                0.2;
             muSt             0.38;
             muC              0.64;
             I0               0.279;
-            aQSk		   	 0;
-	    	alphaDeltaMin    0.01;
-	    	Rc               0; //Rolling Friction
-        }		
+            aQSk             0;
+            alphaDeltaMin    0.01;
+            Rc               0; //Rolling Friction
+        }
     }
 }
 

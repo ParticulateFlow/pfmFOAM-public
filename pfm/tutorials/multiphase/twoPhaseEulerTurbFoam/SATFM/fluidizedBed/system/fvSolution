@@ -12,12 +12,12 @@ FoamFile
     class       dictionary;
     location    "system";
     object      fvSolution;
-} 
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 solvers
 {
-       "alpha.*"
+    "alpha.*"
     {
         nAlphaCorr      1;
         nAlphaSubCycles 3;
@@ -99,12 +99,12 @@ PIMPLE
     nCorrectors      2;
     nNonOrthogonalCorrectors 0;
     faceMomentum     no;
-    momentumPredictor no; 
+    momentumPredictor no;
 // switch for periodic box
-    periodicBox       no;  
-    energyEqn         no;  
+    periodicBox       no;
+    energyEqn         no;
 //    pRefPoint        (-0.001 0.001 0.001);
-//    pRefValue        1e5;   
+//    pRefValue        1e5;
 }
 
 relaxationFactors
@@ -114,7 +114,7 @@ relaxationFactors
         "U.*"                 1;
         "alphaP2Mean.*"       1;
         "k.*"                 0.25;
-        "Theta.*"             1;   
+        "Theta.*"             1;
         p_rgh                 1;
     }
 }

@@ -23,20 +23,20 @@ RAS
 
     turbulence      on;
     printCoeffs     on;
-    
+
     SATFMcontinuousCoeffs
     {
         equilibriumK            off;  // equilibrium assumption: production of k == dissipation
         equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
         dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
-	    anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor       
-        
+        anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
+
         alphaMax                0.6;
         residualAlpha           1e-3; // minimum dispersed phase volume fraction
-        
+
         maxK                    10.0; // Limits Reynolds stresses
         maxNut                  1.0;        
-        
+
         xiPhiG                  0.5;  // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
         Cmu                     0.2;  // smagorinsky constant for turbulent viscosity   
         CmuW                    0.4;  // smagorinsky constant for turbulent viscosity near walls
@@ -45,13 +45,13 @@ RAS
         Sigma                   2.0;  // turbulent schmidt number
         g                       (0 0 -9.81); // gravity vector
 
-        
-        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants    
+
+        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants
         laplaceAnIso2ndCoeffs   
         {
-            widthCoeff		6.0;
+            widthCoeff          6.0;
         }
-		
+
     }
 }
 
