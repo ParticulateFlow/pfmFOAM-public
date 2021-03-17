@@ -1600,7 +1600,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // alphaP2Mean Equation
     // -------------------------------------------------------------------
     // compute laplacian(k)
-    volScalarField lapK(mag(fvc::laplacian(km)));
+    volScalarField lapK(2.0*mag(fvc::laplacian(km)));
     // compute fields for transport equation for phiP2
     volScalarField xiKgradAlpha = (
                                          ((sqrt(2.0*k_&eX) * (gradAlpha&eX) * (xiPhiS_&eX)))
