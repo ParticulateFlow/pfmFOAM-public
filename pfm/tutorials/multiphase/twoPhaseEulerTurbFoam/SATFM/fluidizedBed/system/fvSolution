@@ -17,16 +17,15 @@ FoamFile
 
 solvers
 {
-       "alpha.*"
+    "alpha.*"
     {
         nAlphaCorr      1;
-        nAlphaSubCycles 2;
+        nAlphaSubCycles 3;
+        implicitPhasePressure no;
 
-        smoothLimiter   0.1;
+        solver          PBiCGStab;
+        preconditioner  DIC;
 
-        implicitPhasePressure yes;
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
         tolerance       1e-9;
         relTol          0;
         minIter         1;
@@ -37,7 +36,7 @@ solvers
         solver          GAMG;
         smoother        DIC;
         tolerance       1e-8;
-        relTol          0;
+        relTol          0.01;
     }
 
     p_rghFinal
@@ -62,14 +61,23 @@ solvers
         smoother        symGaussSeidel;
         tolerance       1e-6;
         relTol          0;
-        minIter         0;
-	maxIter		0;
+        minIter         1;
+        maxIter         10;
     }
 
     "Theta.*"
     {
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-6;
+        relTol          0;
+        minIter         1;
+    }
+
+    "alphaP2Mean.*"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
         tolerance       1e-6;
         relTol          0;
         minIter         1;
@@ -77,9 +85,9 @@ solvers
 
     "(k|epsilon).*"
     {
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
-        tolerance       1e-5;
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-6;
         relTol          0;
         minIter         1;
     }
@@ -88,20 +96,26 @@ solvers
 PIMPLE
 {
     nOuterCorrectors 3;
-    nCorrectors      1;
+    nCorrectors      2;
     nNonOrthogonalCorrectors 0;
     faceMomentum     no;
     momentumPredictor no;
 // switch for periodic box
-    periodicBox       no;  
-    energyEqn         no;  
+    periodicBox       no;
+    energyEqn         no;
+//    pRefPoint        (-0.001 0.001 0.001);
+//    pRefValue        1e5;
 }
 
 relaxationFactors
 {
     equations
     {
-        ".*"            1;
+        "U.*"                 1;
+        "alphaP2Mean.*"       1;
+        "k.*"                 0.25;
+        "Theta.*"             1;
+        p_rgh                 1;
     }
 }
 

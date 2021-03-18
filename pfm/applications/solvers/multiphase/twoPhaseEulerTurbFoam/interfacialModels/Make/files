@@ -1,11 +1,9 @@
-/* library compressibleEulerianInterfacialModelsT contains additional models 
-   for filtered TFM --> extension of compressibleEulerianInterfacialModels */
-
 dragModels/dragModel/dragModel.C
 dragModels/dragModel/newDragModel.C
 dragModels/segregated/segregated.C
 dragModels/Ergun/Ergun.C
 dragModels/Gibilaro/Gibilaro.C
+dragModels/Gobin/Gobin.C
 dragModels/GidaspowErgunWenYu/GidaspowErgunWenYu.C
 dragModels/GidaspowSchillerNaumann/GidaspowSchillerNaumann.C
 dragModels/Lain/Lain.C
@@ -73,6 +71,15 @@ dragModels/Beetstra/Beetstra.C
 virtualMassModels/deWildeADM/deWildeADM.C
 virtualMassModels/deWildeSATFM/deWildeSATFM.C
 
+/* interPhaseForceModels: direct implementation of unresolved part of pressure gradient
+    --> alternative to virtual mass force */
+interPhaseForceModels/interPhaseForceModel/interPhaseForceModel.C
+interPhaseForceModels/interPhaseForceModel/newInterPhaseForceModel.C
+interPhaseForceModels/noInterPhaseForce/noInterPhaseForce.C
+interPhaseForceModels/deWildeSATFM/deWildeIPhSATFM.C
+interPhaseForceModels/deWildeADM/deWildeIPhADM.C
+
+
 /* filtered drag force modeled by drift velocity */
 driftVelocityModels/driftVelocityModel/driftVelocityModel.C
 driftVelocityModels/driftVelocityModel/newDriftVelocityModel.C
@@ -80,5 +87,6 @@ driftVelocityModels/noDriftVelocity/noDriftVelocity.C
 driftVelocityModels/driftVelocityADM/driftVelocityADM.C
 driftVelocityModels/driftVelocityADMreg/driftVelocityADMreg.C
 driftVelocityModels/driftVelocitySATFM/driftVelocitySATFM.C
+driftVelocityModels/driftVelocitySATFMreg/driftVelocitySATFMreg.C
 
 LIB = $(FOAM_USER_LIBBIN)/libcompressibleEulerianInterfacialModelsT

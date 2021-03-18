@@ -42,7 +42,7 @@ RAS
         {
         	smagConst       0.25;
         	lengthConst     0.3;	
-        	filter          simpleADM; // filter for Stolz    
+        	filter          laplaceAnIso2nd; // filter for Stolz    
         	laplaceAnIso2ndCoeffs   
         	{
         		widthCoeff		24.0;

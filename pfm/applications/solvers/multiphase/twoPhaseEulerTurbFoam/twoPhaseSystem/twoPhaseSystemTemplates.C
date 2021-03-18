@@ -26,6 +26,7 @@ License
 #include "BlendedInterfacialModel.H"
 #include "dragModel.H"
 #include "driftVelocityModel.H"
+#include "interPhaseForceModel.H"
 #include "virtualMassModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -68,8 +69,17 @@ inline const driftVelocityModel& twoPhaseSystem::lookupSubModel<driftVelocityMod
 {
     return driftVelocity_->phaseModel(dispersed);
 }
-
-
+    
+template<>
+inline const interPhaseForceModel& twoPhaseSystem::lookupSubModel<interPhaseForceModel>
+(
+    const phaseModel& dispersed,
+    const phaseModel& continuous
+) const
+{
+    return interPhaseForce_->phaseModel(dispersed);
+}
+    
 template<>
 inline const virtualMassModel& twoPhaseSystem::lookupSubModel<virtualMassModel>
 (

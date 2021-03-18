@@ -71,6 +71,7 @@ class driftVelocityADMreg
     
     //- max phase fraction
     const dimensionedScalar alphaMax_;
+    const dimensionedScalar Cd_;
     
 protected:
     autoPtr<LESfilter> filterPtr_;

@@ -65,19 +65,20 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::WenYuC::CdRe() const
 {
     volScalarField alpha2
     (
-        max(scalar(1) - pair_.dispersed(), pair_.continuous().residualAlpha())
+        max(scalar(1) - pair_.dispersed(), pair_.dispersed().residualAlpha())
     );
     
     volScalarField Res(alpha2*pair_.Re());
     volScalarField ResRes = max(Res,residualRe_);
-    volScalarField CdsRes
+    volScalarField Cd
     (
-        neg(ResRes - 1000)*24.0*(1.0 + 0.15*pow(ResRes, 0.687))
-      + pos0(ResRes - 1000)*0.44*ResRes
+        neg(Res - 1000)*24.0*(1.0 + 0.15*pow(Res, 0.687))/ResRes
+      + pos0(Res - 1000)*0.44
     );
     
     return
-        CdsRes*(Res/ResRes)
+         Cd
+        *Res
         *pow(alpha2, -3.65)
         *max(pair_.continuous(), pair_.continuous().residualAlpha());
 }

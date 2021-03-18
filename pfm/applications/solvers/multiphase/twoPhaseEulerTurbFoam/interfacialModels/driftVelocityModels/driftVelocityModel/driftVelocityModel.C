@@ -103,29 +103,51 @@ Foam::driftVelocityModel::KdUdrift() const
             IOobject::groupName(dragModel::typeName, pair_.name())
         )
     );
+    dimensionedScalar uSmall("uSmall", dimensionSet(0, 1, -1, 0, 0, 0, 0), 1.0e-6);
+    
+    dimensionedVector eX
+    (
+        "eX",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(1,0,0)
+    );
+    dimensionedVector eY
+    (
+        "eY",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,1,0)
+    );
+    dimensionedVector eZ
+    (
+        "eZ",
+        dimensionSet(0, 0, 0, 0, 0, 0, 0),
+        vector(0,0,1)
+    );
+    
     volVectorField ud(udrift());
-
+    
     volVectorField uSlipV(pair_.continuous().U() - pair_.dispersed().U());
     volScalarField uSlip(mag(uSlipV));
     uSlip.max(SMALL);
-     
+    
+    dragCorr_ = -((ud&uSlipV)/sqr(uSlip));
+    
     // limit turbulent dispersion force according to
     // Parmentier et al., AIChE J., 2012
-    
-    volScalarField magUd = mag(ud);
-    magUd.max(SMALL);
-    ud *= min(mag(uSlipV&ud)/uSlip,0.95*uSlip)/magUd;
-    dragCorr_ = -(ud&uSlipV)/sqr(uSlip);
+    ud *= 1.0/max(1.0,1.001*mag(dragCorr_));
+    dragCorr_.min(0.99);
+    dragCorr_.max(-0.99);
 
+    /*
+    ud =  ((ud&eX)*min(0.99*mag(uSlipV&eX)/(mag(ud&eX)+uSmall),1.0))*eX
+        + ((ud&eY)*min(0.99*mag(uSlipV&eY)/(mag(ud&eY)+uSmall),1.0))*eY
+        + ((ud&eZ)*min(0.99*mag(uSlipV&eZ)/(mag(ud&eZ)+uSmall),1.0))*eZ;
+    */
     // multiply drift velocity by drag coefficient
+    
     return
-        0.75
-        *pair_.dispersed()
-        *drag.CdRe()
-        *pair_.continuous().nu()
-        *pair_.continuous().rho()
-        *ud
-        /sqr(pair_.dispersed().d());
+         drag.K()
+        *ud; 
 }
 
 bool Foam::driftVelocityModel::writeData(Ostream& os) const

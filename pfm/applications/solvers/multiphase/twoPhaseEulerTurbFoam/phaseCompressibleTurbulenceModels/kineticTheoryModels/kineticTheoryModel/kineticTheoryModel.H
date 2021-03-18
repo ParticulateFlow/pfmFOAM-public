@@ -156,7 +156,8 @@ class kineticTheoryModel
         //- Disallow default bitwise assignment
         void operator=(const kineticTheoryModel&);
 
-
+protected:
+        void boundGradU(volTensorField& S) const;
 public:
 
     //- Runtime type information
@@ -212,6 +213,9 @@ public:
         //- Return the phase-pressure'
         // (derivative of phase-pressure w.r.t. phase-fraction)
         virtual tmp<volScalarField> pPrime() const;
+    
+        //- Return the phase-pressure'
+        virtual tmp<volScalarField> normalStress() const;
 
         //- Return the face-phase-pressure'
         // (derivative of phase-pressure w.r.t. phase-fraction)

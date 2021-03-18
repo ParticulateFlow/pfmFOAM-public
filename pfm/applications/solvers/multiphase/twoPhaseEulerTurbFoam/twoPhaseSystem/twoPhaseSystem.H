@@ -53,6 +53,7 @@ class liftModel;
 class wallLubricationModel;
 class turbulentDispersionModel;
 class driftVelocityModel;
+class interPhaseForceModel;
 
 class blendingMethod;
 template<class modelType> class BlendedInterfacialModel;
@@ -119,6 +120,9 @@ class twoPhaseSystem
         //- drift Velocity model
         autoPtr<BlendedInterfacialModel<driftVelocityModel>>
             driftVelocity_;
+        //- meso-scale interPhaseForceModel
+        autoPtr<BlendedInterfacialModel<interPhaseForceModel>>
+            interPhaseForce_;
 
     // Private member functions
 
@@ -173,6 +177,9 @@ public:
     
         //- Return drag correction due to drift velocity
         tmp<volVectorField> KdUdrift();
+    
+        //- Return interphase force correction
+        tmp<volScalarField> CpIPh() const;
     
         //- Solve for the two-phase-fractions
         void solve();

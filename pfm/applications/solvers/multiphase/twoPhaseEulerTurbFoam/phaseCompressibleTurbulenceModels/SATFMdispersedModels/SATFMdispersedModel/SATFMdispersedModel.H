@@ -55,6 +55,12 @@ SourceFiles
 #include "frictionalStressModel.H"
 // h-files for LES filters
 #include "LESfilter.H"
+#include "simpleFilter.H"
+#include "simpleFilterADM.H"
+#include "laplaceFilter.H"
+#include "wallFvPatch.H"
+#include "cyclicAMIFvsPatchField.H"
+#include "cyclicACMIFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -92,14 +98,22 @@ class SATFMdispersedModel
         // SA-TFM Model coefficients
 
             //- Use equilibrium approximation: generation == dissipation
-            Switch equilibrium_;
+            Switch equilibriumK_;
+            Switch equilibriumPhiP2_;
     
             //- Use dynamic adjustment of several model parameters and
             //  correlation coefficients
             Switch dynamicAdjustment_;
 
+            //- switch between isotropic and anisotropic treatment of
+            //  shear component of mesoscale stress tensor
+            Switch anIsoTropicNut_;
+
             //- Maximum packing phase-fraction
             dimensionedScalar alphaMax_;
+    
+            //- above alphaMaxTurb_ alphaP2Mean is 0
+            dimensionedScalar alphaMaxTurb_;
 
             //- Min value for which the frictional stresses are zero
             dimensionedScalar alphaMinFriction_;
@@ -113,23 +127,34 @@ class SATFMdispersedModel
             //- correlation coefficient between solid volume fraction and solid velocity
             dimensionedScalar xiPhiSolidScalar_;
     
+            //- correlation coefficient between solid volume fraction and divU
+            dimensionedScalar xiPhiDivUScalar_;
+    
+            //- correlation coefficient between cont. phase and solid velocity
+            dimensionedScalar xiGSScalar_;
+    
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
+            //- "Smagorinsky constant" near walls
+            dimensionedScalar CmuWScalar_;
+    
             //- constant in alphaP2Mean equation
-            dimensionedScalar CphiSscalar_;    
+            dimensionedScalar CphiSscalar_;
+            dimensionedScalar CphiS2scalar_;
     
             //- "Smagorinsky constant"
             dimensionedScalar CepsScalar_;
     
-            //- "pressure dilation constant"
-            dimensionedScalar CpScalar_;
     
             //- turbulent schmidt number
             dimensionedScalar sigma_;
     
             //- maximum turbulent kinetic energy
             dimensionedScalar maxK_;
+    
+            //- terminal settling velocity
+            dimensionedScalar ut_;
 
 
         // SA-TFM fields
@@ -147,6 +172,25 @@ class SATFMdispersedModel
             //- correlation coefficient between solid volume fraction and solid velocity
             volVectorField xiPhiS_;
     
+            //- correlation coefficient between solid volume fraction and velocity divergence
+            volScalarField xiPhiDivU_;
+    
+            //- correlation coefficient between solid volume fraction^2 and velocity divergence
+    
+            volScalarField xiPhi2DivU_;
+    
+            //- auto correlation coefficient of solids velocity
+            volTensorField xiUU_;
+    
+            //- triple correlation coefficient between solid volume fraction and cont. velocity
+            volScalarField xiPhiGG_;
+
+            //- correlation coefficient between cont. phase and solid velocity
+            volVectorField xiGS_;
+    
+            //- correlation coefficient between cont. phase and solid velocity (seen by the gas phase)
+            volScalarField xiGatS_;    
+    
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField alphaP2Mean_;
     
@@ -156,13 +200,22 @@ class SATFMdispersedModel
             //- phiPrimeSquared (Variance of solids volume fraction)
             volScalarField Ceps_;
     
-            //- pressure dilation constant
-            volScalarField Cp_;    
+            //- constant for the computation of alphaP2Mean
+            volScalarField CphiS_;
+            volScalarField CphiS2_;
     
             //- grid size
             volScalarField deltaF_;
-
-
+    
+            //- mixing length
+            volScalarField lm_;   
+    
+            //- Reynolds stress tensor
+            volTensorField R1_;
+    
+            //- anisotropic viscosity
+            volTensorField nutA_;
+    
     // Private Member Functions
 
         void correctNut()
@@ -180,7 +233,11 @@ protected:
     
     //- bound k
     void boundNormalStress(volVectorField& k) const;
+    void boundStress(volTensorField& R) const;
     void boundxiPhiS(volVectorField& xi) const;
+    void boundxiGS(volVectorField& xi) const;
+    void boundCorrTensor(volTensorField& R) const;
+    void boundGradU(volTensorField& S) const;
 public:
 
     //- Runtime type information
@@ -236,6 +293,9 @@ public:
         //- Return the phase-pressure'
         // (derivative of phase-pressure w.r.t. phase-fraction)
         virtual tmp<volScalarField> pPrime() const;
+    
+        //- Return the phase-pressure'
+        virtual tmp<volScalarField> normalStress() const;
 
         //- Return the face-phase-pressure'
         // (derivative of phase-pressure w.r.t. phase-fraction)

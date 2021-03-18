@@ -16,23 +16,27 @@ FoamFile
 
 dimensions      [0 1 -1 0 0 0 0];
 
-internalField   uniform (0 0 -0.01);
+internalField   uniform (0 0 -0.001);
 
 boundaryField
 {
     vin_DB
     {
-		type                   slip;
+        type                slip;
     }
 
     pout
     {
-		type                   slip;
+        type                slip;
     }
 
     w_FB
     {
-        type           		   slip;
+        type                slip;
+//  partial slip boundary conditions
+//        type                partialSlipFriction;
+//        muW                 0.2;
+//        value               $internalField;
     }
 }
 
