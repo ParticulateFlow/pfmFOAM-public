@@ -1239,9 +1239,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiPhiGG_.min(0.99);
         
         // compute correlation coefficient between gas phase and solid phase velocity
-        /*
         volVectorField xiGSNom =  (
-                                        ((filter_((U&eX)*(UcZero&eX)*alpha)/alphaf)- ((Uf&eX)*filter_((UcZero&eX)*alpha)/alphaf))*eX
+                                        ((filter_((U&eX)*(UcZero&eX)*alpha)/alphaf) - ((Uf&eX)*filter_((UcZero&eX)*alpha)/alphaf))*eX
                                        +((filter_((U&eY)*(UcZero&eY)*alpha)/alphaf) - ((Uf&eY)*filter_((UcZero&eY)*alpha)/alphaf))*eY
                                        +((filter_((U&eZ)*(UcZero&eZ)*alpha)/alphaf) - ((Uf&eZ)*filter_((UcZero&eZ)*alpha)/alphaf))*eZ
                                       );
@@ -1265,31 +1264,17 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
         xiGS_ = eX *
                 (
-                    filterS(sqrt(xiGSDenX)*mag(xiGSNom&eX))/filterS(xiGSDenX)
+                    filterS(sqrt(xiGSDenX)*(xiGSNom&eX))/filterS(xiGSDenX)
                 )
                 + eY *
                 (
-                    filterS(sqrt(xiGSDenY)*mag(xiGSNom&eY))/filterS(xiGSDenY)
+                    filterS(sqrt(xiGSDenY)*(xiGSNom&eY))/filterS(xiGSDenY)
                 )
                 + eZ *
                 (
-                    filterS(sqrt(xiGSDenZ)*mag(xiGSNom&eZ))/filterS(xiGSDenZ)
+                    filterS(sqrt(xiGSDenZ)*(xiGSNom&eZ))/filterS(xiGSDenZ)
                 );
-        */
-        volScalarField xiGSnum
-        (
-            filter_(alpha*(UcZero&U))/alphaf
-          - (filter_(alpha*UcZero) & Uf)/alphaf
-        );
-        volScalarField xiGSden
-        (
-            (filter_(alpha2*magSqr(UcZero))/alpha2f - magSqr(Ucf))
-           *aUU
-        );
-        xiGSden.max(SMALL);
-        volScalarField xiGSs(filterS(xiGSnum*sqrt(xiGSden))/filterS(xiGSden));
-        
-        xiGS_ = xiGSs*eSum;
+
         // smooth and regularize xiGS_ (xiGS_ is positive)
         boundxiGS(xiGS_);
         
