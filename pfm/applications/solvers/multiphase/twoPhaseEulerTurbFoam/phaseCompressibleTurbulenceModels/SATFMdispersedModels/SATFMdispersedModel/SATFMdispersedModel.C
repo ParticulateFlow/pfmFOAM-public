@@ -1609,18 +1609,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // Construct the transport equation for alphaP2Mean
         fvScalarMatrix phiP2Eqn
         (
-            fvm::ddt(alpha,rho,alphaP2Mean_)
-          + fvm::div(alphaRhoPhi, alphaP2Mean_)
-          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), alphaP2Mean_)
-          - fvm::laplacian(alpha*rho*nutA_/sigma_, alphaP2Mean_)
+            fvm::ddt(alphaP2Mean_)
+          + fvm::div(phi1, alphaP2Mean_)
+          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), alphaP2Mean_)
+          - fvc::laplacian(rho*nutA_/sigma_, alphaP2Mean_/alpha)
           // production/dissipation
-          + fvm::SuSp(alpha*rho*divU,alphaP2Mean_)
-          + fvm::SuSp(alpha*rho*xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
-          + fvm::SuSp(2.0*sqr(alpha)*rho*xiPhiDivU_*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::SuSp(2.0*alpha*rho*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
-          + fvm::Sp(CphiS_ * Ceps_ * alpha*rho*sqrt(km)/lm_,alphaP2Mean_)
+          + fvm::SuSp(divU,alphaP2Mean_)
+          + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
+          + fvm::SuSp(2.0*alpha*xiPhiDivU_*sqrt(lapK)/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::SuSp(2.0*xiKgradAlpha/sqrt(alphaP2Mean_),alphaP2Mean_)
+          + fvm::Sp(CphiS_ * Ceps_ * sqrt(km)/lm_,alphaP2Mean_)
          ==
-            CphiS2_*(alpha*rho*(nutA_&gradAlpha)&gradAlpha)/alpha
+            CphiS2_*((nutA_&gradAlpha)&gradAlpha)/alpha
         );
 
         phiP2Eqn.relax();
