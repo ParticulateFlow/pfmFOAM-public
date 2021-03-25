@@ -1611,8 +1611,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         (
             fvm::ddt(alphaP2Mean_)
           + fvm::div(phi1, alphaP2Mean_)
-          //+ fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), alphaP2Mean_)
-          - fvc::laplacian(rho*nutA_/sigma_, alphaP2Mean_/alpha)
+          - fvc::laplacian(nutA_/sigma_, alphaP2Mean_/alpha)
           // production/dissipation
           + fvm::SuSp(divU,alphaP2Mean_)
           + fvm::SuSp(xiPhi2DivU_*sqrt(lapK),alphaP2Mean_)
