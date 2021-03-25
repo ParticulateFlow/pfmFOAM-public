@@ -864,7 +864,7 @@ void Foam::RASModels::SATFMdispersedModel::boundxiGS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = 0;
+    scalar xiMin = -sqrt(2.0);
     scalar xiMax = sqrt(2.0);
 
     xi.max
@@ -1408,7 +1408,7 @@ void Foam::RASModels::SATFMdispersedModel::correct()
 
     // compute xiGatS
     xiGatS_ =  scalar(1.0) + xiPhiGG_*sqrt(alphaP2Mean_)
-              /Foam::max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2Mean_)/alpha2),residualAlpha_);
+              /Foam::max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2Mean_)/alpha2),sqr(residualAlpha_));
     xiGatS_.max(SMALL);
     xiGatS_.min(2.0);
 
