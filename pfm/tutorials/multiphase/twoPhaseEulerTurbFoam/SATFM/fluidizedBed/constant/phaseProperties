@@ -107,9 +107,8 @@ driftVelocity
 (
 	(particles in air)
     {
-        type            driftVelocitySATFMreg;
+        type            driftVelocitySATFM;
 		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero
-	    blendingSlip    1.0;
     }
 );
 

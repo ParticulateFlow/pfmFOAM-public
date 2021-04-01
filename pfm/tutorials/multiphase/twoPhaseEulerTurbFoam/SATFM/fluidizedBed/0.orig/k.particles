@@ -32,13 +32,12 @@ boundaryField
 
     w_FB
     {
-        type               zeroGradient;
-// production - dissipation corresponding to partial slip BC
-//        type           		   particleK;
-//        muW                    0.2;
-//        CepsW                  1.0;
-//        sigma                  1;
-//        value                  $internalField;     
+ //       type                    zeroGradient;
+        type           		   particleK;
+        muW                    0.01;
+        CepsW                  2.0;
+        sigma                  1;
+        value                  $internalField;   
     }
 
 }

@@ -22,7 +22,7 @@ ddtSchemes
 
 gradSchemes
 {
-    default Gauss linear 1;
+    default Gauss linear;
 }
 
 divSchemes
@@ -32,17 +32,15 @@ divSchemes
     "div\(phi,alpha.*\)"            Gauss SuperBee;
     "div\(phir,alpha.*\)"           Gauss SuperBee;
 
-    "div\(alphaRhoPhi.*,U.*\)"      Gauss SuperBeeV;
-    "div\(alphaRhoPhi.*\)"          Gauss SuperBee; 
+    "div\(alphaRhoPhi.*,U.*\)"      Gauss SuperBeeV; 
     "div\(phi.*,U.*\)"              Gauss SuperBeeV; 
-    "div\(phi.*,alphaP2Mean.*\)"    Gauss SuperBee; 
+    "div\(phi.*,alphaP2Mean.*\)"    Gauss SuperBee;
 
     "div\(alphaRhoPhi.*,(h|e).*\)"  Gauss SuperBee; 
     "div\(alphaRhoPhi.*,K.*\)"      Gauss SuperBee;   
-    "div\(alphaPhi.*,p\)"           Gauss SuperBee;
-    "div\(alphaPhi.*\)"             Gauss SuperBee; 
+    "div\(alphaPhi.*,p\)"           Gauss SuperBee; 
 
-    div(alphaRhoPhi.particles,Theta.particles) Gauss SuperBee;    
+    div(alphaRhoPhi.particles,Theta.particles) Gauss SuperBee;   
 
     "div\(alphaRhoPhi.*,(k|epsilon).*\)" Gauss SuperBee;   
 

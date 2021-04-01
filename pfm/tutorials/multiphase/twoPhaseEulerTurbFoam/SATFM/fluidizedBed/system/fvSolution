@@ -36,7 +36,7 @@ solvers
         solver          GAMG;
         smoother        DIC;
         tolerance       1e-8;
-        relTol          0.01;
+        relTol          0.001;
     }
 
     p_rghFinal
@@ -103,6 +103,7 @@ PIMPLE
 // switch for periodic box
     periodicBox       no;  
     energyEqn         no;  
+    turbOnFinalIter   no;
 //    pRefPoint        (-0.001 0.001 0.001);
 //    pRefValue        1e5;   
 }
@@ -111,11 +112,7 @@ relaxationFactors
 {
     equations
     {
-        "U.*"                 1;
-        "alphaP2Mean.*"       1;
-        "k.*"                 0.25;
-        "Theta.*"             1;   
-        p_rgh                 1;
+        ".*"       1;
     }
 }
 

@@ -32,8 +32,8 @@ boundaryField
 
     w_FB
     {
-        type            calculated;
-        value           $internalField;
+        type               calculated;
+        value              $internalField;
     }
 
 }

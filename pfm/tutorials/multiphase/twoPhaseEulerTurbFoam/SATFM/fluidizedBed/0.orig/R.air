@@ -32,7 +32,9 @@ boundaryField
 
     w_FB
     {
-        type               zeroGradient;
+        type               fixedValue;
+        value              $internalField;
     }
+
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
