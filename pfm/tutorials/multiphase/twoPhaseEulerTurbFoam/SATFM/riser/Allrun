@@ -1,0 +1,19 @@
+#!/bin/sh
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+cp -rf 0.orig 0
+
+unzip NETL_riser.zip
+
+# convert mesh
+runApplication fluentMeshToFoam NETL_riser.cas -writeZones -scale 0.001
+
+# set initial conditions
+runApplication setFields
+
+# decompose Domain
+# runApplication decomposePar
+
+# run twoPhaseEulerTurbFoam
+runApplication $(getApplication)
+
