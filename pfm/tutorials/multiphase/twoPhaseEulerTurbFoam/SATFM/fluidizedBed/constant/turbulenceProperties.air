@@ -48,7 +48,7 @@ RAS
 	    filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants    
 	    laplaceAnIso2ndCoeffs   
 	    {
-		    widthCoeff		6.0;
+		    widthCoeff		7.0;
 	    }
 		
     }

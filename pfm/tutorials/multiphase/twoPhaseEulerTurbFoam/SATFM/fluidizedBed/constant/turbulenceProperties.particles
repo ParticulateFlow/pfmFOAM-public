@@ -40,7 +40,7 @@ RAS
         
         maxK                    10.0; // Limits Reynolds stresses
         maxNut                  1.0;
-        ut                      0.99;
+        ut                      2.0;
 
         xiPhiS                 -0.50; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
         xiPhiDivU              -0.15;
@@ -56,7 +56,7 @@ RAS
 	    filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants    
 	    laplaceAnIso2ndCoeffs   
 	    {
-		    widthCoeff		6.0;
+		    widthCoeff		7.0;
 	    }
 		
 		

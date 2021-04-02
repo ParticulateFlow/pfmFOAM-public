@@ -32,12 +32,7 @@ boundaryField
 
     w_FB
     {
- //       type                    zeroGradient;
-        type           		   particleK;
-        muW                    0.01;
-        CepsW                  2.0;
-        sigma                  1;
-        value                  $internalField;   
+        type                zeroGradient; 
     }
 
 }

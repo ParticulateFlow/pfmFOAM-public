@@ -22,23 +22,17 @@ boundaryField
 {
     vin_DB
     {
-        type           		   slip;
-//        type           		   partialSlipFriction;
-//        muW                    0.4;
-//        value                  $internalField;   
+        type                slip;
     }
 
     pout
     {
-        type               slip;
+        type                slip;
     }
 
     w_FB
     {
- //       type            slip;
-        type           		   partialSlipFriction;
-        muW                    0.01;
-        value                  $internalField;         
+        type                slip;     
     }
 }
 
