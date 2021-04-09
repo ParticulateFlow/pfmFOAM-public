@@ -74,10 +74,10 @@ drag
 
 virtualMass
 (
-//	(particles in air)
+//    (particles in air)
 //    {
 //        type            deWildeSATFM;
-//	    residualAlpha   1e-3;			 // below residualAlpha interphase force is zero
+//        residualAlpha   1e-3;         // below residualAlpha interphase force is zero
 //    }
 );
 
@@ -105,20 +105,20 @@ turbulentDispersion
 //drift Velocity
 driftVelocity
 (
-	(particles in air)
+    (particles in air)
     {
         type            driftVelocitySATFM;
-		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero
+        residualAlpha   1e-3;           // below residualAlpha drift velocity is zero
     }
 );
 
 //meso-scale interphase Force
 interPhaseForce
 (
-	(particles in air)
+    (particles in air)
     {
         type            deWildeIPhSATFM;
-		residualAlpha   1e-3;			 // below residualAlpha interphase force is zero
+        residualAlpha   1e-3;           // below residualAlpha interphase force is zero
     }
 );
 

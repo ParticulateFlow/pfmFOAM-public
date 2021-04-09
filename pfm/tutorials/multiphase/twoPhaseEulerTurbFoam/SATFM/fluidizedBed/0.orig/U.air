@@ -22,26 +22,26 @@ boundaryField
 {
     vin_DB
     {
-        type               interstitialInletVelocity;
-        inletVelocity      uniform (0 0 0.63);
-        alpha              alpha.air;
-        value              uniform (0 0 0.63); 
-//        type            turbulentInlet;
-//        referenceField  uniform (0 0 0.63);
-//        fluctuationScale (0.01 0.01 0.05);
-//        value           uniform (0 0 0.63);
+        type            interstitialInletVelocity;
+        inletVelocity   uniform (0 0 0.63);
+        alpha           alpha.air;
+        value           uniform (0 0 0.63);
+//        type                turbulentInlet;
+//        referenceField      uniform (0 0 0.63);
+//        fluctuationScale    (0.01 0.01 0.05);
+//        value               uniform (0 0 0.63);
     }
 
     pout
     {
-        type               pressureInletOutletVelocity;
-        phi                phi.air;
-        value              $internalField;
+        type            pressureInletOutletVelocity;
+        phi             phi.air;
+        value           $internalField;
     }
 
     w_FB
     {
-        type               noSlip;
+        type            noSlip;
     }
 }
 

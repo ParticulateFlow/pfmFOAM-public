@@ -32,7 +32,7 @@ boundaryField
 
     w_FB
     {
-        type                slip;     
+        type                slip;
     }
 }
 

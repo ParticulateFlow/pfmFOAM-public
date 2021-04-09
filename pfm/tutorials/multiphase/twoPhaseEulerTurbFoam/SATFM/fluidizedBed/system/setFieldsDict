@@ -23,7 +23,7 @@ defaultFieldValues
 
 regions
 (
-    boxToCell 
+    boxToCell
     {
         box ( -0.08 -0.03 0) ( 0.08 0.03 0.5025 );
         fieldValues

@@ -27,7 +27,7 @@ boundaryField
 
     pout
     {
-        type               zeroGradient;
+        type            zeroGradient;
     }
 
     w_FB

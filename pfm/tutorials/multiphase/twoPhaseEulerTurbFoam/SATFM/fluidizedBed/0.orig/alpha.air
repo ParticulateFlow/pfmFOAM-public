@@ -27,10 +27,10 @@ boundaryField
 
     pout
     {
-        type               inletOutlet;
-        phi                phi.air;
-        inletValue         uniform 1;
-        value              uniform 1;
+        type            inletOutlet;
+        phi             phi.air;
+        inletValue      uniform 1;
+        value           uniform 1;
     }
 
     w_FB
