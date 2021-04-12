@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -10,31 +10,44 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volVectorField;
-    object      k.particles;
+    object      U.air;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+dimensions      [0 1 -1 0 0 0 0];
 
-internalField   uniform (1e-3 1e-3 1e-3);
+internalField   uniform (0 0.0 0.0);
 
 boundaryField
 {
-    vin_DB
+// gas inlet
+    vin_g
     {
-        type            zeroGradient;
+        type            interstitialInletVelocity;
+        inletVelocity   uniform (0 0 5.14);
+        alpha           alpha.air;
+        value           uniform (0 0 5.14);
     }
-
-    pout
+//outlet
+    p_out 
     {
-        type            zeroGradient;
+        type            pressureInletOutletVelocity;
+        phi             phi.air;
+        value           uniform (0 0 0);
     }
-
-    w_FB
+//solid inlet
+    vin_s
     {
-        type            zeroGradient;
+        type            interstitialInletVelocity;
+        inletVelocity   uniform (-0.1 0 0);
+        alpha           alpha.air;
+        value           $internalField;
     }
-
+// walls
+    wall
+    {
+        type            noSlip;
+    }
 }
 
 // ************************************************************************* //

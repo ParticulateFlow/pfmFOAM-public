@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -12,12 +12,12 @@ FoamFile
     class       dictionary;
     location    "system";
     object      fvSolution;
-}
+} 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 solvers
 {
-    "alpha.*"
+       "alpha.*"
     {
         nAlphaCorr      1;
         nAlphaSubCycles 3;
@@ -36,7 +36,7 @@ solvers
         solver          GAMG;
         smoother        DIC;
         tolerance       1e-8;
-        relTol          0.001;
+        relTol          0.0001;
     }
 
     p_rghFinal
@@ -112,7 +112,7 @@ relaxationFactors
 {
     equations
     {
-        ".*"        1;
+        ".*"       1;
     }
 }
 

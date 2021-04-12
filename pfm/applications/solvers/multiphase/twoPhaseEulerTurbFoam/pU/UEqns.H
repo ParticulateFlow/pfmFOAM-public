@@ -103,7 +103,6 @@ volVectorField KdUdrift(fluid.KdUdrift());
                 )
             );
         }
-        
         U1.correctBoundaryConditions();
         fvOptions.correct(U1);
     }

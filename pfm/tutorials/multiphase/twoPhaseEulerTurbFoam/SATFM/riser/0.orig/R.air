@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -20,22 +20,25 @@ internalField   uniform (0 0 0 0 0 0 0 0 0);
 
 boundaryField
 {
-    vin_DB
+// gas inlet
+    vin_g
     {
         type            zeroGradient;
     }
-
-    pout
+//outlet
+    p_out 
     {
         type            zeroGradient;
     }
-
-    w_FB
+//solid inlet
+    vin_s
     {
-        type            fixedValue;
-        value           $internalField;
+        type            zeroGradient;
     }
-
+// walls
+    wall
+    {
+        type            zeroGradient;
+    }
 }
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

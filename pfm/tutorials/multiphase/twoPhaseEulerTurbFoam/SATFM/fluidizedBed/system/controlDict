@@ -22,7 +22,7 @@ startFrom       latestTime;
 
 stopAt          endTime;
 
-endTime         1.12;
+endTime         5;
 
 deltaT          0.00025;
 
@@ -79,6 +79,12 @@ functions
                 mean        on;
                 prime2Mean  on;
                 base        time;
+            }
+            alphaP2Mean.particles
+            {
+                 mean        on;
+                 prime2Mean  on;
+                 base        time;
             }
         );
     }

@@ -114,6 +114,9 @@ class SATFMdispersedModel
     
             //- above alphaMaxTurb_ alphaP2Mean is 0
             dimensionedScalar alphaMaxTurb_;
+            
+            //- prefactor for g0
+            dimensionedScalar limitAlphaP2Mean_;
 
             //- Min value for which the frictional stresses are zero
             dimensionedScalar alphaMinFriction_;
