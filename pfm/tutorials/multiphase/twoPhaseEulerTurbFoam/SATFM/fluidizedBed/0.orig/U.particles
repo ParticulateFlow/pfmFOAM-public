@@ -33,10 +33,6 @@ boundaryField
     w_FB
     {
         type                slip;
-//  partial slip boundary conditions
-//        type                partialSlipFriction;
-//        muW                 0.2;
-//        value               $internalField;
     }
 }
 

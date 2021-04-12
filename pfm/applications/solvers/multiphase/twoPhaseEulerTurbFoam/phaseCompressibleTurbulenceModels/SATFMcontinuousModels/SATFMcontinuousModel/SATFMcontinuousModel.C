@@ -498,9 +498,9 @@ Foam::RASModels::SATFMcontinuousModel::divDevRhoReff
     } else {
         return
         (
-            fvc::laplacian(rho_*nut_, U)
+//            fvc::laplacian(rho_*nut_, U)
           - fvc::div(rho_*(nuEff() - nut_)*dev2(T(fvc::grad(U))))
-          - fvm::laplacian(rho_*nuEff(), U)
+          - fvm::laplacian(rho_*(nuEff() - nut_), U)
           + fvc::div
             (
                 2.0
@@ -593,8 +593,8 @@ void Foam::RASModels::SATFMcontinuousModel::boundCorrTensor
     volTensorField& R
 ) const
 {
-    scalar xiMin = -0.75;
-    scalar xiMax = 0.75;
+    scalar xiMin = -0.99;
+    scalar xiMax = 0.99;
 
     R.max
     (
@@ -1047,9 +1047,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
         volVectorField shearProd
         (
-          - mag(gradUR2&&(eX*eX))*(eX)
-          - mag(gradUR2&&(eY*eY))*(eY)
-          - mag(gradUR2&&(eZ*eZ))*(eZ)
+            (gradUR2&&(eX*eX))*(eX)
+          + (gradUR2&&(eY*eY))*(eY)
+          + (gradUR2&&(eZ*eZ))*(eZ)
         );
         
         fv::options& fvOptions(fv::options::New(mesh_));
@@ -1063,10 +1063,12 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), k_)
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
-          + fvm::Sp(2.0*beta*xiGatS_,k_)
-          // dissipation
-          + fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
-         ==
+        );
+        
+        kEqn.relax();
+        
+        kEqn -=
+        (
           // some source terms are explicit since fvm::Sp()
           // takes solely scalars as first argument.
           // ----------------
@@ -1075,18 +1077,23 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
          // interfacial work (--> energy transfer)
          + 2.0*beta
           *(
-                (xiGS_&eX)*sqrt((kD&eX)*(k_&eX))*eX
-              + (xiGS_&eY)*sqrt((kD&eY)*(k_&eY))*eY
-              + (xiGS_&eZ)*sqrt((kD&eZ)*(k_&eZ))*eZ
+                (xiGS_&eX)*sqrt((kD&eX)*(k_.oldTime()&eX))*eX
+              + (xiGS_&eY)*sqrt((kD&eY)*(k_.oldTime()&eY))*eY
+              + (xiGS_&eZ)*sqrt((kD&eZ)*(k_.oldTime()&eZ))*eZ
+              - xiGatS_*k_.oldTime()
             )
           // drag production and pressure dilation
           - (KdUdrift&eX)*((uSlip&eX) + (pDil&eX))*eX
           - (KdUdrift&eY)*((uSlip&eY) + (pDil&eY))*eY
           - (KdUdrift&eZ)*((uSlip&eZ) + (pDil&eZ))*eZ
+          // dissipation
+          - fvm::Sp(Ceps_*alpha*rho*sqrt(km)/lm_,k_)
+          // stabilization
+          + 2.0*beta*xiGatS_*k_
+          - fvm::Sp(2.0*beta*xiGatS_,k_)
           + fvOptions(alpha, rho, k_)
         );
 
-        kEqn.relax();
         fvOptions.constrain(kEqn);
         kEqn.solve();
         fvOptions.correct(k_);

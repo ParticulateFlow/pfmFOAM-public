@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,33 +9,45 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volTensorField;
-    object      R.particles;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties.particles;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
-
-internalField   uniform (0 0 0 0 0 0 0 0 0);
-
-boundaryField
+thermoType
 {
-    vin_DB
-    {
-        type            zeroGradient;
-    }
-
-    pout
-    {
-        type            zeroGradient;
-    }
-
-    w_FB
-    {
-        type               calculated;
-        value              $internalField;
-    }
-
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState rhoConst;
+    specie          specie;
+    energy          sensibleInternalEnergy;
 }
+
+mixture
+{
+    specie
+    {
+        nMoles      1;
+        molWeight   100;
+    }
+    equationOfState
+    {
+        rho         2425;
+    }
+    thermodynamics
+    {
+        Cp          6000;
+        Hf          0;
+    }
+    transport
+    {
+        mu          0;
+        Pr          1;
+    }
+}
+
 
 // ************************************************************************* //

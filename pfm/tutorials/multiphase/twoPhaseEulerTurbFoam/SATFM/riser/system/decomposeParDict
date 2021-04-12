@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,33 +9,15 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volTensorField;
-    object      R.particles;
+    class       dictionary;
+    object      decomposeParDict;
 }
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+numberOfSubdomains      22;
 
-internalField   uniform (0 0 0 0 0 0 0 0 0);
+method                  scotch;
 
-boundaryField
-{
-    vin_DB
-    {
-        type            zeroGradient;
-    }
-
-    pout
-    {
-        type            zeroGradient;
-    }
-
-    w_FB
-    {
-        type               calculated;
-        value              $internalField;
-    }
-
-}
 
 // ************************************************************************* //
