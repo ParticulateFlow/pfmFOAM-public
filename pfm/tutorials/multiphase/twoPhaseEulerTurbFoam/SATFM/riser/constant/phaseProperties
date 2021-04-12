@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -100,10 +100,10 @@ turbulentDispersion
 //drift Velocity
 driftVelocity
 (
-	(particles in air)
+    (particles in air)
     {
         type            driftVelocitySATFMreg;
-	    residualAlpha   1e-3;
+        residualAlpha   1e-3;
         blendingSlip    0;
     }
 );
@@ -111,10 +111,10 @@ driftVelocity
 //meso-scale interphase Force
 interPhaseForce
 (
-	(particles in air)
+    (particles in air)
     {
         type            deWildeIPhSATFM;
-	    residualAlpha   1e-3;			 // below residualAlpha interphase force is zero
+        residualAlpha   1e-3;            // below residualAlpha interphase force is zero
     }
 );
 

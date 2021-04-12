@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -29,7 +29,7 @@ RAS
         equilibriumK            off;  // equilibrium assumption: production of k == dissipation
         equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
         dynamicAdjustment       on;  // dynamic adjustment of model coefficient and correlation coefficients
-	    anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
+        anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
         
         alphaMax                0.6;   // maximum dispersed phase volume fraction
         alphaMaxTurb            0.6;
@@ -45,48 +45,48 @@ RAS
         xiPhiS                 -0.50; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
         xiPhiDivU              -0.15;
         xiGS                    0.90; // correlation coefficient between dispersed phase velocity and continuous phase velocity
-        Cmu                     0.2; // smagorinsky constant for turbulent viscosity  
-        CmuW                    0.2; // smagorinsky constant for turbulent viscosity 
+        Cmu                     0.2; // smagorinsky constant for turbulent viscosity
+        CmuW                    0.2; // smagorinsky constant for turbulent viscosity
         Ceps                    0.4; // constant for mixing length model of turbulent dissipation rate
-        Sigma                   1.0; // turbulent schmidt number        
-        CphiS                   0.0; // turbulent schmidt number  
-        CphiS2                  0.0; // turbulent schmidt number        
+        Sigma                   1.0; // turbulent schmidt number
+        CphiS                   0.0; // turbulent schmidt number
+        CphiS2                  0.0; // turbulent schmidt number
         g                       (0 0 -9.81);
-        
-	    filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants    
-	    laplaceAnIso2ndCoeffs   
-	    {
-		    widthCoeff		7.0;
-	    }
-		
-		
-		frictionalStressModel    SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
+
+        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          7.0;
+        }
+
+
+        frictionalStressModel    SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
         SchneiderbauerEtAlCoeffs
         {
-            alpha            1.6;
-            L                0.2;
-            b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 0.089;
-            aInt             0.01;
-            k                1e4;
-	    	alphaDeltaMin    0.01;
-	    	Rc               0; //Rolling Friction
-        }	
+            alpha               1.6;
+            L                   0.2;
+            b                   0.2;
+            muSt                0.38;
+            muC                 0.64;
+            I0                  0.279;
+            aQSk                0.089;
+            aInt                0.01;
+            k                   1e4;
+            alphaDeltaMin       0.01;
+            Rc                  0; //Rolling Friction
+        }
 
         SchaefferCoeffs
         {
-            phi                     28.5;
-        }		
+            phi                 28.5;
+        }
         JohnsonJacksonCoeffs
         {
-            Fr                      0.05;
-            eta                     2;
-            p                       5;
-            phi                     28.5;
-            alphaDeltaMin           0.05;
+            Fr                  0.05;
+            eta                 2;
+            p                   5;
+            phi                 28.5;
+            alphaDeltaMin       0.05;
         }
     }
     kineticTheoryCoeffs
@@ -105,27 +105,27 @@ RAS
 
         SchneiderbauerEtAlCoeffs
         {
-            alpha            1.6;
-            L                0.2;
-            b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 0.089;
-            aInt             0.01;
-            k                1e4;
-	    	alphaDeltaMin    0.01;
-	    	Rc               0; //Rolling Friction
-        }		
+            alpha               1.6;
+            L                   0.2;
+            b                   0.2;
+            muSt                0.38;
+            muC                 0.64;
+            I0                  0.279;
+            aQSk                0.089;
+            aInt                0.01;
+            k                   1e4;
+            alphaDeltaMin       0.01;
+            Rc                  0; //Rolling Friction
+        }
     }
 
 
     phasePressureCoeffs
     {
-        preAlphaExp     500;
-        expMax          1000;
-        alphaMax        0.62;
-        g0              1000;
+        preAlphaExp             500;
+        expMax                  1000;
+        alphaMax                0.62;
+        g0                      1000;
     }
 }
 

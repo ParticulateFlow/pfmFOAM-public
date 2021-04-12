@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -49,7 +49,7 @@ adjustTimeStep  yes;
 maxCo           2.0;
 
 maxDeltaT       1e-2;
-minDeltaT	    1e-5; 
+minDeltaT       1e-5;
 
 functions
 {
@@ -66,42 +66,41 @@ functions
         functionObjectLibs ( "libutilityFunctionObjects.so" );
         type coded;
         enabled true;
-  //      redirectType mfp;
-	    name c_mfp;
+//        redirectType mfp;
+        name c_mfp;
         writeControl   writeTime;
         codeExecute
         #{
             const volScalarField& alpha = mesh().lookupObject<volScalarField>("alpha.particles");
             const volVectorField& U = mesh().lookupObject<volVectorField>("U.particles");
-   	        static autoPtr<volScalarField> pField;
+            static autoPtr<volScalarField> pField;
 
-   if(!pField.valid())
-   {
-      pField.set
-      (
-         new volScalarField
-         (
-            IOobject
-            (
-               "mfp",
-               mesh().time().timeName(),
-               U.mesh(),
-               IOobject::NO_READ,
-               IOobject::AUTO_WRITE
-            ),
-            alpha*U.component(2)
-         )
-      );
-   }
+            if(!pField.valid())
+            {
+                pField.set
+                (
+                    new volScalarField
+                    (
+                        IOobject
+                        (
+                            "mfp",
+                            mesh().time().timeName(),
+                            U.mesh(),
+                            IOobject::NO_READ,
+                            IOobject::AUTO_WRITE
+                        ),
+                        alpha*U.component(2)
+                    )
+                );
+            }
 
-   volScalarField &mfp = pField();
+            volScalarField &mfp = pField();
 
-   mfp.checkIn();
+            mfp.checkIn();
 
-   mfp = alpha*U.component(2);
+            mfp = alpha*U.component(2);
 
- 
-	    Info << "max(mfp)" << max(mag(mfp)) <<  endl;
+            Info << "max(mfp)" << max(mag(mfp)) <<  endl;
         #};
     }
 
@@ -116,49 +115,49 @@ functions
         (
             U.particles
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
-		 window      10.0;
+                mean        on;
+                prime2Mean  off;
+                base        time;
+                window      10.0;
             }
 
             U.air
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
-		 window      10.0;
+                mean        on;
+                prime2Mean  off;
+                base        time;
+                window      10.0;
             }
 
             alpha.particles
             {
-                 mean        on;
-                 prime2Mean  on;
-                 base        time;
-		 window      10.0;
+                mean        on;
+                prime2Mean  on;
+                base        time;
+                window      10.0;
             }
             p
             {
-                 mean        on;
-                 prime2Mean  on;
-                 base        time;
-		 window      10.0;
+                mean        on;
+                prime2Mean  on;
+                base        time;
+                window      10.0;
             }
             gradP
             {
-                 mean        on;
-                 prime2Mean  on;
-                 base        time;
-		 window      10.0;
+                mean        on;
+                prime2Mean  on;
+                base        time;
+                window      10.0;
             }
             mfp
             {
-                 mean        on;
-                 prime2Mean  on;
-                 base        time;
-		 window      10.0;
+                mean        on;
+                prime2Mean  on;
+                base        time;
+                window      10.0;
             }
-            
+
         );
     }
 }

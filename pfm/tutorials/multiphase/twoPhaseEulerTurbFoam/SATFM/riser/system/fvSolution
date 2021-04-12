@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -99,13 +99,13 @@ PIMPLE
     nCorrectors      2;
     nNonOrthogonalCorrectors 0;
     faceMomentum     no;
-    momentumPredictor no; 
+    momentumPredictor no;
 // switch for periodic box
-    periodicBox       no;  
-    energyEqn         no;  
+    periodicBox       no;
+    energyEqn         no;
     turbOnFinalIter   no;
 //    pRefPoint        (-0.001 0.001 0.001);
-//    pRefValue        1e5;   
+//    pRefValue        1e5;
 }
 
 relaxationFactors

@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -31,7 +31,7 @@ boundaryField
     {
         type            inletOutlet;
         phi             phi.air;
-        inletValue	    uniform (1e-3 1e-3 1e-3);
+        inletValue      uniform (1e-3 1e-3 1e-3);
         value           uniform (1e-3 1e-3 1e-3);
     }
 //solid inlet

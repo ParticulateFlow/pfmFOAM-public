@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.4.0                                 |
+|  \\    /   O peration     | Version:  6                                     |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -22,7 +22,7 @@ thermoType
     transport       const;
     thermo          hConst;
     equationOfState perfectGas;
-    specie          specie; 
+    specie          specie;
     energy          sensibleInternalEnergy;
 }
 
@@ -40,7 +40,7 @@ mixture
     }
     equationOfState
     {
-        rho         1.2;//in this case the outlet pressure is higher, thus we use higher density instead
+        rho         1.2; //in this case the outlet pressure is higher, thus we use higher density instead
     }
     transport
     {
