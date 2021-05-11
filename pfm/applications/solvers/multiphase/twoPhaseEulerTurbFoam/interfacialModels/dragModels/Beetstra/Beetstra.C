@@ -65,7 +65,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Beetstra::CdRe() const
 {
     volScalarField alpha1
     (
-        max(pair_.dispersed(), pair_.continuous().residualAlpha())
+        max(pair_.dispersed(), pair_.dispersed().residualAlpha())
     );
 
     volScalarField alpha2
@@ -95,7 +95,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Beetstra::CdRe() const
         /(scalar(1.0) + pow(10.0, 3.0*alpha1)*pow(ResLim, -0.5*(scalar(1.0) + 4.0*alpha1)))
     );
 
-    return 24.0*alpha2*(F0*Res/ResLim + F1);
+    return 24.0*alpha2*(F0 + F1);
 }
 
 
