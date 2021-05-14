@@ -537,12 +537,40 @@ void Foam::RASModels::kineticTheoryModel::correct()
            /(da*sqrtPi)
         );
 
-        // Eq. 3.25, p. 50 Js = J1 - J2
-        volScalarField J1("J1", 3.0*beta);
+        // Gidaspow (1994)
+        // volScalarField J1("J1", 3.0*beta);
+        // Koch & Sangani (1999)
+        volScalarField Rdiss
+        (
+            1.0
+          + 3.0*sqrt(0.5*alpha)
+          + 2.11*alpha*log(alpha)
+          + 11.26*alpha*(1.0 - 5.1*alpha + 16.57*sqr(alpha) - 21.77*alpha*sqr(alpha))
+          - alpha*gs0_*log(0.01)
+        );
+        volScalarField J1
+        (
+            "J1",
+            3.0*beta*Rdiss
+        );
+        // Koch & Sangani (1999)
+        volScalarField Rd
+        (
+            neg(alpha - 0.4)
+           *(1.0 + 3.0*sqrt(0.5*alpha) + 2.11*alpha*log(alpha)+17.14*alpha)
+           /(1.0 + 0.681*alpha - 8.48*sqr(alpha) + 8.16*alpha*sqr(alpha))
+          + pos(alpha - 0.4)
+           *(10.0*alpha/(sqr(1.0 - alpha)*(1.0 - alpha)) + 0.7)
+        );
+        volScalarField Psi
+        (
+            sqr(Rd)
+           /(1.0 + 2.5*sqrt(alpha) + 5.9*alpha)
+        );
         volScalarField J2
         (
             "J2",
-           0.25*sqr(beta)*da*magSqr(U - Uc_)
+           0.25*sqr(beta)*da*magSqr(U - Uc_)*Psi
            /(
                rho
               *max(alpha,residualAlpha_)
@@ -558,26 +586,26 @@ void Foam::RASModels::kineticTheoryModel::correct()
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the granular temperature equation (Eq. 3.20, p. 44)
-        volScalarField solveTheta(alpha - residualAlpha_);
         fvScalarMatrix ThetaEqn
         (
             1.5
            *(
                 fvm::ddt(alpha, rho, Theta_)
               + fvm::div(alphaRhoPhi, Theta_)
-              + fvm::Sp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
+              + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), Theta_)
             )
           - fvm::laplacian(kappa_, Theta_, "laplacian(kappa,Theta)")
-          + fvm::SuSp(PsCoeff*trD, Theta_)
-          - rho
+         ==
+          - fvm::SuSp(PsCoeff*trD, Theta_)
+          + rho
            *(
                 lambda_*sqr(trD)
               + 2.0*nut_*(dev(D)&&gradU)
             )
-          + fvm::Sp(gammaCoeff, Theta_)
-          + fvm::SuSp(J1 - J2, Theta_)
-         ==
-            fvOptions(alpha, rho, Theta_)
+          + fvm::Sp(-gammaCoeff, Theta_)
+          + fvm::Sp(-J1, Theta_)
+          + fvm::Sp(J2, Theta_)
+          + fvOptions(alpha, rho, Theta_)
         );
 
         ThetaEqn.relax();
