@@ -82,6 +82,8 @@ functions
         
 	writeControl    writeTime;
         restartOnOutput true;
+        //if a newField is calculated
+        //addNewField	true;
 
         fields
         (

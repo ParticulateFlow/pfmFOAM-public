@@ -19,5 +19,10 @@ patchMap        ( );
 
 cuttingPatches  (leftPatch);
 
+//if a new field is calculated (only works for scalars!)
+//fieldName	defineNameOfNewField;
+
+//fieldsList	(list of fields in the calculation);
+//prefactorsList	(factors to multiply each field in the list by);
 
 // ************************************************************************* //
