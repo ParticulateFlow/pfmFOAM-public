@@ -22,21 +22,21 @@ boundaryField
 {
     vin_DB
     {
-        type               fixedValue;
-        value              uniform 300; 
+        type            fixedValue;
+        value           uniform 300;
     }
 
     pout
     {
-        type               inletOutlet;
-        phi                phi.air;
-        inletValue         uniform 300;
-        value              uniform 300;
+        type            inletOutlet;
+        phi             phi.air;
+        inletValue      uniform 300;
+        value           uniform 300;
     }
 
     w_FB
     {
-        type               zeroGradient;
+        type            zeroGradient;
     }
 }
 

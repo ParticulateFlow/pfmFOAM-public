@@ -16,26 +16,23 @@ FoamFile
 
 dimensions          [0 2 -1 0 0 0 0];
 
-internalField       uniform 0; 
+internalField       uniform 0;
 
 boundaryField
 {
     vin_DB
     {
-        type               calculated;
-        value              $internalField;
+        type            zeroGradient;
     }
 
     pout
     {
-        type               calculated;
-        value              $internalField;
+        type            zeroGradient;
     }
 
     w_FB
     {
-        type               calculated;
-        value              $internalField;
+        type            zeroGradient;
     }
 
 }

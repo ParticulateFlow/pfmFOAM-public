@@ -176,13 +176,13 @@ public:
         //- Return the effective viscosity
         virtual tmp<volScalarField> nuEff() const
         {
-            return this->nut();
+            return this->nut() + this->nu()*alpha_;
         }
 
         //- Return the effective viscosity on patch
         virtual tmp<scalarField> nuEff(const label patchi) const
         {
-            return this->nut(patchi);
+            return this->nut(patchi) + this->nu(patchi)*alpha_;
         }
 
         //- Return the turbulence kinetic energy

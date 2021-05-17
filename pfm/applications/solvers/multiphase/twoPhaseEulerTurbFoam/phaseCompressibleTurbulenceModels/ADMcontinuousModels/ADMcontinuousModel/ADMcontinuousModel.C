@@ -418,7 +418,7 @@ void Foam::RASModels::ADMcontinuousModel::correct()
                      /(rho*(alpha*alpha)*max(scalar(1.0)-alpha,residualAlpha_))
                   + 2.0*(D&&D)
                 );
-    nut_.min(100.);
+    nut_.min(5.0);
     nut_.correctBoundaryConditions();
     
     Info<< "ADM (continuous):" << nl

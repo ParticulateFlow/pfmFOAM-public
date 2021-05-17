@@ -47,7 +47,6 @@ namespace virtualMassModels
 }
 }
 
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::virtualMassModels::deWildeSATFM::deWildeSATFM
@@ -83,12 +82,8 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
 {
     // get alphaP2Mean from Turbulence Model
     const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
+    const volScalarField& alphaP2Mean(mesh.lookupObject<volScalarField>
                                         ("alphaP2Mean." + pair_.dispersed().name()));
-    const volScalarField& alphaP2Mean2_(mesh.lookupObject<volScalarField>
-                                        ("alphaP2Mean." + pair_.continuous().name()));
-    
-    volScalarField alphaP2Mean = max(alphaP2Mean1_,alphaP2Mean2_);
     
     volScalarField alpha1
     (
@@ -98,9 +93,6 @@ Foam::tmp<Foam::volScalarField> Foam::virtualMassModels::deWildeSATFM::Cvm() con
     (
         scalar(1.0) - alpha1
     );
-    
-    // limit alphaP2Mean to prevent unphysical values of Vm0
-    alphaP2Mean = min(0.5*alpha1*alpha2,alphaP2Mean);
     
     volScalarField rho1
     (

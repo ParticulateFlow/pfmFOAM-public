@@ -23,28 +23,35 @@ RAS
 
     turbulence      on;
     printCoeffs     on;
-    
+
     SATFMcontinuousCoeffs
     {
-        equilibrium             on;  // equilibrium assumption: production of k == dissipation
-        dynamicAdjustment       off;  // dynamic adjustment of model coefficient and correlation coefficients
-        
-        residualAlpha           1e-3; // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
-        
-        xiPhiG                 -0.50; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
-        xiGS                    0.90; // correlation coefficient between dispersed phase velocity and continuous phase velocity
-        Cmu                     0.40; // smagorinsky constant for turbulent viscosity   
-        Ceps                    1.00; // constant for mixing length model of turbulent dissipation rate
-        CphiG                   0.40; // constant appearing in the equation for alphaP2Mean
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
+        dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
+        anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
 
-        maxK                    5.0; // Limits Reynolds stresses
-        
-		filter                  simple; // test filter for dynamic adjustment of model constants    
-		laplaceAnIso2ndCoeffs   
-		{
-			widthCoeff		6.0;
-		}
+        alphaMax                0.60;
+        residualAlpha           1e-3; // minimum dispersed phase volume fraction
+
+        maxK                    10.0; // Limits Reynolds stresses
+        maxNut                  1.0;        
+
+        xiPhiG                  0.5;  // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
+        Cmu                     0.4;  // smagorinsky constant for turbulent viscosity
+        CmuW                    0.4;  // smagorinsky constant for turbulent viscosity
+        Ceps                    0.6;  // constant for mixing length model of turbulent dissipation rate
+        Cp                      0.5;
+        Sigma                   2.0;  // turbulent schmidt number
+        g                       (0 0 -9.81);
+
+        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          7.0;
+        }
     }
+
     ADMcontinuousCoeffs
     {
         alphaMax                0.6;  // maximum dispersed phase volume fraction
@@ -52,23 +59,24 @@ RAS
         maxK                    0.04; // Limits Reynolds stresses
         deconOrder              2;    // deconvolution Order
 
-		filter                  laplaceAnIso2nd; // filter for ADM    
-		laplaceAnIso2ndCoeffs   
-		{
-			widthCoeff		24.0;
-		}
-		
+        filter                  laplaceAnIso2nd; // filter for ADM
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          24.0;
+        }
+
         regularizationModel     none;  // regularization model (e.g. Stolz)
         StolzCoeffs
         {
-        	smagConst       0.25;
-        	lengthConst     0.3;	
-        	filter          laplaceAnIso2nd; // filter for Stolz    
-        	laplaceAnIso2ndCoeffs   
-        	{
-        		widthCoeff		24.0;
-        	}
+            smagConst           0.25;
+            lengthConst         0.3;
+            filter              laplaceAnIso2nd; // filter for Stolz
+            laplaceAnIso2ndCoeffs
+            {
+                widthCoeff      24.0;
+            }
         }
+
     }
 }
 

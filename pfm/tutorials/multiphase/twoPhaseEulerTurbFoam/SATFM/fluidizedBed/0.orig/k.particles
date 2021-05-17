@@ -22,17 +22,17 @@ boundaryField
 {
     vin_DB
     {
-		type               zeroGradient;
+        type            zeroGradient;
     }
 
     pout
     {
-		type               zeroGradient;
+        type            zeroGradient;
     }
 
     w_FB
     {
-		type               zeroGradient;
+        type            zeroGradient;
     }
 
 }

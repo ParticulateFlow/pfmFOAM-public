@@ -110,11 +110,22 @@ driftVelocity
         type            driftVelocityADM;
 		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero 
 		alphaMax        0.6;
+//		Cd              0.5;
 		filter          simpleADM; // filter for drift Velocity    
         laplaceAnIso2ndCoeffs   // coeffs for laplaceAnIso2nd
         {
         	widthCoeff		24.0;
         }
+    }
+);
+
+//meso-scale interphase Force
+interPhaseForce
+(
+	(particles in air)
+    {
+        type            deWildeIPhADM;
+		residualAlpha   1e-3;			 // below residualAlpha interphase force is zero
     }
 );
 

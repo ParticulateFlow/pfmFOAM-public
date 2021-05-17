@@ -1,0 +1,58 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  6                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties.air;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  RAS;
+
+RAS
+{
+    RASModel SATFMcontinuous;
+
+    turbulence      on;
+    printCoeffs     on;
+    
+    SATFMcontinuousCoeffs
+    {
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
+        dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
+        anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
+        
+        alphaMax                0.6;
+        residualAlpha           1e-3; // minimum dispersed phase volume fraction
+        
+        maxK                    10.0; // Limits Reynolds stresses
+        maxNut                  1.0;        
+        
+        xiPhiG                  0.5;  // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
+        Cmu                     0.4;  // smagorinsky constant for turbulent viscosity
+        CmuW                    0.4;  // smagorinsky constant for turbulent viscosity
+        Ceps                    0.6;  // constant for mixing length model of turbulent dissipation rate
+        Cp                      0.5;
+        Sigma                   2.0;  // turbulent schmidt number
+        g                       (0 0 -9.81);
+
+        filter                  laplaceAnIso2nd; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          7.0;
+        }
+
+    }
+}
+
+
+// ************************************************************************* //

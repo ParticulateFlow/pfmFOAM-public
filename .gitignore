@@ -1,0 +1,11 @@
+*.o
+*.d
+*.a
+*.dep
+log_*
+log.*
+*~
+
+**/linux*Gcc*/
+
+lnInclude

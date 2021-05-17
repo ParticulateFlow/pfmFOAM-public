@@ -218,6 +218,9 @@ public:
         //- Return the face-phase-pressure'
         // (derivative of phase-pressure w.r.t. phase-fraction)
         virtual tmp<surfaceScalarField> pPrimef() const;
+    
+        //- Return the phase-pressure'
+        virtual tmp<volScalarField> normalStress() const;
 
         //- Return the effective stress tensor
         virtual tmp<volSymmTensorField> devRhoReff() const;

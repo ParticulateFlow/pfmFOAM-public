@@ -29,6 +29,7 @@ License
 #include "fvOptions.H"
 #include "fixedValueFvsPatchFields.H"
 #include "zeroGradientFvPatchFields.H"
+#include "wallFvPatch.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -164,7 +165,7 @@ Foam::RASModels::ADMdispersedModel::ADMdispersedModel
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         U.mesh(),
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 0.0),
@@ -342,7 +343,7 @@ Foam::RASModels::ADMdispersedModel::pPrime() const
     {
         if (!bpPrime[patchi].coupled())
         {
-            bpPrime[patchi] == 0;
+            bpPrime[patchi] = 0;
         }
     }
 
@@ -354,6 +355,34 @@ Foam::tmp<Foam::surfaceScalarField>
 Foam::RASModels::ADMdispersedModel::pPrimef() const
 {
     return fvc::interpolate(pPrime());
+}
+
+Foam::tmp<Foam::volScalarField>
+Foam::RASModels::ADMdispersedModel::normalStress() const
+{
+    const volScalarField& rho = phase_.rho();
+    tmp<volScalarField> tda(phase_.d());
+    const volScalarField& da = tda();
+
+    tmp<volScalarField> tNormalStress
+    (
+       pos(alpha_ - alphaMinFriction_)
+      *filter_
+       (
+           frictionalStressModel_->frictionalPressure
+           (
+               phase_,
+               alpha1star_,
+               alphaMinFriction_,
+               alphaMax_,
+               da,
+               rho,
+               dev(Dstar_)
+           )
+       )
+    );
+
+    return tNormalStress;
 }
 
 
@@ -490,7 +519,30 @@ void Foam::RASModels::ADMdispersedModel::correct()
     
     // limit Reynolds stress
     boundNormalStress(R1ADM_);
-    R1ADM_.correctBoundaryConditions();
+    
+    // wall BC for R
+    const fvPatchList& patches = mesh_.boundary();
+
+    volTensorField::Boundary& RBf = R1ADM_.boundaryFieldRef();
+
+    forAll(patches, patchi) {
+        const fvPatch& curPatch = patches[patchi];
+
+        if (isA<wallFvPatch>(curPatch)) {
+            tensorField& Rw = RBf[patchi];
+
+            const vectorField& nf
+                = curPatch.nf();
+
+            forAll(curPatch, facei)
+            {
+                label faceCelli = curPatch.faceCells()[facei];
+                tensor n2(sqr(nf[facei]));
+                tensor transform(tensor::I - 2.0*n2);
+                Rw[facei] = 0.5*(transform&R1ADM_[faceCelli]&transform)-(n2&R1ADM_[faceCelli]&n2);
+            }
+        }
+    }
     
     // compute turbulent kinetic energy
     k_ = tr(R1ADM_)/(rho*max(a1sF,residualAlpha_));
