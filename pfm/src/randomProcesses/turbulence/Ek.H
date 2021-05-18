@@ -25,8 +25,9 @@ inline tmp<scalarField> Ek
     // Turbulent length scale (Pope, 2000)
     const scalar L = pow(e,1.5)/epsilon;
     
-    Info << "L    =" << L   << nl
-         << "eta  =" << eta << endl;
+    Info << "L      = " << L   << nl
+         << "eta    = " << eta << nl
+         << "min(k) = " << min(k) << nl << endl;
     
     tmp<scalarField> tEk
     (
@@ -44,6 +45,7 @@ inline tmp<scalarField> Ek
         )
        /pow(k+vSmall,5.0/3.0)
     );
+    Info << "Pope Spectrum computed!" << endl;
     /*
     scalarField& Ekf = tEk();
 
