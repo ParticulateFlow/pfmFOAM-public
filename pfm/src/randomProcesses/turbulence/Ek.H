@@ -38,7 +38,7 @@ inline tmp<scalarField> Ek
         (
             -beta*(pow(sqr(sqr(k*eta))+sqr(sqr(cEta)),0.25) - cEta)
         )
-       /pow(k,5.0/3.0)
+       /pow(k+vSmall,5.0/3.0)
     );
     /*
     scalarField& Ekf = tEk();
