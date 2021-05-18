@@ -27,3 +27,12 @@
     scalar e(readScalar(boxTurbDict.lookup("e")));
 
     scalar epsilon(readScalar(boxTurbDict.lookup("epsilon")));
+
+    Info << Cp << nl
+         << p0<< nl
+         << beta << nl
+         << nu << nl
+         << cL << nl
+         << cEta << nl
+         << e<< nl
+         << epsilon << endl;
