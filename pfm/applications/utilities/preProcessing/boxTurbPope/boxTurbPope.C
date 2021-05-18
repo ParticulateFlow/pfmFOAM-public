@@ -27,6 +27,8 @@ Application
 Description
     Makes a box of turbulence which conforms to a given energy
     spectrum and is divergence free.
+ 
+    Pope (2000), equation (6.246)
 
 \*---------------------------------------------------------------------------*/
 
