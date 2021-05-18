@@ -36,14 +36,14 @@ inline tmp<scalarField> Ek
        *pow
         (
             k*L
-           /sqrt(sqr(k*L + 1.0e-7) + cL),
+           /sqrt(sqr(k*L + 1.0e-2) + cL),
            5.0/3.0 + p0
         )
        *exp
         (
             -beta*(pow(sqr(sqr(k*eta))+sqr(sqr(cEta)),0.25) - cEta)
         )
-       /pow(k + 1.0e-7,5.0/3.0)
+       /pow(k + 1.0e-2,5.0/3.0)
     );
     Info << "Pope Spectrum computed!" << endl;
     /*
