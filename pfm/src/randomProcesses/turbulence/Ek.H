@@ -24,6 +24,10 @@ inline tmp<scalarField> Ek
     const scalar eta = pow(sqr(nu)*nu/epsilon,0.25);
     // Turbulent length scale (Pope, 2000)
     const scalar L = pow(e,1.5)/epsilon;
+    
+    Info << "L    =" << L   << nl
+         << "eta  =" << eta << endl;
+    
     tmp<scalarField> tEk
     (
         Cp
