@@ -17,5 +17,5 @@
         U/dimensionedScalar("dt", dimTime, runTime.deltaTValue())
     );
 
-    Kmesh K(mesh);
-    UOprocess forceGen(K, runTime.deltaTValue(), turbulenceProperties);
+   // Kmesh K(mesh);
+   // UOprocess forceGen(K, runTime.deltaTValue(), turbulenceProperties);

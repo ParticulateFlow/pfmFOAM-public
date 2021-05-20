@@ -113,15 +113,15 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        if (runTime.writeTime())
-        {
-            calcEk(U, K).write
-            (
-                runTime.path()/"graphs"/runTime.timeName(),
-                "Ek",
-                runTime.graphFormat()
-            );
-        }
+//        if (runTime.writeTime())
+//        {
+//            calcEk(U, K).write
+//            (
+//                runTime.path()/"graphs"/runTime.timeName(),
+//                "Ek",
+//                runTime.graphFormat()
+//            );
+//        }
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
