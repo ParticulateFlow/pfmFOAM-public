@@ -110,6 +110,17 @@ int main(int argc, char *argv[])
             U = HbyA - rAU*fvc::grad(p);
             U.correctBoundaryConditions();
         }
+        
+        term1g = U&fvc::grad(fvc::curl(U));
+        term2g = fvc::curl(U) & fvc::grad(U);
+        
+        volVectorField divDevRhoReffg
+        (
+         - fvc::laplacian(nu, U)
+        );
+        
+        term5g = fvc::curl(divDevRhoReffg);
+       
 
         runTime.write();
 
