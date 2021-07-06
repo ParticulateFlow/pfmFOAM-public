@@ -41,6 +41,7 @@ License
 #include "SchneiderbauerEtAlFrictionalStress.H"
 #include "addToRunTimeSelectionTable.H"
 #include "mathematicalConstants.H"
+#include "wallFvPatch.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -235,9 +236,9 @@ SchneiderbauerEtAl::nu
 
     forAll(patches, patchi)
     {
-        //if (!patches[patchi].coupled())
-        if (isA<wallFvPatch>(patches[patchi])) {
-        {
+        //if (!patches[patchi].coupled()) {
+        const fvPatch& curPatch = patches[patchi];
+        if (isA<wallFvPatch>(curPatch)) {
             nufBf[patchi] = (
                                muSt_.value()
                              + (
