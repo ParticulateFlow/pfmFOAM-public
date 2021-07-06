@@ -236,7 +236,7 @@ SchneiderbauerEtAl::nu
     forAll(patches, patchi)
     {
         //if (!patches[patchi].coupled())
-        if (isA<wallFvPatch>(curPatch)) {
+        if (isA<wallFvPatch>(patches[patchi])) {
         {
             nufBf[patchi] = (
                                muSt_.value()
