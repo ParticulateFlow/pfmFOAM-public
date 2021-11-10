@@ -353,7 +353,7 @@ Foam::RASModels::kineticTheoryModel::pPrime() const
             alphaMax_,
             da,
             rho,
-            dev(D)
+            D
         )
     );
 
@@ -407,7 +407,7 @@ Foam::RASModels::kineticTheoryModel::normalStress() const
             alphaMax_,
             da,
             rho,
-            dev(D)
+            D
         )
       );
 
@@ -682,7 +682,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             alphaMax_,
             da,
             rho,
-            dev(D)
+            D
         );
 
         nuFric_ = frictionalStressModel_->nu
@@ -692,7 +692,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             alphaMax_,
             pf_/rho,
             da,
-            dev(D)
+            D
         );
         
         // Limit viscosity and add frictional viscosity

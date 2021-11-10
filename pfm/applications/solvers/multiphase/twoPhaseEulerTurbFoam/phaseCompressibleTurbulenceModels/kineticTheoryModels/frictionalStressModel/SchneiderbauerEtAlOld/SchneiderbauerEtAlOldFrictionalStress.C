@@ -109,37 +109,38 @@ SchneiderbauerEtAlOld::frictionalPressure
     const volSymmTensorField& D
 ) const
 {
-        const volScalarField& alpha = phase;
-        volScalarField DD
+    const volScalarField& alpha = phase;
+    volSymmTensorField S = dev(D);
+    volScalarField DD
+    (
+        min
         (
-            min
-            (
-                max(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-               ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
-            )
-        );
-        volScalarField pInt
-        (
-           aInt_
-           *k_
-           *sqrt(sqrt(DD)*dp/sqrt(k_/(rho*dp)))
-           /dp
-         );
+            max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+        )
+    );
+    volScalarField pInt
+    (
+       aInt_
+       *k_
+       *sqrt(sqrt(DD)*dp/sqrt(k_/(rho*dp)))
+       /dp
+     );
 
-        return
-             pos(alpha - alphaMinFriction)
-            *(
-                2.0
-               *rho
-               *sqr(b_*dp)
-               *DD
-             )
-            /sqr(max(alphaMax - alpha,alphaDeltaMin_))
-           + pos(alpha - alphaMax)
-            *(
-                aQSk_*k_*pow(max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
-              + pInt
-             );
+    return
+         pos(alpha - alphaMinFriction)
+        *(
+            2.0
+           *rho
+           *sqr(b_*dp)
+           *DD
+         )
+        /sqr(max(alphaMax - alpha,alphaDeltaMin_))
+       + pos(alpha - alphaMax)
+        *(
+            aQSk_*k_*pow(max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
+          + pInt
+         );
 }
 
 
@@ -155,13 +156,22 @@ SchneiderbauerEtAlOld::frictionalPressurePrime
     const volSymmTensorField& D
 ) const
 {
-        const volScalarField& alpha = phase;
-        // pPrime does not contain pInt contribution
-        // pPrime is solely used, if implicitPhasePressure is true
-        return
-             pos(alpha - alphaMinFriction)
-            *4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4))
-            /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
+    const volScalarField& alpha = phase;
+    // pPrime does not contain pInt contribution
+    // pPrime is solely used, if implicitPhasePressure is true
+    volSymmTensorField S = dev(D);
+    volScalarField DD
+    (
+        min
+        (
+            max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+        )
+    );
+    return
+         pos(alpha - alphaMinFriction)
+        *4.0*rho*sqr(b_*dp)*DD
+        /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
 }
 
 
@@ -198,6 +208,7 @@ SchneiderbauerEtAlOld::nu
     );
 
     volScalarField& nuf = tnu.ref();
+    volSymmTensorField S = dev(D);
 
     forAll(D, celli)
     {
@@ -212,14 +223,14 @@ SchneiderbauerEtAlOld::nu
                             /(
                                  I0_.value()
                                / (
-                                   (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
+                                   (2.0 * sqrt(0.5*(S[celli]&&S[celli])) * dp[celli])
                                    /(sqrt(pf[celli])+SMALL) + SMALL
                                  )
                                + 1.0
                              )
                           )
                         * pf[celli]
-                        / (2.0 * sqrt(0.5*(D[celli]&&D[celli])) + SMALL);
+                        / (2.0 * sqrt(0.5*(S[celli]&&S[celli])) + SMALL);
         }
     }
 
@@ -254,9 +265,9 @@ SchneiderbauerEtAlOld::nu
                                  mag(U.boundaryField()[patchi].snGrad())
                                + SMALL
                               );
+            Info << "max(dp): " << max(dp.boundaryField()[patchi]) << endl;
         }
     }
-
     // Correct coupled BCs
     nuf.correctBoundaryConditions();
 

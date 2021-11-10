@@ -110,11 +110,12 @@ SchneiderbauerEtAl::frictionalPressure
 ) const
 {
         const volScalarField& alpha = phase;
+        volSymmTensorField S = dev(D);
         volScalarField DD
         (
             min
             (
-                max(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+                max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
                ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
             )
         );
@@ -164,9 +165,18 @@ SchneiderbauerEtAl::frictionalPressurePrime
         const volScalarField& alpha = phase;
         // pPrime does not contain pInt contribution
         // pPrime is solely used, if implicitPhasePressure is true
+        volSymmTensorField S = dev(D);
+        volScalarField DD
+        (
+            min
+            (
+                max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+               ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+            )
+        );
         return
              pos(alpha - alphaMinFriction)
-            *4.0*rho*sqr(b_*dp)*min(D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4))
+            *4.0*rho*sqr(b_*dp)*DD
             /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
 }
 
@@ -204,6 +214,7 @@ SchneiderbauerEtAl::nu
     );
 
     volScalarField& nuf = tnu.ref();
+    volSymmTensorField S = dev(D);
 
     forAll(D, celli)
     {
@@ -218,14 +229,14 @@ SchneiderbauerEtAl::nu
                             /(
                                  I0_.value()
                                / (
-                                   (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
+                                   (2.0 * sqrt(0.5*(S[celli]&&S[celli])) * dp[celli])
                                    /(sqrt(pf[celli])+SMALL) + SMALL
                                  )
                                + 1.0
                              )
                           )
                         * pf[celli]
-                        / (2.0 * sqrt(0.5*(D[celli]&&D[celli])) + SMALL);
+                        / (2.0 * sqrt(0.5*(S[celli]&&S[celli])) + SMALL);
         }
     }
 
