@@ -27,6 +27,7 @@ License
 #include "mathematicalConstants.H"
 #include "twoPhaseSystem.H"
 #include "fvOptions.H"
+#include "zeroGradientFvPatchFields.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -198,7 +199,8 @@ Foam::RASModels::kineticTheoryModel::kineticTheoryModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0)
+        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0),
+        zeroGradientFvPatchField<scalar>::typeName
      )
 {
     if (type == typeName)
@@ -684,6 +686,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             rho,
             D
         );
+        pf_.correctBoundaryConditions();
 
         nuFric_ = frictionalStressModel_->nu
         (
