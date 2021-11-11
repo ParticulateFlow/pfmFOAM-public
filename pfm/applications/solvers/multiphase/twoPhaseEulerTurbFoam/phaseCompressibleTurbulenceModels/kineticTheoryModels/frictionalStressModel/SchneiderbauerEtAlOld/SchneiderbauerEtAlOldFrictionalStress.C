@@ -119,6 +119,18 @@ SchneiderbauerEtAlOld::frictionalPressure
            ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
         )
     );
+    volScalarField::Boundary& DDBf = DD.boundaryFieldRef();
+    
+    const fvPatchList& patches = phase.mesh().boundary();
+    const volVectorField& U = phase.U();
+    forAll(patches, patchi)
+    {
+        const fvPatch& curPatch = patches[patchi];
+        if (isA<wallFvPatch>(curPatch)) {
+            DDBf[patchi] = magSqr(U.boundaryField()[patchi].snGrad());
+        }
+    }
+    
     volScalarField pInt
     (
        aInt_
@@ -265,7 +277,7 @@ SchneiderbauerEtAlOld::nu
                                  mag(U.boundaryField()[patchi].snGrad())
                                + SMALL
                               );
-            Info << "max(dp): " << max(dp.boundaryField()[patchi]) << endl;
+            // Info << "max(dp): " << max(dp.boundaryField()[patchi]) << endl;
         }
     }
     // Correct coupled BCs
