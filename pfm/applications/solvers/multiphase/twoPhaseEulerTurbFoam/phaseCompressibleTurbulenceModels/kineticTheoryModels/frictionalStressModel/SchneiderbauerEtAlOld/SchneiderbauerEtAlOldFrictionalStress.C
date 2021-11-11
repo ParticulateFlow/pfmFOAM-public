@@ -178,8 +178,8 @@ SchneiderbauerEtAlOld::frictionalPressure
             
             Info << "max(pfW): " << max(pfBf[patchi])
                  << ", max(gradU)" << max(magSqr(U.boundaryField()[patchi].snGrad()))
-                 << ", max(dp)" << max(dp[patchi])
-                 << ", max(rho)" << max(rho[patchi])
+                 << ", max(dp)" << dp[patchi]
+                 << ", max(rho)" << rho[patchi]
                  << endl;
         }
 
