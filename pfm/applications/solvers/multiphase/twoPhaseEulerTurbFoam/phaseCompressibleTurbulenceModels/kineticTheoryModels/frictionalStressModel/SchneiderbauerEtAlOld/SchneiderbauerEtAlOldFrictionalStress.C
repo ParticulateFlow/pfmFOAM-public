@@ -111,14 +111,6 @@ SchneiderbauerEtAlOld::frictionalPressure
 {
     const volScalarField& alpha = phase;
     volSymmTensorField S = dev(D);
-    volScalarField DD
-    (
-        min
-        (
-            max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
-        )
-    );
         
     tmp<volScalarField> tpf
     (
@@ -148,7 +140,7 @@ SchneiderbauerEtAlOld::frictionalPressure
                     2.0
                    *rho[celli]
                    *sqr(b_.value()*dp[celli])
-                   *DD[celli]
+                   *min(S[celli]&&S[celli],1.0e4)
                   /sqr(max(alphaMax.value() - alpha[celli],alphaDeltaMin_.value()));
             } else {
                 pf[celli] =
@@ -184,7 +176,7 @@ SchneiderbauerEtAlOld::frictionalPressure
                *pow(max(alpha[patchi] - alphaMax.value(),SMALL), 2.0/3.0)
               /dp[patchi];
             
-            Info << "max(pfW): " << max(pfBf) << endl;
+            Info << "max(pfW): " << max(pfBf[patchi]) << endl;
         }
 
     }
@@ -216,7 +208,7 @@ SchneiderbauerEtAlOld::frictionalPressurePrime
     (
         min
         (
-            max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+            S&&S
            ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
         )
     );
