@@ -119,40 +119,84 @@ SchneiderbauerEtAlOld::frictionalPressure
            ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
         )
     );
-    volScalarField::Boundary& DDBf = DD.boundaryFieldRef();
-    
+        
+    tmp<volScalarField> tpf
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "Schneiderbauer:pf",
+                phase.mesh().time().timeName(),
+                phase.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            phase.mesh(),
+            dimensionedScalar("pf", dimensionSet(1, -1, -2, 0, 0), 0.0)
+        )
+    );
+
+    volScalarField& pf = tpf.ref();
+
+    forAll(D, celli)
+    {
+        if (alpha[celli] > alphaMinFriction.value()) {
+            if (alpha[celli] < alphaMax.value()) {
+                pf[celli] =
+                    (
+                        2.0
+                       *rho[celli]
+                       *sqr(b_.value()*dp[celli])
+                       *DD[celli]
+                     )
+                    /sqr(max(alphaMax.value() - alpha[celli],alphaDeltaMin_.value()));
+            } else {
+                pf[celli] =
+                    (
+                        aQSk_.value()
+                       *k_.value()
+                       *pow(alpha[celli] - alphaMax.value(), 2.0/3.0)
+                       /dp[celli]
+                    );
+            }
+        }
+    }
+
     const fvPatchList& patches = phase.mesh().boundary();
     const volVectorField& U = phase.U();
+
+    volScalarField::Boundary& pfBf = pf.boundaryFieldRef();
+
     forAll(patches, patchi)
     {
         const fvPatch& curPatch = patches[patchi];
         if (isA<wallFvPatch>(curPatch)) {
-            DDBf[patchi] = min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4);
+            pfBf[patchi] =
+                pos(alpha[patchi] - alphaMinFriction.value())
+               *neg(alpha[patchi] - alphaMax.value())
+               *(
+                    2.0
+                   *rho[patchi]
+                   *sqr(b_.value()*dp[patchi])
+                   *min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4)
+                 )
+                /sqr(max(alphaMax.value() - alpha[patchi],alphaDeltaMin_.value()))
+              + pos(alpha[patchi] - alphaMax.value())
+               *(
+                    aQSk_.value()
+                   *k_.value()
+                   *pow(alpha[patchi] - alphaMax.value(), 2.0/3.0)
+                   /dp[patchi]
+                );
         }
     }
-    
-    volScalarField pInt
-    (
-       aInt_
-       *k_
-       *sqrt(sqrt(DD)*dp/sqrt(k_/(rho*dp)))
-       /dp
-     );
 
-    return
-         pos(alpha - alphaMinFriction)
-        *(
-            2.0
-           *rho
-           *sqr(b_*dp)
-           *DD
-         )
-        /sqr(max(alphaMax - alpha,alphaDeltaMin_))
-       + pos(alpha - alphaMax)
-        *(
-            aQSk_*k_*pow(max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
-          + pInt
-         );
+    // Correct coupled BCs
+    pf.correctBoundaryConditions();
+
+    return tpf;
 }
 
 
@@ -182,8 +226,14 @@ SchneiderbauerEtAlOld::frictionalPressurePrime
     );
     return
          pos(alpha - alphaMinFriction)
+        *neg(alpha - alphaMax)
         *4.0*rho*sqr(b_*dp)*DD
-        /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
+        /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_))
+      +  pos(alpha- alphaMax)
+        *(2.0/3.0)
+        *aQSk_
+        *k_
+        /(pow(max(alpha - alphaMax,alphaDeltaMin_), 1.0/3.0)*dp);
 }
 
 
