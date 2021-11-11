@@ -159,16 +159,16 @@ SchneiderbauerEtAlOld::frictionalPressure
 
     forAll(patches, patchi)
     {
-        if (!patches[patchi].coupled()) {
-        // const fvPatch& curPatch = patches[patchi];
-        // if (isA<wallFvPatch>(curPatch)) {
+        //if (!patches[patchi].coupled()) {
+        const fvPatch& curPatch = patches[patchi];
+        if (isA<wallFvPatch>(curPatch)) {
             pfBf[patchi] =
                 pos(alpha[patchi] - alphaMinFriction.value())
                *neg(alpha[patchi] - alphaMax.value())
                *2.0
                *rho[patchi]
                *sqr(b_.value()*dp[patchi])
-               *min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4)
+               *max(min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4),SMALL)
                /sqr(max(alphaMax.value() - alpha[patchi],alphaDeltaMin_.value()))
               + pos(alpha[patchi] - alphaMax.value())
                *aQSk_.value()
@@ -176,7 +176,7 @@ SchneiderbauerEtAlOld::frictionalPressure
                *pow(max(alpha[patchi] - alphaMax.value(),SMALL), 2.0/3.0)
               /dp[patchi];
             
-            Info << "max(pfW): " << pfBf[patchi]
+            Info << "max(pfW): " << max(pfBf[patchi])
                  << ", max(gradU)" << max(magSqr(U.boundaryField()[patchi].snGrad()))
                  << endl;
         }
@@ -293,9 +293,9 @@ SchneiderbauerEtAlOld::nu
 
     forAll(patches, patchi)
     {
-        if (!patches[patchi].coupled()) {
-        // const fvPatch& curPatch = patches[patchi];
-        // if (isA<wallFvPatch>(curPatch)) {
+        // if (!patches[patchi].coupled()) {
+        const fvPatch& curPatch = patches[patchi];
+        if (isA<wallFvPatch>(curPatch)) {
             nufBf[patchi] = (
                                muSt_.value()
                              + (
