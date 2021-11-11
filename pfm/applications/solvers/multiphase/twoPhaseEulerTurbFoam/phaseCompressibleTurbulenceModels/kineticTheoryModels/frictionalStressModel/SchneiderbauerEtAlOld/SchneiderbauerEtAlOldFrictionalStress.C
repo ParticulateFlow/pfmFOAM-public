@@ -167,8 +167,9 @@ SchneiderbauerEtAlOld::frictionalPressure
 
     forAll(patches, patchi)
     {
-        const fvPatch& curPatch = patches[patchi];
-        if (isA<wallFvPatch>(curPatch)) {
+        if (!patches[patchi].coupled()) {
+        // const fvPatch& curPatch = patches[patchi];
+        // if (isA<wallFvPatch>(curPatch)) {
             pfBf[patchi] =
                 pos(alpha[patchi] - alphaMinFriction.value())
                *neg(alpha[patchi] - alphaMax.value())
@@ -182,7 +183,10 @@ SchneiderbauerEtAlOld::frictionalPressure
                *k_.value()
                *pow(max(alpha[patchi] - alphaMax.value(),SMALL), 2.0/3.0)
               /dp[patchi];
+            
+            Info << "max(pfW): " << max(pfBf) << endl;
         }
+
     }
 
     // Correct coupled BCs
@@ -295,9 +299,9 @@ SchneiderbauerEtAlOld::nu
 
     forAll(patches, patchi)
     {
-        // if (!patches[patchi].coupled()) {
-        const fvPatch& curPatch = patches[patchi];
-        if (isA<wallFvPatch>(curPatch)) {
+        if (!patches[patchi].coupled()) {
+        // const fvPatch& curPatch = patches[patchi];
+        // if (isA<wallFvPatch>(curPatch)) {
             nufBf[patchi] = (
                                muSt_.value()
                              + (
@@ -319,7 +323,6 @@ SchneiderbauerEtAlOld::nu
                                  mag(U.boundaryField()[patchi].snGrad())
                                + SMALL
                               );
-            // Info << "max(dp): " << max(dp.boundaryField()[patchi]) << endl;
         }
     }
     // Correct coupled BCs
