@@ -111,82 +111,28 @@ SchneiderbauerEtAlOld::frictionalPressure
 {
     const volScalarField& alpha = phase;
     volSymmTensorField S = dev(D);
-        
-    tmp<volScalarField> tpf
+    volScalarField DD
     (
-        new volScalarField
+        min
         (
-            IOobject
-            (
-                "Schneiderbauer:pf",
-                phase.mesh().time().timeName(),
-                phase.mesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            phase.mesh(),
-            dimensionedScalar("pf", dimensionSet(1, -1, -2, 0, 0), 0.0)
+            S&&S
+           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
         )
     );
 
-    volScalarField& pf = tpf.ref();
-
-    forAll(D, celli)
-    {
-        if (alpha[celli] > alphaMinFriction.value()) {
-            if (alpha[celli] < alphaMax.value()) {
-                pf[celli] =
-                    2.0
-                   *rho[celli]
-                   *sqr(b_.value()*dp[celli])
-                   *min(S[celli]&&S[celli],1.0e4)
-                  /sqr(max(alphaMax.value() - alpha[celli],alphaDeltaMin_.value()));
-            } else {
-                pf[celli] =
-                    aQSk_.value()
-                   *k_.value()
-                   *pow(max(alpha[celli] - alphaMax.value(),SMALL), 2.0/3.0)
-                  /dp[celli];
-            }
-        }
-    }
-
-    const fvPatchList& patches = phase.mesh().boundary();
-    const volVectorField& U = phase.U();
-
-    volScalarField::Boundary& pfBf = pf.boundaryFieldRef();
-
-    forAll(patches, patchi)
-    {
-        //if (!patches[patchi].coupled()) {
-        const fvPatch& curPatch = patches[patchi];
-        if (isA<wallFvPatch>(curPatch)) {
-            pfBf[patchi] =
-                pos(alpha[patchi] - alphaMinFriction.value())
-               *neg(alpha[patchi] - alphaMax.value())
-               *2.0
-               *rho[patchi]
-               *sqr(b_.value()*dp[patchi])
-               *max(min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4),SMALL)
-               /sqr(max(alphaMax.value() - alpha[patchi],alphaDeltaMin_.value()))
-              + pos(alpha[patchi] - alphaMax.value())
-               *aQSk_.value()
-               *k_.value()
-               *pow(max(alpha[patchi] - alphaMax.value(),SMALL), 2.0/3.0)
-              /dp[patchi];
-            
-            Info << "max(pfW): " << max(pfBf[patchi])
-                 << ", max(gradU)" << max(magSqr(U.boundaryField()[patchi].snGrad()))
-                 << endl;
-        }
-
-    }
-
-    // Correct coupled BCs
-    pf.correctBoundaryConditions();
-
-    return tpf;
+    return
+        pos(alpha - alphaMinFriction)
+       *neg(alpha - alphaMax)
+       *2.0
+       *rho
+       *sqr(b_*dp)
+       *DD
+       /sqr(max(alphaMax - alpha,alphaDeltaMin_))
+      + pos(alpha - alphaMax)
+       *aQSk_
+       *k_
+       *pow(max(alpha- alphaMax,alphaDeltaMin_), 2.0/3.0)
+       /dp;
 }
 
 
