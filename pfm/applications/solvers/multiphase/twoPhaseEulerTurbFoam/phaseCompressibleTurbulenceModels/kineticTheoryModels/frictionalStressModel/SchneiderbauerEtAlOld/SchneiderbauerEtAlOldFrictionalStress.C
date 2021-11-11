@@ -127,7 +127,7 @@ SchneiderbauerEtAlOld::frictionalPressure
     {
         const fvPatch& curPatch = patches[patchi];
         if (isA<wallFvPatch>(curPatch)) {
-            DDBf[patchi] = magSqr(U.boundaryField()[patchi].snGrad());
+            DDBf[patchi] = min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4);
         }
     }
     
