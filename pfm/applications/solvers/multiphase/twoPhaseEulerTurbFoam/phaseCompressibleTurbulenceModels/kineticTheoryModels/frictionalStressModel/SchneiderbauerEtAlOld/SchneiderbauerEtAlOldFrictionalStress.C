@@ -145,21 +145,17 @@ SchneiderbauerEtAlOld::frictionalPressure
         if (alpha[celli] > alphaMinFriction.value()) {
             if (alpha[celli] < alphaMax.value()) {
                 pf[celli] =
-                    (
-                        2.0
-                       *rho[celli]
-                       *sqr(b_.value()*dp[celli])
-                       *DD[celli]
-                     )
-                    /sqr(max(alphaMax.value() - alpha[celli],alphaDeltaMin_.value()));
+                    2.0
+                   *rho[celli]
+                   *sqr(b_.value()*dp[celli])
+                   *DD[celli]
+                  /sqr(max(alphaMax.value() - alpha[celli],alphaDeltaMin_.value()));
             } else {
                 pf[celli] =
-                    (
-                        aQSk_.value()
-                       *k_.value()
-                       *pow(alpha[celli] - alphaMax.value(), 2.0/3.0)
-                       /dp[celli]
-                    );
+                    aQSk_.value()
+                   *k_.value()
+                   *pow(max(alpha[celli] - alphaMax.value(),SMALL), 2.0/3.0)
+                  /dp[celli];
             }
         }
     }
@@ -176,20 +172,16 @@ SchneiderbauerEtAlOld::frictionalPressure
             pfBf[patchi] =
                 pos(alpha[patchi] - alphaMinFriction.value())
                *neg(alpha[patchi] - alphaMax.value())
-               *(
-                    2.0
-                   *rho[patchi]
-                   *sqr(b_.value()*dp[patchi])
-                   *min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4)
-                 )
-                /sqr(max(alphaMax.value() - alpha[patchi],alphaDeltaMin_.value()))
+               *2.0
+               *rho[patchi]
+               *sqr(b_.value()*dp[patchi])
+               *min(magSqr(U.boundaryField()[patchi].snGrad()),1.0e4)
+               /sqr(max(alphaMax.value() - alpha[patchi],alphaDeltaMin_.value()))
               + pos(alpha[patchi] - alphaMax.value())
-               *(
-                    aQSk_.value()
-                   *k_.value()
-                   *pow(alpha[patchi] - alphaMax.value(), 2.0/3.0)
-                   /dp[patchi]
-                );
+               *aQSk_.value()
+               *k_.value()
+               *pow(max(alpha[patchi] - alphaMax.value(),SMALL), 2.0/3.0)
+              /dp[patchi];
         }
     }
 
