@@ -362,6 +362,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
 
     Info<< "  tauw: " << min(tauw) << " - " << max(tauw) << endl;
     Info<< "  pfW: "  << min(pfW) << " - " << max(pfW) << endl;
+    Info<< "  deltaCoeff: " << min(patch().deltaCoeffs()) << " - " << max(patch().deltaCoeffs()) << endl;
     Info<< "  valueFraction(): " << min(this->valueFraction()) 
         << " - " << max(this->valueFraction()) << endl;
         
