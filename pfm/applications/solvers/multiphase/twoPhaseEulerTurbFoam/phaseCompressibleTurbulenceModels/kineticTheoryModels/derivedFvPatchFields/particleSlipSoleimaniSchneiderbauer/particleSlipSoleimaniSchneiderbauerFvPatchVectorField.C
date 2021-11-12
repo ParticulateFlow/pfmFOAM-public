@@ -211,7 +211,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     (
         patch().lookupPatchField<volScalarField, scalar>
         (
-            IOobject::groupName("nut", granular.name())
+            IOobject::groupName("nuFric", granular.name())
         )
     );
     const scalarField muP = nu*rhop;
@@ -353,7 +353,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
         (
             min
             (
-              - (tauw)/max(Utc*(muP)*patch().deltaCoeffs(),scalar(1e-10))
+              - (tauw)/max(Utc*(muP-muFP)*patch().deltaCoeffs(),scalar(1e-10))
               + (pfW)/max(Utc*(muFP)*patch().deltaCoeffs(),scalar(1e-10)),
                 scalar(1)
             ),
