@@ -129,9 +129,9 @@ SchneiderbauerEtAl::frictionalPressure
 
         return
              pos(alpha - alphaMinFriction)
-            *neg(alpha - alphaMax)
+            *pos(alphaMax - alpha)
             /(
-                sqr(Foam::max(alphaMax - alpha,alphaDeltaMin_))
+                sqr(max(alphaMax - alpha,alphaDeltaMin_))
                /(
                     2.0
                    *rho
@@ -175,7 +175,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
             )
         );
         return
-             pos(alpha - alphaMinFriction)
+           - pos(alpha - alphaMinFriction)
             *4.0*rho*sqr(b_*dp)*DD
             /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
 }
