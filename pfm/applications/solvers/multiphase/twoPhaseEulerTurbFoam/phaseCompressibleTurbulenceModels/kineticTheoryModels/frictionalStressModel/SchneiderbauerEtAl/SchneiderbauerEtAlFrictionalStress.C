@@ -249,7 +249,8 @@ SchneiderbauerEtAl::nu
         // const fvPatch& curPatch = patches[patchi];
         // if (isA<wallFvPatch>(curPatch)) {
             nufBf[patchi] = (
-                               muSt_.value()
+                               Rc_.value()
+                             + muSt_.value()
                              + (
                                    muC_.value() - muSt_.value()
                                )
