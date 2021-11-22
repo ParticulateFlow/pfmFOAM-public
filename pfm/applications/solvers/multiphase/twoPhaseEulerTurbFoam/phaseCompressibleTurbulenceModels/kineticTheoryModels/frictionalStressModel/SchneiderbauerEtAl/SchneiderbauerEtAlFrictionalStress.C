@@ -110,12 +110,11 @@ SchneiderbauerEtAl::frictionalPressure
 ) const
 {
         const volScalarField& alpha = phase;
-        volSymmTensorField S = dev(D);
         volScalarField DD
         (
             min
             (
-                max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
+                max(0.5*D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
                ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
             )
         );
@@ -123,7 +122,7 @@ SchneiderbauerEtAl::frictionalPressure
         (
            aInt_
            *k_
-           *sqrt(sqrt(DD)*dp/sqrt(k_/(rho*dp)))
+           *sqrt(2.0*sqrt(DD)*dp/sqrt(k_/(rho*dp)))
            /dp
          );
 
@@ -133,7 +132,7 @@ SchneiderbauerEtAl::frictionalPressure
             /(
                 sqr(max(alphaMax - alpha,alphaDeltaMin_))
                /(
-                    2.0
+                    4.0
                    *rho
                    *sqr(b_*dp)
                    *DD
@@ -176,7 +175,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
         );
         return
            - pos(alpha - alphaMinFriction)
-            *4.0*rho*sqr(b_*dp)*DD
+            *8.0*rho*sqr(b_*dp)*DD
             /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
 }
 
@@ -214,7 +213,6 @@ SchneiderbauerEtAl::nu
     );
 
     volScalarField& nuf = tnu.ref();
-    volSymmTensorField S = dev(D);
 
     forAll(D, celli)
     {
@@ -229,14 +227,14 @@ SchneiderbauerEtAl::nu
                             /(
                                  I0_.value()
                                / (
-                                   (2.0 * sqrt(0.5*(S[celli]&&S[celli])) * dp[celli])
+                                   (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
                                    /(sqrt(pf[celli])+SMALL) + SMALL
                                  )
                                + 1.0
                              )
                           )
                         * pf[celli]
-                        / (2.0 * sqrt(0.5*(S[celli]&&S[celli])) + SMALL);
+                        / (sqrt(0.5*(D[celli]&&D[celli])) + SMALL);
         }
     }
 
@@ -268,7 +266,7 @@ SchneiderbauerEtAl::nu
                              )
                             * pf.boundaryField()[patchi]
                             / (
-                                 mag(U.boundaryField()[patchi].snGrad())
+                                 sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
                                + SMALL
                               );
         }
