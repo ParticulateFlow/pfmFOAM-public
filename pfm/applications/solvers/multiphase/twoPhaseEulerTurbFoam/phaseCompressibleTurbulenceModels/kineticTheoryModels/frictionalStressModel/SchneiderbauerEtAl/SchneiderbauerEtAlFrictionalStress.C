@@ -256,7 +256,7 @@ SchneiderbauerEtAl::nu
                               /(
                                    I0_.value()
                                  / (
-                                     (mag(U.boundaryField()[patchi].snGrad())
+                                     (sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
                                           * dp.boundaryField()[patchi])
                                      /(sqrt(pf.boundaryField()[patchi])+SMALL)
                                     + SMALL
