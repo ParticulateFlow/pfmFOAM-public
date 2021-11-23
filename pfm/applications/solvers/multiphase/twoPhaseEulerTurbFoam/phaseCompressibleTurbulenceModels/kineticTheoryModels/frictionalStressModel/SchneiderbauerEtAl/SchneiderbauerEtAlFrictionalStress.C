@@ -225,10 +225,14 @@ SchneiderbauerEtAl::nu
                                 muC_.value() - muSt_.value()
                              )
                             /(
-                                 I0_.value()
-                               / (
-                                   (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
-                                   /(sqrt(pf[celli])+SMALL) + SMALL
+                                 pow(
+                                     I0_.value()
+                                   / (
+                                         (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
+                                        /(sqrt(pf[celli])+SMALL)
+                                       + SMALL
+                                     )
+                                    ,1.5
                                  )
                                + 1.0
                              )
@@ -255,12 +259,15 @@ SchneiderbauerEtAl::nu
                                    muC_.value() - muSt_.value()
                                )
                               /(
-                                   I0_.value()
-                                 / (
-                                     (sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
-                                          * dp.boundaryField()[patchi])
-                                     /(sqrt(pf.boundaryField()[patchi])+SMALL)
-                                    + SMALL
+                                   pow(
+                                       I0_.value()
+                                     / (
+                                           (sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
+                                          *dp.boundaryField()[patchi])
+                                          /(sqrt(pf.boundaryField()[patchi])+SMALL)
+                                         + SMALL
+                                        )
+                                       ,1.5
                                    )
                                  + 1.0
                                )
