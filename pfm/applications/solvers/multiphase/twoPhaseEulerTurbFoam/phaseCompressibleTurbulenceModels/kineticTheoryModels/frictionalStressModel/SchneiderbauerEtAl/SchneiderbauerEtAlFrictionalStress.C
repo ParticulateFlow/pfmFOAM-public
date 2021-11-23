@@ -220,7 +220,7 @@ SchneiderbauerEtAl::nu
                              )
                           )
                         * pf[celli]
-                        / (sqrt(0.5*(D[celli]&&D[celli])) + SMALL);
+                        / (sqrt(0.5*(dev(D[celli])&&dev(D[celli]))) + SMALL);
         }
     }
 

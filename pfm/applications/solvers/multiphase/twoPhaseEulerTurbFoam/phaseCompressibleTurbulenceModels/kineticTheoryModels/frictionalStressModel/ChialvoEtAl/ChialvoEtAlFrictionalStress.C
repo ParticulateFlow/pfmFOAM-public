@@ -128,6 +128,7 @@ ChialvoEtAl::frictionalPressure
 
     return
          pos(alpha - alphaMinFriction)
+        *neg(alpha - alphaMax)
         /(
             sqr(max(alphaMax - alpha,alphaDeltaMin_))
            /(
@@ -139,8 +140,7 @@ ChialvoEtAl::frictionalPressure
           + 1.0
            /pInt
          )
-       +
-         pos(alpha - alphaMax)
+       + pos(alpha - alphaMax)
         *(
             aQSk_*k_*pow(Foam::max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
           + pInt
@@ -194,6 +194,7 @@ ChialvoEtAl::frictionalPressurePrime
     );
     return
       - pos(alpha - alphaMinFriction)
+       *neg(alpha - alphaMax)
        *8.0*rho*sqr(b_*dp)*DD*factor
        /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_))
       + pos(alpha- alphaMax)
@@ -262,7 +263,7 @@ ChialvoEtAl::nu
                              )
                           )
                         * pf[celli]
-                        / (sqrt(0.5*(D[celli]&&D[celli])) + SMALL);
+                        / (sqrt(0.5*(dev(D[celli])&&dev(D[celli]))) + SMALL);
         }
     }
 
