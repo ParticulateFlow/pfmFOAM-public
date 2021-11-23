@@ -291,6 +291,8 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
             Utc*cos(gamma)
           - Un*sin(gamma)
         )
+       *mag(Up)
+       /magUc
     );
 
     const scalarField v
@@ -299,7 +301,9 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
           - Utc*sin(gamma)
           + Un*cos(gamma)
         )
-    );
+       *mag(Up)
+       /magUc
+    ); 
 
     const scalarField us((u + mu0_*v)/(sqrt(2.0*Thetap)*mu0_));
 

@@ -285,6 +285,8 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
             Utc*cos(gamma)
           - Un*sin(gamma)
         )
+       *mag(Up)
+       /magUc
     );
 
     const scalarField v
@@ -293,6 +295,8 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
           - Utc*sin(gamma)
           + Un*cos(gamma)
         )
+       *mag(Up)
+       /magUc
     ); 
 
     const scalarField us
