@@ -98,10 +98,10 @@ particleThetaSoleimaniSchneiderbauerFvPatchScalarField
     tangentialRestitutionCoeff_(readScalar(dict.lookup("tangentialRestitutionCoeff"))),
     muF_(readScalar(dict.lookup("muF"))),
     sigma_(readScalar(dict.lookup("sigma"))),
-    residualAlpha_(dict.lookupOrDefault<scalar>("residualAlpha",1e-8)),
-    residualKappa_(dict.lookupOrDefault<scalar>("residualKappa",1e-12)),
-    residualTheta_(dict.lookupOrDefault<scalar>("residualTheta",1e-8)),
-    residualU_(dict.lookupOrDefault<scalar>("residualU",1e-8)),
+    residualAlpha_(dict.lookupOrDefault<scalar>("residualAlpha",1.0e-8)),
+    residualKappa_(dict.lookupOrDefault<scalar>("residualKappa",1.0e-12)),
+    residualTheta_(dict.lookupOrDefault<scalar>("residualTheta",1.0e-8)),
+    residualU_(dict.lookupOrDefault<scalar>("residualU",1.0e-8)),
     mu0_(7.0/2.0*(1.0 + restitutionCoefficient_)/(1.0 + tangentialRestitutionCoeff_)*muF_),
     eta_(1.0/2.0*(1.0 + restitutionCoefficient_))   
 {
@@ -205,13 +205,13 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     const volVectorField& U = tU();
     const fvPatchVectorField& Up = U.boundaryField()[patchi];
     const vectorField Uc(Up.patchInternalField());
-    const scalarField magUc(mag(Uc));
 
     // Wall normal cell velocity
     const scalarField Un(-(this->patch().nf() & Uc));
 
     // Tangential cell velocity
     const scalarField Utc(mag(Uc + this->patch().nf()*Un));
+    const scalarField magUc(mag(Utc)+scalar(1.0e-8));
 
     const scalarField rhop
     (
@@ -263,7 +263,7 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
         (
             atan
             (
-                max(sqrt(1.5*Thetap)/2 + Un, scalar(0.0))
+                max(sqrt(1.5*Thetap)/2.0 + Un, scalar(0.0))
                /max(Utc, residualU_)
             )
         )
@@ -274,25 +274,31 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     (
         degToRad
         (
-            2*0.398942*sigma_
+            2.0*0.398942*sigma_
            *(
-                exp(-0.5*sqr(Imp)/(sqr(sigma_)))
-              - exp(-4050/(sqr(sigma_)))
+                exp(-0.5*sqr(Imp)/(sqr(sigma_ + scalar(1.0e-8))))
+              - exp(-4050/(sqr(sigma_ + scalar(1.0e-8))))
             )
-           /(erf(63.6396/sigma_) + erf(0.707107*Imp/sigma_))
+           /(erf(63.6396/(sigma_ + scalar(1.0e-8))) + erf(0.707107*Imp/(sigma_ + scalar(1.0e-8))))
         )
     );
 
+    // u and v should have the magnitude of the particle
+    // velocity at the wall
     const scalarField u
     (
-        Utc*cos(gamma)
-      - Un*sin(gamma)
+        (
+            Utc*cos(gamma)
+          - Un*sin(gamma)
+        )
     );
 
     const scalarField v
     (
-       - Utc*sin(gamma)
-       + Un*cos(gamma)
+        (
+          - Utc*sin(gamma)
+          + Un*cos(gamma)
+        )
     );
 
     const scalarField us((u + mu0_*v)/(sqrt(2.0*Thetap)*mu0_));
@@ -302,17 +308,17 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     // Wall shear stress
     const scalarField tauw
     ( 
-      - rhop*alphap*gs0p*eta_*muF_
+        rhop*alphap*gs0p*eta_*muF_
        *(
-            u*v*(1-erfUs)/mu0_
-          + v*sqrt(2*Thetap/constant::mathematical::pi)*
+            u*v*(1.0-erfUs)/mu0_
+          + v*sqrt(2.0*Thetap/constant::mathematical::pi)*
             (
-                exp(-sqr(v)/(2*Thetap))
+                exp(-sqr(v)/(2.0*Thetap))
               - exp(-sqr(us))
             )
           + (sqr(v)+Thetap)
            *(
-                erf(v/sqrt(2*Thetap))
+                erf(v/sqrt(2.0*Thetap))
               - erfUs
             )
         )
@@ -323,24 +329,24 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     (
         rhop*alphap*gs0p*eta_
        *(
-            (sqr(v) + Thetap)*(1 - erf(v/sqrt(2*Thetap)))
-          - sqrt(2*Thetap/constant::mathematical::pi)
-           *v*exp(-sqr(v)/(2*Thetap))
+            (sqr(v) + Thetap)*(1.0 - erf(v/sqrt(2.0*Thetap)))
+          - sqrt(2.0*Thetap/constant::mathematical::pi)
+           *v*exp(-sqr(v)/(2.0*Thetap))
         )
     );
 
     const scalarField A
     (
-        2*muF_*sqr(u)*(2*eta_ - mu0_)
+        2.0*muF_*sqr(u)*(2*eta_ - mu0_)
       + Thetap
        *(
             14.0*muF_*eta_
-          - 4*mu0_*(1.0 + muF_)
+          - 4.0*mu0_*(1.0 + muF_)
           - 6.0*muF_*sqr(mu0_)*eta_
         )
     );
 
-    const scalarField Ul(u/(sqrt(2*Thetap)*mu0_));
+    const scalarField Ul(u/(sqrt(2.0*Thetap)*mu0_));
 
     const scalarField B
     (
@@ -374,9 +380,11 @@ void particleThetaSoleimaniSchneiderbauerFvPatchScalarField::updateCoeffs()
     const scalarField N0(eta_*rhop*alphap*gs0p*Thetap);
     const scalarField D(D0/N0*N);
     
-    this->gradient() = -((tauw*(u) - N*(v)) + D)/(max(kappap, residualKappa_));
+    this->gradient() = (-tauw*(u) - N*(v) - D)/(max(kappap, residualKappa_));
 
-    // Info<< "  theta-grad: " << min(this->gradient()) << " - " << max(this->gradient()) << endl;
+    Info<< "  tauw*u: " << min(-tauw*(u)) << " - " << max(-tauw*(u)) << endl;
+    Info<< "  N: " << min(N) << " - " << max(N) << endl;
+    Info<< "  D: " << min(D) << " - " << max(D) << endl;
 
     fixedGradientFvPatchScalarField::updateCoeffs();
 }
