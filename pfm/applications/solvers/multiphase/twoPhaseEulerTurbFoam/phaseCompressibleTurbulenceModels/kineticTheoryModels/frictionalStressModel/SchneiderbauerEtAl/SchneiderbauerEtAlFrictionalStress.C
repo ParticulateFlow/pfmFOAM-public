@@ -25,14 +25,10 @@ License
      Christian Doppler Laboratory for Multiscale Modeling of Multiphase Processes
      Johannes Kepler University, Linz, Austria
 
- Description
-     Combination of Schneiderbauer et al. and Chialvo et al. frictional model
 
-     Reference:
-     \verbatim
-        Chialvo, S., J. Sun, S. Sundaresan. Phys. Rev. E, 2012, 85, 021305 (2012).
-        Schneiderbauer, S., A. Aigner, S. Pirker. Chem. Eng. Sci., 2012, 80, 279–292.
-     \endverbatim
+ Description
+     Implementaton of mu(I)-rheology (Schneiderbauer et al., Chem. Eng.
+     Science, 80, 2012)
  
  
 
@@ -79,7 +75,6 @@ SchneiderbauerEtAl::SchneiderbauerEtAl
     muC_("muC", dimless, coeffDict_),
     I0_("I0", dimless, coeffDict_),
     aQSk_("aQSk", dimless, coeffDict_),
-    aInt_("aInt", dimless, coeffDict_),
     k_("k", dimensionSet(1,0,-2,0,0), coeffDict_),
     alphaDeltaMin_("alphaDeltaMin", dimless, coeffDict_),
     Rc_("Rc", dimless, coeffDict_)
@@ -109,43 +104,29 @@ SchneiderbauerEtAl::frictionalPressure
     const volSymmTensorField& D
 ) const
 {
-        const volScalarField& alpha = phase;
-        volScalarField DD
-        (
-            min
-            (
-                max(0.5*D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-               ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
-            )
-        );
-        volScalarField pInt
-        (
-           aInt_
-           *k_
-           *sqrt(2.0*sqrt(DD)*dp/sqrt(k_/(rho*dp)))
-           /dp
-         );
+    const volScalarField& alpha = phase;
 
-        return
-             pos(alpha - alphaMinFriction)
-            *pos(alphaMax - alpha)
-            /(
-                sqr(max(alphaMax - alpha,alphaDeltaMin_))
-               /(
-                    4.0
-                   *rho
-                   *sqr(b_*dp)
-                   *DD
-                )
-              + 1.0
-               /pInt
-            )
-          +
-             pos(alpha - alphaMax)
-            *(
-                aQSk_*k_*pow(Foam::max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
-              + pInt
-             );
+    volScalarField DD
+    (
+        min
+        (
+            0.5*D&&D
+           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+        )
+    );
+
+    return
+        pos(alpha - alphaMinFriction)
+       *4.0
+       *rho
+       *sqr(b_*dp)
+       *DD
+       /sqr(max(alphaMax - alpha,alphaDeltaMin_))
+      + pos(alpha - alphaMax)
+       *aQSk_
+       *k_
+       *pow(max(alpha- alphaMax,alphaDeltaMin_), 2.0/3.0)
+       /dp;
 }
 
 
@@ -161,22 +142,26 @@ SchneiderbauerEtAl::frictionalPressurePrime
     const volSymmTensorField& D
 ) const
 {
-        const volScalarField& alpha = phase;
-        // pPrime does not contain pInt contribution
-        // pPrime is solely used, if implicitPhasePressure is true
-        volSymmTensorField S = dev(D);
-        volScalarField DD
+    const volScalarField& alpha = phase;
+    // pPrime does not contain pInt contribution
+    // pPrime is solely used, if implicitPhasePressure is true
+    volScalarField DD
+    (
+        min
         (
-            min
-            (
-                max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-               ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
-            )
-        );
-        return
-           - pos(alpha - alphaMinFriction)
-            *8.0*rho*sqr(b_*dp)*DD
-            /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_));
+            0.5*D&&D
+           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+        )
+    );
+    return
+       - pos(alpha - alphaMinFriction)
+        *8.0*rho*sqr(b_*dp)*DD
+        /pow3(max(alphaMax - alpha, alphaDeltaMin_))
+      +  pos(alpha- alphaMax)
+        *(2.0/3.0)
+        *aQSk_
+        *k_
+        /(pow(max(alpha - alphaMax,alphaDeltaMin_), 1.0/3.0)*dp);
 }
 
 
@@ -225,14 +210,11 @@ SchneiderbauerEtAl::nu
                                 muC_.value() - muSt_.value()
                              )
                             /(
-                                 pow(
-                                     I0_.value()
-                                   / (
-                                         (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
-                                        /(sqrt(pf[celli])+SMALL)
-                                       + SMALL
-                                     )
-                                    ,1.5
+                                 I0_.value()
+                               / (
+                                     (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
+                                    /(sqrt(pf[celli])+SMALL)
+                                   + SMALL
                                  )
                                + 1.0
                              )
@@ -259,15 +241,12 @@ SchneiderbauerEtAl::nu
                                    muC_.value() - muSt_.value()
                                )
                               /(
-                                   pow(
-                                       I0_.value()
-                                     / (
-                                           (sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
-                                          *dp.boundaryField()[patchi])
-                                          /(sqrt(pf.boundaryField()[patchi])+SMALL)
-                                         + SMALL
-                                        )
-                                       ,1.5
+                                   I0_.value()
+                                 / (
+                                       (sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
+                                      *dp.boundaryField()[patchi])
+                                      /(sqrt(pf.boundaryField()[patchi])+SMALL)
+                                     + SMALL
                                    )
                                  + 1.0
                                )
@@ -279,7 +258,6 @@ SchneiderbauerEtAl::nu
                               );
         }
     }
-
     // Correct coupled BCs
     nuf.correctBoundaryConditions();
 
@@ -298,7 +276,6 @@ SchneiderbauerEtAl::read()
 
     I0_.read(coeffDict_);
     aQSk_.read(coeffDict_);
-    aInt_.read(coeffDict_);
     k_.read(coeffDict_);
     
     alphaDeltaMin_.read(coeffDict_);

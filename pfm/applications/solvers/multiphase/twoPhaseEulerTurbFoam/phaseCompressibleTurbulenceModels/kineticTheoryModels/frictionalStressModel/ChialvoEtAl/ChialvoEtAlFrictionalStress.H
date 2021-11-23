@@ -22,18 +22,23 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::kineticTheoryModels::frictionalStressModels::SchneiderbauerEtAlOld
+    Foam::kineticTheoryModels::frictionalStressModels::ChialvoEtAl
 
-Description
-    Implementaton of mu(I)-rheology (Schneiderbauer et al., Chem. Eng.
-    Science, 80, 2012)
+ Description
+     Combination of Schneiderbauer et al. and Chialvo et al. frictional model
+
+     Reference:
+     \verbatim
+        Chialvo, S., J. Sun, S. Sundaresan. Phys. Rev. E, 2012, 85, 021305 (2012).
+        Schneiderbauer, S., A. Aigner, S. Pirker. Chem. Eng. Sci., 2012, 80, 279–292.
+     \endverbatim
 SourceFiles
-    SchneiderbauerEtAlOldFrictionalStress.C
+    ChialvoEtAlFrictionalStress.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef SchneiderbauerEtAlOld_H
-#define SchneiderbauerEtAlOld_H
+#ifndef ChialvoEtAl_H
+#define ChialvoEtAl_H
 
 #include "frictionalStressModel.H"
 
@@ -47,10 +52,10 @@ namespace frictionalStressModels
 {
 
 /*---------------------------------------------------------------------------*\
-               Class SchneiderbauerEtAlOld Declaration
+               Class ChialvoEtAl Declaration
 \*---------------------------------------------------------------------------*/
 
-class SchneiderbauerEtAlOld
+class ChialvoEtAl
 :
     public frictionalStressModel
 {
@@ -89,17 +94,17 @@ class SchneiderbauerEtAlOld
 public:
 
     //- Runtime type information
-    TypeName("SchneiderbauerEtAlOld");
+    TypeName("ChialvoEtAl");
 
 
     // Constructors
 
         //- Construct from components
-        SchneiderbauerEtAlOld(const dictionary& dict);
+        ChialvoEtAl(const dictionary& dict);
 
 
     //- Destructor
-    virtual ~SchneiderbauerEtAlOld();
+    virtual ~ChialvoEtAl();
 
 
     // Member functions

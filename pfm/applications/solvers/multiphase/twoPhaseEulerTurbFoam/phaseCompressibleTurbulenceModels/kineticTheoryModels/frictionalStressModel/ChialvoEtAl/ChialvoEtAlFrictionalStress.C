@@ -38,7 +38,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "SchneiderbauerEtAlOldFrictionalStress.H"
+#include "ChialvoEtAlFrictionalStress.H"
 #include "addToRunTimeSelectionTable.H"
 #include "mathematicalConstants.H"
 #include "wallFvPatch.H"
@@ -51,12 +51,12 @@ namespace kineticTheoryModels
 {
 namespace frictionalStressModels
 {
-    defineTypeNameAndDebug(SchneiderbauerEtAlOld, 0);
+    defineTypeNameAndDebug(ChialvoEtAl, 0);
 
     addToRunTimeSelectionTable
     (
         frictionalStressModel,
-        SchneiderbauerEtAlOld,
+        ChialvoEtAl,
         dictionary
     );
 }
@@ -67,7 +67,7 @@ namespace frictionalStressModels
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::kineticTheoryModels::frictionalStressModels::
-SchneiderbauerEtAlOld::SchneiderbauerEtAlOld
+ChialvoEtAl::ChialvoEtAl
 (
     const dictionary& dict
 )
@@ -91,7 +91,7 @@ SchneiderbauerEtAlOld::SchneiderbauerEtAlOld
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::kineticTheoryModels::frictionalStressModels::
-SchneiderbauerEtAlOld::~SchneiderbauerEtAlOld()
+ChialvoEtAl::~ChialvoEtAl()
 {}
 
 
@@ -99,7 +99,7 @@ SchneiderbauerEtAlOld::~SchneiderbauerEtAlOld()
 
 Foam::tmp<Foam::volScalarField>
 Foam::kineticTheoryModels::frictionalStressModels::
-SchneiderbauerEtAlOld::frictionalPressure
+ChialvoEtAl::frictionalPressure
 (
     const phaseModel& phase,
     const dimensionedScalar& alphaMinFriction,
@@ -110,34 +110,47 @@ SchneiderbauerEtAlOld::frictionalPressure
 ) const
 {
     const volScalarField& alpha = phase;
-
     volScalarField DD
     (
         min
         (
-            0.5*D&&D
+            max(0.5*D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
            ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
         )
     );
+    volScalarField pInt
+    (
+       aInt_
+       *k_
+       *sqrt(2.0*sqrt(DD)*dp/sqrt(k_/(rho*dp)))
+       /dp
+     );
 
     return
-        pos(alpha - alphaMinFriction)
-       *4.0
-       *rho
-       *sqr(b_*dp)
-       *DD
-       /sqr(max(alphaMax - alpha,alphaDeltaMin_))
-      + pos(alpha - alphaMax)
-       *aQSk_
-       *k_
-       *pow(max(alpha- alphaMax,alphaDeltaMin_), 2.0/3.0)
-       /dp;
+         pos(alpha - alphaMinFriction)
+        /(
+            sqr(max(alphaMax - alpha,alphaDeltaMin_))
+           /(
+                4.0
+               *rho
+               *sqr(b_*dp)
+               *DD
+            )
+          + 1.0
+           /pInt
+         )
+       +
+         pos(alpha - alphaMax)
+        *(
+            aQSk_*k_*pow(Foam::max(alpha - alphaMax, scalar(0)), 2.0/3.0)/dp
+          + pInt
+         );
 }
 
 
 Foam::tmp<Foam::volScalarField>
 Foam::kineticTheoryModels::frictionalStressModels::
-SchneiderbauerEtAlOld::frictionalPressurePrime
+ChialvoEtAl::frictionalPressurePrime
 (
     const phaseModel& phase,
     const dimensionedScalar& alphaMinFriction,
@@ -150,29 +163,50 @@ SchneiderbauerEtAlOld::frictionalPressurePrime
     const volScalarField& alpha = phase;
     // pPrime does not contain pInt contribution
     // pPrime is solely used, if implicitPhasePressure is true
+    volSymmTensorField S = dev(D);
     volScalarField DD
     (
         min
         (
-            0.5*D&&D
+            max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
            ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
         )
     );
+    volScalarField pInt
+    (
+       aInt_
+       *k_
+       *sqrt(2.0*sqrt(DD)*dp/sqrt(k_/(rho*dp)))
+       /dp
+    );
+    volScalarField pInert
+    (
+        4.0
+       *rho
+       *sqr(b_*dp)
+       *DD
+       /sqr(max(alphaMax - alpha,alphaDeltaMin_))
+    );
+    volScalarField factor
+    (
+        sqr(pInt)
+       /sqr(pInt + pInert)
+    );
     return
-       - pos(alpha - alphaMinFriction)
-        *8.0*rho*sqr(b_*dp)*DD
-        /pow3(max(alphaMax - alpha, alphaDeltaMin_))
-      +  pos(alpha- alphaMax)
-        *(2.0/3.0)
-        *aQSk_
-        *k_
-        /(pow(max(alpha - alphaMax,alphaDeltaMin_), 1.0/3.0)*dp);
+      - pos(alpha - alphaMinFriction)
+       *8.0*rho*sqr(b_*dp)*DD*factor
+       /pow3(Foam::max(alphaMax - alpha, alphaDeltaMin_))
+      + pos(alpha- alphaMax)
+       *(2.0/3.0)
+       *aQSk_
+       *k_
+       /(pow(max(alpha - alphaMax,alphaDeltaMin_), 1.0/3.0)*dp);
 }
 
 
 Foam::tmp<Foam::volScalarField>
 Foam::kineticTheoryModels::frictionalStressModels::
-SchneiderbauerEtAlOld::nu
+ChialvoEtAl::nu
 (
     const phaseModel& phase,
     const dimensionedScalar& alphaMinFriction,
@@ -190,7 +224,7 @@ SchneiderbauerEtAlOld::nu
         (
             IOobject
             (
-                "SchneiderbauerEtAlOld:nu",
+                "ChialvoEtAl:nu",
                 phase.mesh().time().timeName(),
                 phase.mesh(),
                 IOobject::NO_READ,
@@ -269,6 +303,7 @@ SchneiderbauerEtAlOld::nu
                               );
         }
     }
+
     // Correct coupled BCs
     nuf.correctBoundaryConditions();
 
@@ -277,7 +312,7 @@ SchneiderbauerEtAlOld::nu
 
 
 bool Foam::kineticTheoryModels::frictionalStressModels::
-SchneiderbauerEtAlOld::read()
+ChialvoEtAl::read()
 {
     coeffDict_ <<= dict_.optionalSubDict(typeName + "Coeffs");
 
