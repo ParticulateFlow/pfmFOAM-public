@@ -110,14 +110,47 @@ ChialvoEtAl::frictionalPressure
 ) const
 {
     const volScalarField& alpha = phase;
-    volScalarField DD
+
+    // compute D&&D in the interior and at boundaries
+    tmp<volScalarField> tDD
     (
-        min
+        new volScalarField
         (
-            max(0.5*D&&D,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+            IOobject
+            (
+                "SchneiderbauerEtAl:DD",
+                phase.mesh().time().timeName(),
+                phase.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            phase.mesh(),
+            dimensionedScalar("DD", dimensionSet(0, 0, -2, 0, 0), 0.0)
         )
     );
+
+    volScalarField& DD = tDD.ref();
+    forAll(D, celli)
+    {
+        if (alpha[celli] > alphaMinFriction.value()) {
+            DD[celli] = 0.5*D[celli]&&D[celli];
+        }
+    }
+    const fvPatchList& patches = phase.mesh().boundary();
+    const volVectorField& U = phase.U();
+
+    volScalarField::Boundary& DDBf = DD.boundaryFieldRef();
+
+    forAll(patches, patchi)
+    {
+        if (!patches[patchi].coupled()) {
+            DDBf[patchi] = 0.5*magSqr(U.boundaryField()[patchi].snGrad())*pos(alpha[patchi]-alphaMinFriction.value());
+        }
+    }
+    // Correct coupled BCs
+    DD.correctBoundaryConditions();
+    
     volScalarField pInt
     (
        aInt_
@@ -161,17 +194,47 @@ ChialvoEtAl::frictionalPressurePrime
 ) const
 {
     const volScalarField& alpha = phase;
-    // pPrime does not contain pInt contribution
-    // pPrime is solely used, if implicitPhasePressure is true
-    volSymmTensorField S = dev(D);
-    volScalarField DD
+    
+    // compute D&&D in the interior and at boundaries
+    tmp<volScalarField> tDD
     (
-        min
+        new volScalarField
         (
-            max(S&&S,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e-8))
-           ,dimensionedScalar("dmax",dimensionSet(0, 0, -2, 0, 0),1.0e4)
+            IOobject
+            (
+                "SchneiderbauerEtAl:DD",
+                phase.mesh().time().timeName(),
+                phase.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            phase.mesh(),
+            dimensionedScalar("DD", dimensionSet(0, 0, -2, 0, 0), 0.0)
         )
     );
+
+    volScalarField& DD = tDD.ref();
+    forAll(D, celli)
+    {
+        if (alpha[celli] > alphaMinFriction.value()) {
+            DD[celli] = 0.5*D[celli]&&D[celli];
+        }
+    }
+    const fvPatchList& patches = phase.mesh().boundary();
+    const volVectorField& U = phase.U();
+
+    volScalarField::Boundary& DDBf = DD.boundaryFieldRef();
+
+    forAll(patches, patchi)
+    {
+        if (!patches[patchi].coupled()) {
+            DDBf[patchi] = 0.5*magSqr(U.boundaryField()[patchi].snGrad())*pos(alpha[patchi]-alphaMinFriction.value());
+        }
+    }
+    // Correct coupled BCs
+    DD.correctBoundaryConditions();
+    
     volScalarField pInt
     (
        aInt_
