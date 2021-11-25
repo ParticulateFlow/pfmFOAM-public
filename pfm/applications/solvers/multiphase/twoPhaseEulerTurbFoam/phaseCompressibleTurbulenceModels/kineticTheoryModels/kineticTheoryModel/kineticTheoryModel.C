@@ -97,6 +97,7 @@ Foam::RASModels::kineticTheoryModel::kineticTheoryModel
     ),
 
     equilibrium_(coeffDict_.lookup("equilibrium")),
+    KochSanganiDrag_(coeffDict_.lookupOrDefault<Switch>("KochSanganiDrag", true)),
     e_("e", dimless, coeffDict_),
     alphaMax_("alphaMax", dimless, coeffDict_),
     alphaMinFriction_
@@ -199,8 +200,8 @@ Foam::RASModels::kineticTheoryModel::kineticTheoryModel
             IOobject::AUTO_WRITE
         ),
         U.mesh(),
-        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0),
-        zeroGradientFvPatchField<scalar>::typeName
+        dimensionedScalar("zero", dimensionSet(1, -1, -2, 0, 0), 0.0)//,
+        //zeroGradientFvPatchField<scalar>::typeName
      )
 {
     if (type == typeName)
@@ -229,6 +230,7 @@ bool Foam::RASModels::kineticTheoryModel::read()
     )
     {
         coeffDict().lookup("equilibrium") >> equilibrium_;
+        coeffDict().lookup("KochSanganiDrag") >> KochSanganiDrag_;
         e_.readIfPresent(coeffDict());
         alphaMax_.readIfPresent(coeffDict());
         alphaMinFriction_.readIfPresent(coeffDict());
@@ -540,46 +542,50 @@ void Foam::RASModels::kineticTheoryModel::correct()
 
         // Gidaspow (1994)
         // volScalarField J1("J1", 3.0*beta);
-        // Koch & Sangani (1999)
-        volScalarField Rdiss
-        (
-            1.0
-          + 3.0*sqrt(0.5*alpha)
-          + 2.11*alpha*log(alpha)
-          + 11.26*alpha*(1.0 - 5.1*alpha + 16.57*sqr(alpha) - 21.77*alpha*sqr(alpha))
-          - alpha*gs0_*log(0.01)
-        );
         volScalarField J1
         (
             "J1",
-            3.0*beta*Rdiss
-        );
-        // Koch & Sangani (1999)
-        volScalarField Rd
-        (
-            neg(alpha - 0.4)
-           *(1.0 + 3.0*sqrt(0.5*alpha) + 2.11*alpha*log(alpha)+17.14*alpha)
-           /(1.0 + 0.681*alpha - 8.48*sqr(alpha) + 8.16*alpha*sqr(alpha))
-          + pos(alpha - 0.4)
-           *(10.0*alpha/(sqr(1.0 - alpha)*(1.0 - alpha)) + 0.7)
-        );
-        volScalarField Psi
-        (
-            sqr(Rd)
-           /(1.0 + 2.5*sqrt(alpha) + 5.9*alpha)
+            3.0*beta
         );
         volScalarField J2
         (
             "J2",
-           0.25*sqr(beta)*da*magSqr(U - Uc_)*Psi
+           0.25*sqr(beta)*da*magSqr(U - Uc_)
            /(
                rho
               *max(alpha,residualAlpha_)
-              *gs0_
+              *radialModel_->g0(alpha, 0.999*alphaMax_, alphaMax_)
               *sqrtPi
               *(ThetaSqrt*Theta_ + ThetaSmallSqrt*ThetaSmall)
             )
         );
+        if (KochSanganiDrag_) {
+            // Koch & Sangani (1999): drag dissipation
+            volScalarField Rdiss
+            (
+                1.0
+              + 3.0*sqrt(0.5*alpha)
+              + 2.11*alpha*log(alpha)
+              + 11.26*alpha*(1.0 - 5.1*alpha + 16.57*sqr(alpha) - 21.77*alpha*sqr(alpha))
+              - alpha*gs0_*log(0.01)
+            );
+            J1 *= Rdiss;
+            // Koch & Sangani (1999): drag production
+            volScalarField Rd
+            (
+                neg(alpha - 0.4)
+               *(1.0 + 3.0*sqrt(0.5*alpha) + 2.11*alpha*log(alpha)+17.14*alpha)
+               /(1.0 + 0.681*alpha - 8.48*sqr(alpha) + 8.16*alpha*sqr(alpha))
+              + pos(alpha - 0.4)
+               *(10.0*alpha/(sqr(1.0 - alpha)*(1.0 - alpha)) + 0.7)
+            );
+            volScalarField Psi
+            (
+                sqr(Rd)
+               /(1.0 + 2.5*sqrt(alpha) + 5.9*alpha)
+            );
+            J2 *= Psi;            
+        }
 
         // 'thermal' conductivity (Table 3.3, p. 49)
         kappa_ = conductivityModel_->kappa(alpha, Theta_, gs0_, rho, da, e_);
@@ -689,7 +695,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
             rho,
             D
         );
-        pf_.correctBoundaryConditions();
+        //pf_.correctBoundaryConditions();
 
         nuFric_ = frictionalStressModel_->nu
         (

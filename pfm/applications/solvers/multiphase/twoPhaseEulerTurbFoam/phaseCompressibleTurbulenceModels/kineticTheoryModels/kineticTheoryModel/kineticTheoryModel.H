@@ -107,6 +107,9 @@ class kineticTheoryModel
 
             //- Use equilibrium approximation: generation == dissipation
             Switch equilibrium_;
+    
+            //- Use Koch & Sangani correction for drag production and dissipation
+            Switch KochSanganiDrag_;
 
             //- Coefficient of restitution
             dimensionedScalar e_;
