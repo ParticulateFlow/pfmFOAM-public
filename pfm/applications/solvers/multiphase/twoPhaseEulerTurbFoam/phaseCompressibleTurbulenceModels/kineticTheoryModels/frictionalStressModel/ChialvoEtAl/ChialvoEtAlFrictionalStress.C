@@ -126,16 +126,14 @@ ChialvoEtAl::frictionalPressure
                 false
             ),
             phase.mesh(),
-            dimensionedScalar("DD", dimensionSet(0, 0, -2, 0, 0), 0.0)
+            dimensionedScalar("DD", dimensionSet(0, 0, -2, 0, 0), 1.0e-8)
         )
     );
 
     volScalarField& DD = tDD.ref();
     forAll(D, celli)
     {
-        if (alpha[celli] > alphaMinFriction.value()) {
             DD[celli] = Foam::max(0.5*D[celli]&&D[celli],SMALL);
-        }
     }
     const fvPatchList& patches = phase.mesh().boundary();
     const volVectorField& U = phase.U();
@@ -147,9 +145,7 @@ ChialvoEtAl::frictionalPressure
         if (!patches[patchi].coupled()) {
             DDBf[patchi] = max
                            (
-                               0.5
-                              *magSqr(U.boundaryField()[patchi].snGrad())
-                              *pos(alpha[patchi]-alphaMinFriction.value())
+                              0.5*magSqr(U.boundaryField()[patchi].snGrad())
                              ,SMALL
                            );
         }
@@ -216,16 +212,14 @@ ChialvoEtAl::frictionalPressurePrime
                 false
             ),
             phase.mesh(),
-            dimensionedScalar("DD", dimensionSet(0, 0, -2, 0, 0), 0.0)
+            dimensionedScalar("DD", dimensionSet(0, 0, -2, 0, 0), 1.0e-8)
         )
     );
 
     volScalarField& DD = tDD.ref();
     forAll(D, celli)
     {
-        if (alpha[celli] > alphaMinFriction.value()) {
             DD[celli] = Foam::max(0.5*D[celli]&&D[celli],SMALL);
-        }
     }
     const fvPatchList& patches = phase.mesh().boundary();
     const volVectorField& U = phase.U();
@@ -237,9 +231,7 @@ ChialvoEtAl::frictionalPressurePrime
         if (!patches[patchi].coupled()) {
             DDBf[patchi] = max
                            (
-                               0.5
-                              *magSqr(U.boundaryField()[patchi].snGrad())
-                              *pos(alpha[patchi]-alphaMinFriction.value())
+                              0.5*magSqr(U.boundaryField()[patchi].snGrad())
                              ,SMALL
                            );
         }
