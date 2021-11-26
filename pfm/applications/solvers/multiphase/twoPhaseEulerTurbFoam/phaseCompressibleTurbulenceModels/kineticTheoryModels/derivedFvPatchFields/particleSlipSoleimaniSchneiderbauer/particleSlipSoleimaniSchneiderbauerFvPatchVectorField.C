@@ -362,7 +362,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
         (
             min
             (
-                (-tauw + 0*pfW*muF_)/max(Utc*(muP+0*muFP)*patch().deltaCoeffs(),scalar(1.0e-8)),
+                (-tauw + pfW*muF_)/max(Utc*(muP+muFP)*patch().deltaCoeffs(),scalar(1.0e-8)),
                 scalar(1.0)
             ),
             scalar(0)
