@@ -134,7 +134,7 @@ ChialvoEtAl::frictionalPressure
     forAll(D, celli)
     {
         if (alpha[celli] > alphaMinFriction.value()) {
-            DD[celli] = 0.5*D[celli]&&D[celli];
+            DD[celli] = Foam::max(0.5*D[celli]&&D[celli],SMALL);
         }
     }
     const fvPatchList& patches = phase.mesh().boundary();
@@ -145,7 +145,13 @@ ChialvoEtAl::frictionalPressure
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = 0.5*magSqr(U.boundaryField()[patchi].snGrad())*pos(alpha[patchi]-alphaMinFriction.value());
+            DDBf[patchi] = max
+                           (
+                               0.5
+                              *magSqr(U.boundaryField()[patchi].snGrad())
+                              *pos(alpha[patchi]-alphaMinFriction.value())
+                             ,SMALL
+                           );
         }
     }
     // Correct coupled BCs
@@ -218,7 +224,7 @@ ChialvoEtAl::frictionalPressurePrime
     forAll(D, celli)
     {
         if (alpha[celli] > alphaMinFriction.value()) {
-            DD[celli] = 0.5*D[celli]&&D[celli];
+            DD[celli] = Foam::max(0.5*D[celli]&&D[celli],SMALL);
         }
     }
     const fvPatchList& patches = phase.mesh().boundary();
@@ -229,7 +235,13 @@ ChialvoEtAl::frictionalPressurePrime
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = 0.5*magSqr(U.boundaryField()[patchi].snGrad())*pos(alpha[patchi]-alphaMinFriction.value());
+            DDBf[patchi] = max
+                           (
+                               0.5
+                              *magSqr(U.boundaryField()[patchi].snGrad())
+                              *pos(alpha[patchi]-alphaMinFriction.value())
+                             ,SMALL
+                           );
         }
     }
     // Correct coupled BCs
