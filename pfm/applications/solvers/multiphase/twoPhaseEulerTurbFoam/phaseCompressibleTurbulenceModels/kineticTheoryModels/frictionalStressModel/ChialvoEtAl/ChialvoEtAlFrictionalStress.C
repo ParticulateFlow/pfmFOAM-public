@@ -143,7 +143,7 @@ ChialvoEtAl::frictionalPressure
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = max
+            DDBf[patchi] = Foam::max
                            (
                               0.5*magSqr(U.boundaryField()[patchi].snGrad())
                              ,SMALL
@@ -229,7 +229,7 @@ ChialvoEtAl::frictionalPressurePrime
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = max
+            DDBf[patchi] = Foam::max
                            (
                               0.5*magSqr(U.boundaryField()[patchi].snGrad())
                              ,SMALL

@@ -130,6 +130,8 @@ SchneiderbauerEtAl::frictionalPressure
     {
         if (alpha[celli] > alphaMinFriction.value()) {
             DD[celli] = 0.5*D[celli]&&D[celli];
+        } else {
+            DD[celli] = 0.;
         }
     }
     const fvPatchList& patches = phase.mesh().boundary();
@@ -140,7 +142,9 @@ SchneiderbauerEtAl::frictionalPressure
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = 0.5*magSqr(U.boundaryField()[patchi].snGrad())*pos(alpha[patchi]-alphaMinFriction.value());
+            DDBf[patchi] = 0.5
+                          *magSqr(U.boundaryField()[patchi].snGrad())
+                          *Foam::pos(alpha[patchi] - alphaMinFriction.value());
         }
     }
     // Correct coupled BCs
@@ -199,6 +203,8 @@ SchneiderbauerEtAl::frictionalPressurePrime
     {
         if (alpha[celli] > alphaMinFriction.value()) {
             DD[celli] = 0.5*D[celli]&&D[celli];
+        } else {
+            DD[celli] = 0.;
         }
     }
     const fvPatchList& patches = phase.mesh().boundary();
@@ -209,7 +215,9 @@ SchneiderbauerEtAl::frictionalPressurePrime
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = 0.5*magSqr(U.boundaryField()[patchi].snGrad())*pos(alpha[patchi]-alphaMinFriction.value());
+            DDBf[patchi] = 0.5
+                          *magSqr(U.boundaryField()[patchi].snGrad())
+                          *Foam::pos(alpha[patchi] - alphaMinFriction.value());
         }
     }
     // Correct coupled BCs
@@ -283,6 +291,8 @@ SchneiderbauerEtAl::nu
                           )
                         * pf[celli]
                         / (sqrt(0.5*(dev(D[celli])&&dev(D[celli]))) + SMALL);
+        } else {
+            nuf[celli] = 0;
         }
     }
 
