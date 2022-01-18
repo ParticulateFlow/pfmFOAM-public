@@ -144,7 +144,8 @@ SchneiderbauerEtAl::frictionalPressure
         if (!patches[patchi].coupled()) {
             DDBf[patchi] = 0.5
                           *magSqr(U.boundaryField()[patchi].snGrad())
-                          *Foam::pos(alpha[patchi] - alphaMinFriction.value());
+                          *Foam::pos(alpha.boundaryField()[patchi] - alphaMinFriction.value());
+            Info << "min(DDBf) = " << Foam::min(DDBf[patchi]) << ", max(DDBf) = " << Foam::max(DDBf[patchi]) << endl;
         }
     }
     // Correct coupled BCs
@@ -217,7 +218,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
         if (!patches[patchi].coupled()) {
             DDBf[patchi] = 0.5
                           *magSqr(U.boundaryField()[patchi].snGrad())
-                          *Foam::pos(alpha[patchi] - alphaMinFriction.value());
+                          *Foam::pos(alpha.boundaryField()[patchi] - alphaMinFriction.value());
         }
     }
     // Correct coupled BCs
