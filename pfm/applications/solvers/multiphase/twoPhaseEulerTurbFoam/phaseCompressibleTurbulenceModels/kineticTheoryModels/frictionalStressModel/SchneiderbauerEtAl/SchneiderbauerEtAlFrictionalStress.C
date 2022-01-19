@@ -145,7 +145,7 @@ SchneiderbauerEtAl::frictionalPressure
             DDBf[patchi] = 0.5
                           *magSqr(U.boundaryField()[patchi].snGrad())
                           *Foam::pos(alpha.boundaryField()[patchi] - alphaMinFriction.value());
-            Info << "min(DDBf) = " << Foam::min(DDBf[patchi]) << ", max(DDBf) = " << Foam::max(DDBf[patchi]) << endl;
+            // Info << "min(DDBf) = " << Foam::min(DDBf[patchi]) << ", max(DDBf) = " << Foam::max(DDBf[patchi]) << endl;
         }
     }
     // Correct coupled BCs
