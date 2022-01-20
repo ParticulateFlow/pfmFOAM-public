@@ -133,7 +133,7 @@ ChialvoEtAl::frictionalPressure
     volScalarField& DD = tDD.ref();
     forAll(D, celli)
     {
-            DD[celli] = Foam::max(0.5*D[celli]&&D[celli],SMALL);
+        DD[celli] = Foam::max(Foam::min(0.5*D[celli]&&D[celli],1.0e3),SMALL);
     }
     const fvPatchList& patches = phase.mesh().boundary();
     const volVectorField& U = phase.U();
@@ -145,8 +145,13 @@ ChialvoEtAl::frictionalPressure
         if (!patches[patchi].coupled()) {
             DDBf[patchi] = Foam::max
                            (
-                              0.5*magSqr(U.boundaryField()[patchi].snGrad())
-                             ,SMALL
+                                Foam::min
+                                (
+                                    0.5
+                                   *magSqr(U.boundaryField()[patchi].snGrad())
+                                   ,1.0e3
+                                )
+                               ,SMALL
                            );
         }
     }
@@ -219,7 +224,7 @@ ChialvoEtAl::frictionalPressurePrime
     volScalarField& DD = tDD.ref();
     forAll(D, celli)
     {
-            DD[celli] = Foam::max(0.5*D[celli]&&D[celli],SMALL);
+        DD[celli] = Foam::max(Foam::min(0.5*D[celli]&&D[celli],1.0e3),SMALL);
     }
     const fvPatchList& patches = phase.mesh().boundary();
     const volVectorField& U = phase.U();
@@ -231,8 +236,13 @@ ChialvoEtAl::frictionalPressurePrime
         if (!patches[patchi].coupled()) {
             DDBf[patchi] = Foam::max
                            (
-                              0.5*magSqr(U.boundaryField()[patchi].snGrad())
-                             ,SMALL
+                                Foam::min
+                                (
+                                    0.5
+                                   *magSqr(U.boundaryField()[patchi].snGrad())
+                                   ,1.0e3
+                                )
+                               ,SMALL
                            );
         }
     }
