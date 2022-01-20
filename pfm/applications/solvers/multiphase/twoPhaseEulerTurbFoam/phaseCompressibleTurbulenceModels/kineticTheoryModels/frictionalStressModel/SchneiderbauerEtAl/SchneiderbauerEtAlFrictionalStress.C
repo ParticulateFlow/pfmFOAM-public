@@ -129,7 +129,7 @@ SchneiderbauerEtAl::frictionalPressure
     forAll(D, celli)
     {
         if (alpha[celli] > alphaMinFriction.value()) {
-            DD[celli] = 0.5*D[celli]&&D[celli];
+            DD[celli] = Foam::min(0.5*D[celli]&&D[celli],1.0e3);
         } else {
             DD[celli] = 0.;
         }
@@ -142,8 +142,12 @@ SchneiderbauerEtAl::frictionalPressure
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = 0.5
-                          *magSqr(U.boundaryField()[patchi].snGrad())
+            DDBf[patchi] = Foam::min
+                           (
+                              0.5
+                             *magSqr(U.boundaryField()[patchi].snGrad())
+                             ,1.0e3
+                           )
                           *Foam::pos(alpha.boundaryField()[patchi] - alphaMinFriction.value());
             // Info << "min(DDBf) = " << Foam::min(DDBf[patchi]) << ", max(DDBf) = " << Foam::max(DDBf[patchi]) << endl;
         }
@@ -203,7 +207,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
     forAll(D, celli)
     {
         if (alpha[celli] > alphaMinFriction.value()) {
-            DD[celli] = 0.5*D[celli]&&D[celli];
+            DD[celli] = Foam::min(0.5*D[celli]&&D[celli],1.0e3);
         } else {
             DD[celli] = 0.;
         }
@@ -216,9 +220,13 @@ SchneiderbauerEtAl::frictionalPressurePrime
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
-            DDBf[patchi] = 0.5
-                          *magSqr(U.boundaryField()[patchi].snGrad())
-                          *Foam::pos(alpha.boundaryField()[patchi] - alphaMinFriction.value());
+            DDBf[patchi] = Foam::min
+                           (
+                              0.5
+                             *magSqr(U.boundaryField()[patchi].snGrad())
+                             ,1.0e3
+                            )
+                           *Foam::pos(alpha.boundaryField()[patchi] - alphaMinFriction.value());
         }
     }
     // Correct coupled BCs
