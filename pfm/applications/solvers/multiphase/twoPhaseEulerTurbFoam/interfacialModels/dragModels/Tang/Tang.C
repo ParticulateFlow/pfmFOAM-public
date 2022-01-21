@@ -90,7 +90,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Tang::CdRe() const
     volScalarField F1
     (
         "F1",
-        ResLim*(0.11*alpha1*(1+alpha1) - 0.00456/pow(alpha2, 4.0)
+        Res*(0.11*alpha1*(1.0 + alpha1) - 0.00456/pow(alpha2, 4.0)
       + pow(ResLim, -0.343)*(0.169*alpha2 + 0.0644/pow(alpha2, 4.0)))
     );
 
