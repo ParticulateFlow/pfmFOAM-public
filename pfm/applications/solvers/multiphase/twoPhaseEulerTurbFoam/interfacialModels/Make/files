@@ -65,6 +65,8 @@ wallDependentModel/wallDependentModel.C
 /* additional drag models */
 dragModels/WenYuC/WenYuC.C
 dragModels/Beetstra/Beetstra.C
+dragModels/Tang/Tang.C
+dragModels/Tenneti/Tenneti.C
 
 
 /* virtual mass force appearing due to filtering --> unresolved part of pressure gradient */
