@@ -166,6 +166,22 @@ int main(int argc, char *argv[])
             << fvc::domainIntegrate(alpha2*rho2).value()
               /fvc::domainIntegrate(alpha2).value()
             << endl;
+        Info<< "TKE gas: "
+            << fvc::domainIntegrate(alpha2*(U2&U2)).value()
+              /fvc::domainIntegrate(alpha2).value()
+            << endl;
+
+        Info<< "TKE solid: "
+            << fvc::domainIntegrate(alpha1*(U1&U1)).value()
+              /fvc::domainIntegrate(alpha1).value()
+            << endl;
+
+        Info<< "PhiP2: "
+            << fvc::domainIntegrate(alpha1*alpha1).value()
+              /fvc::domainIntegrate(unity).value()
+             - fvc::domainIntegrate(alpha1).value()*fvc::domainIntegrate(alpha1).value()
+              /(fvc::domainIntegrate(unity).value()*fvc::domainIntegrate(unity).value())
+            << endl;
         
         #include "write.H"
 
