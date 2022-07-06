@@ -1,0 +1,71 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6  
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      Theta.particles;
+}
+// ************************************************************************* //
+
+dimensions          [0 2 -2 0 0 0 0];
+
+internalField       uniform 0;
+
+referenceLevel      1e-4;
+
+boundaryField
+{
+    inlet
+    {
+        type                zeroGradient;
+    }
+    
+    inlet_bg
+    {
+//        type                zeroGradient;
+        type                            particleThetaSoleimaniSchneiderbauer;
+        restitutionCoefficient          0.9;
+        tangentialRestitutionCoeff      0.4;
+        muF                             0.3;
+        sigma                           0;
+        value                           $internalField;
+    }
+
+    outlet
+    {
+        type               zeroGradient;
+    }
+
+    wall
+    {
+//        type                zeroGradient;
+        type                            particleThetaSoleimaniSchneiderbauer;
+        restitutionCoefficient          0.9;
+        tangentialRestitutionCoeff      0.4;
+        muF                             0.3;
+        sigma                           0;
+        value                           $internalField;
+        
+    }
+    wall2
+    {
+//        type                zeroGradient;
+        type                            particleThetaSoleimaniSchneiderbauer;
+        restitutionCoefficient          0.9;
+        tangentialRestitutionCoeff      0.4;
+        muF                             0.3;
+        sigma                           0;
+        value                           $internalField;
+    }
+
+
+}
+
+// ************************************************************************* //
