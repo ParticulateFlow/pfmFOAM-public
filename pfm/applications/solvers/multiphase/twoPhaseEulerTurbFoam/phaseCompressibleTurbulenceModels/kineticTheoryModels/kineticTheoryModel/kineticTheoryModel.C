@@ -175,6 +175,21 @@ Foam::RASModels::kineticTheoryModel::kineticTheoryModel
         dimensionedScalar("zero", dimensionSet(1, -1, -1, 0, 0), 0.0)
     ),
 
+    alphaturb_
+    (
+        IOobject
+        (
+            IOobject::groupName("alphaturb", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("zero", dimensionSet(1, -1, -1, 0, 0), 0.0)
+    ),
+
+
     nuFric_
     (
         IOobject
@@ -710,6 +725,8 @@ void Foam::RASModels::kineticTheoryModel::correct()
         // Limit viscosity and add frictional viscosity
         nut_.min(maxNut_);
         nuFric_.min(maxNut_);
+
+        alphaturb_ = rho*da*pow(constant::mathematical::pi,1.5)*sqrt(Theta_)/(32*(16 - 7*alpha)/(16*(1 - alpha)*(1 - alpha)));
         
         
         Info << "    max(nut) = " << max(nut_).value() << nl

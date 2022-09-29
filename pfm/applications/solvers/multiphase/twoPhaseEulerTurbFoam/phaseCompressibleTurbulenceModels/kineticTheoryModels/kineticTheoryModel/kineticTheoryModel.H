@@ -141,6 +141,9 @@ class kineticTheoryModel
             //- The granular "thermal" conductivity
             volScalarField kappa_;
 
+            //- The granular "thermal" conductivity
+            volScalarField alphaturb_;
+
             //- The frictional viscosity
             volScalarField nuFric_;
     
