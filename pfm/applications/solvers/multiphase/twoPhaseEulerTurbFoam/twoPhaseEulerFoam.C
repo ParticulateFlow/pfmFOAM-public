@@ -84,6 +84,22 @@ int main(int argc, char *argv[])
         pimple.dict().lookupOrDefault<Switch>("energyEqn", false)
     );
 
+    //check if SATFM is used
+    const dictionary& turbulencephase1 = mesh.lookupObject<IOdictionary>
+    (
+       "turbulenceProperties." +  phase1.name()
+    );
+    const word turbulence1Groupname = turbulencephase1.lookup("simulationType");
+    const word turbulence1name = turbulencephase1.subDict("RAS").lookup("RASModel");
+
+    const dictionary& turbulencephase2 = mesh.lookupObject<IOdictionary>
+    (
+       "turbulenceProperties." +  phase2.name()
+    );
+    const word turbulence2Groupname = turbulencephase2.lookup("simulationType");
+    const word turbulence2name = turbulencephase2.subDict("RAS").lookup("RASModel");
+
+
     #include "pUf/createDDtU.H"
     #include "pU/createDDtU.H"
 
@@ -112,7 +128,14 @@ int main(int argc, char *argv[])
             {
                 #include "pUf/UEqns.H"
                 if (energyEqn) {
-                    #include "EEqns.H"
+                    if (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous")
+                    {
+                        #include "EEqnsSATFM.H"
+                    }
+                    else
+                    {
+                        #include "EEqns.H"
+                    }
                 }
                 #include "pUf/pEqn.H"
                 #include "pUf/DDtU.H"
@@ -121,7 +144,14 @@ int main(int argc, char *argv[])
             {
                 #include "pU/UEqns.H"
                 if (energyEqn) {
-                    #include "EEqns.H"
+                    if (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous")
+                    {
+                        #include "EEqnsSATFM.H"
+                    }
+                    else
+                    {
+                        #include "EEqns.H"
+                    }
                 }
                 #include "pU/pEqn.H"
                 #include "pU/DDtU.H"
