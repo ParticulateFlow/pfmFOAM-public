@@ -562,6 +562,68 @@ Foam::BlendedInterfacialModel<modelType>::CpIPh() const
     return x;
 }
 
+// Blending for drift temperature
+template<class modelType>
+Foam::tmp<Foam::volScalarField>
+Foam::BlendedInterfacialModel<modelType>::KhTdrift() const
+{
+    tmp<volScalarField> f1, f2;
+
+    if (model_.valid() || model1In2_.valid())
+    {
+        f1 = blending_.f1(pair1In2_.dispersed(), pair2In1_.dispersed());
+    }
+
+    if (model_.valid() || model2In1_.valid())
+    {
+        f2 = blending_.f2(pair1In2_.dispersed(), pair2In1_.dispersed());
+    }
+
+    tmp<volScalarField> x
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                modelType::typeName + ":KhTdrift",
+                pair_.phase1().mesh().time().timeName(),
+                pair_.phase1().mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            pair_.phase1().mesh(),
+            dimensionedScalar("zero", modelType::dimG, 0)
+        )
+    );
+
+    if (model_.valid())
+    {
+        x.ref() += model_->KhTdrift()*(f1() - f2());
+    }
+
+    if (model1In2_.valid())
+    {
+        x.ref() += model1In2_->KhTdrift()*(1 - f1);
+    }
+
+    if (model2In1_.valid())
+    {
+        x.ref() += model2In1_->KhTdrift()*f2;
+    }
+
+    if
+    (
+        correctFixedFluxBCs_
+     && (model_.valid() || model1In2_.valid() || model2In1_.valid())
+    )
+    {
+        correctFixedFluxBCs(x.ref());
+    }
+
+    return x;
+}
+
 
 template<class modelType>
 bool Foam::BlendedInterfacialModel<modelType>::hasModel
