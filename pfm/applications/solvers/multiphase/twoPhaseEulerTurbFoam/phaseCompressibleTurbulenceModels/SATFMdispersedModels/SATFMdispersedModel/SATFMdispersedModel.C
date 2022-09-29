@@ -70,6 +70,7 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
 
     equilibriumK_(coeffDict_.lookup("equilibriumK")),
     equilibriumPhiP2_(coeffDict_.lookup("equilibriumPhiP2")),
+    equilibriumH_(coeffDict_.lookup("equilibriumH")),
     dynamicAdjustment_(coeffDict_.lookup("dynamicAdjustment")),
     anIsoTropicNut_(coeffDict_.lookup("anIsoTropicNut")),
     alphaMax_("alphaMax", dimless, coeffDict_),
@@ -120,6 +121,13 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("xiGS",0.9)
     ),
 
+    xiTGSScalar_
+    (
+        "xiTGSScalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("xiTGS",-0.2)
+    ),
+
     CmuScalar_
     (
         "CmuScalar",
@@ -155,11 +163,25 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("Ceps",1.0)
     ),
 
+    CpScalar_
+    (
+        "CpScalar",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cp",0.4)
+    ),
+
     sigma_
     (
         "sigmaD",
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
+    ),
+
+    Cdp_
+    (
+        "Cdp",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Cdp",0.5)
     ),
 
     maxK_
@@ -187,6 +209,20 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
             IOobject::AUTO_WRITE
         ),
         U.mesh()
+    ),
+
+    H_
+    (
+        IOobject
+        (
+            IOobject::groupName("H", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        U.mesh()
+        //dimensionedScalar("zero", dimensionSet(0, 4, -4, 0, 0),1e-5)
     ),
 
     nuFric_
@@ -324,6 +360,51 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         zeroGradientFvPatchField<scalar>::typeName
     ),
 
+   xiTPhiGG_
+    (
+        IOobject
+        (
+            "xiTPhiGG",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 0.0),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
+    xiTGS_
+    (
+        IOobject
+        (
+            "xiTGS",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), -0.2),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
+    xiTGatS_
+    (
+        IOobject
+        (
+            "xiTGatS",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0),
+        zeroGradientFvPatchField<scalar>::typeName
+    ),
+
     alphaP2Mean_
     (
         IOobject
@@ -356,6 +437,20 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         IOobject
         (
             IOobject::groupName("Ceps", phase.name()),
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar("value", dimensionSet(0, 0, 0, 0, 0), 1.0)
+    ),
+
+    Cp_
+    (
+        IOobject
+        (
+            IOobject::groupName("Cp", phase.name()),
             U.time().timeName(),
             U.mesh(),
             IOobject::NO_READ,
@@ -493,6 +588,7 @@ bool Foam::RASModels::SATFMdispersedModel::read()
         CmuWScalar_.readIfPresent(coeffDict());
         CphiSscalar_.readIfPresent(coeffDict());
         CepsScalar_.readIfPresent(coeffDict());
+        CpScalar_.readIfPresent(coeffDict());
         sigma_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
         ut_.readIfPresent(coeffDict());
@@ -535,7 +631,7 @@ Foam::RASModels::SATFMdispersedModel::k() const
 Foam::tmp<Foam::volScalarField>
 Foam::RASModels::SATFMdispersedModel::epsilon() const
 {
-    return Ceps_*alpha_*pow(k(),3.0/2.0)/deltaF_;
+    return Ceps_*alpha_*pow(k(),3.0/2.0)/lm_;
 }
 
 // R without friction
@@ -827,8 +923,8 @@ void Foam::RASModels::SATFMdispersedModel::boundxiPhiS
     volVectorField& xi
 ) const
 {
-    scalar xiMin = -1.0;
-    scalar xiMax =  1.0;
+    scalar xiMin = -1.4;
+    scalar xiMax =  1.4;
 
     xi.max
     (
@@ -976,6 +1072,44 @@ void Foam::RASModels::SATFMdispersedModel::boundGradU
     );
 }
 
+void Foam::RASModels::SATFMdispersedModel::boundgradh
+(
+    volVectorField& gradh
+) const
+{
+    scalar gradhMin = -1.0e5;
+    scalar gradhMax = 1.0e5;
+
+    gradh.max
+    (
+        dimensionedVector
+        (
+            "mingradh",
+            gradh.dimensions(),
+            vector
+            (
+                gradhMin,
+                gradhMin,
+                gradhMin
+            )
+        )
+    );
+    gradh.min
+    (
+        dimensionedVector
+        (
+            "maxgradh",
+            gradh.dimensions(),
+            vector
+            (
+                gradhMax,
+                gradhMax,
+                gradhMax
+            )
+        )
+    );
+}
+
 
 void Foam::RASModels::SATFMdispersedModel::correct()
 {
@@ -988,6 +1122,69 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     const surfaceScalarField& phi1 = phi_;
     const volVectorField& U = U_;
     
+    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
+
+    //create continuous phase thermo reference
+    const rhoThermo& thermo = phase_.thermo();
+    //cv or cp and enthalpie h or internal energy e
+    volScalarField Cpv1("Cpv1", thermo.Cpv());
+    const volScalarField& he_ = thermo.he();
+
+    volVectorField gradh = fvc::grad(he_);
+    boundgradh(gradh);
+
+    //look up pressure
+    const volScalarField p(mesh_.lookupObject<volScalarField>("p"));
+    //get other phase turbulent internal energy
+    const volScalarField& HC_(mesh_.lookupObject<volScalarField>
+                                     ("H." + fluid.otherPhase(phase_).name()));
+
+    const dictionary& pimple = mesh_.lookupObject<IOdictionary>
+    (
+       "fvSolution"
+    );
+
+    Switch energyEqn
+    (
+        pimple.subDict("PIMPLE").lookupOrDefault<Switch>("energyEqn", false)
+    );
+
+    const rhoThermo& thermo2 = fluid.otherPhase(phase_).thermo();
+
+    //cv or cp and enthalpie h or internal energy e of other phase
+    volScalarField Cpv2("Cpv2", thermo2.Cpv());
+    const volScalarField& heC_ = thermo2.he();
+
+    //continuous phase temperature
+    volScalarField T_ = he_/Cpv1;
+
+    //continuous phase temperature
+    volScalarField Tc_ = heC_/Cpv2;
+
+    const dictionary& thermophase = mesh_.lookupObject<IOdictionary>
+    (
+       "thermophysicalProperties." +  phase_.name()
+    );
+
+    volScalarField Prt_
+    (
+        IOobject
+        (
+            "Prt",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedScalar
+        (
+            "Prtvalue",
+            dimensionSet(0,0,0,0,0),
+            thermophase.subDict("mixture").subDict("transport").lookupOrDefault<scalar>("Prt",1.0)
+        )
+    );
+
     // cont. Phase velocity
     const volVectorField& Uc_ = fluid.otherPhase(phase_).U();
     
@@ -1017,6 +1214,9 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar lSmall("lSmall", dimLength, 1.0e-6);
+    dimensionedScalar TSmall("TSmall", T_.dimensions(), 1.0e-6);
+    dimensionedScalar HSmall("HSmall", H_.dimensions(), 1.0e-6);
+
     
     dimensionedVector eX
     (
@@ -1060,6 +1260,11 @@ void Foam::RASModels::SATFMdispersedModel::correct()
       + ((SijSij&eY)&eSum)*eY
       + ((SijSij&eZ)&eSum)*eZ
      );
+
+    volScalarField Reyheat = (mag((gradh&eX)*(gradh&eX)) + mag((gradh&eY)*(gradh&eY)) + mag((gradh&eZ)*(gradh&eZ)));
+    Reyheat.max(1e-8);
+    Reyheat.min(1e12);
+
     // gradient of solids volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha_);
     
@@ -1085,7 +1290,18 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // compute total k
     volScalarField km(k());
     km.max(kSmall.value());
-    
+
+
+    // get heat transfer coefficient
+    volScalarField gamma
+    (
+        fluid.lookupSubModel<heatTransferModel>
+        (
+            phase_,
+            fluid.otherPhase(phase_)
+        ).K()
+    );
+     gamma.max(1.0e-7);
     
     // local reference to deltaF
     volScalarField deltaF(deltaF_);
@@ -1170,7 +1386,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         volVectorField Ucf(filter_(alpha2*UcZero)/alpha2f);
         volScalarField aUU(filter_(alpha*magSqr(U))/alphaf - magSqr(Uf));
         aUU.max(SMALL);
-        
+           volScalarField Tf = filter_(alpha*T_)/alphaf;
+
         //Compute xiPhiS
         volVectorField xiPhiSNom =   (
                                           filter_(alpha*U)
@@ -1378,6 +1595,38 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         // compute CphiS
         CphiS_ = CphiSscalar_;
         CphiS2_      = CphiS2scalar_;
+        // Set Cp
+        Cp_     = CpScalar_;
+
+
+       if (energyEqn) {
+
+       // compute correlation coefficient between gas phase and solid phase temperature
+       volScalarField xiTGSnum  = filter_(alpha*(Tc_*T_))/alphaf - (filter_(alpha*Tc_) * Tf)/alphaf;
+       volScalarField xiTGSden  = (max(filter_(alpha*sqr(T_))/alphaf- sqr(Tf),sqr(TSmall)))
+                               *(max(filter_(alpha2*sqr(Tc_))/alpha2f- sqr(filter_(alpha2*(Tc_))/alpha2f),sqr(TSmall)));
+
+       xiTGS_ = filterS(sqrt(xiTGSden)*xiTGSnum)/filterS(xiTGSden);
+
+       xiTGS_.max(0);
+       xiTGS_.min(1.4);
+
+       volScalarField xiTPhiGGnom =  filter_(alpha*Tc_*Tc_)
+                                  - alphaf*filter_(Tc_*Tc_)
+                                  - 2.0*(filter_(alpha2*(Tc_))/alpha2f)
+                                        *((filter_(alpha*Tc_) - alphaf*filter_(Tc_)));
+       volScalarField xiTPhiGGden =  sqrt(alphafP2Mean)
+                                  * max(filter_(Tc_*Tc_) - 2.0*((filter_(alpha2*(Tc_))/alpha2f)*filter_(Tc_)) + sqr(filter_(alpha2*(Tc_))/alpha2f),sqr(TSmall));
+       xiTPhiGG_ = filterS(xiTPhiGGnom*xiTPhiGGden)/filterS(sqr(xiTPhiGGden));
+
+       // smooth and limit xiTPhiGG_
+       xiTPhiGG_.max(-0.99);
+       xiTPhiGG_.min(0.99);
+
+
+        }
+
+
     } else {
         volVectorField xiPhiSDir = uSlip/Foam::max(mag(uSlip),uSmall);
         xiPhiS_     = -(xiPhiSolidScalar_)*xiPhiSDir;
@@ -1387,9 +1636,14 @@ void Foam::RASModels::SATFMdispersedModel::correct()
         xiGS_       = xiGSScalar_*eSum;
         Cmu_        = CmuScalar_;
         Ceps_       = CepsScalar_;
+        Cp_        = CpScalar_;
         // compute CphiS
         CphiS_      = CphiSscalar_;
         CphiS2_      = CphiS2scalar_;
+         if (energyEqn) {
+             xiTGS_ = xiTGSScalar_;
+             xiTPhiGG_ = scalar(0.0);
+         }
     }
 
     // compute xiGatS
@@ -1397,6 +1651,15 @@ void Foam::RASModels::SATFMdispersedModel::correct()
               /Foam::max(alpha*alpha2*(scalar(1.0) - xiPhiGG_*sqrt(alphaP2Mean_)/alpha2),sqr(residualAlpha_));
     xiGatS_.max(SMALL);
     xiGatS_.min(2.0);
+
+
+    if (energyEqn) {
+        // compute xiTGatS
+        xiTGatS_ =  scalar(1.0) + xiTPhiGG_*sqrt(alphaP2Mean_)
+                  /Foam::max(alpha*alpha2*(scalar(1.0) - xiTPhiGG_*sqrt(alphaP2Mean_)/alpha2),sqr(residualAlpha_));
+        xiTGatS_.max(SMALL);
+        xiTGatS_.min(2.0);
+    }
 
     
     // Compute k_
@@ -1668,7 +1931,109 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     // Limit viscosity and add frictional viscosity
     nut_.min(maxNut_);
     nuFric_.min(maxNut_);
-    
+
+if (energyEqn) {
+
+    volScalarField pTrans
+            (
+                 IOobject
+                 (
+                      "pTrans",
+                      U.time().timeName(),
+                      U.mesh(),
+                      IOobject::NO_READ,
+                      IOobject::NO_WRITE
+                 ),
+                 U.mesh(),
+                 dimensionedScalar("zero", dimensionSet(1, 1, -5, 0, 0), 0.0)
+            );
+
+    if(he_.name() == thermo.phasePropertyName("e"))
+    {
+       pTrans = -2.0*Cdp_*alpha*p*sqrt(max(H_,HSmall))*((gradU&&(eX*eX))+ (gradU&&(eY*eY))+ (gradU&&(eZ*eZ)));
+    }
+
+    if (!equilibriumH_) {
+        fv::options& fvOptions(fv::options::New(mesh_));
+
+        // Construct the transport equation for H
+        Info << "Solving H-equation (dispersed phase) ... " << endl;
+        fvScalarMatrix HEqn
+        (
+            fvm::ddt(alpha, rho, H_)
+          + fvm::div(alphaRhoPhi, H_)
+          + fvm::SuSp(-(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi)), H_)
+          // diffusion with anisotropic diffusivity
+          - fvm::laplacian(rho*nutA_/(sigma_), H_, "laplacian(kappa,k)")
+          );
+
+          HEqn.relax();
+
+          HEqn -=
+          (
+          // some source terms are explicit since fvm::Sp()
+          // takes solely scalars as first argument.
+          // ----------------
+          // shear production
+          + 2.0*alpha
+                    *rho
+                    *(sqrt(km)*lm_/(Prt_))
+                    *Reyheat
+
+          // interfacial work (--> energy transfer)
+          + 2.0*gamma/Cpv2
+               *(
+                    (
+                        xiTGS_*sqrt((HC_)*(H_))
+                    )
+                )
+          - 2.0*(gamma/Cpv1)*H_
+          + pTrans
+          // stabilization
+          + 2.0*(gamma/Cpv1)*H_
+          - fvm::Sp(2.0*(gamma/Cpv1),H_)
+          + fvOptions(alpha, rho, H_)
+        );
+
+        fvOptions.constrain(HEqn);
+        HEqn.solve();
+        fvOptions.correct(H_);
+
+     }
+    else
+    {
+        volScalarField posalpha = pos(alpha - residualAlpha_);
+
+        forAll(cells,cellI)
+        {
+                /* H_[cellI] =
+                  // posalpha[cellI]*
+                         sqr(
+                         xiTGS_[cellI]*Cpv1[cellI]*sqrt(Foam::max(HC_[cellI], HSmall.value()))/(2.0*Cpv2[cellI])
+                         + Foam::sqrt(Foam::max(
+                             sqr(xiTGS_[cellI]*Cpv1[cellI]*sqrt(Foam::max(HC_[cellI], HSmall.value()))/(2.0*Cpv2[cellI]))
+                            + ((alpha[cellI]*rho[cellI]*Cpv1[cellI]/gamma[cellI])
+                              *(sqrt(Foam::max(km[cellI], kSmall.value()))*lm_[cellI] /(Prt_[cellI]))
+                              *Reyheat[cellI])
+                           ,HSmall.value()))
+                        );*/
+
+                H_[cellI] = //posalpha[cellI]*
+                            sqr(Cpv1[cellI]*xiTGS_[cellI]*sqrt(max(HC_[cellI],HSmall.value()))/Cpv2[cellI]);
+
+        }
+    }
+
+
+    // limit H
+    H_.min(sqr(max(he_) - min(he_)));
+    H_.max(1e-3);
+    //H_ = pos(alpha - residualAlpha_)*H_;
+    // correct BCs
+    H_.correctBoundaryConditions();
+   }
+
+ 
     volScalarField unity
     (
          IOobject
@@ -1700,6 +2065,8 @@ void Foam::RASModels::SATFMdispersedModel::correct()
          << "    mean(phiP2/phi2) = " << fvc::domainIntegrate(alphaP2Mean_/sqr(alpha)).value()
                                         /fvc::domainIntegrate(unity).value()
                                       << nl
+         << "    mean(H)         = " << fvc::domainIntegrate(alpha*(H_)).value()
+                                        /fvc::domainIntegrate(alpha).value()
          << endl;
 }
 
