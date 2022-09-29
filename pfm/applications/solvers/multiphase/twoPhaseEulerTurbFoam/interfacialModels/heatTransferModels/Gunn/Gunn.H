@@ -68,8 +68,7 @@ public:
         Gunn
         (
             const dictionary& dict,
-            const phasePair& pair,
-            const bool registerObject
+            const phasePair& pair
         );
 
 
