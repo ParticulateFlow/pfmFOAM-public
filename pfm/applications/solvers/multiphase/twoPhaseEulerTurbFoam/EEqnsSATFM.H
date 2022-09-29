@@ -168,8 +168,4 @@
     Info<< "min " << thermo2.T().name()
         << " " << min(thermo2.T()).value() << endl;
 
-    Info<< "T_diff: "
-        << fvc::domainIntegrate((thermo2.T() - thermo1.T())/(dimensionedScalar("500", dimensionSet(0,0,0,1,0), 500.0) - thermo1.T())).value()
-            /fvc::domainIntegrate(unity).value() << endl;
-
 }

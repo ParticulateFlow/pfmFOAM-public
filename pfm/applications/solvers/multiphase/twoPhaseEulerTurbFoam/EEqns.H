@@ -5,16 +5,6 @@
     volScalarField Cpv1("Cpv1", thermo1.Cpv());
     volScalarField Cpv2("Cpv2", thermo2.Cpv());
 
-    volScalarField Kh(fluid.Kh());
-
-    volScalarField KhTdrift(fluid.KhTdrift());
-
-    if (mesh.foundObject<volScalarField>("heatTransferCorr")) {
-        Info<< "Applying heat transfer correction..." << endl;
-        const volScalarField& heatTransferCorr = mesh.lookupObject<volScalarField>("heatTransferCorr");
-        Kh *= (scalar(1.0) - heatTransferCorr);
-    }
-
     Kd = fluid.Kd();
 
     volVectorField KdUdrift(fluid.KdUdrift());
@@ -164,9 +154,5 @@
     thermo2.correct();
     Info<< "min " << thermo2.T().name()
         << " " << min(thermo2.T()).value() << endl;
-
-    Info<< "T_diff: "
-        << fvc::domainIntegrate((thermo2.T() - thermo1.T())/(dimensionedScalar("500", dimensionSet(0,0,0,1,0), 500.0) - thermo1.T())).value()
-            /fvc::domainIntegrate(unity).value() << endl;
 
 }
