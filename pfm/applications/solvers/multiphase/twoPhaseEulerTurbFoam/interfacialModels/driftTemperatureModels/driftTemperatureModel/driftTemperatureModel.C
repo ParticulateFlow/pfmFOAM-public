@@ -146,32 +146,13 @@ Foam::driftTemperatureModel::KhTdrift() const
     volScalarField TSlip(TC - TD);
     volScalarField TSlipM(mag(TSlip));
     TSlipM.max(TSmall);
-
-
-    //Td = (Td*min((0.99999999999*mag(TSlip)/(mag(Td)+TSmall)),1.0));
     
     heatTransferCorr_ = -(TSlip)*Td/(TSlipM*TSlipM);
-    //heatTransferCorr_ = - pos(mag(TSlip) - mag(Td))*Td/(TSlip +TSmall) + neg(mag(TSlip) - mag(Td))*0.99;
-
 
     Td = (Td*min((0.99999999999*mag(TSlip)/(mag(Td)+TSmall)),1.0));
 
     heatTransferCorr_.min(0.99);
     heatTransferCorr_.max(-0.99);
-
-    //Td *= 1.0/max(1.0,1.001*mag(heatTransferCorr_));
-    driftTemp_ = Td;
-
-    Info << "driftTemp:" << nl
-         << "    max(driftTemp)      = " << sum(alpha1*Td).value()
-            /sum(alpha1).value() << nl
-            << "    max(Tslip)      = " << sum(alpha1*TSlip).value()
-               /sum(alpha1).value() << nl
-         << "    mean(heatCorr)      = " << sum(alpha1*heatTransferCorr_).value()
-            /sum(alpha1).value()
-         << "    mean(heatCorrecht)      = " << sum(-alpha1*Td/TSlipM).value()
-            /sum(alpha1).value()
-         << endl;
 
     // multiply drift Temperature by heatTransfer coefficient
     return

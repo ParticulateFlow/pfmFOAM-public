@@ -62,7 +62,7 @@ protected:
         const phasePair& pair_;
     
         mutable volScalarField heatTransferCorr_;
-        mutable volScalarField driftTemp_;
+
 public:
 
     //- Runtime type information
