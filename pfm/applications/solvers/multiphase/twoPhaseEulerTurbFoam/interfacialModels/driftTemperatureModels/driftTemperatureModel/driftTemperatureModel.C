@@ -79,23 +79,6 @@ Foam::driftTemperatureModel::driftTemperatureModel
         // Set Boundary condition
         zeroGradientFvPatchField<scalar>::typeName
         
-    ),
-
-    driftTemp_
-    (
-        IOobject
-        (
-            "driftTemp",
-            pair.dispersed().time().timeName(),
-            pair.dispersed().mesh(),
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        pair.dispersed().mesh(),
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 1, 0), 0.0),
-        // Set Boundary condition
-        zeroGradientFvPatchField<scalar>::typeName
-
     )
 {}
 
