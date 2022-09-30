@@ -125,13 +125,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("Cp",0.4)
     ),
 
-    sigma_
-    (
-        "sigmaC",
-        dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
-    ),
-
     Cdp_
     (
         "Cdp",
@@ -139,6 +132,12 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         coeffDict_.lookupOrDefault<scalar>("Cdp",0.5)
     ),
 
+    sigma_
+    (
+        "sigmaC",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
+    ),
 
     gN_
     (
@@ -197,21 +196,6 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         zeroGradientFvPatchField<vector>::typeName
     ),
 
-    xiUU_
-    (
-        IOobject
-        (
-            "xiUU",
-            U.time().timeName(),
-            U.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        U.mesh(),
-        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
-        zeroGradientFvPatchField<tensor>::typeName
-    ),
-
     xiTPhiG_
     (
         IOobject
@@ -227,6 +211,20 @@ Foam::RASModels::SATFMcontinuousModel::SATFMcontinuousModel
         zeroGradientFvPatchField<scalar>::typeName
     ),
 
+    xiUU_
+    (
+        IOobject
+        (
+            "xiUU",
+            U.time().timeName(),
+            U.mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        U.mesh(),
+        dimensionedTensor("value", dimensionSet(0, 0, 0, 0, 0), tensor(1,0,0, 0,1,0, 0,0,1)),
+        zeroGradientFvPatchField<tensor>::typeName
+    ),
 
     Cmu_
     (

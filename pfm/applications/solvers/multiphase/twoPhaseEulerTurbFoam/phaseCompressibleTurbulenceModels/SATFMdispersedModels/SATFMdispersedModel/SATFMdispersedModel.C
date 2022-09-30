@@ -170,18 +170,18 @@ Foam::RASModels::SATFMdispersedModel::SATFMdispersedModel
         coeffDict_.lookupOrDefault<scalar>("Cp",0.4)
     ),
 
-    sigma_
-    (
-        "sigmaD",
-        dimensionSet(0,0,0,0,0),
-        coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
-    ),
-
     Cdp_
     (
         "Cdp",
         dimensionSet(0,0,0,0,0),
         coeffDict_.lookupOrDefault<scalar>("Cdp",0.5)
+    ),
+
+    sigma_
+    (
+        "sigmaD",
+        dimensionSet(0,0,0,0,0),
+        coeffDict_.lookupOrDefault<scalar>("Sigma",2.0)
     ),
 
     maxK_
