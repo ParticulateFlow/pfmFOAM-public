@@ -1,0 +1,145 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      phaseProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+phases (particles air);
+
+particles
+{
+    diameterModel constant;
+    constantCoeffs
+    {
+        d               150.0e-6;
+    }
+
+    alphaMax 0.6;
+    residualAlpha 1.e-6;
+}
+
+air
+{
+    diameterModel constant;
+    constantCoeffs
+    {
+        d               1;
+    }
+    residualAlpha   0;
+}
+
+
+blending
+{
+    default
+    {
+        type            none;
+        continuousPhase air;
+    }
+}
+
+sigma
+(
+    (particles and air) 0
+);
+
+aspectRatio
+(
+);
+
+drag
+(
+    (particles in air)
+    {
+        type            WenYuC;
+        residualAlpha   1e-6;
+        residualRe      1e-3;
+        swarmCorrection
+        {
+            type        none;
+        }
+    }
+);
+
+virtualMass
+(
+);
+
+heatTransfer
+(
+    (particles in air)
+    {
+        type            Gunn;
+        residualAlpha   1e-4;
+    }
+);
+
+//drift temperature
+driftTemperature
+(
+	/*(particles in air)
+    {
+        type            driftTemperatureSATFM;
+		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero
+    }*/
+);
+
+
+lift
+(
+);
+
+wallLubrication
+(
+);
+
+turbulentDispersion
+(
+);
+
+//drift Velocity
+driftVelocity
+(
+	/*(particles in air)
+    {
+        type            driftVelocitySATFM;
+		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero
+   }*/
+);
+
+//drift temperature
+driftTemperature
+(
+	/*(particles in air)
+    {
+        type             driftTemperatureSATFM;
+		residualAlpha   1e-3;			 // below residualAlpha drift velocity is zero
+    }*/
+);
+
+//meso-scale interphase Force
+interPhaseForce
+(
+	/*(particles in air)
+    {
+        type            deWildeIPhSATFM;
+		residualAlpha   1e-3;			 // below residualAlpha interphase force is zero
+    }*/
+);
+
+// Minimum allowable pressure
+pMin            10000;
+
+
+// ************************************************************************* //

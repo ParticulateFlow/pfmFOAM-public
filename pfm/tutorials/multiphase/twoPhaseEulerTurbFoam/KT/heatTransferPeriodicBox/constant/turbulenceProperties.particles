@@ -1,0 +1,65 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties.particles;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+simulationType  RAS;
+
+RAS
+{
+    RASModel kineticTheory;
+
+    turbulence      on;
+    printCoeffs     on;
+    
+    kineticTheoryCoeffs
+    {
+        equilibrium             off;
+        e                       0.9;
+        alphaMax                0.64;
+        alphaMinFriction        0.6;
+        residualAlpha           1e-4;
+
+        viscosityModel          SchneiderbauerEtAl; 
+        conductivityModel       SchneiderbauerEtAl;
+        granularPressureModel   SchneiderbauerEtAl;
+        frictionalStressModel   Schaeffer;
+        radialModel             Arastoopour;
+        
+        
+        SchneiderbauerEtAlCoeffs
+        {
+            alpha            1.6;
+            L                0.008;
+            b                0.2;
+            muSt             0.38;
+            muC              0.64;
+            I0               0.279;
+            aQSk		   	 0.089;
+            aInt             0.1;
+            k                1e4;
+	    	alphaDeltaMin    0.01;
+	    	Rc               0; //Rolling Friction
+        }	
+        SchaefferCoeffs
+        {
+            phi                     28;
+        }	
+    }
+
+}
+
+// ************************************************************************* //
