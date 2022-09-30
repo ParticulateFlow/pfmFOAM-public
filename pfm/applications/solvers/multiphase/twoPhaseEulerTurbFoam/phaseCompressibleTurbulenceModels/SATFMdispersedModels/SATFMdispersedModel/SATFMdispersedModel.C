@@ -1121,8 +1121,6 @@ void Foam::RASModels::SATFMdispersedModel::correct()
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
     const surfaceScalarField& phi1 = phi_;
     const volVectorField& U = U_;
-    
-    const volScalarField& rho2 = fluid.otherPhase(phase_).rho();
 
     //create continuous phase thermo reference
     const rhoThermo& thermo = phase_.thermo();

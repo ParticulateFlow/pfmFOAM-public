@@ -799,7 +799,6 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     const volScalarField& rho = phase_.rho();
     const volScalarField& rho1 = fluid.otherPhase(phase_).rho();
     const surfaceScalarField& alphaRhoPhi = alphaRhoPhi_;
-    const surfaceScalarField& phi2 = phi_;
     const volVectorField& U = U_;
 
     volScalarField alphaP2Mean_ = mesh_.lookupObject<volScalarField>("alphaP2Mean." + fluid.otherPhase(phase_).name());
