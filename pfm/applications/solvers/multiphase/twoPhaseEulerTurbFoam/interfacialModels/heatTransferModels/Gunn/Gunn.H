@@ -25,7 +25,7 @@ Class
     Foam::heatTransferModels::Gunn
 
 Description
-    Ranz-Marshall correlation for turbulent heat transfer from the surface of a
+    Gunn correlation for turbulent heat transfer from the surface of a
     sphere to the surrounding fluid.
 
 SourceFiles
@@ -68,7 +68,8 @@ public:
         Gunn
         (
             const dictionary& dict,
-            const phasePair& pair
+            const phasePair& pair,
+            const bool registerObject
         );
 
 

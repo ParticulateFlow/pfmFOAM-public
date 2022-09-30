@@ -43,11 +43,12 @@ namespace heatTransferModels
 
 Foam::heatTransferModels::Gunn::Gunn
 (
-    const dictionary& dict,
-    const phasePair& pair
-)
+   const dictionary& dict,
+   const phasePair& pair,
+   const bool registerObject
+ )
 :
-    heatTransferModel(dict, pair)
+    heatTransferModel(dict, pair, registerObject)
 {}
 
 

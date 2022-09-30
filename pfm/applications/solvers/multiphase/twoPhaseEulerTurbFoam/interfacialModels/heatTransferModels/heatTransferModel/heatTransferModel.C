@@ -42,10 +42,25 @@ const Foam::dimensionSet Foam::heatTransferModel::dimK(1, -1, -3, -1, 0);
 Foam::heatTransferModel::heatTransferModel
 (
     const dictionary& dict,
-    const phasePair& pair
+    const phasePair& pair,
+    const bool registerObject
 )
 :
+    regIOobject
+    (
+        IOobject
+        (
+            IOobject::groupName(typeName, pair.name()),
+            pair.phase1().mesh().time().timeName(),
+            pair.phase1().mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            registerObject
+        )
+    ),
+
     pair_(pair),
+
     residualAlpha_
     (
         "residualAlpha",
@@ -64,5 +79,16 @@ Foam::heatTransferModel::heatTransferModel
 Foam::heatTransferModel::~heatTransferModel()
 {}
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::volScalarField> Foam::heatTransferModel::K() const
+{
+    return K();
+}
+
+bool Foam::heatTransferModel::writeData(Ostream& os) const
+{
+    return os.good();
+}
 
 // ************************************************************************* //
