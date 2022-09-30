@@ -565,7 +565,7 @@ Foam::BlendedInterfacialModel<modelType>::CpIPh() const
 // Blending for drift temperature
 template<class modelType>
 Foam::tmp<Foam::volScalarField>
-Foam::BlendedInterfacialModel<modelType>::KhTdrift() const
+Foam::BlendedInterfacialModel<modelType>::KhTdrift()
 {
     tmp<volScalarField> f1, f2;
 
