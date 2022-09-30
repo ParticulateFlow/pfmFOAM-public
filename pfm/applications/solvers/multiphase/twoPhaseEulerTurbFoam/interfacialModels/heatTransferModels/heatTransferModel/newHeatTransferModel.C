@@ -52,7 +52,7 @@ Foam::autoPtr<Foam::heatTransferModel> Foam::heatTransferModel::New
             << exit(FatalError);
     }
 
-     return cstrIter()(dict, pair, true);
+    return cstrIter()(dict, pair, true);
 }
 
 
