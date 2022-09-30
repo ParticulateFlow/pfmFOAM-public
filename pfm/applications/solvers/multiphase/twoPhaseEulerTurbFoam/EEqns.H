@@ -5,6 +5,8 @@
     volScalarField Cpv1("Cpv1", thermo1.Cpv());
     volScalarField Cpv2("Cpv2", thermo2.Cpv());
 
+    volScalarField Kh(fluid.Kh());
+
     Kd = fluid.Kd();
 
     volVectorField KdUdrift(fluid.KdUdrift());
