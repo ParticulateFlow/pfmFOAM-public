@@ -366,7 +366,7 @@ bool Foam::RASModels::SATFMcontinuousModel::read()
         sigma_.readIfPresent(coeffDict());
         gN_.readIfPresent(coeffDict());
         maxK_.readIfPresent(coeffDict());
-        
+
         return true;
     }
     else
@@ -391,7 +391,7 @@ Foam::RASModels::SATFMcontinuousModel::k() const
 
         (k_&eSum) - (k_&U_)/(mag(U_) + dimensionedScalar("small",dimensionSet(0,1,-1,0,0,0,0),1.0e-7))
     );
-    
+
     return kT;
     */
     return k_&eSum;
@@ -654,7 +654,7 @@ void Foam::RASModels::SATFMcontinuousModel::boundCorrTensor
             )
         )
     );
-    
+
     R.min
     (
         dimensionedTensor
@@ -693,7 +693,7 @@ void Foam::RASModels::SATFMcontinuousModel::boundGradU
             )
         )
     );
-    
+
     R.min
     (
         dimensionedTensor
@@ -732,7 +732,7 @@ void Foam::RASModels::SATFMcontinuousModel::boundStress
             )
         )
     );
-    
+
     R.min
     (
         dimensionedTensor
@@ -869,13 +869,13 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
     // dispersed Phase velocity
     const volVectorField& Ud_ = fluid.otherPhase(phase_).U();
-    
+
     // slip velocity
     volVectorField uSlip = U - Ud_;
-    
+
     // gravity vector
     //const uniformDimensionedVectorField& g = mesh_.lookupObject<uniformDimensionedVectorField>("g");
-    
+
     dimensionedScalar kSmall("kSmall", k_.dimensions(), 1.0e-6);
     dimensionedScalar uSmall("uSmall", U_.dimensions(), 1.0e-6);
     dimensionedScalar lSmall("lSmall", dimLength, 1.0e-6);
@@ -900,7 +900,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         dimensionSet(0, 0, 0, 0, 0, 0, 0),
         vector(0,0,1)
     );
-    
+
     dimensionedVector eSum
     (
         "eSum",
@@ -913,9 +913,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         dimensionSet(0, 2, -2, 0, 0, 0, 0),
         tensor(0,0,0,0,0,0,0,0,0)
     );
-    
+
     volScalarField divU(fvc::div(phi_));
-    
+
     volTensorField gradU(fvc::grad(U_));
     boundGradU(gradU);
     volSymmTensorField D(dev(symm(gradU)));
@@ -939,7 +939,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
     // gradient of continuous phase volume fraction
     volVectorField gradAlpha  = fvc::grad(alpha);
-    
+
     // get turbulent kinetic energy of continuous-phase
     const volVectorField& kDt(mesh_.lookupObject<volVectorField>
                                      ("k." + fluid.otherPhase(phase_).name()));
@@ -957,7 +957,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // get correction coefficient for k seen by the particles
     const volScalarField& xiTGatS_(mesh_.lookupObject<volScalarField>
                              ("xiTGatS"));
-    
+
     // simple filter for local smoothing
     simpleFilter filterS(mesh_);
     //simpleFilterADM filterS(mesh_);
@@ -977,7 +977,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
      );
     Uzero.correctBoundaryConditions();
     // const volVectorField& Uzero(U);
-    
+
     // get drag coefficient
     volScalarField beta
     (
@@ -988,9 +988,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         ).K()
     );
     beta.max(SMALL);
-    
+
     volScalarField betaA = beta/(rho*alpha);
-    
+
     // get drift velocity
     volVectorField KdUdrift
     (
@@ -1023,11 +1023,11 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     gamma.max(1.0e-7);
 
     dimensionedScalar GSmall("GSmall", gamma.dimensions(), 1.0e-6);
-    
+
     // compute total k
     volScalarField km(k());
     km.max(kSmall.value());
-    
+
     // local reference to deltaF
     volScalarField deltaF(deltaF_);
     // compute grid size for mixing length
@@ -1037,7 +1037,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         scalar deltaMaxTmp = 0.0;
         const labelList& cFaces = mesh_.cells()[cellI];
         const point& centrevector = mesh_.cellCentres()[cellI];
-        
+
         forAll(cFaces, cFaceI)
         {
             label faceI = cFaces[cFaceI];
@@ -1050,7 +1050,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
         deltaF[cellI] = 2.0*deltaMaxTmp;
     }
-    
+
     volScalarField wD = wallDist(mesh_).y();
     // correction for cases w/o walls
     // (since wall distance is then negative)
@@ -1060,7 +1060,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // correction for cyclic patches
     {
         const fvPatchList& patches = mesh_.boundary();
-        
+
         forAll(patches, patchi) {
             const fvPatch& curPatch = patches[patchi];
 
@@ -1075,9 +1075,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     }
     deltaF_.max(lSmall.value());
     lm_.max(lSmall.value());
-    
 
-    
+
+
     // compute nut
     nut_ = alpha*sqrt(km)*lm_;
     // anisotropic viscosity
@@ -1095,7 +1095,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         }
     }
     nutA_.correctBoundaryConditions();
-    
+
     if (dynamicAdjustment_) {
         // precompute \bar phi
         volScalarField alpha2f = filter_(alpha);
@@ -1116,7 +1116,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         alphafP2Mean.max(SMALL);
         // volScalarField aUU(filter_(alpha*magSqr(Uzero)) / alpha2f - magSqr(Uf));
         // aUU.max(ROOTVSMALL);
-        
+
         volScalarField tmpDenX
         (
             filter_(alpha*sqr(Uzero&eX)) / alpha2f
@@ -1132,7 +1132,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
             filter_(alpha*sqr(Uzero&eZ)) / alpha2f
           - sqr(Uf&eZ)
          );
-       
+
         tmpDenX.max(SMALL);
         tmpDenY.max(SMALL);
         tmpDenZ.max(SMALL);
@@ -1186,7 +1186,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField Mij      = sqr(deltaF_)*(4.0*magSqr(Df) - magSqrDf);
         volScalarField MijMij   = filterS(sqr(Mij));
         MijMij.max(SMALL);
-        
+
         volScalarField CmuT     = 0.5*(filterS(Lij * Mij)/(MijMij));
         CmuT.min(4.0*sqr(CmuScalar_.value()));
         Cmu_ = sqrt(0.5*(CmuT+mag(CmuT))+scalar(1.e-2));
@@ -1198,15 +1198,15 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
         volScalarField MijEps    = pow(alpha*Lij,1.5)/(2.0*deltaF_);
         volScalarField MijMijEps = filterS(sqr(MijEps));
         MijMijEps.max(SMALL);
-        
+
         volScalarField CepsT     = filterS(LijEps*MijEps)/(MijMijEps);
-        
+
         Ceps_ = 0.5*(CepsT + mag(CepsT));
-        
+
         Ceps_.min(10.0);
          */
         Ceps_ = CepsScalar_;
-        
+
         // Currently no dynamic procedure for Cp
         /*
         const volScalarField& p_rgh(mesh_.lookupObject<volScalarField>("p_rgh"));
@@ -1260,7 +1260,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           + (gradUR2&&(eY*eY))*(eY)
           + (gradUR2&&(eZ*eZ))*(eZ)
         );
-        
+
         fv::options& fvOptions(fv::options::New(mesh_));
 
         // Construct the transport equation for k
@@ -1273,9 +1273,9 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           // diffusion with anisotropic diffusivity
           - fvm::laplacian(rho*nutA_/(sigma_), k_, "laplacian(kappa,k)")
         );
-        
+
         kEqn.relax();
-        
+
         kEqn -=
         (
           // some source terms are explicit since fvm::Sp()
@@ -1343,7 +1343,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // update km
     km = k();
     km.max(kSmall.value());
-    
+
     // use k_normal for nut in stress tensor
     /*
     volScalarField kT
@@ -1361,23 +1361,23 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     // Limit viscosity
     nut_.min(maxNut_);
     nut_.correctBoundaryConditions();
-    
+
     if (anIsoTropicNut_) {
         volScalarField alphaf = filter_(alpha);
         alphaf.max(residualAlpha_.value());
         volVectorField Uf = filter_(alpha*U)/alphaf;
-        
+
         // compute correlation coefficients
         volTensorField xiUUnom = (filter_(alpha*(U*U))/alphaf - Uf*Uf);
         volScalarField xiUUden = max(tr(xiUUnom),kSmall);
-        
+
         xiUU_ = filterS(xiUUnom*xiUUden)/filterS(sqr(xiUUden));
-        
+
         // limit correlation coefficients
         boundCorrTensor(xiUU_);
-        
+
         xiUU_.correctBoundaryConditions();
-        
+
         // compute Reynolds-stress tensor
         forAll(cells,cellI)
         {
@@ -1472,7 +1472,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
           pTrans = -2.0*Cdp_*alpha*p*sqrt(max(H_,HSmall))*((gradU&&(eX*eX))+ (gradU&&(eY*eY))+ (gradU&&(eZ*eZ)));
        }
 
-    
+
    if (!equilibriumH_) {
        fv::options& fvOptions(fv::options::New(mesh_));
 
@@ -1548,7 +1548,7 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
 
    }
-    
+
     Info << "SA-TFM (continuous Phase):" << nl
          << "    max(nuEff)      = " << max(nuEff()).value() << nl
          << "    min(nuEff)      = " << min(nuEff()).value() << nl
