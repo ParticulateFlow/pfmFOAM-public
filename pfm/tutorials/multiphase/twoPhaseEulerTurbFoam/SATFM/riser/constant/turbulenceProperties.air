@@ -28,7 +28,8 @@ RAS
     {
         equilibriumK            off;  // equilibrium assumption: production of k == dissipation
         equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
-        dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
+        equilibriumH            off;
+	dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
         anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
         
         alphaMax                0.6;

@@ -85,17 +85,6 @@ heatTransfer
     }
 );
 
-// drift temperature
-driftTemperature
-(
-    /*(particles in air)
-    {
-        type            driftTemperatureSATFM;
-        residualAlpha   1e-3;                   // below residualAlpha drift velocity is zero
-    }*/
-);
-
-
 lift
 (
 );

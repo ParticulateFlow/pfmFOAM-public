@@ -80,34 +80,7 @@ RAS
         }
     }
 
-    kineticTheoryCoeffs
-    {
-        equilibrium             off;
-        e                       0.9;
-        alphaMax                0.6;
-        alphaMinFriction        0.4;
-        residualAlpha           1e-4;
 
-        viscosityModel          SchneiderbauerEtAl;
-        conductivityModel       SchneiderbauerEtAl;
-        granularPressureModel   SchneiderbauerEtAl;
-        frictionalStressModel   SchneiderbauerEtAl;
-        radialModel             Arastoopour;
-
-        SchneiderbauerEtAlCoeffs
-        {
-            L                   0.008;
-            alpha               1.6;
-
-            b                   0.2;
-            muSt                0.38;
-            muC                 0.64;
-            I0                  0.279;
-            aQSk                1000;
-            alphaDeltaMin       0.001;
-            Rc                  0.0;
-        }
-    }
 
 }
 

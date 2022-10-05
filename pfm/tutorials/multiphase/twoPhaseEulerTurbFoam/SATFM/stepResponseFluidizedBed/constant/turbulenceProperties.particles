@@ -80,40 +80,7 @@ RAS
 
     }
 
-    kineticTheoryCoeffs
-    {
-        equilibrium             off;
-        e                       0.85;
-        alphaMax                0.6;
-        alphaMinFriction        0.4;
-        residualAlpha           1e-6;
-
-        viscosityModel          SchneiderbauerEtAl;
-        conductivityModel       SchneiderbauerEtAl;
-        granularPressureModel   SchneiderbauerEtAl;
-        frictionalStressModel   SchneiderbauerEtAl;
-        radialModel             CarnahanStarling;
-
-        SchneiderbauerEtAlCoeffs
-        {
-            alpha               1.6;
-            L                   0.046;
-            b                   0.2;
-            muSt                0.38;
-            muC                 0.64;
-            I0                  0.279;
-            aQSk                0.089;
-            aInt                0.1;
-            k                   1e4;
-            alphaDeltaMin       0.01;
-            Rc                  0; //Rolling Friction
-        }
-        SchaefferCoeffs
-        {
-            phi                 28;
-        }
-    }
-
+    
 }
 
 // ************************************************************************* //
