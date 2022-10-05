@@ -103,24 +103,22 @@ solvers
 
 PIMPLE
 {
-    nOuterCorrectors 3;
-    nCorrectors      3;
+    nOuterCorrectors    3;
+    nCorrectors         3;
     nNonOrthogonalCorrectors 0;
-    faceMomentum     no;
-    momentumPredictor no;
-// switch for periodic box
-    periodicBox       no;
-    energyEqn         on;
-    turbOnFinalIter   no;
-//    pRefPoint        (-0.001 0.001 0.001);
-//    pRefValue        1e5;
+    faceMomentum        no;
+    momentumPredictor   no;
+    // switch for periodic box
+    periodicBox         no;
+    energyEqn           on;
+    turbOnFinalIter     no;
 }
 
 relaxationFactors
 {
     equations
     {
-        ".*"        1;
+        ".*"            1;
     }
 }
 

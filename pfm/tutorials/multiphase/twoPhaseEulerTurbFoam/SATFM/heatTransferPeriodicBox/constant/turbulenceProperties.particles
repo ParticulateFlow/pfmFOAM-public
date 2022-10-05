@@ -15,7 +15,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
 simulationType  RAS;
 
 RAS
@@ -28,15 +27,15 @@ RAS
 
     SATFMdispersedCoeffs
     {
-        equilibriumK             off;  // equilibrium assumption: production of k == dissipation
-equilibriumPhiP2            off;  //
-equilibriumH 			off;
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  //
+        equilibriumH            off;
         dynamicAdjustment       on;  // dynamic adjustment of model coefficient and correlation coefficients
-	    anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
-        
+        anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
+
         alphaMax                0.65;   // maximum dispersed phase volume fraction
-	alphaMaxTurb		0.58;
-	limitAlphaP2Mean 	0.4;
+        alphaMaxTurb            0.58;
+        limitAlphaP2Mean        0.4;
         alphaMinFriction        0.6; // friction stresses are solely computed for alpha > alphaMinFriction
         residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
 
@@ -46,41 +45,41 @@ equilibriumH 			off;
 
         Ceps                    0.4; // constant for mixing length model of turbulent dissipation rate
         Cp                      0.0;
-        Sigma                   1.0; // turbulent schmidt number        
-        CphiS                   0.0; // turbulent schmidt number        
+        Sigma                   1.0; // turbulent schmidt number
+        CphiS                   0.0; // turbulent schmidt number
 
         maxK                    5.0; // Limits Reynolds stresses
-        
-	filter                  ParmentierTest; // test filter for dynamic adjustment of model constants    
-	laplaceAnIso2ndCoeffs   
-	{
-		widthCoeff		6.0;
-	}
-		
-		frictionalStressModel  SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
-       
+
+        filter                  ParmentierTest; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          6.0;
+        }
+
+        frictionalStressModel  SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
+
         SchneiderbauerEtAlCoeffs
         {
-            L		     0.008;
-	    alpha	     1.6;
+            L                   0.008;
+            alpha               1.6;
 
-	    b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 0.089;
-            aInt             0.1;
-            k                1e4;
-	    	alphaDeltaMin    0.01;
-	    	Rc               0; //Rolling Friction
+            b                   0.2;
+            muSt                0.38;
+            muC                 0.64;
+            I0                  0.279;
+            aQSk                0.089;
+            aInt                0.1;
+            k                   1e4;
+            alphaDeltaMin       0.01;
+            Rc                  0; //Rolling Friction
         }
- SchaefferCoeffs
+
+        SchaefferCoeffs
         {
-            phi                     28;
-        }		
-       	
+            phi                 28;
+        }
     }
-    
+
     kineticTheoryCoeffs
     {
         equilibrium             off;
@@ -97,17 +96,17 @@ equilibriumH 			off;
 
         SchneiderbauerEtAlCoeffs
         {
-            L		     0.008;
-	    alpha	     1.6;
+            L                   0.008;
+            alpha               1.6;
 
-	    b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk	     1000;
-	    alphaDeltaMin    0.001;
-	    Rc 		     0.0;
-        }		
+            b                   0.2;
+            muSt                0.38;
+            muC                 0.64;
+            I0                  0.279;
+            aQSk                1000;
+            alphaDeltaMin       0.001;
+            Rc                  0.0;
+        }
     }
 
 }

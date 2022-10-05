@@ -20,99 +20,39 @@ internalField   uniform (0 0 0 0 0 0 0 0 0);
 
 boundaryField
 {
-// gas inlet
+    // gas inlet
     vin_DB
     {
         type            fixedValue;
-        value          $internalField;
+        value           $internalField;
     }
-//outlet
-    pout 
-    {
-       type               inletOutlet;
-        phi                phi.air;
-        inletValue          uniform (0 0 0 0 0 0 0 0 0);
-        value               uniform (0 0 0 0 0 0 0 0 0);
 
-/* type            fixedValue;
-        value           uniform (0 0 0 0 0 0 0 0 0);*/
-    }
-// walls
-     w_F
+    // outlet
+    pout
     {
-        type               cyclic;
+        type            inletOutlet;
+        phi             phi.air;
+        inletValue      uniform (0 0 0 0 0 0 0 0 0);
+        value           uniform (0 0 0 0 0 0 0 0 0);
+    }
+
+    // walls
+    w_F
+    {
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
-    }
-/*
-
-//solid inlet
-    vin_s
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
+        type            cyclic;
     }
 
-    wall_d
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-	wall_u
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-// interfaces
-    ACMIdown1_blockage
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-    ACMIdown1_couple
-    {
-        type            cyclicACMI;
-        value           $internalField;
-    }
-    ACMIdown2_blockage
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-    ACMIdown2_couple
-    {
-        type            cyclicACMI;
-        value           $internalField;
-    }
-    ACMIup1_blockage
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-    ACMIup1_couple
-    {
-        type            cyclicACMI;
-        value           $internalField;
-    }
-    ACMIup2_blockage
-    {
-        type            fixedValue;
-        value           uniform (0 0 0);
-    }
-    ACMIup2_couple
-    {
-        type            cyclicACMI;
-        value           $internalField;
-    }*/
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

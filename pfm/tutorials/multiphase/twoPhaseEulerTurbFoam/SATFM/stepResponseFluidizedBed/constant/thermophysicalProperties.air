@@ -46,7 +46,7 @@ mixture
     {
         mu          1.78e-05;
         Pr          0.7;
-	Prt	    1.0; 		
+        Prt         1.0;
     }
 }
 

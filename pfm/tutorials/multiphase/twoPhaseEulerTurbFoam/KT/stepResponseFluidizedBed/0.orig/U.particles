@@ -22,32 +22,32 @@ boundaryField
 {
     vin_DB
     {
-	type                   slip;
+        type            slip;
     }
 
     pout
     {
-	type               inletOutlet;
-        phi                phi.particles;
-        inletValue        uniform (0 0 0);
-        value              uniform (0 0 0);
+        type            inletOutlet;
+        phi             phi.particles;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
     }
 
     w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 }
 

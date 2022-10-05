@@ -14,6 +14,7 @@ FoamFile
     object      controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 application     twoPhaseEulerTurbFoam;
 
 startFrom       startTime;
@@ -49,7 +50,7 @@ adjustTimeStep no;
 maxCo           1.0;
 
 maxDeltaT       1e-03;
-minDeltaT	1e-5;
+minDeltaT       1e-5;
 
 functions
 {
@@ -62,41 +63,41 @@ functions
         (
             U.particles
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
+                mean        on;
+                prime2Mean  off;
+                base        time;
             }
 
             U.air
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
+                mean        on;
+                prime2Mean  off;
+                base        time;
             }
 
             alpha.particles
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
+                mean        on;
+                prime2Mean  off;
+                base        time;
             }
-  
-	    T.particles
+
+            T.particles
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
+                mean        on;
+                prime2Mean  off;
+                base        time;
             }
 
             T.air
             {
-                 mean        on;
-                 prime2Mean  off;
-                 base        time;
+                mean        on;
+                prime2Mean  off;
+                base        time;
             }
         );
     }
-   
+
 }
 
 

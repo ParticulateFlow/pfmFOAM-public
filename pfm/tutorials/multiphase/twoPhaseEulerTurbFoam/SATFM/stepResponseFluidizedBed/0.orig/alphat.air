@@ -18,7 +18,7 @@ dimensions      [1 -1 -1 0 0 0 0];
 
 internalField   uniform 0;
 
-boundaryField 
+boundaryField
 {
     vin_DB
     {
@@ -34,19 +34,19 @@ boundaryField
 
     w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 
 }

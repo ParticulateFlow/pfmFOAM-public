@@ -24,42 +24,29 @@ boundaryField
     {
         type            zeroGradient;
     }
- pout
+
+    pout
     {
-        /*type               pressureInletOutletVelocity;
-        phi                phi.air;
-        value              $internalField;*/
-type            zeroGradient; 
+        type            zeroGradient;
     }
 
-   
- w_F
+    w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 
-
-    /*pout
-    {
-        type            zeroGradient; 
-    }
-
-    w_FB
-    {
-        type            zeroGradient;
-    }*/
 }
 
 // ************************************************************************* //

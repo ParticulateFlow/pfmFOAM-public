@@ -24,7 +24,7 @@ boundaryField
     {
         type            zeroGradient;
     }
-    
+
     inlet_bg
     {
         type            zeroGradient;
@@ -45,7 +45,6 @@ boundaryField
         type            zeroGradient;
     }
 
-    
 }
 
 // ************************************************************************* //

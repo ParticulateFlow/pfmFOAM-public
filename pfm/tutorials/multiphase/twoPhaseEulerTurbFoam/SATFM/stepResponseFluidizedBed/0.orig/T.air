@@ -14,57 +14,41 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions          [0 0 0 1 0 0 0];
+dimensions      [0 0 0 1 0 0 0];
 
-internalField       uniform 300;
+internalField   uniform 300;
 
 boundaryField
 {
     vin_DB
     {
-      type         uniformFixedValue;
-      uniformValue table ((0 300) (2.99 300) (3 800) (4 800) (4.01 300) (6 300));
-      /*{
-          type             square;
-          frequency        2;
-          amplitude        600;
-          scale            1;
-          level            300;
-      }*/
-      /*{
-          type             scale;
-          scale            linearRamp;
-          start            0;
-          duration         1;
-          value            600;
-      }*/
-/* type               fixedValue;
-        value              uniform 300; */
+        type            uniformFixedValue;
+        uniformValue table ((0 300) (2.99 300) (3 800) (4 800) (4.01 300) (6 300));
     }
 
     pout
     {
-        type               inletOutlet;
-        phi                phi.air;
-        inletValue         uniform 300;
-        value              uniform 300;
+        type            inletOutlet;
+        phi             phi.air;
+        inletValue      uniform 300;
+        value           uniform 300;
     }
 
-     w_F
+    w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 }
 

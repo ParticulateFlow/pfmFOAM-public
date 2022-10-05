@@ -26,43 +26,31 @@ boundaryField
         value           $internalField;
     }
 
- pout
+    pout
     {
-       type            inletOutlet;
+        type            inletOutlet;
         phi             phi.air;
         inletValue      $internalField;
         value           $internalField;
-    } 
-
+    }
 
     w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 
-
-
-    /*pout
-    {
-        type            zeroGradient; 
-    }
-
-    w_FB
-    {
-        type            zeroGradient;
-    }*/
 }
 
 // ************************************************************************* //

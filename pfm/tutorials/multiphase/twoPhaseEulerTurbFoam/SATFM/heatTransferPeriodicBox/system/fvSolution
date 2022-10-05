@@ -17,7 +17,7 @@ FoamFile
 
 solvers
 {
-       "alpha.*"
+    "alpha.*"
     {
         nAlphaCorr      1;
         nAlphaSubCycles 2;
@@ -38,7 +38,7 @@ solvers
         solver          GAMG;
         smoother        DIC;
         tolerance       1e-7;
- maxIter 		25;
+        maxIter         25;
         relTol          0;
     }
 
@@ -65,7 +65,6 @@ solvers
         tolerance       1e-6;
         relTol          0;
         minIter         1;
-	//maxIter		0;
     }
 
     "Theta.*"
@@ -107,18 +106,18 @@ solvers
 
 PIMPLE
 {
-    nOuterCorrectors 3;
-    nCorrectors      5;
+    nOuterCorrectors    3;
+    nCorrectors         5;
     nNonOrthogonalCorrectors 0;
-    maxIter 		25;
-    faceMomentum     no;
-    momentumPredictor yes; 
-// switch for periodic box
-    periodicBox       yes;  
-    pRefCell 0;
-    pRefValue 1e5;
-// switch for energy equation
-    energyEqn         on;  
+    maxIter             25;
+    faceMomentum        no;
+    momentumPredictor yes;
+    // switch for periodic box
+    periodicBox         yes;
+    pRefCell            0;
+    pRefValue           1e5;
+    // switch for energy equation
+    energyEqn           on;
 }
 
 relaxationFactors

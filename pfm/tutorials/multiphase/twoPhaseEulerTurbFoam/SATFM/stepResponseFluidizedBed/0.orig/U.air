@@ -22,34 +22,34 @@ boundaryField
 {
     vin_DB
     {
-        type               interstitialInletVelocity;
-        inletVelocity      uniform (0 0 0.63);
-        alpha              alpha.air;
-        value              $internalField;
+        type            interstitialInletVelocity;
+        inletVelocity   uniform (0 0 0.63);
+        alpha           alpha.air;
+        value           $internalField;
     }
 
     pout
     {
-        type               pressureInletOutletVelocity;
-        phi                phi.air;
-        value              $internalField;
+        type            pressureInletOutletVelocity;
+        phi             phi.air;
+        value           $internalField;
     }
 
-   w_F
+    w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 }
 

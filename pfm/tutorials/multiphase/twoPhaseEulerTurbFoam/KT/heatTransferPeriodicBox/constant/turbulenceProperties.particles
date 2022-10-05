@@ -15,7 +15,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
 simulationType  RAS;
 
 RAS
@@ -24,7 +23,7 @@ RAS
 
     turbulence      on;
     printCoeffs     on;
-    
+
     kineticTheoryCoeffs
     {
         equilibrium             off;
@@ -33,31 +32,31 @@ RAS
         alphaMinFriction        0.6;
         residualAlpha           1e-4;
 
-        viscosityModel          SchneiderbauerEtAl; 
+        viscosityModel          SchneiderbauerEtAl;
         conductivityModel       SchneiderbauerEtAl;
         granularPressureModel   SchneiderbauerEtAl;
         frictionalStressModel   Schaeffer;
         radialModel             Arastoopour;
-        
-        
+
+
         SchneiderbauerEtAlCoeffs
         {
-            alpha            1.6;
-            L                0.008;
-            b                0.2;
-            muSt             0.38;
-            muC              0.64;
-            I0               0.279;
-            aQSk		   	 0.089;
-            aInt             0.1;
-            k                1e4;
-	    	alphaDeltaMin    0.01;
-	    	Rc               0; //Rolling Friction
-        }	
+            alpha               1.6;
+            L                   0.008;
+            b                   0.2;
+            muSt                0.38;
+            muC                 0.64;
+            I0                  0.279;
+            aQSk                0.089;
+            aInt                0.1;
+            k                   1e4;
+            alphaDeltaMin       0.01;
+            Rc                  0; //Rolling Friction
+        }
         SchaefferCoeffs
         {
-            phi                     28;
-        }	
+            phi                 28;
+        }
     }
 
 }

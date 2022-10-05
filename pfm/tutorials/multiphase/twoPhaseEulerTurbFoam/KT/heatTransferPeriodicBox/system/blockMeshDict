@@ -16,7 +16,7 @@ FoamFile
 
 convertToMeters 1;
 
-vertices 
+vertices
 (
     (-0.004 -0.004 0.00)
     ( 0.004 -0.004 0.00)
@@ -30,7 +30,7 @@ vertices
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) (4 4 16) 
+    hex (0 1 2 3 4 5 6 7) (4 4 16)
     simpleGrading (1 1 1)
 );
 
@@ -41,60 +41,59 @@ edges
 boundary
 (
     vin_DB
-{
-type cyclic;
-neighbourPatch pout;
-faces
-    (
-	(0 3 2 1)
-    );
-}
-   pout
-{
-type cyclic;
-neighbourPatch vin_DB;
-faces
-    (
-        (4 5 6 7)
-    );
-}
+    {
+        type cyclic;
+        neighbourPatch pout;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+    pout
+    {
+        type cyclic;
+        neighbourPatch vin_DB;
+        faces
+        (
+            (4 5 6 7)
+        );
+    }
     w_F
     {
-	type cyclic;
-	neighbourPatch w_B;
-	faces
-    (
-	(0 1 4 5)
-    );
-}
- w_B
+        type cyclic;
+        neighbourPatch w_B;
+        faces
+        (
+            (0 1 4 5)
+        );
+    }
+    w_B
     {
-	type cyclic;
-	neighbourPatch w_F;
-	faces
-    (
-	
-	(2 6 7 3)
-    );
-}
+        type cyclic;
+        neighbourPatch w_F;
+        faces
+        (
+            (2 6 7 3)
+        );
+    }
     w_L
     {
-	type cyclic;
-	neighbourPatch w_R;
-	faces
-    (
-	(1 5 6 2)
-    );
-}
- w_R
+        type cyclic;
+        neighbourPatch w_R;
+        faces
+        (
+            (1 5 6 2)
+        );
+    }
+    w_R
     {
-	type cyclic;
-	neighbourPatch w_L;
-	faces
-    (
-	(0 3 7 4)
-    );
-}
+        type cyclic;
+        neighbourPatch w_L;
+        faces
+        (
+            (0 3 7 4)
+        );
+    }
 );
 
 mergePatchPairs

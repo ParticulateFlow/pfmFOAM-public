@@ -62,7 +62,6 @@ solvers
         tolerance       1e-6;
         relTol          0;
         minIter         1;
-	//maxIter		0;
     }
 
     "Theta.*"
@@ -109,7 +108,7 @@ PIMPLE
     nNonOrthogonalCorrectors 0;
     faceMomentum     no;
     momentumPredictor no;
-// switch for periodic box
+    // switch for periodic box
     periodicBox       on;
     energyEqn         on;
     turbOnFinalIter   no;

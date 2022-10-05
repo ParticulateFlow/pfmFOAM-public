@@ -14,10 +14,9 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions          [0 2 -1 0 0 0 0];
+dimensions      [0 2 -1 0 0 0 0];
 
-
-internalField   uniform 0; 
+internalField   uniform 0;
 
 boundaryField
 {
@@ -33,45 +32,23 @@ boundaryField
         value           $internalField;
     }
 
-   w_F
+    w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 
 }
-/*
 
-internalField       uniform 0; 
-
-boundaryField
-{
-    vin_DB
-    {type           zeroGradient;
-        
-    }
-
-    pout
-    {type           zeroGradient;
-        
-    }
-
-    w_FB
-    {type           zeroGradient;
-       
-    }
-
-}
-*/
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

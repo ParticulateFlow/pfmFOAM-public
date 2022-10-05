@@ -22,51 +22,30 @@ boundaryField
 {
     vin_DB
     {
-		type               zeroGradient;
- //type               slip;
-//        type                directionMixed;
-//        refValue            uniform (0 0 0);
-//        refGradient         uniform (0 0 0);
-//        valueFraction       uniform (0 0 0 0 0 1);
+        type            zeroGradient;
     }
- pout
+
+    pout
     {
-        type             zeroGradient; 
-/* pressureInletOutletVelocity;
-        phi                phi.particles;
-        value              $internalField;*/
+        type            zeroGradient;
     }
 
     w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
-
-   /* pout
-    {
-		type               zeroGradient;
-    }
-
-    w_FB
-    {
-		type               zeroGradient;
-//        type                directionMixed;
-//        refValue            uniform (0 0 0);
-//        refGradient         uniform (0 0 0);
-//        valueFraction       uniform (0 0 0 0 0 1);
-    }*/
 
 }
 

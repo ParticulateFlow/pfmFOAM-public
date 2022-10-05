@@ -13,7 +13,8 @@ FoamFile
     location    "system";
     object      decomposeParDict;
 }
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 numberOfSubdomains 16;
 
-method          scotch; 
+method          scotch;

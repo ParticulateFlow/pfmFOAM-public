@@ -20,37 +20,31 @@ internalField   uniform 1e-3;
 
 boundaryField
 {
-     vin_DB
+    vin_DB
     {
-		type          zeroGradient;     
-/*fixedValue;
-		value              $internalField;*/
+        type            zeroGradient;
     }
 
     pout
     {
-        type             zeroGradient; 
-/* inletOutlet;
-        phi                phi.air;
-        inletValue         uniform 0.2;
-        value              uniform 0.2;*/
+        type            zeroGradient;
     }
 
     w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 
 }

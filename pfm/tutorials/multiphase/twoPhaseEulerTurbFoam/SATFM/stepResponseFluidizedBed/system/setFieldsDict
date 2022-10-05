@@ -23,7 +23,7 @@ defaultFieldValues
 
 regions
 (
-    boxToCell 
+    boxToCell
     {
         box ( -0.023 -0.023 0) ( 0.023 0.023 0.4 );
         fieldValues
@@ -41,15 +41,6 @@ regions
             volScalarFieldValue alpha.particles 0.3
         );
     }
-   /* boxToCell
-    {
-        box ( -0.05 -0.05 0.02 ) ( -0.08 0.05 0.025 );
-        fieldValues
-        (
-            volScalarFieldValue alpha.air 0.7
-            volScalarFieldValue alpha.particles 0.3
-        );
-    }*/
 );
 
 

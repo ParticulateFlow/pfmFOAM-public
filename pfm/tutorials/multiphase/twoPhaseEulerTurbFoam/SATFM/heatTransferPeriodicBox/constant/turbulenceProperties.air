@@ -23,33 +23,33 @@ RAS
 
     turbulence      on;
     printCoeffs     on;
-    
+
     SATFMcontinuousCoeffs
     {
-        equilibriumK             off;  // equilibrium assumption: production of k == dissipation
- equilibriumPhiP2             off;  //
-equilibriumH 			off;
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  //
+        equilibriumH            off;
         dynamicAdjustment       on;  // dynamic adjustment of model coefficient and correlation coefficients
-	    anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor        
-        
+        anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
+
         alphaMax                0.65;
         residualAlpha           1e-3; // minimum dispersed phase volume fraction
-        
+
         xiPhiG                  0.5; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
-        Cmu                     0.4; // smagorinsky constant for turbulent viscosity   
+        Cmu                     0.4; // smagorinsky constant for turbulent viscosity
         Ceps                    0.6; // constant for mixing length model of turbulent dissipation rate
         Cp                      1.0;
         Sigma                   1.0; // turbulent schmidt number
         CphiG                   0.0;
 
         maxK                    5.0; // Limits Reynolds stresses
-        
-	filter                  ParmentierTest; // test filter for dynamic adjustment of model constants    
-	laplaceAnIso2ndCoeffs   
-	{
-		widthCoeff		6.0;
-	}
-		
+
+        filter                  ParmentierTest; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          6.0;
+        }
+
     }
     ADMcontinuousCoeffs
     {
@@ -58,22 +58,22 @@ equilibriumH 			off;
         maxK                    0.04; // Limits Reynolds stresses
         deconOrder              2;    // deconvolution Order
 
-		filter                  laplaceAnIso2nd; // filter for ADM    
-		laplaceAnIso2ndCoeffs   
-		{
-			widthCoeff		24.0;
-		}
-		
+        filter                  laplaceAnIso2nd; // filter for ADM
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          24.0;
+        }
+
         regularizationModel     none;  // regularization model (e.g. Stolz)
         StolzCoeffs
         {
-        	smagConst       0.25;
-        	lengthConst     0.3;	
-        	filter          laplaceAnIso2nd; // filter for Stolz    
-        	laplaceAnIso2ndCoeffs   
-        	{
-        		widthCoeff		24.0;
-        	}
+            smagConst           0.25;
+            lengthConst         0.3;
+            filter              laplaceAnIso2nd; // filter for Stolz
+            laplaceAnIso2ndCoeffs
+            {
+                widthCoeff      24.0;
+            }
         }
     }
 }

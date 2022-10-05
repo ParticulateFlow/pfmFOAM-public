@@ -29,21 +29,22 @@ boundaryField
     {
         type            zeroGradient;
     }
-  w_F
+
+    w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 }
 

@@ -20,7 +20,7 @@ internalField   uniform 0;
 
 boundaryField
 {
-     vin_DB
+    vin_DB
     {
         type            zeroGradient;
     }
@@ -32,19 +32,19 @@ boundaryField
 
     w_F
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_B
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_L
     {
-        type               cyclic;
+        type            cyclic;
     }
     w_R
     {
-        type               cyclic;
+        type            cyclic;
     }
 }
 
