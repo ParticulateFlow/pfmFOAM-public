@@ -84,18 +84,14 @@ Foam::driftTemperatureModels::driftTemperatureSATFM::~driftTemperatureSATFM()
 Foam::tmp<Foam::volScalarField>
 Foam::driftTemperatureModels::driftTemperatureSATFM::Tdrift() const
 {
-    const fvMesh& mesh(pair_.phase1().mesh());
-    const volScalarField& alphaP2Mean1_(mesh.lookupObject<volScalarField>
-                               ("alphaP2Mean." + pair_.dispersed().name()));
+    const fvMesh& mesh = pair_.phase1().mesh();
+    const volScalarField& alphaP2Mean1_ = mesh.lookupObject<volScalarField>("alphaP2Mean." + pair_.dispersed().name());
 
-    const volScalarField& xiTPhiG_(mesh.lookupObject<volScalarField>
-                               ("xiTPhiG"));
-    const volScalarField& HC_(mesh.lookupObject<volScalarField>
-                                 ("H." + pair_.continuous().name()));
+    const volScalarField& xiTPhiG_= mesh.lookupObject<volScalarField>("xiTPhiG");
 
-    dimensionedScalar HSmall("HSmall", HC_.dimensions(), 1.0e-6);
+    const volScalarField& HC_ = mesh.lookupObject<volScalarField>("H." + pair_.continuous().name());
 
-    volScalarField alphaP2Mean = (alphaP2Mean1_);
+    volScalarField alphaP2Mean = alphaP2Mean1_;
 
     volScalarField alpha1 = max(pair_.dispersed(), residualAlpha_);
     
@@ -106,11 +102,6 @@ Foam::driftTemperatureModels::driftTemperatureSATFM::Tdrift() const
     //cv or cp
     volScalarField Cpv2("Cpv2", thermo2.Cpv());
 
-    const rhoThermo& thermo1 = pair_.dispersed().thermo();
-    //cv or cp
-    volScalarField Cpv1("Cpv1", thermo1.Cpv());
-
-    
     return //pos(pair_.dispersed() - residualAlpha_)*
           alphaP2MeanN
          * sqrt((HC_))
@@ -118,6 +109,5 @@ Foam::driftTemperatureModels::driftTemperatureSATFM::Tdrift() const
          /Cpv2;
 
 }
-
 
 // ************************************************************************* //

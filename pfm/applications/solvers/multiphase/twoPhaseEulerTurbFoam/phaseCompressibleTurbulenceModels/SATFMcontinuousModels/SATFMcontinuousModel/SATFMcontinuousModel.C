@@ -816,11 +816,10 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
     dimensionedScalar GradHMax("GradHMax", gradh.dimensions(), 1.0e5);
 
     //look up pressure
-    const volScalarField& p(mesh_.lookupObject<volScalarField>("p"));
+    const volScalarField& p = mesh_.lookupObject<volScalarField>("p");
 
     //get other phase turbulent internal energy
-    const volScalarField& HD_(mesh_.lookupObject<volScalarField>
-                                     ("H." + fluid.otherPhase(phase_).name()));
+    const volScalarField& HD_ = mesh_.lookupObject<volScalarField>("H." + fluid.otherPhase(phase_).name());
 
     const dictionary& pimple = mesh_.lookupObject<IOdictionary>
     (
