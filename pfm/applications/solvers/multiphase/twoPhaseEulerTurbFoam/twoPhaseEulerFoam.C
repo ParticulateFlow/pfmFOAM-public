@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
     const word turbulence2Groupname = turbulencephase2.lookup("simulationType");
     const word turbulence2name = turbulencephase2.subDict("RAS").lookup("RASModel");
 
+    const bool SATFM = (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous");
 
     #include "pUf/createDDtU.H"
     #include "pU/createDDtU.H"
@@ -128,7 +129,7 @@ int main(int argc, char *argv[])
             {
                 #include "pUf/UEqns.H"
                 if (energyEqn) {
-                    if (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous")
+                    if (SATFM)
                     {
                         #include "EEqnsSATFM.H"
                     }
@@ -144,7 +145,7 @@ int main(int argc, char *argv[])
             {
                 #include "pU/UEqns.H"
                 if (energyEqn) {
-                    if (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous")
+                    if (SATFM)
                     {
                         #include "EEqnsSATFM.H"
                     }
