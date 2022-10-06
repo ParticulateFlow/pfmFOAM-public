@@ -33,8 +33,8 @@ License
         Chialvo, S., J. Sun, S. Sundaresan. Phys. Rev. E, 2012, 85, 021305 (2012).
         Schneiderbauer, S., A. Aigner, S. Pirker. Chem. Eng. Sci., 2012, 80, 279–292.
      \endverbatim
- 
- 
+
+
 
 \*---------------------------------------------------------------------------*/
 
@@ -157,7 +157,7 @@ ChialvoEtAl::frictionalPressure
     }
     // Correct coupled BCs
     DD.correctBoundaryConditions();
-    
+
     volScalarField pInt
     (
        aInt_
@@ -201,7 +201,7 @@ ChialvoEtAl::frictionalPressurePrime
 ) const
 {
     const volScalarField& alpha = phase;
-    
+
     // compute D&&D in the interior and at boundaries
     tmp<volScalarField> tDD
     (
@@ -248,7 +248,7 @@ ChialvoEtAl::frictionalPressurePrime
     }
     // Correct coupled BCs
     DD.correctBoundaryConditions();
-    
+
     volScalarField pInt
     (
        aInt_
@@ -349,7 +349,7 @@ ChialvoEtAl::nu
 
     volScalarField::Boundary& nufBf = nuf.boundaryFieldRef();
 
-    volScalarField& sqrt05 = sqrt(0.5);
+    const scalar sqrt05 = sqrt(0.5);
 
     forAll(patches, patchi)
     {
@@ -404,7 +404,7 @@ ChialvoEtAl::read()
     aQSk_.read(coeffDict_);
     aInt_.read(coeffDict_);
     k_.read(coeffDict_);
-    
+
     alphaDeltaMin_.read(coeffDict_);
     Rc_.read(coeffDict_);
 

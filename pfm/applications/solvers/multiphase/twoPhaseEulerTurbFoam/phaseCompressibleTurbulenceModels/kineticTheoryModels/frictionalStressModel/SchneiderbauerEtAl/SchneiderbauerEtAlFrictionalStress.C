@@ -29,8 +29,8 @@ License
  Description
      Implementaton of mu(I)-rheology (Schneiderbauer et al., Chem. Eng.
      Science, 80, 2012)
- 
- 
+
+
 
 \*---------------------------------------------------------------------------*/
 
@@ -105,7 +105,7 @@ SchneiderbauerEtAl::frictionalPressure
 ) const
 {
     const volScalarField& alpha = phase;
-    
+
     // compute D&&D in the interior and at boundaries
     tmp<volScalarField> tDD
     (
@@ -183,7 +183,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
 ) const
 {
     const volScalarField& alpha = phase;
-    
+
     // compute D&&D in the interior and at boundaries
     tmp<volScalarField> tDD
     (
@@ -231,7 +231,7 @@ SchneiderbauerEtAl::frictionalPressurePrime
     }
     // Correct coupled BCs
     DD.correctBoundaryConditions();
-    
+
     return
        - pos(alpha - alphaMinFriction)
         *8.0*rho*sqr(b_*dp)*DD
@@ -310,7 +310,7 @@ SchneiderbauerEtAl::nu
 
     volScalarField::Boundary& nufBf = nuf.boundaryFieldRef();
 
-    volScalarField& sqrt05 = sqrt(0.5);
+    const scalar sqrt05 = sqrt(0.5);
 
     forAll(patches, patchi)
     {
@@ -360,7 +360,7 @@ SchneiderbauerEtAl::read()
     I0_.read(coeffDict_);
     aQSk_.read(coeffDict_);
     k_.read(coeffDict_);
-    
+
     alphaDeltaMin_.read(coeffDict_);
     Rc_.read(coeffDict_);
 
