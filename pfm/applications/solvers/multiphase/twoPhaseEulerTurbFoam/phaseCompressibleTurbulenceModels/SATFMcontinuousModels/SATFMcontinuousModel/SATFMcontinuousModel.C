@@ -1548,22 +1548,22 @@ void Foam::RASModels::SATFMcontinuousModel::correct()
 
    }
 
-    Info << "SA-TFM (continuous Phase):" << nl
-         << "    max(nuEff)      = " << max(nuEff()).value() << nl
-         << "    min(nuEff)      = " << min(nuEff()).value() << nl
-         << "    max(k2)         = " << max(k_&eSum).value() << nl
-         << "    mean(k2x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
+   Info<< "SA-TFM (continuous Phase):" << nl
+       << "    max(nuEff)      = " << max(nuEff()).value() << nl
+       << "    min(nuEff)      = " << min(nuEff()).value() << nl
+       << "    max(k2)         = " << max(k_&eSum).value() << nl
+       << "    mean(k2x)       = " << fvc::domainIntegrate(alpha*(k_&eX)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                      << nl
-         << "    mean(k2y)       = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
+       << "    mean(k2y)       = " << fvc::domainIntegrate(alpha*(k_&eY)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                      << nl
-         << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
+       << "    mean(k2z)       = " << fvc::domainIntegrate(alpha*(k_&eZ)).value()
                                         /fvc::domainIntegrate(alpha).value()
                                      << nl
-         << "    mean(H)         = " << fvc::domainIntegrate(alpha*(H_)).value()
+       << "    mean(H)         = " << fvc::domainIntegrate(alpha*(H_)).value()
                                         /fvc::domainIntegrate(alpha).value()
-         << endl;
+       << endl;
 }
 
 
