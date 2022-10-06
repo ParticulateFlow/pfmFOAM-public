@@ -64,7 +64,7 @@ Foam::tmp<Foam::volScalarField>
 Foam::heatTransferModels::Gunn::K() const
 {
     volScalarField Nu(((7.0 - 10.0*pair_.continuous() + 5.0*pair_.continuous()*pair_.continuous())
-                      *(1.0 + 0.7*pair_.Re()*cbrt(pair_.Pr())))
+                      *(1.0 + 0.7*pow(pair_.Re(),0.2)*cbrt(pair_.Pr())))
                       +((1.33 - 2.4*pair_.continuous() + 1.2*pair_.continuous()*pair_.continuous())
                       *pow(pair_.Re(),0.7)*cbrt(pair_.Pr()))
                       );
