@@ -581,7 +581,7 @@ void Foam::RASModels::kineticTheoryModel::correct()
                 1.0
               + 3.0*sqrt(0.5*alpha)
               + 2.11*alpha*log(alpha)
-              + 11.26*alpha*(1.0 - 5.1*alpha + 16.57*sqr(alpha) - 21.77*alpha*sqr(alpha))
+              + 11.26*alpha*(1.0 - 5.1*alpha + 16.57*sqr(alpha) - 21.77*pow3(alpha))
               - alpha*gs0_*log(0.01)
             );
             J1 *= Rdiss;
@@ -590,9 +590,9 @@ void Foam::RASModels::kineticTheoryModel::correct()
             (
                 neg(alpha - 0.4)
                *(1.0 + 3.0*sqrt(0.5*alpha) + 2.11*alpha*log(alpha)+17.14*alpha)
-               /(1.0 + 0.681*alpha - 8.48*sqr(alpha) + 8.16*alpha*sqr(alpha))
+               /(1.0 + 0.681*alpha - 8.48*sqr(alpha) + 8.16*pow3(alpha))
               + pos(alpha - 0.4)
-               *(10.0*alpha/(sqr(1.0 - alpha)*(1.0 - alpha)) + 0.7)
+               *(10.0*alpha/(pow3((1.0 - alpha))) + 0.7)
             );
             volScalarField Psi
             (

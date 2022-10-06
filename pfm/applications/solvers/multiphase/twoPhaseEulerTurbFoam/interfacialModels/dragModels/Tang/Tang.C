@@ -70,7 +70,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Tang::CdRe() const
 
     volScalarField alpha2
     (
-        max(scalar(1) - pair_.dispersed(), pair_.continuous().residualAlpha())
+        max(1.0 - pair_.dispersed(), pair_.continuous().residualAlpha())
     );
 
     volScalarField Res(alpha2*pair_.Re());
@@ -84,14 +84,14 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Tang::CdRe() const
     volScalarField F0
     (
         "F0",
-        10.0*alpha1/sqr(alpha2) + sqr(alpha2)*(scalar(1.0) + 1.5*sqrt(alpha1))
+        10.0*alpha1/sqr(alpha2) + sqr(alpha2)*(1.0 + 1.5*sqrt(alpha1))
     );
 
     volScalarField F1
     (
         "F1",
-        Res*(0.11*alpha1*(1.0 + alpha1) - 0.00456/pow(alpha2, 4.0)
-      + pow(ResLim, -0.343)*(0.169*alpha2 + 0.0644/pow(alpha2, 4.0)))
+        Res*(0.11*alpha1*(1.0 + alpha1) - 0.00456/pow4(alpha2)
+      + pow(ResLim, -0.343)*(0.169*alpha2 + 0.0644/pow4(alpha2)))
     );
 
     return 24.0*alpha2*(F0 + F1);

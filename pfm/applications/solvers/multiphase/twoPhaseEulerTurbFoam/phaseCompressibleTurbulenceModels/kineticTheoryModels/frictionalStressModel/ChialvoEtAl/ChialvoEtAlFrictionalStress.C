@@ -253,7 +253,7 @@ ChialvoEtAl::frictionalPressurePrime
     (
        aInt_
        *k_
-       *sqrt(2.0*sqrt(DD)*dp/sqrt(k_/(rho*dp)))
+       *sqrt(2.0*dp*sqrt(DD/(k_/(rho*dp))))
        /dp
     );
     volScalarField pInert
@@ -278,7 +278,7 @@ ChialvoEtAl::frictionalPressurePrime
        *(2.0/3.0)
        *aQSk_
        *k_
-       /(pow(max(alpha - alphaMax,alphaDeltaMin_), 1.0/3.0)*dp);
+       /(cbrt(max(alpha - alphaMax,alphaDeltaMin_))*dp);
 }
 
 
@@ -330,8 +330,8 @@ ChialvoEtAl::nu
                                  pow(
                                      I0_.value()
                                    / (
-                                         (2.0 * sqrt(0.5*(D[celli]&&D[celli])) * dp[celli])
-                                        /(sqrt(pf[celli])+SMALL)
+                                         2.0 * dp[celli] * sqrt((0.5*(D[celli]&&D[celli]))
+                                        /(pf[celli]+SMALL))
                                        + SMALL
                                      )
                                     ,1.5
@@ -349,6 +349,8 @@ ChialvoEtAl::nu
 
     volScalarField::Boundary& nufBf = nuf.boundaryFieldRef();
 
+    volScalarField& sqrt05 = sqrt(0.5);
+
     forAll(patches, patchi)
     {
         if (!patches[patchi].coupled()) {
@@ -364,7 +366,7 @@ ChialvoEtAl::nu
                                    pow(
                                        I0_.value()
                                      / (
-                                           (sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
+                                           (sqrt05*mag(U.boundaryField()[patchi].snGrad())
                                           *dp.boundaryField()[patchi])
                                           /(sqrt(pf.boundaryField()[patchi])+SMALL)
                                          + SMALL
@@ -376,7 +378,7 @@ ChialvoEtAl::nu
                              )
                             * pf.boundaryField()[patchi]
                             / (
-                                 sqrt(0.5)*mag(U.boundaryField()[patchi].snGrad())
+                                 sqrt05*mag(U.boundaryField()[patchi].snGrad())
                                + SMALL
                               );
         }

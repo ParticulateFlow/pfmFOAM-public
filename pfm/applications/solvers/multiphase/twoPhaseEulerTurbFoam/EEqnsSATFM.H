@@ -12,7 +12,7 @@
     if (mesh.foundObject<volScalarField>("heatTransferCorr")) {
         Info<< "Applying heat transfer correction..." << endl;
         const volScalarField& heatTransferCorr = mesh.lookupObject<volScalarField>("heatTransferCorr");
-        Kh *= (scalar(1.0) - heatTransferCorr);
+        Kh *= (1.0 - heatTransferCorr);
     }
 
     Kd = fluid.Kd();
@@ -22,7 +22,7 @@
     if (mesh.foundObject<volScalarField>("dragCorr")) {
         Info<< "Applying drag correction..." << endl;
         const volScalarField& dragCorr = mesh.lookupObject<volScalarField>("dragCorr");
-        Kd *= (scalar(1.0) - dragCorr);
+        Kd *= (1.0 - dragCorr);
     }
 
     volVectorField dragEx = Kd*(U2 - U1);

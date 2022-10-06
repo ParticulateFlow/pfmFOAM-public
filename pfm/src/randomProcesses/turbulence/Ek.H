@@ -21,7 +21,7 @@ inline tmp<scalarField> Ek
 )
 {
     // Kolmogorov length scale
-    const scalar eta = pow(sqr(nu)*nu/epsilon,0.25);
+    const scalar eta = pow025(pow3(nu)/epsilon);
     // Turbulent length scale (Pope, 2000)
     const scalar L = pow(e,1.5)/epsilon;
     
@@ -41,7 +41,7 @@ inline tmp<scalarField> Ek
         )
        *exp
         (
-            -beta*(pow(sqr(sqr(k*eta))+sqr(sqr(cEta)),0.25) - cEta)
+            -beta*(pow025(pow4(k*eta)+pow4(cEta)) - cEta)
         )
        /(nu*pow(k + 1.0e-20,5.0/3.0))
     );
