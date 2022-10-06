@@ -29,14 +29,14 @@ RAS
         equilibriumK            off;  // equilibrium assumption: production of k == dissipation
         equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
         equilibriumH            off;
-	dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
+        dynamicAdjustment       on;   // dynamic adjustment of model coefficient and correlation coefficients
         anIsoTropicNut          on;   // anisotropic treatment of shear component of Reynolds-stress tensor
 
         alphaMax                0.60;
         residualAlpha           1e-3; // minimum dispersed phase volume fraction
 
         maxK                    10.0; // Limits Reynolds stresses
-        maxNut                  1.0;        
+        maxNut                  1.0;
 
         xiPhiG                  0.5;  // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
         Cmu                     0.4;  // smagorinsky constant for turbulent viscosity
