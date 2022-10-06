@@ -75,11 +75,12 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::Tenneti::CdRe() const
 
     volScalarField Res(alpha2*pair_.Re());
 
-    volScalarField F0  
+    volScalarField F0
     (
         "F0",
-        (Res < 1000) ? ((1.0 + 0.15*pow(Res, 0.687))/sqr(alpha2)):((0.44/24.0)*Res/sqr(alpha2))
-    );
+         neg(Res - 1000) *(1.0 + 0.15*pow(Res, 0.687))/sqr(alpha2)
+       + pos0(Res - 1000)*(0.44/24.0)*Res/sqr(alpha2)
+   );
 
     volScalarField F1
     (
