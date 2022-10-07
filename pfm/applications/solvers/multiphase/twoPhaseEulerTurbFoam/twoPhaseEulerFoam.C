@@ -90,14 +90,14 @@ int main(int argc, char *argv[])
        "turbulenceProperties." +  phase1.name()
     );
     const word turbulence1Groupname = turbulencephase1.lookup("simulationType");
-    const word turbulence1name = turbulencephase1.subDict("RAS").lookup("RASModel");
+    const word turbulence1name = turbulencephase1.subOrEmptyDict("RAS").lookupOrDefault<word>("RASModel", "");
 
     const dictionary& turbulencephase2 = mesh.lookupObject<IOdictionary>
     (
        "turbulenceProperties." +  phase2.name()
     );
     const word turbulence2Groupname = turbulencephase2.lookup("simulationType");
-    const word turbulence2name = turbulencephase2.subDict("RAS").lookup("RASModel");
+    const word turbulence2name = turbulencephase2.subOrEmptyDict("RAS").lookupOrDefault<word>("RASModel", "");
 
     const bool SATFM = (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous");
 
