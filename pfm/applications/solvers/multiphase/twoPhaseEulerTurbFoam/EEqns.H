@@ -53,13 +53,15 @@
        "turbulenceProperties." +  phase1.name()
     );
     const word turbulence1Groupname = turbulencephase1.lookup("simulationType");
-    const word turbulence1name = turbulencephase1.subDict("RAS").lookup("RASModel");
 
-
-    if (turbulence1Groupname == "RAS" && turbulence1name == "kineticTheory")
+    if (turbulence1Groupname == "RAS")
     {
-       alphat1 = mesh.lookupObject<volScalarField>("alphaturb." + phase1.name());
+        const word turbulence1name = turbulencephase1.subDict("RAS").lookup("RASModel");
 
+        if (turbulence1name == "kineticTheory")
+        {
+            alphat1 = mesh.lookupObject<volScalarField>("alphaturb." + phase1.name());
+        }
     }
 
     volSymmTensorField viscousHeat1 = phase1.turbulence().devRhoReff();
@@ -89,7 +91,6 @@
         )
       + fvc::div(viscousHeat1&U1)
       - (U1&dragEx)
-   
     );
 
     E1Eqn.relax();
