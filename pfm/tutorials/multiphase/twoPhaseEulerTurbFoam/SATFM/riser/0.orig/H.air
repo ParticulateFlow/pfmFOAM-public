@@ -20,20 +20,26 @@ internalField   uniform 1e-3;
 
 boundaryField
 {
-    vin_DB
+// gas inlet
+    vin_g
     {
         type            zeroGradient;
     }
-
-    pout
+//outlet
+    p_out
     {
         type            zeroGradient;
     }
-
-    w_FB
+//solid inlet
+    vin_s
     {
         type            zeroGradient;
     }
-
+// walls
+    wall
+    {
+        type            zeroGradient;
+    }
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// ************************************************************************* //
