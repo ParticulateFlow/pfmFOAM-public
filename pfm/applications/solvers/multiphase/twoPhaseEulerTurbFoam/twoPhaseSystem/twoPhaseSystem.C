@@ -35,6 +35,8 @@ License
 #include "driftVelocityModel.H"
 // added meso-scale interphase force model
 #include "interPhaseForceModel.H"
+// added drift temperature model
+#include "driftTemperatureModel.H"
 #include "fvMatrix.H"
 #include "surfaceInterpolate.H"
 #include "MULES.H"
@@ -303,6 +305,22 @@ Foam::twoPhaseSystem::twoPhaseSystem
             pair2In1_
          )
        );
+    //drift temperature
+    driftTemperature_.set
+    (
+        new BlendedInterfacialModel<driftTemperatureModel>
+        (
+            lookup("driftTemperature"),
+            (
+                blendingMethods_.found("driftTemperature")
+              ? blendingMethods_["driftTemperature"]
+              : blendingMethods_["default"]
+            ),
+            pair_,
+            pair1In2_,
+            pair2In1_
+         )
+       );
 }
 
 
@@ -392,6 +410,11 @@ Foam::tmp<Foam::volScalarField> Foam::twoPhaseSystem::CpIPh() const
     return interPhaseForce_->CpIPh();
 }
 
+// drift temperature model
+Foam::tmp<Foam::volScalarField> Foam::twoPhaseSystem::KhTdrift()
+{
+    return driftTemperature_->KhTdrift();
+}
 
 void Foam::twoPhaseSystem::solve()
 {

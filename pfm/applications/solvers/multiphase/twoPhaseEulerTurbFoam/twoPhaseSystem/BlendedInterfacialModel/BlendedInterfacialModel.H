@@ -141,6 +141,9 @@ public:
     
         //- Return interPhase force correction
         tmp<volScalarField> CpIPh() const;
+
+        //- Return the drift temperature correction
+        tmp<volScalarField> KhTdrift();
 };
 
 

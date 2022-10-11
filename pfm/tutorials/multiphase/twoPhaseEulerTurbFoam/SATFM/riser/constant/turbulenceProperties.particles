@@ -27,7 +27,8 @@ RAS
     SATFMdispersedCoeffs
     {
         equilibriumK            off;  // equilibrium assumption: production of k == dissipation
-        equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  //
+        equilibriumH            off;
         dynamicAdjustment       on;  // dynamic adjustment of model coefficient and correlation coefficients
         anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
         

@@ -29,11 +29,11 @@ Class
     Johannes Kepler University, Linz, Austria
 
 Description
-    Turbulent drift velocity model of Schneiderbauer & Saeedipour
+    Turbulent drift velocity model of Rauchenzauner & Schneiderbauer
 
     References:
     \verbatim
-        Schneiderbauer, S., & Saeedipour, M. (2018). Approximate deconvolution model for the simulation of turbulent gas-solid flows: An a-priori analysis. Physics of Fluids, 30(2), 023301.
+        Rauchenzauner, S. and Schneiderbauer, S. (2020). A Dynamic Anisotropic Spatially-Averaged Two-Fluid Model for Moderately Dense Gas-Particle Flows. IJMF, 126, 103237.
     \endverbatim
 
 SourceFiles

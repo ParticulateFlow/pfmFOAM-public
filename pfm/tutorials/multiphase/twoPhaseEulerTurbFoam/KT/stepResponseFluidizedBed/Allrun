@@ -1,0 +1,17 @@
+#!/bin/sh
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+cp -rf 0.orig 0
+
+# create mesh
+runApplication blockMesh
+
+# set initial conditions
+runApplication setFields
+
+# decompose domain
+runApplication decomposePar
+
+# run twoPhaseEulerTurbFoam
+runApplication $(getApplication)
+

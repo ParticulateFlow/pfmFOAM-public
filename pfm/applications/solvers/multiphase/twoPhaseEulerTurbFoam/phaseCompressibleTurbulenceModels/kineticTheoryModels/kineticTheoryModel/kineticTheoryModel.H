@@ -107,6 +107,9 @@ class kineticTheoryModel
 
             //- Use equilibrium approximation: generation == dissipation
             Switch equilibrium_;
+    
+            //- Use Koch & Sangani correction for drag production and dissipation
+            Switch KochSanganiDrag_;
 
             //- Coefficient of restitution
             dimensionedScalar e_;
@@ -137,6 +140,9 @@ class kineticTheoryModel
 
             //- The granular "thermal" conductivity
             volScalarField kappa_;
+
+            //- The granular "thermal" conductivity
+            volScalarField alphaturb_;
 
             //- The frictional viscosity
             volScalarField nuFric_;
