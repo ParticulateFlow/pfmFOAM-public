@@ -32,7 +32,7 @@ Finally, use
 to compile the solver.
 
 ## Tutorials
-For both cases (ADM and SATFM) a simple fluidized bed tutorial is provided (compare with Schneiderbauer & Saeedipour, 2019). In addition, tutorials are added, which showcase the predictions of the thermal energy balance eautions for both, kinetic-theory Two-Fluid Model and SATFM (compare with Rauchenzauner & Schneiderbauer, Int. J. Heat Mass Transf., 2022).
+For both cases (ADM and SATFM) a simple fluidized bed tutorial is provided (compare with Schneiderbauer & Saeedipour, 2019). In addition, tutorials are added, which showcase the predictions of the thermal energy balance equations for both, kinetic-theory Two-Fluid Model and SATFM (compare with Rauchenzauner & Schneiderbauer, Int. J. Heat Mass Transf., 2022).
 
 ## References
 * Schneiderbauer, S. (2017). A spatially-averaged two-fluid model for dense large-scale gas-solid flows. AIChE Journal, 63(8), 3544–3562.
