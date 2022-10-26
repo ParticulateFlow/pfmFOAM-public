@@ -48,13 +48,11 @@ Description
 namespace Foam
 {
 
+// Forward declaration of classes
 class fvMesh;
-class myClass;
 
 namespace functionObjects
 {
-
-// Forward declaration of classes
 
 /*---------------------------------------------------------------------------*\
                         Class mapAveField Declaration
