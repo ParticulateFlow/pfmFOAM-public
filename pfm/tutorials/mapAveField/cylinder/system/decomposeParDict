@@ -34,7 +34,7 @@ hierarchicalCoeffs
 
 manualCoeffs
 {
-    dataFile        "";
+    dataFile        "cellDist";
 }
 
 distributed     no;
