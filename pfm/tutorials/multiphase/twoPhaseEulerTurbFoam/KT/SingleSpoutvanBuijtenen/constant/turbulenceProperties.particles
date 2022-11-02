@@ -1,0 +1,86 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6  
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties.particles;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  RAS;
+
+RAS
+{
+    RASModel kineticTheory;
+
+    turbulence      on;
+    printCoeffs     on;
+
+    kineticTheoryCoeffs
+    {
+        equilibrium             off;
+        e                       0.9;
+        alphaMax                0.6;
+        alphaMinFriction        0.40;
+        residualAlpha           1e-3;
+
+        viscosityModel          SchneiderbauerEtAl; 
+        conductivityModel       SchneiderbauerEtAl;
+        granularPressureModel   SchneiderbauerEtAl;
+        frictionalStressModel   ChialvoEtAl;
+        radialModel             Arastoopour;
+        
+        KochSanganiDrag         off;
+        
+        ChialvoEtAlCoeffs
+        {
+            alpha            1.6;
+            L                0.145;
+            b                0.2;
+            muSt             0.3268;
+            muC              0.697;
+            I0               0.32;
+            aQSk             0.105; 
+            aInt             0.1;
+            k                1.0e3;
+            alphaDeltaMin    0.01;
+            Rc               0.0; 
+        }	       
+        SchneiderbauerEtAlCoeffs
+        {
+            alpha            1.6;
+            L                0.145;
+            b                0.2;
+            muSt             0.3268;
+            muC              0.697;
+            I0               0.32;
+            aQSk             0.105;
+            k                1.0e3;
+            alphaDeltaMin    0.01;
+            Rc               0.0; 
+        }	
+        SchaefferCoeffs
+        {
+            phi                     28;
+        }	
+    }
+
+    phasePressureCoeffs
+    {
+        preAlphaExp     500;
+        expMax          1000;
+        alphaMax        0.6;
+        g0              1000;
+    }
+}
+
+
+// ************************************************************************* //

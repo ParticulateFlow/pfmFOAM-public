@@ -35,7 +35,8 @@ Description
     \verbatim
         Schneiderbauer, S. (2017). A spatially-averaged two-fluid model for dense large-scale gas-solid flows. AIChE Journal, 63(8), 3544–3562.
         Schneiderbauer, S. (2018). Validation study on spatially averaged two-fluid model for gas-solid flows: I. A-priori analysis of wall bounded flows. AIChE Journal, 64(5), 1591–1605.
-        Rauchenzauner, S. & Schneiderbauer, S. (2019).
+        Rauchenzauner, S. and Schneiderbauer, S. (2020). A Dynamic Anisotropic Spatially-Averaged Two-Fluid Model for Moderately Dense Gas-Particle Flows. IJMF, 126, 103237.
+        Rauchenzauner, S. and Schneiderbauer, S. (2022). A dynamic multiphase turbulence model for coarse-grid simulations of fluidized gas-particle suspensions. Chem. Eng. Sci., 1247, 117104.
     \endverbatim
 
 SourceFiles
@@ -93,7 +94,8 @@ class SATFMcontinuousModel
             //- Use equilibrium approximation: generation == dissipation
             Switch equilibriumK_;
             Switch equilibriumPhiP2_;
-    
+            Switch equilibriumH_;
+
             //- Use dynamic adjustment of several model parameters and
             //  correlation coefficients
             Switch dynamicAdjustment_;
@@ -113,7 +115,10 @@ class SATFMcontinuousModel
     
             //- correlation coefficient between solid volume fraction and cont. velocity
             dimensionedScalar xiPhiContScalar_;
-    
+
+            //- correlation coefficient between solid volume fraction and cont. temperature
+            dimensionedScalar xiTPhiGScalar_;
+
             //- "Smagorinsky constant"
             dimensionedScalar CmuScalar_;
     
@@ -125,6 +130,9 @@ class SATFMcontinuousModel
     
             //- "pressure dilation constant"
             dimensionedScalar CpScalar_;
+
+            //- "pressure transport constant"
+            dimensionedScalar Cdp_;
     
             //- turbulent schmidt number
             dimensionedScalar sigma_;
@@ -140,9 +148,18 @@ class SATFMcontinuousModel
             //- normal components of Reynoldsstress tensor
             //  (turbulent kinetic energies)
             volVectorField k_;
+
+            //- turbulent internal energy
+            volScalarField H_;
     
             //- correlation coefficient between solid volume fraction and cont. velocity
             volVectorField xiPhiG_;
+
+            //- pressure dilatation
+            //volScalarField pdil_;
+
+            //- correlation coefficient between solid volume fraction and cont. temperature
+            volScalarField xiTPhiG_;
     
             //- auto correlation coefficient of solids velocity
             volTensorField xiUU_;
@@ -190,7 +207,7 @@ protected:
     void boundCorrTensor(volTensorField& R) const;
     void boundGradU(volTensorField& S) const;
     void boundStress(volTensorField& R) const;
-    
+    void boundgradh(volVectorField& gradh) const;
 public:
 
     //- Runtime type information

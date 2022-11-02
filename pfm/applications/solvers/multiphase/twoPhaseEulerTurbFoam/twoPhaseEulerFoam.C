@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             "implicitPhasePressure", false
         )
     );
-    
+
     // switch for periodic box simulations
     // handling of p_rgh in case of periodic boxes is wrong,
     // thus, we introduced a second gravity term in the momentum equations
@@ -76,13 +76,30 @@ int main(int argc, char *argv[])
     (
         pimple.dict().lookupOrDefault<Switch>("periodicBox", false)
     );
-    
+
     if (!periodicBox) gN *= 0.;
-    
+
     Switch energyEqn
     (
         pimple.dict().lookupOrDefault<Switch>("energyEqn", false)
     );
+
+    //check if SATFM is used
+    const dictionary& turbulencephase1 = mesh.lookupObject<IOdictionary>
+    (
+       "turbulenceProperties." +  phase1.name()
+    );
+    const word turbulence1Groupname = turbulencephase1.lookup("simulationType");
+    const word turbulence1name = turbulencephase1.subOrEmptyDict("RAS").lookupOrDefault<word>("RASModel", "");
+
+    const dictionary& turbulencephase2 = mesh.lookupObject<IOdictionary>
+    (
+       "turbulenceProperties." +  phase2.name()
+    );
+    const word turbulence2Groupname = turbulencephase2.lookup("simulationType");
+    const word turbulence2name = turbulencephase2.subOrEmptyDict("RAS").lookupOrDefault<word>("RASModel", "");
+
+    const bool SATFM = (turbulence1Groupname == "RAS" && turbulence1name == "SATFMdispersed" && turbulence2Groupname == "RAS" && turbulence2name == "SATFMcontinuous");
 
     #include "pUf/createDDtU.H"
     #include "pU/createDDtU.H"
@@ -112,7 +129,14 @@ int main(int argc, char *argv[])
             {
                 #include "pUf/UEqns.H"
                 if (energyEqn) {
-                    #include "EEqns.H"
+                    if (SATFM)
+                    {
+                        #include "EEqnsSATFM.H"
+                    }
+                    else
+                    {
+                        #include "EEqns.H"
+                    }
                 }
                 #include "pUf/pEqn.H"
                 #include "pUf/DDtU.H"
@@ -121,7 +145,14 @@ int main(int argc, char *argv[])
             {
                 #include "pU/UEqns.H"
                 if (energyEqn) {
-                    #include "EEqns.H"
+                    if (SATFM)
+                    {
+                        #include "EEqnsSATFM.H"
+                    }
+                    else
+                    {
+                        #include "EEqns.H"
+                    }
                 }
                 #include "pU/pEqn.H"
                 #include "pU/DDtU.H"
@@ -132,12 +163,12 @@ int main(int argc, char *argv[])
                 fluid.correctTurbulence();
             }
         }
-        
+
         ///////////---------------POST_PROCESS-----------//////////////////////////
         Info<< "particle_ENSTROPHY: "
             << fvc::domainIntegrate( 0.5*magSqr(fvc::curl(U1))).value()
             << endl;
-        
+
         Info<< "air_ENSTROPHY: "
             << fvc::domainIntegrate(0.5*magSqr(fvc::curl(U2))).value()
             << endl;
@@ -153,20 +184,36 @@ int main(int argc, char *argv[])
                      ))
                 << endl;
         }
-        
+
         Info<< "total momentum: "
             << mag(fvc::domainIntegrate(alpha1*rho1*U1 + alpha2*rho2*U2).value())
             << endl;
-        
+
         Info<< "total solids mass: "
             << mag(fvc::domainIntegrate(alpha1*rho1).value())
             << endl;
-        
+
         Info<< "mean gas density: "
             << fvc::domainIntegrate(alpha2*rho2).value()
               /fvc::domainIntegrate(alpha2).value()
             << endl;
-        
+        Info<< "TKE gas: "
+            << fvc::domainIntegrate(alpha2*(U2&U2)).value()
+              /fvc::domainIntegrate(alpha2).value()
+            << endl;
+
+        Info<< "TKE solid: "
+            << fvc::domainIntegrate(alpha1*(U1&U1)).value()
+              /fvc::domainIntegrate(alpha1).value()
+            << endl;
+
+        Info<< "PhiP2: "
+            << fvc::domainIntegrate(alpha1*alpha1).value()
+              /fvc::domainIntegrate(unity).value()
+             - fvc::domainIntegrate(alpha1).value()*fvc::domainIntegrate(alpha1).value()
+              /(fvc::domainIntegrate(unity).value()*fvc::domainIntegrate(unity).value())
+            << endl;
+
         #include "write.H"
 
         Info<< "ExecutionTime = "

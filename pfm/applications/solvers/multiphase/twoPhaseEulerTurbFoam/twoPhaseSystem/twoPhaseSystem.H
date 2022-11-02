@@ -41,6 +41,7 @@ SourceFiles
 #include "volFields.H"
 #include "surfaceFields.H"
 #include "dragModel.H"
+#include "heatTransferModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,6 +55,7 @@ class wallLubricationModel;
 class turbulentDispersionModel;
 class driftVelocityModel;
 class interPhaseForceModel;
+class driftTemperatureModel;
 
 class blendingMethod;
 template<class modelType> class BlendedInterfacialModel;
@@ -123,6 +125,8 @@ class twoPhaseSystem
         //- meso-scale interPhaseForceModel
         autoPtr<BlendedInterfacialModel<interPhaseForceModel>>
             interPhaseForce_;
+        autoPtr<BlendedInterfacialModel<driftTemperatureModel>>
+            driftTemperature_;
 
     // Private member functions
 
@@ -177,6 +181,9 @@ public:
     
         //- Return drag correction due to drift velocity
         tmp<volVectorField> KdUdrift();
+
+        //- Return heattransfer correction due to drift temperature
+        tmp<volScalarField> KhTdrift();
     
         //- Return interphase force correction
         tmp<volScalarField> CpIPh() const;

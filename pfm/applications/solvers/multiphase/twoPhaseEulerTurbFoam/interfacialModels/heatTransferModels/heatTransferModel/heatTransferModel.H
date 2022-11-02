@@ -50,6 +50,8 @@ class phasePair;
 \*---------------------------------------------------------------------------*/
 
 class heatTransferModel
+:
+    public regIOobject
 {
 protected:
 
@@ -77,9 +79,10 @@ public:
             dictionary,
             (
                 const dictionary& dict,
-                const phasePair& pair
+                const phasePair& pair,
+                const bool registerObject
             ),
-            (dict, pair)
+            (dict, pair, registerObject)
         );
 
 
@@ -91,16 +94,17 @@ public:
 
     // Constructors
 
-        //- Construct froma dictionary and a phase pair
+        //- Construct from a dictionary and a phase pair
         heatTransferModel
         (
             const dictionary& dict,
-            const phasePair& pair
+            const phasePair& pair,
+            const bool registerObject
         );
 
 
-    //- Destructor
-    virtual ~heatTransferModel();
+        //- Destructor
+        virtual ~heatTransferModel();
 
 
     // Selectors
@@ -111,13 +115,16 @@ public:
             const phasePair& pair
         );
 
+        // Member Functions
 
-    // Member Functions
+            //- The heat transfer function K used in the enthalpy equation
+            //    ddt(alpha1*rho1*ha) + ... = ... K*(Ta - Tb)
+            //    ddt(alpha2*rho2*hb) + ... = ... K*(Tb - Ta)
+            virtual tmp<volScalarField> K() const = 0;
 
-        //- The heat transfer function K used in the enthalpy equation
-        //    ddt(alpha1*rho1*ha) + ... = ... K*(Ta - Tb)
-        //    ddt(alpha2*rho2*hb) + ... = ... K*(Tb - Ta)
-        virtual tmp<volScalarField> K() const = 0;
+
+        //- Dummy write for regIOobject
+        bool writeData(Ostream& os) const;
 };
 
 

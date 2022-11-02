@@ -44,10 +44,11 @@ namespace heatTransferModels
 Foam::heatTransferModels::RanzMarshall::RanzMarshall
 (
     const dictionary& dict,
-    const phasePair& pair
+    const phasePair& pair,
+    const bool registerObject
 )
 :
-    heatTransferModel(dict, pair)
+    heatTransferModel(dict, pair, registerObject)
 {}
 
 

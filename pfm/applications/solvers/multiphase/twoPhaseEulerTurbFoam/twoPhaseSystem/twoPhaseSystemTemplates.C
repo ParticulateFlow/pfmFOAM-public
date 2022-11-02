@@ -27,6 +27,8 @@ License
 #include "dragModel.H"
 #include "driftVelocityModel.H"
 #include "interPhaseForceModel.H"
+#include "driftTemperatureModel.H"
+#include "heatTransferModel.H"
 #include "virtualMassModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -61,6 +63,16 @@ inline const dragModel& twoPhaseSystem::lookupSubModel<dragModel>
 }
 
 template<>
+inline const heatTransferModel& twoPhaseSystem::lookupSubModel<heatTransferModel>
+(
+    const phaseModel& dispersed,
+    const phaseModel& continuous
+) const
+{
+    return heatTransfer_->phaseModel(dispersed);
+}
+
+template<>
 inline const driftVelocityModel& twoPhaseSystem::lookupSubModel<driftVelocityModel>
 (
     const phaseModel& dispersed,
@@ -78,6 +90,16 @@ inline const interPhaseForceModel& twoPhaseSystem::lookupSubModel<interPhaseForc
 ) const
 {
     return interPhaseForce_->phaseModel(dispersed);
+}
+
+template<>
+inline const driftTemperatureModel& twoPhaseSystem::lookupSubModel<driftTemperatureModel>
+(
+    const phaseModel& dispersed,
+    const phaseModel& continuous
+) const
+{
+    return driftTemperature_->phaseModel(dispersed);
 }
     
 template<>

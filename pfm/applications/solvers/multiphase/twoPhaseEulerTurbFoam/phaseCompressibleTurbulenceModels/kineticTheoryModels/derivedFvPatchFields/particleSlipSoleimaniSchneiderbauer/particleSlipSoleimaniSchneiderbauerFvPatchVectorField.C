@@ -53,9 +53,9 @@ particleSlipSoleimaniSchneiderbauerFvPatchVectorField
     tangentialRestitutionCoeff_(0),
     muF_(0),
     sigma_(0),
-    residualAlpha_(1e-8),
-    residualTheta_(1e-8),
-    residualU_(1e-8),
+    residualAlpha_(1.0e-8),
+    residualTheta_(1.0e-8),
+    residualU_(1.0e-8),
     mu0_(0)
  {}
 
@@ -95,9 +95,9 @@ particleSlipSoleimaniSchneiderbauerFvPatchVectorField
     tangentialRestitutionCoeff_(readScalar(dict.lookup("tangentialRestitutionCoeff"))),
     muF_(readScalar(dict.lookup("muF"))),
     sigma_(readScalar(dict.lookup("sigma"))),
-    residualAlpha_(dict.lookupOrDefault<scalar>("residualAlpha",1e-8)),
-    residualTheta_(dict.lookupOrDefault<scalar>("residualTheta",1e-8)),
-    residualU_(dict.lookupOrDefault<scalar>("residualU",1e-8)),
+    residualAlpha_(dict.lookupOrDefault<scalar>("residualAlpha",1.0e-8)),
+    residualTheta_(dict.lookupOrDefault<scalar>("residualTheta",1.0e-8)),
+    residualU_(dict.lookupOrDefault<scalar>("residualU",1.0e-8)),
     mu0_(7.0/2.0*(1.0 + restitutionCoefficient_)/(1.0 + tangentialRestitutionCoeff_)*muF_)
    
 {
@@ -175,14 +175,13 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     const volVectorField& U = tU();
     const fvPatchVectorField& Up = U.boundaryField()[patchi];
     const vectorField Uc(Up.patchInternalField());
-    const scalarField magUc(mag(Uc));
 
     // Wall normal cell velocity
     const scalarField Un(-(this->patch().nf() & Uc));
 
     // Tangential cell velocity
     const scalarField Utc(mag(Uc + this->patch().nf()*Un));
-
+    const scalarField magUc(mag(Utc)+scalar(1.0e-8));
     
     const scalarField rhop
     (
@@ -211,7 +210,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     (
         patch().lookupPatchField<volScalarField, scalar>
         (
-            IOobject::groupName("nut", granular.name())
+            IOobject::groupName("nuFric", granular.name())
         )
     );
     const scalarField muP = nu*rhop;
@@ -258,7 +257,7 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
         (
             atan
             (
-                max(sqrt(1.5*Thetap)/2 + Un, scalar(0.0))
+                max(sqrt(1.5*Thetap)/2.0 + Un, scalar(0.0))
                /max(Utc, residualU_)
             )
         )
@@ -269,25 +268,35 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     (
         degToRad
         (
-            2*0.398942*sigma_
+            2.0*0.398942*sigma_
            *(
-                exp(-0.5*sqr(Imp)/(sqr(sigma_)))
-              - exp(-4050/(sqr(sigma_)))
+                exp(-0.5*sqr(Imp)/(sqr(sigma_ + scalar(1.0e-8))))
+              - exp(-4050/(sqr(sigma_ + scalar(1.0e-8))))
             )
-           /(erf(63.6396/sigma_) + erf(0.707107*Imp/sigma_))
+           /(erf(63.6396/(sigma_ + scalar(1.0e-8))) + erf(0.707107*Imp/(sigma_ + scalar(1.0e-8))))
         )
     );
 
+    // u and v should have the magnitude of the particle
+    // velocity at the wall
     const scalarField u
     (
-        Utc*cos(gamma)
-      - Un*sin(gamma)
+        (
+            Utc*cos(gamma)
+          - Un*sin(gamma)
+        )
+//       *mag(Up)
+//       /magUc
     );
 
     const scalarField v
     (
-       - Utc*sin(gamma)
-       + Un*cos(gamma)
+        (
+          - Utc*sin(gamma)
+          + Un*cos(gamma)
+        )
+//       *mag(Up)
+//       /magUc
     ); 
 
     const scalarField us
@@ -301,17 +310,17 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
     // Wall shear stress
     const scalarField tauw
     (
-       0.5*rhop*alphap*gs0p*(1 + restitutionCoefficient_)*muF_
+        0.5*rhop*alphap*gs0p*(1.0 + restitutionCoefficient_)*muF_
        *(
-             u*v*(1-erfUs)/mu0_
-          + v*sqrt(2*Thetap/constant::mathematical::pi)*
+             u*v*(1.0-erfUs)/mu0_
+          + v*sqrt(2.0*Thetap/constant::mathematical::pi)*
             (
-                exp(-sqr(v)/(2*Thetap))
+                exp(-sqr(v)/(2.0*Thetap))
               - exp(-sqr(us))
             )
           + (sqr(v)+Thetap)
            *(
-                erf(v/sqrt(2*Thetap))
+                erf(v/sqrt(2.0*Thetap))
               - erfUs
             )
         ) 
@@ -353,16 +362,15 @@ void particleSlipSoleimaniSchneiderbauerFvPatchVectorField::updateCoeffs()
         (
             min
             (
-              - (tauw)/max(Utc*(muP)*patch().deltaCoeffs(),scalar(1e-10))
-              + (pfW)/max(Utc*(muFP)*patch().deltaCoeffs(),scalar(1e-10)),
-                scalar(1)
+                (-tauw + pfW*muF_)/max(Utc*(muP + muFP)*patch().deltaCoeffs(),scalar(1.0e-8)),
+                scalar(1.0)
             ),
             scalar(0)
         );
 
     Info<< "  tauw: " << min(tauw) << " - " << max(tauw) << endl;
     Info<< "  pfW: "  << min(pfW) << " - " << max(pfW) << endl;
-    Info<< "  valueFraction(): " << min(this->valueFraction()) 
+    Info<< "  valueFraction(): " << min(this->valueFraction())
         << " - " << max(this->valueFraction()) << endl;
         
     partialSlipFvPatchVectorField::updateCoeffs();       

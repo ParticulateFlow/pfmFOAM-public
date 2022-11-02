@@ -563,6 +563,7 @@ void Foam::RASModels::ADMdispersedModel::correct()
         rho,
         dev(Dstar_)
     );
+    pf_.correctBoundaryConditions();
     
     nuFric_ = frictionalStressModel_->nu
     (

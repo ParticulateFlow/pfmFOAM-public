@@ -78,9 +78,13 @@ int main(int argc, char *argv[])
 
     wordList vectorFieldNames_(symmetrizerProperties.lookup("vectorFields"));
 
+    wordList pseudoVectorFieldNames_(symmetrizerProperties.lookup("pseudoVectorFields"));
+
     PtrList<volScalarField> scalarFields_;
 
     PtrList<volVectorField> vectorFields_;
+
+    PtrList<volVectorField> pseudoVectorFields_;
 
     vector refPoint(symmetrizerProperties.lookup("refPoint"));
 
@@ -140,6 +144,24 @@ int main(int argc, char *argv[])
                 )
             );
         }
+        for (int i=0; i<pseudoVectorFieldNames_.size(); i++)
+        {
+            pseudoVectorFields_.append
+            (
+                new volVectorField
+                (
+                    IOobject
+                    (
+                        pseudoVectorFieldNames_[i],
+                        runTime.timePath(),
+                        mesh,
+                        IOobject::MUST_READ,
+                        IOobject::NO_WRITE
+                     ),
+                     mesh
+                )
+            );
+        }
 
         label cellI_transformed;
         // mirror scalar fields
@@ -188,8 +210,33 @@ int main(int argc, char *argv[])
             vectorFields_[i].write();
         }
 
+        // mirror pseudovector fields
+        for (int i=0; i<pseudoVectorFieldNames_.size(); i++)
+        {
+            volVectorField tmpField(pseudoVectorFields_[i]);
+
+            forAll(tmpField, cellI)
+            {
+                vector position = mesh.C()[cellI];
+                vector transformedPosition = 2 * ((refPoint - position) & refDirection) * refDirection / (refDirection & refDirection) + position;
+                cellI_transformed = mesh.findCell(transformedPosition);
+                if(cellI_transformed < 0)
+                {
+                    FatalError << "Couldn't find transformed cell. Aborting.\n" << abort(FatalError);
+                }
+
+                vector value = pseudoVectorFields_[i][cellI_transformed];
+                vector transformedValue = value;
+                tmpField[cellI] = 0.5 * (transformedValue + pseudoVectorFields_[i][cellI]);
+            }
+            pseudoVectorFields_[i] = tmpField;
+            pseudoVectorFields_[i].write();
+        }
+
+
         scalarFields_.clear();
         vectorFields_.clear();
+        pseudoVectorFields_.clear();
     }
 
 
