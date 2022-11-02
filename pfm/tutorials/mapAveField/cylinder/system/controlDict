@@ -84,6 +84,7 @@ functions
         restartOnOutput true;
         //if a newField is calculated
         //addNewField	true;
+        addNewField	false;
 
         fields
         (

@@ -13,5 +13,6 @@ runApplication blockMesh
 runApplication decomposePar
 
 # run twoPhaseEulerTurbFoam
-runApplication $(getApplication)
+runParallel $(getApplication)
+runApplication reconstructPar
 

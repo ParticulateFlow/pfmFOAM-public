@@ -282,9 +282,7 @@ Foam::functionObjects::mapAveField::mapAveField
 )
 :
   fieldAverage(name, runTime, dict),
-  mappingInitialised_(false),
-  addNewField_(false),
-  Foam::fvMesh
+  fvMesh
     (
             IOobject
             (
@@ -294,6 +292,8 @@ Foam::functionObjects::mapAveField::mapAveField
                     IOobject::MUST_READ
             )
     ),
+  mappingInitialised_(false),
+  addNewField_(false),
 
   obrTgt_
   (
