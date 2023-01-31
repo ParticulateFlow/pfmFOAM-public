@@ -1,0 +1,9 @@
+dataBase/dataBase.C
+referenceStates/referenceStates/referenceStates.C
+referenceStates/referenceStates/newReferenceStates.C
+referenceStates/singlePhaseReferenceStates/singlePhaseReferenceStates.C
+responseFunctions/responseFunctions/responseFunctions.C
+responseFunctions/responseFunctions/newResponseFunctions.C
+responseFunctions/singlePhaseResponseFunctions/singlePhaseResponseFunctions.C
+
+LIB = $(FOAM_USER_LIBBIN)/libdeviationresponse
