@@ -66,17 +66,32 @@ Pstream::listCombineGather(X_uu_glob, plusEqOp<scalar>());
 
 if (Pstream::master())
 {
-    OS_C << sourceElements[sourceElement];
-    for (int i = 0; i < totNumEntries; i++)
+    if (mode != integrated)
     {
-        OS_C << " " << targetCells_glob[i];
-    }
-    OS_C << endl;
+        OS_C << sourceElements[sourceElement];
+        for (int i = 0; i < totNumEntries; i++)
+        {
+            OS_C << " " << targetCells_glob[i];
+        }
+        OS_C << endl;
 
-    OS_X << sourceElements[sourceElement];
-    for (int i = 0; i < numCmpt*numCmpt*totNumEntries; i++)
-    {
-        OS_X << " " << X_uu_glob[i];
+        OS_X << sourceElements[sourceElement];
+        for (int i = 0; i < numCmpt*numCmpt*totNumEntries; i++)
+        {
+            OS_X << " " << X_uu_glob[i];
+        }
+        OS_X << endl;
     }
-    OS_X << endl;
+    else
+    {
+        for (int i = 0; i < totNumEntries; i++)
+        {
+            OS_X << i;
+            for (int j = 0; j < numCmpt*numCmpt; j++)
+            {
+                OS_X << " " << X_uu_glob[i*numCmpt*numCmpt + j];
+            }
+            OS_X << endl;
+        }
+    }
 }

@@ -1,7 +1,7 @@
 fvVectorMatrix XuuEqn
 (
     fvm::ddt(X_uu)
-    + fvm::div(phi_db, X_uu)
+    + fvm::div(phi_ts, X_uu)
  //   + turbulence->divDevReff(X_uu)
     - fvm::laplacian(turbulence->nu(), X_uu)
  ==
@@ -11,7 +11,7 @@ fvVectorMatrix XuuEqn
 XuuEqn.relax();
 
 tmp<volTensorField> tDiagXuu = tensor(I)*XuuEqn.A();
-tDiagXuu.ref() += fvc::grad(U_db);
+tDiagXuu.ref() += fvc::grad(U_ts);
 tmp<volTensorField> trDiagXuu = inv(tDiagXuu());
 trDiagXuu.ref().rename("rAU");
 

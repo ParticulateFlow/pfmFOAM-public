@@ -2,7 +2,7 @@ label locCellsOrFaces = 0;
 const polyBoundaryMesh& boundaryMesh = mesh.boundaryMesh();
 labelList faceIDperPatch(0,0);
 labelList patchOwningFace(0,0);
-if (internalSource)
+if (mode == internal)
 {
     locCellsOrFaces = mesh.nCells();
 }

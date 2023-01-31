@@ -55,21 +55,26 @@ int main(int argc, char *argv[])
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     fileName nameC, nameX;
-    if (internalSource)
+    if (mode == internal)
     {
         nameC = "targetCells_internal";
         nameX = "X_uu_internal";
     }
-    else
+    else if (mode == boundary)
     {
         nameC = "targetCells_boundary";
         nameX = "X_uu_boundary";
+    }
+    else
+    {
+        nameC = "";
+        nameX = "X_uu_integrated";
     }
     OFstream OS_C(nameC);
     OFstream OS_X(nameX);
 
     maxSourceElement = (sourceElements.size() > maxSourceElement) ? maxSourceElement : sourceElements.size();
-    dimensionedVector zeroVec("zero",dimensionSet(0,-3,0,0,0),vector::zero);
+    dimensionedVector defaultVec("zero",dimensionSet(0,-3,0,0,0),vector::zero);
     
     const volVectorField::Boundary& Xbf = X_uu.boundaryField();
     for (label sourceElement = minSourceElement; sourceElement < maxSourceElement; sourceElement++)
@@ -80,71 +85,87 @@ int main(int argc, char *argv[])
             // reset simulation and database time
             runTime.setTime(runTime.startTime(),runTime.startTimeIndex());
             it = itStart;
-
-            X_uu == zeroVec;
-
-            if (globalNumbering.isLocal(sourceElements[sourceElement]))
+            
+            if (mode == integrated)
             {
-                label sourceElementLocalID = globalNumbering.toLocal(sourceElements[sourceElement]);
-                if (internalSource)
+                defaultVec.value() = vector::zero;
+                defaultVec.value().component(cmpt) = 1.0;
+            }
+
+            X_uu == defaultVec;
+
+            if (mode != integrated)
+            {
+                if (globalNumbering.isLocal(sourceElements[sourceElement]))
                 {
-                    Pout << "\nStarting time loop for internal source element " << sourceElements[sourceElement] << " with local ID " << sourceElementLocalID << endl;
-                    X_uu[sourceElementLocalID].component(cmpt) = 1.0 / mesh.V()[sourceElementLocalID];
-                }
-                else
-                {
-                    label faceI = faceIDperPatch[sourceElementLocalID];
-                    label patchI = patchOwningFace[sourceElementLocalID];
-                    Pout << "\nStarting time loop for boundary source element " << sourceElements[sourceElement] << " with local ID " << faceI << " on patch " << boundaryMesh.names()[patchI] << endl;
-                    // check BC on patch and decide what value needs to be set
-                    if (isA<fixedValueFvPatchVectorField>(Xbf[patchI]))
+                    label sourceElementLocalID = globalNumbering.toLocal(sourceElements[sourceElement]);
+                    if (mode == internal)
                     {
-                        X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = 1.0 / mesh.boundary()[patchI].magSf()[faceI];
-                    }
-                    else if (isA<zeroGradientFvPatchVectorField>(Xbf[patchI]))
-                    {
-                        continue;
+                        Pout << "\nStarting time loop for internal source element " << sourceElements[sourceElement] << " with local ID " << sourceElementLocalID << endl;
+                        Pout << "\n 1/volume = " << 1.0 / mesh.V()[sourceElementLocalID] << endl;
+                        X_uu[sourceElementLocalID].component(cmpt) = 1.0 / mesh.V()[sourceElementLocalID];
                     }
                     else
                     {
-                        FatalError << "velocity boundary condition has to be fixed value or zero gradient, but found different condition on patch " << boundaryMesh.names()[patchI] << abort(FatalError);
+                        label faceI = faceIDperPatch[sourceElementLocalID];
+                        label patchI = patchOwningFace[sourceElementLocalID];
+                        Pout << "\nStarting time loop for boundary source element " << sourceElements[sourceElement] << " with local ID " << faceI << " on patch " << boundaryMesh.names()[patchI] << endl;
+                        // check BC on patch and decide what value needs to be set
+                        if (isA<fixedValueFvPatchVectorField>(Xbf[patchI]))
+                        {
+                            X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = 1.0 / mesh.boundary()[patchI].magSf()[faceI];
+                        }
+                        else if (isA<zeroGradientFvPatchVectorField>(Xbf[patchI]))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            FatalError << "velocity boundary condition has to be fixed value or zero gradient, but found different condition on patch " << boundaryMesh.names()[patchI] << abort(FatalError);
+                        }
                     }
                 }
-
             }
 
             // Barrier ?
 
             scalar CoNum = 0.0;
-            scalar deltaT = 0.0;
+            dimensionedScalar deltaT("zero",dimensionSet(0,0,1,0,0,0,0),0.0);
 
             while (runTime.loop())
             {
                 Info<< "Time = " << runTime.timeName() << nl << endl;
-
-                deltaT = X_uu.mesh().time().deltaTValue();
-                dbTime.setTime(*it, it->value());
-                Info << "dbt = " << it->value() << endl;
-                volVectorField U_db_curr
+// testing
+                /*
+label sourceElementLocalID = globalNumbering.toLocal(sourceElements[sourceElement]);
+label faceI = faceIDperPatch[sourceElementLocalID];
+label patchI = patchOwningFace[sourceElementLocalID];
+X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = runTime.timeOutputValue() / mesh.boundary()[patchI].magSf()[faceI];
+*/
+// testing over
+                deltaT.value() = X_uu.mesh().time().deltaTValue();
+                tsTime.setTime(*it, it->value());
+                Info << "tst = " << it->value() << endl;
+                volVectorField U_ts_curr
                 (
                     IOobject
                     (
-                        UdbName,
-                        dbTime.timePath(),
+                        UtsName,
+                        tsTime.timePath(),
                         mesh,
                         IOobject::MUST_READ,
                         IOobject::NO_WRITE
                     ),
                     mesh
                 );
-                U_db == U_db_curr;
-                phi_db = fvc::flux(U_db);
+                U_ts == U_ts_curr;
+                phi_ts = fvc::flux(U_ts);
 
                 scalarField sumPhi
                 (
                     fvc::surfaceSum(mag(phiX))().primitiveField()
                 );
-                CoNum = 0.5*gMax(sumPhi/mesh.V().field())*deltaT;
+                CoNum = 0.5*gMax(sumPhi/mesh.V().field())*deltaT.value();
                 Info<< "Courant Number max: " << CoNum << endl;
 
                 // Pressure-velocity PISO corrector
@@ -155,11 +176,31 @@ int main(int argc, char *argv[])
                     while (piso.correct())
                     {
                         #include "pEqn.H"
+                        //#include "pTEqn.H"
                     }
                 }
 
                 laminarTransport.correct();
                 turbulence->correct();
+                
+                // testing
+                if (c==0)
+                {
+                    X_uu1 = X_uu;
+                    X_uu1.write();
+                    
+                    X_pu1 = X_pu;
+                    X_pu1.write();
+                }
+                else
+                {
+                    X_uu2 = X_uu;    
+                    X_uu2.write();
+
+                    X_pu2 = X_pu;
+                    X_pu2.write();
+                }
+                // testing done
 
                 runTime.write();
 
@@ -171,12 +212,21 @@ int main(int argc, char *argv[])
             }
             X_uu_allCmpt[c] = X_uu;
         }
-        // TODO: problem with evaluation of divX_uu
         forAll(components,c)
         {
             label cmpt = components[c];
-            divX_uu.component(cmpt) = fvc::div(X_uu_allCmpt[c]);
+            volScalarField divXuuC(fvc::div(X_uu_allCmpt[c]));
+            forAll(X_uu,cellI)
+            {
+                divX_uu[cellI].component(cmpt) = divXuuC[cellI];
+            }
         }
+        scalar norm1 = 0.0;
+        forAll(X_uu, cellI)
+        {
+            norm1 += magSqr(divX_uu[cellI]);
+        }
+        Info << "abs(div(X)) = " << norm1 << endl;
         divX_uu.write();
         #include "reconstructAndWrite.H"
     }

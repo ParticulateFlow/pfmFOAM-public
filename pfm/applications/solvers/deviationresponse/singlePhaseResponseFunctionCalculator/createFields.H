@@ -26,6 +26,65 @@ volVectorField X_uu
     mesh
 );
 
+// testing
+volVectorField X_uu1
+(
+    IOobject
+    (
+        "X_uu1",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedVector("zero", dimensionSet(0,-3,0,0,0,0,0), vector::zero)
+);
+
+volVectorField X_uu2
+(
+    IOobject
+    (
+        "X_uu2",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedVector("zero", dimensionSet(0,-3,0,0,0,0,0), vector::zero)
+);
+
+volScalarField X_pu1
+(
+    IOobject
+    (
+        "X_pu1",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero", dimensionSet(0,-2,-1,0,0,0,0), 0.0)
+);
+
+volScalarField X_pu2
+(
+    IOobject
+    (
+        "X_pu2",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero", dimensionSet(0,-2,-1,0,0,0,0), 0.0)
+);
+// testing done
+
+
 volVectorField divX_uu
 (
     IOobject
@@ -67,11 +126,11 @@ volScalarField RHS
     dimensionedScalar("zero", dimensionSet(0,-4,-1,0,0,0,0), 0.0)
 );
 
-IOdictionary dbProperties
+IOdictionary tsProperties
 (
     IOobject
     (
-        "dbProperties",
+        "tsProperties",
         mesh.time().constant(),
         mesh,
         IOobject::MUST_READ,
@@ -79,11 +138,11 @@ IOdictionary dbProperties
     )
 );
 
-label nXuuCorr(dbProperties.lookupOrDefault<label>("nXuuCorr",1));
-label minSourceElement(dbProperties.lookupOrDefault<label>("minSourceElement",0));
-label maxSourceElement(dbProperties.lookupOrDefault<label>("maxSourceElement",1e9));
-wordList patches(dbProperties.lookupOrDefault<wordList>("patches",wordList(0)));
-labelList components(dbProperties.lookup("components"));
+label nXuuCorr(tsProperties.lookupOrDefault<label>("nXuuCorr",1));
+label minSourceElement(tsProperties.lookupOrDefault<label>("minSourceElement",0));
+label maxSourceElement(tsProperties.lookupOrDefault<label>("maxSourceElement",1e9));
+wordList patches(tsProperties.lookupOrDefault<wordList>("patches",wordList(0)));
+labelList components(tsProperties.lookup("components"));
 label numCmpt = components.size();
 PtrList<volVectorField> X_uu_allCmpt(numCmpt);
 for (int i = 0; i < numCmpt; i++)
@@ -94,32 +153,48 @@ for (int i = 0; i < numCmpt; i++)
         new volVectorField(X_uu)
     );   
 }
-//List<Field<vector>> X_uu_allCmpt(numCmpt);
-bool internalSource(dbProperties.lookupOrDefault<bool>("internalSource",true));
-scalar minXuu(dbProperties.lookupOrDefault<scalar>("minXuu",1e-5));
+
+scalar minXuu(tsProperties.lookupOrDefault<scalar>("minXuu",1e-5));
 scalar minXuu2 = minXuu*minXuu;
 
-word dataBaseName(dbProperties.lookupOrDefault<word>("dataBase", "dataBase"));
-word UdbName(dbProperties.lookupOrDefault<word>("U_db", "U"));
-scalar tstart(dbProperties.lookupOrDefault<scalar>("tstart", 0.0));
-scalar tolerance(dbProperties.lookupOrDefault<scalar>("tolerance", 1e-9));
-Foam::Time dbTime(fileName(dataBaseName), "", "../system", "../constant", false);
-instantList timeDirs(dbTime.times());
+
+enum Modes {internal, boundary, integrated};
+word selectedMode(tsProperties.lookup("mode"));
+Modes mode;
+if (selectedMode == "internal") mode = internal;
+else if (selectedMode == "boundary") mode = boundary;
+else if (selectedMode == "integrated")
+{
+    mode = integrated;
+    // instead of looping over all origin cells, do calculation just once
+    minSourceElement = 0;
+    maxSourceElement = 1;
+    // keep all cells regardless of norm(Xuu)
+    minXuu2 = -1.0;
+}
+else FatalError << "no known mode specified\n" << abort(FatalError);
+
+word timeSeriesName(tsProperties.lookupOrDefault<word>("timeSeries", "timeSeries"));
+word UtsName(tsProperties.lookupOrDefault<word>("U_ts", "U"));
+scalar tstart(tsProperties.lookupOrDefault<scalar>("tstart", 0.0));
+scalar tolerance(tsProperties.lookupOrDefault<scalar>("tolerance", 1e-9));
+Foam::Time tsTime(fileName(timeSeriesName), "", "../system", "../constant", false);
+instantList timeDirs(tsTime.times());
 if (timeDirs.size() == 0)
 {
-    FatalError << "database " << dataBaseName << " does not exist or is empty\n" << abort(FatalError);
+    FatalError << "time series " << timeSeriesName << " does not exist or is empty\n" << abort(FatalError);
 }
 
-scalar deltaTdb = timeDirs[1].value() - timeDirs[0].value();
+scalar deltaTts = timeDirs[1].value() - timeDirs[0].value();
 for (label i = 1; i < timeDirs.size() - 1; i++)
 {
-    if (Foam::mag(timeDirs[i+1].value() - timeDirs[i].value() - deltaTdb) > tolerance)
+    if (Foam::mag(timeDirs[i+1].value() - timeDirs[i].value() - deltaTts) > tolerance)
     {
         FatalError << "varying time step detected in database\n" << abort(FatalError);
     }
 }
 
-if (Foam::mag(deltaTdb - runTime.deltaTValue()) > tolerance)
+if (Foam::mag(deltaTts - runTime.deltaTValue()) > tolerance)
 {
     FatalError << "different time steps in database and solver\n" << abort(FatalError);
 }
@@ -135,7 +210,7 @@ while(true)
     it++;
 }
 instantList::iterator itStart = it;
-dbTime.setTime(*itStart, itStart->value());
+tsTime.setTime(*itStart, itStart->value());
 
 scalar tsim = runTime.endTime().value() - runTime.startTime().value();
 if (timeDirs[timeDirs.size()-1].value() - it->value() < tsim - tolerance)
@@ -143,14 +218,14 @@ if (timeDirs[timeDirs.size()-1].value() - it->value() < tsim - tolerance)
     FatalError << "database too short for intended simulation time\n" << abort(FatalError);
 }
 
-Info << "Reading field Udb\n" << endl;
+Info << "Reading field Uts\n" << endl;
 
-volVectorField U_db
+volVectorField U_ts
 (
     IOobject
     (
-        UdbName,
-        dbTime.timePath(),
+        UtsName,
+        tsTime.timePath(),
         mesh,
         IOobject::MUST_READ_IF_MODIFIED,
         IOobject::AUTO_WRITE
@@ -158,17 +233,17 @@ volVectorField U_db
     mesh
 );
 
-surfaceScalarField phi_db
+surfaceScalarField phi_ts
 (
     IOobject
     (
-        "phi_db",
+        "phi_ts",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
-    fvc::flux(U_db)
+    fvc::flux(U_ts)
 );
 
 
@@ -178,11 +253,11 @@ setRefCell(X_pu, piso.dict(), pRefCell, pRefValue);
 mesh.setFluxRequired(X_pu.name());
 
 
-singlePhaseTransportModel laminarTransport(U_db, phi_db);
+singlePhaseTransportModel laminarTransport(U_ts, phi_ts);
 
 autoPtr<incompressible::turbulenceModel> turbulence
 (
-    incompressible::turbulenceModel::New(U_db, phi_db, laminarTransport)
+    incompressible::turbulenceModel::New(U_ts, phi_ts, laminarTransport)
 );
 
 #include "createFvOptions.H"
