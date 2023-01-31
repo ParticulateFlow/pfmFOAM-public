@@ -1,0 +1,3 @@
+integrateResponseFunctions.C
+
+EXE = $(FOAM_APPBIN)/integrateResponseFunctions
