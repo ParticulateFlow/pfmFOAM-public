@@ -55,6 +55,11 @@ protected:
 
     dictionary propsDict_;
 
+    List<List<tensorList>> Xuu_boundary_;
+
+    List<List<tensorList>> Xuu_internal_;
+
+    List<tensorList> Xuu_integrated_;
 
 public:
 
@@ -75,6 +80,9 @@ public:
 
         ~singlePhaseResponseFunctions();
 
+    // Member Functions
+
+    void readResponseFunctions(wordList dataBases);
 
 private:
 

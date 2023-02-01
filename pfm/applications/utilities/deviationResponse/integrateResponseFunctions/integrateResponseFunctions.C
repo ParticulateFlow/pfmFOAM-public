@@ -47,7 +47,6 @@ int main(int argc, char *argv[])
     dataBase db(mesh);
     db.init();
 
-    
     Info<< "End\n" << endl;
     return 0;
 }

@@ -40,6 +40,7 @@ Description
 #include "dataBase.H"
 #include "fvCFD.H"
 #include "HashTable.H"
+#include "tensorList.H"
 
 
 namespace Foam
@@ -59,6 +60,8 @@ protected:
     const dictionary& dataBaseProperties_;
 
     bool verbose_;
+    
+    bool readIntegratedResponseFunctions_;
 
     List<List<labelList>> senderIDs_;
     
@@ -112,6 +115,10 @@ public:
     // Member Functions
 
     void readSenderIDs(wordList dataBases);
+    
+    virtual void readResponseFunctions(wordList dataBases) {}
+
+    void readIntegratedResponseFunctions() {readIntegratedResponseFunctions_ = true;}
 };
 
 

@@ -55,6 +55,7 @@ responseFunctions::responseFunctions
     dataBase_(base),
     dataBaseProperties_(dict),
     verbose_(dict.lookupOrDefault<Switch>("verbose", false)),
+    readIntegratedResponseFunctions_(false),
     senderIDs_(100000)
 {
 }

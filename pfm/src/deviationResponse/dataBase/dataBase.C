@@ -97,6 +97,7 @@ const fvMesh& dataBase::mesh() const
 void dataBase::init()
 {
     responseFunctions_->readSenderIDs(dataBaseNames_);
+    responseFunctions_->readResponseFunctions(dataBaseNames_);
 }
 
 referenceStates& dataBase::referenceS()
