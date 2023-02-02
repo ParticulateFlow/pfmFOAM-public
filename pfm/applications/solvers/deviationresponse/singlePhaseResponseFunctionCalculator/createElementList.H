@@ -8,7 +8,7 @@ if (mode == internal)
 }
 else
 {
-    for (int i=0; i < patches.size(); i++)
+    for (int i = 0; i < patches.size(); i++)
     {
         label patchID = boundaryMesh.findPatchID(patches[i]);
         locCellsOrFaces += boundaryMesh[patchID].size();
@@ -17,7 +17,7 @@ else
     patchOwningFace.resize(locCellsOrFaces);
     
     label fc = 0;
-    for (int i=0; i < patches.size(); i++)
+    for (int i = 0; i < patches.size(); i++)
     {
         label patchID = boundaryMesh.findPatchID(patches[i]);
 

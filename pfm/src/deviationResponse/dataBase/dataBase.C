@@ -76,8 +76,13 @@ dataBase::dataBase
             dataBaseProperties_,
             *this
         )
-    )
+    ),
+    globalCellNumbering_(),
+    globalBoundaryFaceNumbering_(),
+    faceIDperPatch_(0),
+    patchOwningFace_(0)
 {
+    globalCellNumbering_.set(new globalIndex(mesh.nCells()));
 }
 
 
@@ -96,6 +101,33 @@ const fvMesh& dataBase::mesh() const
 
 void dataBase::init()
 {
+    wordList patches;
+    IFstream IS(dbName+"/settings");
+    IS >> patches;
+    
+    for (int i = 0; i < patches.size(); i++)
+    {
+        label patchID = boundaryMesh.findPatchID(patches[i]);
+        locFaces += boundaryMesh[patchID].size();
+    }
+    faceIDperPatch_.resize(locFaces);
+    patchOwningFace_.resize(locFaces);
+    
+    label fc = 0;
+    for (int i = 0; i < patches.size(); i++)
+    {
+        label patchID = boundaryMesh.findPatchID(patches[i]);
+
+        forAll (boundaryMesh[patchID],faceI)
+        {
+            faceIDperPatch_[fc] = faceI;
+            patchOwningFace_[fc] = patchID;
+            fc++;
+        }
+    }
+
+    globalBoundaryFaceNumbering_.set(new globalIndex(locFaces));
+    
     responseFunctions_->readSenderIDs(dataBaseNames_);
     responseFunctions_->readResponseFunctions(dataBaseNames_);
 }

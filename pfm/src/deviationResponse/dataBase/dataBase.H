@@ -73,6 +73,13 @@ protected:
 
     autoPtr<responseFunctions> responseFunctions_;
 
+    autoPtr<globalIndex> globalCellNumbering_;
+
+    autoPtr<globalIndex> globalBoundaryFaceNumbering_;
+
+    labelList faceIDperPatch_;
+
+    labelList patchOwningFace_;
 
 
 public:
