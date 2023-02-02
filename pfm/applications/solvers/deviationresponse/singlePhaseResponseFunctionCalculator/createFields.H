@@ -145,7 +145,7 @@ wordList patches(tsProperties.lookupOrDefault<wordList>("patches",wordList(0)));
 labelList components(tsProperties.lookup("components"));
 label numCmpt = components.size();
 
-OFstream OS_settings("settings");
+OFstream OS_settings("patches");
 OS_settings << patches << endl;
 
 PtrList<volVectorField> X_uu_allCmpt(numCmpt);
@@ -155,7 +155,7 @@ for (int i = 0; i < numCmpt; i++)
     (
         i,
         new volVectorField(X_uu)
-    );   
+    );
 }
 
 scalar minXuu(tsProperties.lookupOrDefault<scalar>("minXuu",1e-5));

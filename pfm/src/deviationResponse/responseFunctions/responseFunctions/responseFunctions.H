@@ -8,7 +8,7 @@
     Contributing authors:
     Thomas Lichtenegger
     Copyright (C) 2015- Johannes Kepler University, Linz
--------------------------------------------------------------------------------    
+-------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
@@ -24,8 +24,8 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-    
-    
+
+
 Class
     Foam::deviationResponse::responseFunctions::responseFunctions
 
@@ -60,13 +60,12 @@ protected:
     const dictionary& dataBaseProperties_;
 
     bool verbose_;
-    
+
     bool readIntegratedResponseFunctions_;
 
     List<List<labelList>> senderBoundaryFaceIDs_;
 
     List<List<labelList>> senderCellIDs_;
-    
 
 public:
 
@@ -117,7 +116,7 @@ public:
     // Member Functions
 
     void readSenderIDs(wordList dataBases);
-    
+
     virtual void readResponseFunctions(wordList dataBases) = 0;
 
     void readIntegratedResponseFunctions() {readIntegratedResponseFunctions_ = true;}
@@ -130,7 +129,7 @@ public:
 
     virtual tensorList &Xuu_internal(label refState, label receiverID) = 0;
 
-    virtual tensor Xuu_integrated_(label refState, label cellI) = 0;
+    virtual tensor Xuu_integrated(label refState, label cellI) = 0;
 };
 
 

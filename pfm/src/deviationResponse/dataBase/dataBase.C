@@ -102,23 +102,24 @@ const fvMesh& dataBase::mesh() const
 void dataBase::init()
 {
     wordList patches;
-    IFstream IS(dbName+"/settings");
+    IFstream IS("patches");
     IS >> patches;
-    
+
+    label locFaces = 0;
     for (int i = 0; i < patches.size(); i++)
     {
-        label patchID = boundaryMesh.findPatchID(patches[i]);
-        locFaces += boundaryMesh[patchID].size();
+        label patchID = mesh_.boundaryMesh().findPatchID(patches[i]);
+        locFaces += mesh_.boundaryMesh()[patchID].size();
     }
     faceIDperPatch_.resize(locFaces);
     patchOwningFace_.resize(locFaces);
-    
+
     label fc = 0;
     for (int i = 0; i < patches.size(); i++)
     {
-        label patchID = boundaryMesh.findPatchID(patches[i]);
+        label patchID = mesh_.boundaryMesh().findPatchID(patches[i]);
 
-        forAll (boundaryMesh[patchID],faceI)
+        forAll (mesh_.boundaryMesh()[patchID],faceI)
         {
             faceIDperPatch_[fc] = faceI;
             patchOwningFace_[fc] = patchID;
@@ -127,7 +128,7 @@ void dataBase::init()
     }
 
     globalBoundaryFaceNumbering_.set(new globalIndex(locFaces));
-    
+
     responseFunctions_->readSenderIDs(dataBaseNames_);
     responseFunctions_->readResponseFunctions(dataBaseNames_);
 }
@@ -145,7 +146,7 @@ responseFunctions& dataBase::responseF()
 label dataBase::localFromGlobalCellID(label cellI)
 {
     label id = -1;
-    if globalCellNumbering_().isLocal(cellI)
+    if (globalCellNumbering_().isLocal(cellI))
     {
         id = globalCellNumbering_().toLocal(cellI);
     }
@@ -155,7 +156,7 @@ label dataBase::localFromGlobalCellID(label cellI)
 label dataBase::localFromGlobalBoundaryFaceID(label bFaceI)
 {
     label id = -1;
-    if globalBoundaryFaceNumbering_().isLocal(bFaceI)
+    if (globalBoundaryFaceNumbering_().isLocal(bFaceI))
     {
         id = globalBoundaryFaceNumbering_().toLocal(bFaceI);
     }

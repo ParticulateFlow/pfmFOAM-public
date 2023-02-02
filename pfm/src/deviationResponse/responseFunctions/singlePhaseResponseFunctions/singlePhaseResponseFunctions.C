@@ -111,7 +111,7 @@ void singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
             IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal");
             IS_internal >> X_internal;
             Xuu_internal_[refStates] = X_internal;
-            
+
             List<tensorList> X_boundary;
             IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary");
             IS_boundary >> X_boundary;
@@ -151,7 +151,7 @@ tensorList& singlePhaseResponseFunctions::Xuu_internal(label refState, label rec
     return Xuu_internal_[refState][receiverID];
 }
 
-tensor singlePhaseResponseFunctions::Xuu_integrated_(label refState, label cellI)
+tensor singlePhaseResponseFunctions::Xuu_integrated(label refState, label cellI)
 {
     return Xuu_integrated_[refState][cellI];
 }

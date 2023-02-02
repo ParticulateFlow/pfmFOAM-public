@@ -8,7 +8,7 @@
     Contributing authors:
     Thomas Lichtenegger
     Copyright (C) 2015- Johannes Kepler University, Linz
--------------------------------------------------------------------------------    
+-------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
@@ -24,8 +24,8 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-    
-    
+
+
 Class
     Foam::deviationResponse::referenceStates::singlePhaseResponseFunctions
 
@@ -83,16 +83,16 @@ public:
     // Member Functions
 
     void readResponseFunctions(wordList dataBases);
-    
+
     tensorList &Xuu_boundary(label refState, label receiverID);
 
     tensorList &Xuu_internal(label refState, label receiverID);
 
-    tensor Xuu_integrated_(label refState, label cellI);
+    tensor Xuu_integrated(label refState, label cellI);
 
 private:
 
-    
+
 };
 
 
