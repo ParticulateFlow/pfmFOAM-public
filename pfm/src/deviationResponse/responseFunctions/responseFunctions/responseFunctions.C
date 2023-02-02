@@ -68,7 +68,7 @@ responseFunctions::~responseFunctions()
 
 // * * * * * * * * * * * * * public Member Functions  * * * * * * * * * * * * //
 
-void responseFunctions::readSenderIDs(wordList dataBases)
+label responseFunctions::readSenderIDs(wordList dataBases)
 {
     int refStates = 0;
     forAll(dataBases,i)
@@ -119,6 +119,8 @@ void responseFunctions::readSenderIDs(wordList dataBases)
     }
     senderBoundaryFaceIDs_.resize(refStates);
     senderCellIDs_.resize(refStates);
+
+    return refStates;
 }
 
 

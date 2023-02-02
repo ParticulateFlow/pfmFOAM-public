@@ -71,7 +71,7 @@ singlePhaseResponseFunctions::~singlePhaseResponseFunctions()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
+label singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
 {
     int refStates = 0;
     forAll(dataBases,i)
@@ -139,6 +139,8 @@ void singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
     {
         Xuu_integrated_.resize(0);
     }
+
+    return refStates;
 }
 
 tensorList& singlePhaseResponseFunctions::Xuu_boundary(label refState, label receiverID)

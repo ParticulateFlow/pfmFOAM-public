@@ -69,6 +69,8 @@ protected:
 
     label numDataBases_;
 
+    label numRefStates_;
+
     autoPtr<referenceStates> referenceStates_;
 
     autoPtr<responseFunctions> responseFunctions_;
@@ -109,6 +111,12 @@ public:
     label localFromGlobalCellID(label cellI);
 
     label localFromGlobalBoundaryFaceID(label bFaceI);
+
+    label numRefStates();
+
+    labelList& faceIDperPatch();
+
+    labelList& patchOwningFace();
 
    // Dummy function for regIOobject
     bool writeData(Ostream&) const

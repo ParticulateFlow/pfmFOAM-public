@@ -115,9 +115,9 @@ public:
 
     // Member Functions
 
-    void readSenderIDs(wordList dataBases);
+    label readSenderIDs(wordList dataBases);
 
-    virtual void readResponseFunctions(wordList dataBases) = 0;
+    virtual label readResponseFunctions(wordList dataBases) = 0;
 
     void readIntegratedResponseFunctions() {readIntegratedResponseFunctions_ = true;}
 

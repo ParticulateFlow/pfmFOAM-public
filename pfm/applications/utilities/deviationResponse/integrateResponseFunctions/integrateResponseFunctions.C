@@ -39,13 +39,49 @@ int main(int argc, char *argv[])
     #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
-//    #include "createFields.H"
-
+    #include "createFields.H"
 
  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     dataBase db(mesh);
     db.init();
+    
+    label numRefStates = db.numRefStates();
+    for (int refState = 0; refState < numRefStates; refState++)
+    {
+        runTime.setTime(refState,refState);
+        
+        forAll(X_uu_integrated, cellI)
+        {
+            X_uu_integrated_target[cellI] = db.responseF().Xuu_integrated(refState,cellI);
+
+            labelList &senderCells = db.responseF().senderCellIDs(refState,cellI);
+            tensorList &X_uu = db.responseF().Xuu_internal(refState,cellI);
+
+            X_uu_integrated[cellI] = tensor::zero;
+            forAll(X_uu, sender)
+            {
+                X_uu_integrated[cellI] += X_uu[sender] * mesh.V()[senderCells[sender]];
+            }
+
+            labelList &senderBoundaryFaces = db.responseF().senderBoundaryFaceIDs(refState,cellI);
+            tensorList &X_uu_boundary = db.responseF().Xuu_boundary(refState,cellI);
+            labelList &faceIDperPatch = db.faceIDperPatch();
+            labelList &patchOwningFace = db.patchOwningFace();
+
+            label patchID;
+            label faceID;
+            forAll(X_uu_boundary, sender)
+            {
+                patchID = patchOwningFace[sender];
+                faceID = faceIDperPatch[sender];
+                X_uu_integrated[cellI] += X_uu[sender] * mesh.magSf().boundaryField()[patchID][faceID];
+            }
+        }
+        
+        X_uu_integrated.write();
+        X_uu_integrated_target.write();
+    }
 
     Info<< "End\n" << endl;
     return 0;

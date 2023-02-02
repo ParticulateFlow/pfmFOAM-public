@@ -61,6 +61,7 @@ dataBase::dataBase
     ),
     dataBaseNames_(dataBaseProperties_.lookupOrDefault<wordList>("dataBases", wordList(1,"dataBase"))),
     numDataBases_(dataBaseNames_.size()),
+    numRefStates_(0),
     referenceStates_
     (
         referenceStates::New
@@ -129,7 +130,7 @@ void dataBase::init()
 
     globalBoundaryFaceNumbering_.set(new globalIndex(locFaces));
 
-    responseFunctions_->readSenderIDs(dataBaseNames_);
+    numRefStates_ = responseFunctions_->readSenderIDs(dataBaseNames_);
     responseFunctions_->readResponseFunctions(dataBaseNames_);
 }
 
@@ -163,6 +164,19 @@ label dataBase::localFromGlobalBoundaryFaceID(label bFaceI)
     return id;
 }
 
+label dataBase::numRefStates()
+{
+    return numRefStates_;
+}
 
+labelList& dataBase::faceIDperPatch()
+{
+    return faceIDperPatch_;
+}
+
+labelList& dataBase::patchOwningFace()
+{
+    return patchOwningFace_;
+}
 
 }
