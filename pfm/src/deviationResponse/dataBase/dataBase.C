@@ -142,4 +142,26 @@ responseFunctions& dataBase::responseF()
     return responseFunctions_();
 }
 
+label dataBase::localFromGlobalCellID(label cellI)
+{
+    label id = -1;
+    if globalCellNumbering_().isLocal(cellI)
+    {
+        id = globalCellNumbering_().toLocal(cellI);
+    }
+    return id;
+}
+
+label dataBase::localFromGlobalBoundaryFaceID(label bFaceI)
+{
+    label id = -1;
+    if globalBoundaryFaceNumbering_().isLocal(bFaceI)
+    {
+        id = globalBoundaryFaceNumbering_().toLocal(bFaceI);
+    }
+    return id;
+}
+
+
+
 }

@@ -141,8 +141,20 @@ void singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
     }
 }
 
+tensorList& singlePhaseResponseFunctions::Xuu_boundary(label refState, label receiverID)
+{
+    return Xuu_boundary_[refState][receiverID];
+}
 
+tensorList& singlePhaseResponseFunctions::Xuu_internal(label refState, label receiverID)
+{
+    return Xuu_internal_[refState][receiverID];
+}
 
+tensor singlePhaseResponseFunctions::Xuu_integrated_(label refState, label cellI)
+{
+    return Xuu_integrated_[refState][cellI];
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

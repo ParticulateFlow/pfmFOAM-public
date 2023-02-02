@@ -106,6 +106,10 @@ public:
 
     responseFunctions& responseF();
 
+    label localFromGlobalCellID(label cellI);
+
+    label localFromGlobalBoundaryFaceID(label bFaceI);
+
    // Dummy function for regIOobject
     bool writeData(Ostream&) const
     {

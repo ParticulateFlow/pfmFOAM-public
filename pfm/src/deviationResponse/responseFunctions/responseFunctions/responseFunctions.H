@@ -63,7 +63,9 @@ protected:
     
     bool readIntegratedResponseFunctions_;
 
-    List<List<labelList>> senderIDs_;
+    List<List<labelList>> senderBoundaryFaceIDs_;
+
+    List<List<labelList>> senderCellIDs_;
     
 
 public:
@@ -116,9 +118,19 @@ public:
 
     void readSenderIDs(wordList dataBases);
     
-    virtual void readResponseFunctions(wordList dataBases) {}
+    virtual void readResponseFunctions(wordList dataBases) = 0;
 
     void readIntegratedResponseFunctions() {readIntegratedResponseFunctions_ = true;}
+
+    labelList &senderCellIDs(label refState, label receiverID); // returns *global* cell IDs sending to cell with *local* receiver ID
+
+    labelList &senderBoundaryFaceIDs(label refState, label receiverID); // returns *global* boundary face IDs sending to cell with *local* receiver ID
+
+    virtual tensorList &Xuu_boundary(label refState, label receiverID) = 0;
+
+    virtual tensorList &Xuu_internal(label refState, label receiverID) = 0;
+
+    virtual tensor Xuu_integrated_(label refState, label cellI) = 0;
 };
 
 

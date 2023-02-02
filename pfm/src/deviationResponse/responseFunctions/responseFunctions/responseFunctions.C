@@ -56,7 +56,8 @@ responseFunctions::responseFunctions
     dataBaseProperties_(dict),
     verbose_(dict.lookupOrDefault<Switch>("verbose", false)),
     readIntegratedResponseFunctions_(false),
-    senderIDs_(100000)
+    senderBoundaryFaceIDs_(100000),
+    senderCellIDs_(100000)
 {
 }
 
@@ -103,15 +104,34 @@ void responseFunctions::readSenderIDs(wordList dataBases)
             // 2(9 1)
             // 3(2 7 4)
             // )
-            List<labelList> senders;
-            IFstream IS(dbName+"/"+dbTime.timeName()+"/sendersCells_internal");
-            IS >> senders;
-            senderIDs_[refStates++] = senders;
+            List<labelList> senderBoundaryFaces;
+            IFstream ISBoundaryFaces(dbName+"/"+dbTime.timeName()+"/senderFaces");
+            ISBoundaryFaces >> senderBoundaryFaces;
+            senderBoundaryFaceIDs_[refStates] = senderBoundaryFaces;
+
+            List<labelList> senderCells;
+            IFstream ISCells(dbName+"/"+dbTime.timeName()+"/senderCells");
+            ISCells >> senderCells;
+            senderCellIDs_[refStates] = senderCells;
+            refStates++;
         }
         Info << "Reading sender IDs of database " << dbName <<" done" << endl;
     }
-    senderIDs_.resize(refStates);
-//    Info << senderIDs_ << endl;
+    senderBoundaryFaceIDs_.resize(refStates);
+    senderCellIDs_.resize(refStates);
+}
+
+
+labelList& responseFunctions::senderCellIDs(label refState, label receiverID)
+{
+    // this assumes that the lists of sender IDs are ordered by receiver cell indices; this implies a proper decomposition of these lists for parallel cases
+    return senderCellIDs_[refState][receiverID];
+}
+
+labelList& responseFunctions::senderBoundaryFaceIDs(label refState, label receiverID)
+{
+    // this assumes that the lists of sender IDs are ordered by receiver cell indices; this implies a proper decomposition of these lists for parallel cases
+    return senderBoundaryFaceIDs_[refState][receiverID];
 }
 // * * * * * * * * * * * * * private Member Functions  * * * * * * * * * * * * //
 

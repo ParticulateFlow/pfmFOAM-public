@@ -83,6 +83,12 @@ public:
     // Member Functions
 
     void readResponseFunctions(wordList dataBases);
+    
+    tensorList &Xuu_boundary(label refState, label receiverID);
+
+    tensorList &Xuu_internal(label refState, label receiverID);
+
+    tensor Xuu_integrated_(label refState, label cellI);
 
 private:
 
