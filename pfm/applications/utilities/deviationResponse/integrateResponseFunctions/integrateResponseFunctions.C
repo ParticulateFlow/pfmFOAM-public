@@ -32,6 +32,7 @@ Description
 #include "fvCFD.H"
 #include "OFstream.H"
 #include "dataBase.H"
+#include "responseFunctions.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
 
     dataBase db(mesh);
     db.init();
-    
+
     label numRefStates = db.numRefStates();
     for (int refState = 0; refState < numRefStates; refState++)
     {
