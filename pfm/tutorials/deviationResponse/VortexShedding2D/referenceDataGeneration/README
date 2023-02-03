@@ -1,0 +1,3 @@
+The present case is adapted from http://www.wolfdynamics.com/tutorials.html
+
+After running the case, transfer constant/polyMesh to ../responseFunctions/constant/ and the time folders for the desired time interval (e.g. 200 - 210) to ../responseFunctions/timeSeries.
