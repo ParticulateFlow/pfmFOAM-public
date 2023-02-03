@@ -1,12 +1,12 @@
 #!/usr/bin/python
+# usage python3 identifySenderCells.py internal/boundary
 import os
 import numpy as np
 from numpy import random
 from bisect import bisect_left ,bisect
 import math
 import re
-
-
+import sys
 import os.path
 from os import path
 from importlib.machinery import SourceFileLoader
@@ -17,9 +17,9 @@ else:
 readDataFile = SourceFileLoader("readDataFile",p+"scripts/dataAnalysis/readDataFile.py").load_module()
 dataAnalysis = SourceFileLoader("dataAnalysis",p+"scripts/dataAnalysis/dataAnalysis.py").load_module()
 
-mode = 'internal' # 'boundary'
-filename = 'testtargetCells_'+mode
-field = 'testX_uu_'
+mode = str(sys.argv[1])
+filename = 'targetCells_'+mode
+field = 'X_uu_'
 filenameX = field+mode
 
 components = [0,1]
