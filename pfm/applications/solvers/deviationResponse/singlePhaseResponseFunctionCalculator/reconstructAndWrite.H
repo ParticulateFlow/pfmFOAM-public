@@ -18,12 +18,15 @@ forAll(X_uu, cellI)
     {
         targetCells_loc[numEntries] = globalCellNumbering.toGlobal(cellI);
         iC = 0;
+        // OpenFOAM writes tensors as lists with components xx xy xz yx yy yz zx zy zz,
+        // hence the inner loop goes over the elements of the list X_uu_allCmpt with fixed
+        // component of the vectors X_uu computet in the main function
         forAll(components,c1)
         {
+            cmpt = components[c1];
             forAll(components,c2)
             {
-                cmpt = components[c2];
-                X_uu_loc[numCmpt * numCmpt * numEntries + iC++] = X_uu_allCmpt[c1][cellI].component(cmpt);
+                X_uu_loc[numCmpt * numCmpt * numEntries + iC++] = X_uu_allCmpt[c2][cellI].component(cmpt);
             }
         }
         numEntries++;
