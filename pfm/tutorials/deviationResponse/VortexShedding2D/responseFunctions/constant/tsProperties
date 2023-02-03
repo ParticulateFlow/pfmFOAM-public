@@ -13,7 +13,10 @@ FoamFile
     object      tsProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-tstart 200;
+#include "../referenceState"
+#include "../mode"
+
+tstart ${tstart};
 
 nXuuCorr 3;
 
@@ -25,7 +28,7 @@ patches ("in" "out" "cylinder");
 
 components (0 1);
 
-mode "internal"; //"boundary";
+mode ${mode}; //"internal"; //"boundary";
 
 minXuu 1e-1;
 // ************************************************************************* //
