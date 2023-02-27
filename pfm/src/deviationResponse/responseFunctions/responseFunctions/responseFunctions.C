@@ -74,7 +74,7 @@ label responseFunctions::readSenderIDs(wordList dataBases)
     forAll(dataBases,i)
     {
         word dbName = dataBases[i];
-        Info << "Reading sender IDs of database " << dbName << "\n" << endl;
+        Info << "\nReading sender IDs of database " << dbName << endl;
 
         Foam::Time dbTime(fileName(dbName), "", "../system", "../constant", false);
         instantList timeDirs(dbTime.times());
@@ -115,7 +115,7 @@ label responseFunctions::readSenderIDs(wordList dataBases)
             senderCellIDs_[refStates] = senderCells;
             refStates++;
         }
-        Info << "Reading sender IDs of database " << dbName <<" done" << endl;
+        Info << "Reading sender IDs of database " << dbName <<" done\n" << endl;
     }
     senderBoundaryFaceIDs_.resize(refStates);
     senderCellIDs_.resize(refStates);

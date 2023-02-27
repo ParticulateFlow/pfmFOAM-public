@@ -77,7 +77,7 @@ label singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
     forAll(dataBases,i)
     {
         word dbName = dataBases[i];
-        Info << "Reading response functions of database " << dbName << "\n" << endl;
+        Info << "\nReading response functions of database " << dbName << endl;
 
         Foam::Time dbTime(fileName(dbName), "", "../system", "../constant", false);
         instantList timeDirs(dbTime.times());
@@ -127,7 +127,7 @@ label singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
 
             refStates++;
         }
-        Info << "Reading response functions of database " << dbName <<" done" << endl;
+        Info << "Reading response functions of database " << dbName <<" done\n" << endl;
     }
     Xuu_internal_.resize(refStates);
     Xuu_boundary_.resize(refStates);

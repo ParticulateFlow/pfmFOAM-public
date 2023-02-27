@@ -82,6 +82,20 @@ volScalarField X_pu2
     mesh,
     dimensionedScalar("zero", dimensionSet(0,-2,-1,0,0,0,0), 0.0)
 );
+
+volScalarField Receiver
+(
+    IOobject
+    (
+        "Receiver",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero", dimensionSet(0,0,0,0,0,0,0), 0.0)
+);
 // testing done
 
 
@@ -159,7 +173,6 @@ for (int i = 0; i < numCmpt; i++)
 }
 
 scalar minXuu(tsProperties.lookupOrDefault<scalar>("minXuu",1e-5));
-scalar minXuu2 = minXuu*minXuu;
 
 
 enum Modes {internal, boundary, integrated};
@@ -174,7 +187,7 @@ else if (selectedMode == "integrated")
     minSourceElement = 0;
     maxSourceElement = 1;
     // keep all cells regardless of norm(Xuu)
-    minXuu2 = -1.0;
+    minXuu = -1.0;
 }
 else FatalError << "no known mode specified\n" << abort(FatalError);
 
@@ -198,9 +211,12 @@ for (label i = 1; i < timeDirs.size() - 1; i++)
     }
 }
 
-if (Foam::mag(deltaTts - runTime.deltaTValue()) > tolerance)
+double dTimeStepRatio = deltaTts/runTime.deltaTValue() + 0.5;
+label timeStepRatio = (int)dTimeStepRatio;
+
+if (Foam::mag(deltaTts/runTime.deltaTValue() - timeStepRatio) > tolerance)
 {
-    FatalError << "different time steps in database and solver\n" << abort(FatalError);
+    FatalError << "time step in database not multiple of solver time step\n" << abort(FatalError);
 }
 
 instantList::iterator it=timeDirs.begin();

@@ -58,17 +58,17 @@ int main(int argc, char *argv[])
     if (mode == internal)
     {
         nameC = "targetCells_internal";
-        nameX = "X_uu_internal";
+        nameX = "X_uu_bySenders_internal";
     }
     else if (mode == boundary)
     {
         nameC = "targetCells_boundary";
-        nameX = "X_uu_boundary";
+        nameX = "X_uu_bySenders_boundary";
     }
     else
     {
         nameC = "";
-        nameX = "X_uu_integrated";
+        nameX = "X_uu_bySenders_integrated";
     }
     OFstream OS_C(nameC);
     OFstream OS_X(nameX);
@@ -76,9 +76,12 @@ int main(int argc, char *argv[])
     maxSourceElement = (sourceElements.size() > maxSourceElement) ? maxSourceElement : sourceElements.size();
     dimensionedVector defaultVec("zero",dimensionSet(0,-3,0,0,0),vector::zero);
     
-    const volVectorField::Boundary& Xbf = X_uu.boundaryField();
+    scalar normalization = 1.0;
+    
+    volVectorField::Boundary& Xbf = X_uu.boundaryFieldRef();
     for (label sourceElement = minSourceElement; sourceElement < maxSourceElement; sourceElement++)
     {
+        Receiver == 0.0;
         forAll(components,c)
         {
             label cmpt = components[c];
@@ -93,35 +96,61 @@ int main(int argc, char *argv[])
             }
 
             X_uu == defaultVec;
+            X_uu_allCmpt[c] = X_uu;
 
             if (mode != integrated)
             {
+                // make sure any previously set gradients on the boundary are reset to zero
+                for (int i = 0; i < patches.size(); i++)
+                {
+                    label patchI = boundaryMesh.findPatchID(patches[i]);
+                    if (isA<fixedGradientFvPatchVectorField>(Xbf[patchI]))
+                    {
+                        fixedGradientFvPatchVectorField& Xbf_fixedGradient = dynamic_cast<fixedGradientFvPatchVectorField &>(Xbf[patchI]);
+                        Xbf_fixedGradient.gradient() = vector::zero;
+                    }
+                }
+                
                 if (globalNumbering.isLocal(sourceElements[sourceElement]))
                 {
                     label sourceElementLocalID = globalNumbering.toLocal(sourceElements[sourceElement]);
                     if (mode == internal)
                     {
+                        normalization = mesh.V()[sourceElementLocalID];
                         Pout << "\nStarting time loop for internal source element " << sourceElements[sourceElement] << " with local ID " << sourceElementLocalID << endl;
-                        Pout << "\n 1/volume = " << 1.0 / mesh.V()[sourceElementLocalID] << endl;
-                        X_uu[sourceElementLocalID].component(cmpt) = 1.0 / mesh.V()[sourceElementLocalID];
+                        Pout << "\n 1/volume = " << 1.0 / normalization << endl;
+                        X_uu[sourceElementLocalID].component(cmpt) = 1.0 / normalization;
+                        
+                        // adjacent to fixed gradient boundary?
+                        if (adjacentFaceID[sourceElementLocalID] >= 0)
+                        {
+                            label faceI = adjacentFaceID[sourceElementLocalID];
+                            label patchI = adjacentPatchID[sourceElementLocalID];
+                            scalar normalization2 = mesh.boundary()[patchI].magSf()[faceI];
+                            fixedGradientFvPatchVectorField& Xbf_fixedGradient = dynamic_cast<fixedGradientFvPatchVectorField &>(Xbf[patchI]);
+                            TODO: check sign and value of normalization
+                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = 1 / normalization2;
+                        }
                     }
                     else
                     {
                         label faceI = faceIDperPatch[sourceElementLocalID];
                         label patchI = patchOwningFace[sourceElementLocalID];
+                        normalization = mesh.boundary()[patchI].magSf()[faceI];
                         Pout << "\nStarting time loop for boundary source element " << sourceElements[sourceElement] << " with local ID " << faceI << " on patch " << boundaryMesh.names()[patchI] << endl;
+                        Pout << "\n 1/area = " << 1.0 / normalization << endl;
                         // check BC on patch and decide what value needs to be set
                         if (isA<fixedValueFvPatchVectorField>(Xbf[patchI]))
                         {
-                            X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = 1.0 / mesh.boundary()[patchI].magSf()[faceI];
+                            Xbf[patchI][faceI].component(cmpt) = 1.0 / normalization;
                         }
-                        else if (isA<zeroGradientFvPatchVectorField>(Xbf[patchI]))
+                        else if (isA<fixedGradientFvPatchVectorField>(Xbf[patchI]))
                         {
-                            continue;
+                            TODO: set adjacent cell value appropriately
                         }
                         else
                         {
-                            FatalError << "velocity boundary condition has to be fixed value or zero gradient, but found different condition on patch " << boundaryMesh.names()[patchI] << abort(FatalError);
+                            FatalError << "velocity boundary condition has to be fixed value or fixed gradient, but found different condition on patch " << boundaryMesh.names()[patchI] << abort(FatalError);
                         }
                     }
                 }
@@ -131,36 +160,32 @@ int main(int argc, char *argv[])
 
             scalar CoNum = 0.0;
             dimensionedScalar deltaT("zero",dimensionSet(0,0,1,0,0,0,0),0.0);
+            deltaT.value() = X_uu.mesh().time().deltaTValue();
+            label subStepCounter = 0;
 
             while (runTime.loop())
             {
                 Info<< "Time = " << runTime.timeName() << nl << endl;
-// testing
-                /*
-label sourceElementLocalID = globalNumbering.toLocal(sourceElements[sourceElement]);
-label faceI = faceIDperPatch[sourceElementLocalID];
-label patchI = patchOwningFace[sourceElementLocalID];
-X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = runTime.timeOutputValue() / mesh.boundary()[patchI].magSf()[faceI];
-*/
-// testing over
-                deltaT.value() = X_uu.mesh().time().deltaTValue();
-                tsTime.setTime(*it, it->value());
-                Info << "tst = " << it->value() << endl;
-                volVectorField U_ts_curr
-                (
-                    IOobject
+                if (subStepCounter % timeStepRatio == 0)
+                {
+                    tsTime.setTime(*it, it->value());
+                    Info << "tst = " << it->value() << endl;
+                    volVectorField U_ts_curr
                     (
-                        UtsName,
-                        tsTime.timePath(),
-                        mesh,
-                        IOobject::MUST_READ,
-                        IOobject::NO_WRITE
-                    ),
-                    mesh
-                );
-                U_ts == U_ts_curr;
-                phi_ts = fvc::flux(U_ts);
-
+                        IOobject
+                        (
+                            UtsName,
+                            tsTime.timePath(),
+                            mesh,
+                            IOobject::MUST_READ,
+                            IOobject::NO_WRITE
+                        ),
+                        mesh
+                    );
+                    U_ts == U_ts_curr;
+                    phi_ts = fvc::flux(U_ts);
+                    it++;
+                }
                 scalarField sumPhi
                 (
                     fvc::surfaceSum(mag(phiX))().primitiveField()
@@ -170,14 +195,14 @@ X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = runTime.timeOutputValue
 
                 // Pressure-velocity PISO corrector
                 {
-                    #include "XuuEqn.H"
-
+//                  #include "XuuEqn.H"
+                    #include "XuuEqnExpl.H"
+                    #include "pEqnExpl.H"  // no iteration in explicit scheme; repeated application would subtract pressure gradient repeatedly
                     // --- PISO loop
-                    while (piso.correct())
-                    {
-                        #include "pEqn.H"
-                        //#include "pTEqn.H"
-                    }
+//                    while (piso.correct())
+//                    {
+//                        #include "pTEqn.H"
+//                    }
                 }
 
                 laminarTransport.correct();
@@ -204,7 +229,7 @@ X_uu.boundaryFieldRef()[patchI][faceI].component(cmpt) = runTime.timeOutputValue
 
                 runTime.write();
 
-                it++;
+                subStepCounter++;
 
                 Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
                     << "  ClockTime = " << runTime.elapsedClockTime() << " s"

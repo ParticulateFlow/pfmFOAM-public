@@ -1,5 +1,7 @@
 IFS=$' ' read -a tlist < listOfReferenceStates
 
+mkdir dataBase
+
 for t in "${tlist[@]}"
 do
    printf "tstart %s;" "$t" > referenceState

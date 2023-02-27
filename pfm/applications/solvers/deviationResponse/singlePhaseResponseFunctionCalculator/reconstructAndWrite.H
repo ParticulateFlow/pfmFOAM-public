@@ -14,8 +14,9 @@ forAll(X_uu, cellI)
     {
         norm += magSqr(X_uu_allCmpt[c][cellI]);
     }
-    if (norm > minXuu2)
+    if (Foam::sqrt(norm) * normalization > minXuu)
     {
+        Receiver[cellI] = 1.0;
         targetCells_loc[numEntries] = globalCellNumbering.toGlobal(cellI);
         iC = 0;
         // OpenFOAM writes tensors as lists with components xx xy xz yx yy yz zx zy zz,
@@ -32,6 +33,7 @@ forAll(X_uu, cellI)
         numEntries++;
     }
 }
+Receiver.write();
 
 labelList numEntriesLoc(Pstream::nProcs(),0);
 numEntriesLoc[Pstream::myProcNo()] = numEntries;
