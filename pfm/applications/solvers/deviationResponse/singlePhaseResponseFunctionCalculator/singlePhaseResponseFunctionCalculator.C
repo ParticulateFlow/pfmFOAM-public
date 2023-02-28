@@ -126,10 +126,9 @@ int main(int argc, char *argv[])
                         {
                             label faceI = adjacentFaceID[sourceElementLocalID];
                             label patchI = adjacentPatchID[sourceElementLocalID];
-                            scalar normalization2 = mesh.boundary()[patchI].magSf()[faceI];
+                       //     scalar normalization2 = mesh.boundary()[patchI].magSf()[faceI];
                             fixedGradientFvPatchVectorField& Xbf_fixedGradient = dynamic_cast<fixedGradientFvPatchVectorField &>(Xbf[patchI]);
-                            TODO: check sign and value of normalization
-                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = 1 / normalization2;
+                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = -1.0 / normalization * Xbf[patchI].deltaCoeffs()[faceI];
                         }
                     }
                     else
@@ -146,7 +145,8 @@ int main(int argc, char *argv[])
                         }
                         else if (isA<fixedGradientFvPatchVectorField>(Xbf[patchI]))
                         {
-                            TODO: set adjacent cell value appropriately
+                            fixedGradientFvPatchVectorField& Xbf_fixedGradient = dynamic_cast<fixedGradientFvPatchVectorField &>(Xbf[patchI]);
+                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = 1.0 / normalization * Xbf[patchI].deltaCoeffs()[faceI];
                         }
                         else
                         {
