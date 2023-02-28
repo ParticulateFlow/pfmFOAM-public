@@ -75,9 +75,9 @@ int main(int argc, char *argv[])
 
     maxSourceElement = (sourceElements.size() > maxSourceElement) ? maxSourceElement : sourceElements.size();
     dimensionedVector defaultVec("zero",dimensionSet(0,-3,0,0,0),vector::zero);
-    
+
     scalar normalization = 1.0;
-    
+
     volVectorField::Boundary& Xbf = X_uu.boundaryFieldRef();
     for (label sourceElement = minSourceElement; sourceElement < maxSourceElement; sourceElement++)
     {
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
             // reset simulation and database time
             runTime.setTime(runTime.startTime(),runTime.startTimeIndex());
             it = itStart;
-            
+
             if (mode == integrated)
             {
                 defaultVec.value() = vector::zero;
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
                         Xbf_fixedGradient.gradient() = vector::zero;
                     }
                 }
-                
+
                 if (globalNumbering.isLocal(sourceElements[sourceElement]))
                 {
                     label sourceElementLocalID = globalNumbering.toLocal(sourceElements[sourceElement]);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
                         Pout << "\nStarting time loop for internal source element " << sourceElements[sourceElement] << " with local ID " << sourceElementLocalID << endl;
                         Pout << "\n 1/volume = " << 1.0 / normalization << endl;
                         X_uu[sourceElementLocalID].component(cmpt) = 1.0 / normalization;
-                        
+
                         // adjacent to fixed gradient boundary?
                         if (adjacentFaceID[sourceElementLocalID] >= 0)
                         {
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
                             label patchI = adjacentPatchID[sourceElementLocalID];
                        //     scalar normalization2 = mesh.boundary()[patchI].magSf()[faceI];
                             fixedGradientFvPatchVectorField& Xbf_fixedGradient = dynamic_cast<fixedGradientFvPatchVectorField &>(Xbf[patchI]);
-                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = -1.0 / normalization * Xbf[patchI].deltaCoeffs()[faceI];
+                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = -1.0 / normalization * Xbf[patchI].patch().deltaCoeffs()[faceI];
                         }
                     }
                     else
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
                         else if (isA<fixedGradientFvPatchVectorField>(Xbf[patchI]))
                         {
                             fixedGradientFvPatchVectorField& Xbf_fixedGradient = dynamic_cast<fixedGradientFvPatchVectorField &>(Xbf[patchI]);
-                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = 1.0 / normalization * Xbf[patchI].deltaCoeffs()[faceI];
+                            Xbf_fixedGradient.gradient()[faceI].component(cmpt) = 1.0 / normalization * Xbf[patchI].patch().deltaCoeffs()[faceI];
                         }
                         else
                         {
