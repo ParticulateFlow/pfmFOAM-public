@@ -1,0 +1,3 @@
+singlePhaseDeviationResponsePredictor.C
+
+EXE = $(FOAM_APPBIN)/singlePhaseDeviationResponsePredictor
