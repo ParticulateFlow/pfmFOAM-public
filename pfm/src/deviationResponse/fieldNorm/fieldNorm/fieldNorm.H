@@ -1,0 +1,112 @@
+/*---------------------------------------------------------------------------*\
+    CFDEMcoupling academic - Open Source CFD-DEM coupling
+
+    Contributing authors:
+    Thomas Lichtenegger
+    Copyright (C) 2015- Johannes Kepler University, Linz
+-------------------------------------------------------------------------------
+License
+    This file is part of CFDEMcoupling academic.
+
+    CFDEMcoupling academic is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CFDEMcoupling academic is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CFDEMcoupling academic.  If not, see <http://www.gnu.org/licenses/>.
+\*---------------------------------------------------------------------------*/
+
+#ifndef fieldNorm_H
+#define fieldNorm_H
+
+#include "dataBase.H"
+#include "HashTable.H"
+#include "OFstream.H"
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class fieldNorm Declaration
+\*---------------------------------------------------------------------------*/
+
+class fieldNorm
+{
+protected:
+
+    // Protected data
+    dataBase& dataBase_;
+
+    const dictionary& dataBaseProperties_;
+
+    bool verbose_;
+
+public:
+
+    friend class dataBase;
+
+    //- Runtime type information
+    TypeName("fieldNorm");
+
+    // Declare runtime constructor selection table
+
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            fieldNorm,
+            dictionary,
+            (
+                const dictionary& dict,
+                dataBase& base
+            ),
+            (dict,base)
+        );
+
+
+    // Constructors
+
+        //- Construct from components
+        fieldNorm
+        (
+            const dictionary& dict,
+            dataBase& base
+        );
+
+
+    // Destructor
+
+        virtual ~fieldNorm();
+
+
+    // Selector
+
+        static autoPtr<fieldNorm> New
+        (
+            const dictionary& dict,
+            dataBase& base
+        );
+
+
+    // Member functions
+
+    virtual scalar fieldsDistance(const volScalarField &, const volScalarField &) = 0;
+
+    virtual scalar fieldsDistance(const volVectorField &, const volVectorField &) = 0;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //
