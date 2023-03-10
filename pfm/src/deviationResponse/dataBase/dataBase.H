@@ -72,6 +72,8 @@ protected:
 
     label numRefStates_;
 
+    scalar predictionTimeStep_;
+
     autoPtr<fieldNorm> fieldNorm_;
 
     autoPtr<referenceStates> referenceStates_;
@@ -126,6 +128,10 @@ public:
     labelList& faceIDperPatch();
 
     labelList& patchOwningFace();
+
+    scalar predictionTimeStep();
+
+    void setPredictionTimeStep(scalar);
 
    // Dummy function for regIOobject
     bool writeData(Ostream&) const

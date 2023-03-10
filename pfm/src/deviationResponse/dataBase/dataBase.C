@@ -63,6 +63,7 @@ dataBase::dataBase
     dataBaseNames_(dataBaseProperties_.lookupOrDefault<wordList>("dataBases", wordList(1,"dataBase"))),
     numDataBases_(dataBaseNames_.size()),
     numRefStates_(0),
+    predictionTimeStep_(-1.0),
     fieldNorm_
     (
         fieldNorm::New
@@ -150,6 +151,11 @@ void dataBase::init()
         FatalError << "different number of reference states and accompanying response functions\n" << abort(FatalError);
     }
     responseFunctions_->readResponseFunctions(dataBaseNames_);
+}
+
+fieldNorm& dataBase::fieldN()
+{
+    return fieldNorm_();
 }
 
 referenceStates& dataBase::referenceS()
@@ -245,6 +251,16 @@ labelList& dataBase::faceIDperPatch()
 labelList& dataBase::patchOwningFace()
 {
     return patchOwningFace_;
+}
+
+scalar dataBase::predictionTimeStep()
+{
+    return predictionTimeStep_;
+}
+
+void dataBase::setPredictionTimeStep(scalar step)
+{
+    predictionTimeStep_ = step;
 }
 
 }

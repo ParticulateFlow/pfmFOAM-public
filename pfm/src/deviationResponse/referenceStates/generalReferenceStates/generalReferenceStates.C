@@ -85,10 +85,14 @@ generalReferenceStates::~generalReferenceStates()
 label generalReferenceStates::readReferenceStates(wordList dataBases)
 {
     int refStates = 0;
+    scalarList predictionSteps(dataBases.size());
     forAll(dataBases,i)
     {
         word dbName = dataBases[i];
         Info << "\nReading reference states of database " << dbName << endl;
+
+        IFstream psFile(dbName+"/predictionStep");
+        psFile >> predictionSteps[i];
 
         Foam::Time dbTime(fileName(dbName), "", "../system", "../constant", false);
         instantList timeDirs(dbTime.times());
@@ -195,6 +199,22 @@ label generalReferenceStates::readReferenceStates(wordList dataBases)
             refStates++;
         }
         Info << "Reading reference states of database " << dbName << " done\n" << endl;
+    }
+
+    scalar maxStep = -1.0;
+    scalar minStep = 1e6;
+    forAll(predictionSteps,i)
+    {
+        if (predictionSteps[i] > maxStep) maxStep = predictionSteps[i];
+        if (predictionSteps[i] < minStep) minStep = predictionSteps[i];
+    }
+    if (maxStep - minStep < stepTolerance_)
+    {
+        dataBase_.setPredictionTimeStep(minStep);
+    }
+    else
+    {
+        FatalError << "different prediction step sizes detected\n" << abort(FatalError);
     }
     
     forAll(volScalarRefStateNames_,i)

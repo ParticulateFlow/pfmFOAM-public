@@ -40,6 +40,7 @@ Description
 #include "dataBase.H"
 #include "fvCFD.H"
 #include "HashTable.H"
+#include "IFstream.H"
 
 
 namespace Foam
@@ -57,6 +58,8 @@ protected:
     dataBase& dataBase_;
 
     bool verbose_;
+
+    scalar stepTolerance_ = 1e-6;
 
     const dictionary& dataBaseProperties_;
 
