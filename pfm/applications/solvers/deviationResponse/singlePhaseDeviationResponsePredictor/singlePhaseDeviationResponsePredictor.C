@@ -105,19 +105,19 @@ int main(int argc, char *argv[])
         }
         
         nearestRefState = db.findNearestRefState(U,URefStateListIndex);
-        URef = db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
+        URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
         if (firstStep)
         {
             initialDistance = db.fieldN().fieldsDistance(U,URef);
             Info << "Performing calculation for initial distance " << initialDistance << endl;
         }
-        deltaU = U - URef;
+        deltaU == U - URef;
         
-        // TODO: convolute
+        #include "convoluteDeviation.H"
 
-        URefEvolved = db.referenceS().exportVolVectorEvolvedField(URefStateListIndex,nearestRefState);
+        URefEvolved == db.referenceS().exportVolVectorEvolvedField(URefStateListIndex,nearestRefState);
         U = URefEvolved + deltaUEvolved;
-             
+        U.correctBoundaryConditions(); 
 
         URef.write();
         deltaU.write();
