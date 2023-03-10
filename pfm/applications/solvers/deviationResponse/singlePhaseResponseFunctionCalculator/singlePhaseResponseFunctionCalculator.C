@@ -209,6 +209,7 @@ int main(int argc, char *argv[])
                 turbulence->correct();
                 
                 // testing
+                /*
                 if (c==0)
                 {
                     X_uu1 = X_uu;
@@ -225,6 +226,7 @@ int main(int argc, char *argv[])
                     X_pu2 = X_pu;
                     X_pu2.write();
                 }
+                */
                 // testing done
 
                 runTime.write();

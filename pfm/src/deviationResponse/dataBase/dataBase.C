@@ -23,6 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+#include "fieldNorm.H"
 #include "referenceStates.H"
 #include "responseFunctions.H"
 
@@ -62,6 +63,14 @@ dataBase::dataBase
     dataBaseNames_(dataBaseProperties_.lookupOrDefault<wordList>("dataBases", wordList(1,"dataBase"))),
     numDataBases_(dataBaseNames_.size()),
     numRefStates_(0),
+    fieldNorm_
+    (
+        fieldNorm::New
+        (
+            dataBaseProperties_,
+            *this
+        )
+    ),
     referenceStates_
     (
         referenceStates::New
@@ -102,6 +111,10 @@ const fvMesh& dataBase::mesh() const
 
 void dataBase::init()
 {
+    // read reference states
+    numRefStates_ = referenceStates_->readReferenceStates(dataBaseNames_);
+    
+    // construct face addressing
     wordList patches;
     IFstream IS("patches");
     IS >> patches;
@@ -130,7 +143,12 @@ void dataBase::init()
 
     globalBoundaryFaceNumbering_.set(new globalIndex(locFaces));
 
-    numRefStates_ = responseFunctions_->readSenderIDs(dataBaseNames_);
+    // read response functions
+    label numRefStates = responseFunctions_->readSenderIDs(dataBaseNames_);
+    if (numRefStates != numRefStates_)
+    {
+        FatalError << "different number of reference states and accompanying response functions\n" << abort(FatalError);
+    }
     responseFunctions_->readResponseFunctions(dataBaseNames_);
 }
 
@@ -167,6 +185,56 @@ label dataBase::localFromGlobalBoundaryFaceID(label bFaceI)
 label dataBase::numRefStates()
 {
     return numRefStates_;
+}
+
+// fieldListIndex for target field has to be found at solver level via findRefStateListIndex()
+
+label dataBase::findNearestRefState(const volScalarField &field, label fieldListIndex)
+{
+    scalarList distances(numRefStates_);
+
+    forAll(distances,stateIndex)
+    {
+        const volScalarField& stateI(referenceS().exportVolScalarField(fieldListIndex,stateIndex));
+        distances[stateIndex] = fieldN().fieldsDistance(stateI,field);
+    }
+    
+    scalar minDist = distances[0];
+    label minIndex = 0;
+    forAll(distances,stateIndex)
+    {
+        if (distances[stateIndex] < minDist)
+        {
+            minDist = distances[stateIndex];
+            minIndex = stateIndex;
+        }
+    }
+
+    return minIndex;
+}
+
+label dataBase::findNearestRefState(const volVectorField &field, label fieldListIndex)
+{
+    scalarList distances(numRefStates_);
+
+    forAll(distances,stateIndex)
+    {
+        const volVectorField& stateI(referenceS().exportVolVectorField(fieldListIndex,stateIndex));
+        distances[stateIndex] = fieldN().fieldsDistance(stateI,field);
+    }
+    
+    scalar minDist = distances[0];
+    label minIndex = 0;
+    forAll(distances,stateIndex)
+    {
+        if (distances[stateIndex] < minDist)
+        {
+            minDist = distances[stateIndex];
+            minIndex = stateIndex;
+        }
+    }
+
+    return minIndex;
 }
 
 labelList& dataBase::faceIDperPatch()

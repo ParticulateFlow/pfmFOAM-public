@@ -48,6 +48,7 @@ namespace Foam
 {
 
 // forward declarations
+class fieldNorm;
 class referenceStates;
 class responseFunctions;
 
@@ -70,6 +71,8 @@ protected:
     label numDataBases_;
 
     label numRefStates_;
+
+    autoPtr<fieldNorm> fieldNorm_;
 
     autoPtr<referenceStates> referenceStates_;
 
@@ -104,6 +107,8 @@ public:
 
     void init();
 
+    fieldNorm& fieldN();
+
     referenceStates& referenceS();
 
     responseFunctions& responseF();
@@ -113,6 +118,10 @@ public:
     label localFromGlobalBoundaryFaceID(label bFaceI);
 
     label numRefStates();
+    
+    label findNearestRefState(const volScalarField &field, label fieldListIndex);
+    
+    label findNearestRefState(const volVectorField &field, label fieldListIndex);
 
     labelList& faceIDperPatch();
 

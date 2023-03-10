@@ -56,14 +56,18 @@ protected:
     // Protected data
     dataBase& dataBase_;
 
+    bool verbose_;
+
     const dictionary& dataBaseProperties_;
 
+    const wordList volScalarRefStateNames_;
 
+    const wordList volVectorRefStateNames_;
     
 
 public:
 
-    friend class recBase;
+    friend class dataBase;
 
     //- Runtime type information
     TypeName("referenceStates");
@@ -108,6 +112,14 @@ public:
 
 
     // Member Functions
+
+    virtual label readReferenceStates(wordList dataBases) = 0;
+
+    label findRefStateListIndex(word fieldType, word fieldName);
+
+    virtual const volScalarField& exportVolScalarField(label, label)  = 0;
+
+    virtual const volVectorField& exportVolVectorField(label, label)  = 0;
 
 };
 

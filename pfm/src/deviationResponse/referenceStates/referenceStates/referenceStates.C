@@ -52,7 +52,10 @@ referenceStates::referenceStates
 )
 :
     dataBase_(base),
-    dataBaseProperties_(dict)
+    dataBaseProperties_(dict),
+    verbose_(dataBaseProperties_.lookupOrDefault<bool>("verbose", false)),
+    volScalarRefStateNames_(dataBaseProperties_.lookup("volScalarRefStates")),
+    volVectorRefStateNames_(dataBaseProperties_.lookup("volVectorRefStates"))
 {
 }
 
@@ -63,6 +66,35 @@ referenceStates::~referenceStates()
 
 // * * * * * * * * * * * * * public Member Functions  * * * * * * * * * * * * //
 
+label referenceStates::findRefStateListIndex(word fieldType, word fieldName)
+{
+    if (fieldType == "volScalarField")
+    {
+        forAll(volScalarRefStateNames_,i)
+        {
+            if (volScalarRefStateNames_[i] == fieldName)
+            {
+                return i;
+            }
+        }
+    }
+    else if (fieldType == "volVectorField")
+    {
+        forAll(volVectorRefStateNames_,i)
+        {
+            if (volVectorRefStateNames_[i] == fieldName)
+            {
+                return i;
+            }
+        }        
+    }
+    else
+    {
+        FatalError << "unknown field type\n" << abort(FatalError);
+    }
+
+    FatalError << "could not find field with name " << fieldName << " \n" << abort(FatalError);
+}
 
 // * * * * * * * * * * * * * private Member Functions  * * * * * * * * * * * * //
 
