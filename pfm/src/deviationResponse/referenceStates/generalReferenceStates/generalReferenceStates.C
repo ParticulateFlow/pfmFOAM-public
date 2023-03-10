@@ -57,7 +57,9 @@ generalReferenceStates::generalReferenceStates
     propsDict_(dict.subDict(typeName + "Props")),
     maxNumRefStates_(propsDict_.lookupOrDefault<label>("maxNumRefStates", 1000)),
     volScalarRefStateList_(volScalarRefStateNames_.size()),
-    volVectorRefStateList_(volVectorRefStateNames_.size())
+    volVectorRefStateList_(volVectorRefStateNames_.size()),
+    volScalarEvolvedRefStateList_(volScalarRefStateNames_.size()),
+    volVectorEvolvedRefStateList_(volVectorRefStateNames_.size())
 {
     forAll(volScalarRefStateNames_,i)
     {
@@ -134,6 +136,23 @@ label generalReferenceStates::readReferenceStates(wordList dataBases)
                         dataBase_.mesh()
                     )
                 );
+
+                volScalarEvolvedRefStateList_[j].set
+                (
+                    refStates,
+                    new volScalarField
+                    (
+                        IOobject
+                        (
+                            volScalarRefStateNames_[j]+"Evolved",
+                            dbTime.timePath(),
+                            dataBase_.mesh(),
+                            IOobject::MUST_READ,
+                            IOobject::NO_WRITE
+                        ),
+                        dataBase_.mesh()
+                    )
+                );
             }
 
             forAll(volVectorRefStateNames_,j)
@@ -154,6 +173,23 @@ label generalReferenceStates::readReferenceStates(wordList dataBases)
                         dataBase_.mesh()
                     )
                 );
+
+                volVectorEvolvedRefStateList_[j].set
+                (
+                    refStates,
+                    new volVectorField
+                    (
+                        IOobject
+                        (
+                            volVectorRefStateNames_[j]+"Evolved",
+                            dbTime.timePath(),
+                            dataBase_.mesh(),
+                            IOobject::MUST_READ,
+                            IOobject::NO_WRITE
+                        ),
+                        dataBase_.mesh()
+                    )
+                );
             }
 
             refStates++;
@@ -164,11 +200,13 @@ label generalReferenceStates::readReferenceStates(wordList dataBases)
     forAll(volScalarRefStateNames_,i)
     {
         volScalarRefStateList_[i].resize(refStates);
+        volScalarEvolvedRefStateList_[i].resize(refStates);
     }
     
     forAll(volVectorRefStateNames_,i)
     {
         volVectorRefStateList_[i].resize(refStates);
+        volVectorEvolvedRefStateList_[i].resize(refStates);
     }
 
     return refStates;
@@ -182,6 +220,16 @@ const volScalarField& generalReferenceStates::exportVolScalarField(label fieldLi
 const volVectorField& generalReferenceStates::exportVolVectorField(label fieldListIndex, label refState)
 {
     return volVectorRefStateList_[fieldListIndex][refState];
+}
+
+const volScalarField& generalReferenceStates::exportVolScalarEvolvedField(label fieldListIndex, label refState)
+{
+    return volScalarEvolvedRefStateList_[fieldListIndex][refState];
+}
+
+const volVectorField& generalReferenceStates::exportVolVectorEvolvedField(label fieldListIndex, label refState)
+{
+    return volVectorEvolvedRefStateList_[fieldListIndex][refState];
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

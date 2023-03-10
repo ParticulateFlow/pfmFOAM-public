@@ -121,6 +121,10 @@ public:
 
     virtual const volVectorField& exportVolVectorField(label, label)  = 0;
 
+    virtual const volScalarField& exportVolScalarEvolvedField(label, label)  = 0;
+
+    virtual const volVectorField& exportVolVectorEvolvedField(label, label)  = 0;
+
 };
 
 

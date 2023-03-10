@@ -85,6 +85,10 @@ public:
 
     const volVectorField& exportVolVectorField(label, label);
 
+    const volScalarField& exportVolScalarEvolvedField(label, label);
+
+    const volVectorField& exportVolVectorEvolvedField(label, label);
+
 private:
 
     label maxNumRefStates_;
@@ -92,6 +96,10 @@ private:
     List<PtrList<volScalarField>> volScalarRefStateList_;
 
     List<PtrList<volVectorField>> volVectorRefStateList_;
+    
+    List<PtrList<volScalarField>> volScalarEvolvedRefStateList_;
+
+    List<PtrList<volVectorField>> volVectorEvolvedRefStateList_;
 };
 
 
