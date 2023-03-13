@@ -258,7 +258,6 @@ int main(int argc, char *argv[])
         #include "reconstructAndWrite.H"
     }
 
-    it++;
     tsTime.setTime(*it, it->value());
     OFstream endTime("timeEvolvedRefState");
     endTime << it->value() << endl;
