@@ -113,7 +113,11 @@ const fvMesh& dataBase::mesh() const
 void dataBase::init()
 {
     // read reference states
-    numRefStates_ = referenceStates_->readReferenceStates(dataBaseNames_);
+    label numRefStates = -1;
+    if (referenceStates_.valid())
+    {
+        numRefStates = referenceStates_->readReferenceStates(dataBaseNames_);
+    }
     
     // construct face addressing
     wordList patches;
@@ -145,8 +149,8 @@ void dataBase::init()
     globalBoundaryFaceNumbering_.set(new globalIndex(locFaces));
 
     // read response functions
-    label numRefStates = responseFunctions_->readSenderIDs(dataBaseNames_);
-    if (numRefStates != numRefStates_)
+    numRefStates_ = responseFunctions_->readSenderIDs(dataBaseNames_);
+    if (numRefStates != numRefStates_ && referenceStates_.valid())
     {
         FatalError << "different number of reference states and accompanying response functions\n" << abort(FatalError);
     }
@@ -155,12 +159,26 @@ void dataBase::init()
 
 fieldNorm& dataBase::fieldN()
 {
-    return fieldNorm_();
+    if (fieldNorm_.valid())
+    {
+        return fieldNorm_();
+    }
+    else
+    {
+        FatalError << "no field norm set\n" << abort(FatalError);        
+    }
 }
 
 referenceStates& dataBase::referenceS()
 {
-    return referenceStates_();
+    if (referenceStates_.valid())
+    {
+        return referenceStates_();
+    }
+    else
+    {
+        FatalError << "no reference state type set\n" << abort(FatalError); 
+    }
 }
 
 responseFunctions& dataBase::responseF()

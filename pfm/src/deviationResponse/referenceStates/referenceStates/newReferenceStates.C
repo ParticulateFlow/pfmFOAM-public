@@ -39,6 +39,10 @@ autoPtr<referenceStates> referenceStates::New
     dataBase& base
 )
 {
+    if (!dict.found("referenceStates"))
+    {
+        return autoPtr<referenceStates>();
+    }
     word referenceStatesType
     (
         dict.lookup("referenceStates")

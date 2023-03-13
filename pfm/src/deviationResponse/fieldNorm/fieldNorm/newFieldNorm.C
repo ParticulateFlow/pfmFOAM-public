@@ -38,6 +38,10 @@ autoPtr<fieldNorm> fieldNorm::New
     dataBase& base
 )
 {
+    if (!dict.found("fieldNorm"))
+    {
+        return autoPtr<fieldNorm>();
+    }
     word fieldNormType
     (
         dict.lookup("fieldNorm")
