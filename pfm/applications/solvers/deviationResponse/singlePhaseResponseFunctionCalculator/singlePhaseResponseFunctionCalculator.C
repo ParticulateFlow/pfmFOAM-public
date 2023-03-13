@@ -257,6 +257,11 @@ int main(int argc, char *argv[])
         divX_uu.write();
         #include "reconstructAndWrite.H"
     }
+
+    it++;
+    tsTime.setTime(*it, it->value());
+    OFstream endTime("timeEvolvedRefState");
+    endTime << it->value() << endl;
     Info<< "End\n" << endl;
     return 0;
 }
