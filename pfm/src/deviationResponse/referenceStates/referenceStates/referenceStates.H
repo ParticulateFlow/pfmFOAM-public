@@ -8,7 +8,7 @@
     Contributing authors:
     Thomas Lichtenegger
     Copyright (C) 2015- Johannes Kepler University, Linz
--------------------------------------------------------------------------------    
+-------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
@@ -24,8 +24,8 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-    
-    
+
+
 Class
     Foam::deviationResponse::referenceStates::referenceStates
 
@@ -57,16 +57,14 @@ protected:
     // Protected data
     dataBase& dataBase_;
 
-    bool verbose_;
-
     scalar stepTolerance_ = 1e-6;
 
-    const dictionary& dataBaseProperties_;
+    dictionary propsDict_;
 
     const wordList volScalarRefStateNames_;
 
     const wordList volVectorRefStateNames_;
-    
+
 
 public:
 
@@ -96,7 +94,8 @@ public:
         referenceStates
         (
             const dictionary& dict,
-            dataBase& base
+            dataBase& base,
+            word type
         );
 
 

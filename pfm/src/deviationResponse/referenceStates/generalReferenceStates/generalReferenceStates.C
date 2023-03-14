@@ -53,8 +53,8 @@ generalReferenceStates::generalReferenceStates
     dataBase& base
 )
 :
-    referenceStates(dict,base),
-    propsDict_(dict.subDict(typeName + "Props")),
+    referenceStates(dict,base,typeName),
+    verbose_(propsDict_.lookupOrDefault<bool>("verbose", false)),
     maxNumRefStates_(propsDict_.lookupOrDefault<label>("maxNumRefStates", 1000)),
     volScalarRefStateList_(volScalarRefStateNames_.size()),
     volVectorRefStateList_(volVectorRefStateNames_.size()),
@@ -64,11 +64,13 @@ generalReferenceStates::generalReferenceStates
     forAll(volScalarRefStateNames_,i)
     {
         volScalarRefStateList_[i].setSize(maxNumRefStates_);
+        volScalarEvolvedRefStateList_[i].setSize(maxNumRefStates_);
     }
 
     forAll(volVectorRefStateNames_,i)
     {
         volVectorRefStateList_[i].setSize(maxNumRefStates_);
+        volVectorEvolvedRefStateList_[i].setSize(maxNumRefStates_);
     }
 }
 
@@ -119,7 +121,7 @@ label generalReferenceStates::readReferenceStates(wordList dataBases)
 
             if (refStates >= maxNumRefStates_)
             {
-                FatalError << "database contents exceeds maximum number of reference states\n" << abort(FatalError);                
+                FatalError << "database contents exceeds maximum number of reference states\n" << abort(FatalError);
             }
 
             forAll(volScalarRefStateNames_,j)
@@ -216,13 +218,13 @@ label generalReferenceStates::readReferenceStates(wordList dataBases)
     {
         FatalError << "different prediction step sizes detected\n" << abort(FatalError);
     }
-    
+
     forAll(volScalarRefStateNames_,i)
     {
         volScalarRefStateList_[i].resize(refStates);
         volScalarEvolvedRefStateList_[i].resize(refStates);
     }
-    
+
     forAll(volVectorRefStateNames_,i)
     {
         volVectorRefStateList_[i].resize(refStates);

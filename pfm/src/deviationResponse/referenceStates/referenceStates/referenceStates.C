@@ -48,16 +48,15 @@ defineRunTimeSelectionTable(referenceStates, dictionary);
 referenceStates::referenceStates
 (
     const dictionary& dict,
-    dataBase& base
+    dataBase& base,
+    word type
 )
 :
     dataBase_(base),
-    dataBaseProperties_(dict),
-    verbose_(dataBaseProperties_.lookupOrDefault<bool>("verbose", false)),
-    volScalarRefStateNames_(dataBaseProperties_.lookup("volScalarRefStates")),
-    volVectorRefStateNames_(dataBaseProperties_.lookup("volVectorRefStates"))
-{
-}
+    propsDict_(dict.subDict(type + "Props")),
+    volScalarRefStateNames_(propsDict_.lookupOrDefault<wordList>("volScalarRefStates",wordList(0))),
+    volVectorRefStateNames_(propsDict_.lookupOrDefault<wordList>("volVectorRefStates",wordList(0)))
+{}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -86,7 +85,7 @@ label referenceStates::findRefStateListIndex(word fieldType, word fieldName)
             {
                 return i;
             }
-        }        
+        }
     }
     else
     {

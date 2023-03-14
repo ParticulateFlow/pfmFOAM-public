@@ -40,12 +40,7 @@ class fieldNorm
 {
 protected:
 
-    // Protected data
     dataBase& dataBase_;
-
-    const dictionary& dataBaseProperties_;
-
-    bool verbose_;
 
 public:
 

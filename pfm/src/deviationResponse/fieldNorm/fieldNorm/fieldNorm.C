@@ -50,9 +50,7 @@ fieldNorm::fieldNorm
     dataBase& base
 )
 :
-    dataBase_(base),
-    dataBaseProperties_(dict),
-    verbose_(dict.lookupOrDefault<Switch>("verbose", false))
+    dataBase_(base)
 {
 }
 

@@ -56,6 +56,7 @@ diffNorm::diffNorm
 :
     fieldNorm(dict, base),
     propsDict_(dict.subDict(type + "Props")),
+    verbose_(propsDict_.lookupOrDefault<bool>("verbose", false)),
     fieldName_(propsDict_.lookup("fieldName"))
 {
 }

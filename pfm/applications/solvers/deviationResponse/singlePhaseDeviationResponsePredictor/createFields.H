@@ -82,7 +82,7 @@ IOdictionary dbProperties
 (
     IOobject
     (
-        "dbProperties",
+        "dataBaseProperties",
         mesh.time().constant(),
         mesh,
         IOobject::MUST_READ,

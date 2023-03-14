@@ -45,6 +45,8 @@ protected:
 
     dictionary propsDict_;
 
+    bool verbose_;
+
     word fieldName_;
 
 
