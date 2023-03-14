@@ -43,7 +43,6 @@ Description
 int main(int argc, char *argv[])
 {
     #include "postProcess.H"
-
     #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
@@ -53,7 +52,6 @@ int main(int argc, char *argv[])
 
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-  
     dataBase db(mesh);
     db.init();
     label URefStateListIndex = db.referenceS().findRefStateListIndex("volVectorField",URefStateName);
@@ -66,53 +64,26 @@ int main(int argc, char *argv[])
         distanceFile << "# time\tinitial distance\terror of evolved ref solution\terror of complete prediction" << endl;
     }
 
-    label nearestRefState = -1;
     bool firstStep = true;
-    scalar initialDistance = -1.0;
-
+    label nearestRefState = db.findNearestRefState(U,URefStateListIndex);
+    URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
+    deltaU == U - URef;
+    URef.write();
+    deltaU.write();
+    scalar initialDistance = db.fieldN().fieldsDistance(U,URef);
+    Info << "Performing calculation for initial distance " << initialDistance << endl;
 
     while (runTime.loop())
     {
         Info << "Time = " << runTime.timeName() << nl << endl;
+
         if (!firstStep)
         {
-            U.write();
-            URefEvolved.write();
-            deltaUEvolved.write();
-            if (compareToExactSolution)
-            {
-                UExactSolution.reset
-                (
-                    new volVectorField
-                        (
-                            IOobject
-                            (
-                                exactSolutionFieldName,
-                                runTime.timeName(),
-                                mesh,
-                                IOobject::MUST_READ,
-                                IOobject::NO_WRITE
-                            ),
-                            mesh
-                        )
-                );
-                
-                scalar distance1 = db.fieldN().fieldsDistance(UExactSolution,URefEvolved);
-                scalar distance2 = db.fieldN().fieldsDistance(UExactSolution,U);
+            nearestRefState = db.findNearestRefState(U,URefStateListIndex);
+            URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
+            deltaU == U - URef;
+        }
 
-                distanceFile << runTime.timeName() << "\t" << initialDistance << "\t" << distance1 << "\t" << distance2 << endl;
-            }
-        }
-        
-        nearestRefState = db.findNearestRefState(U,URefStateListIndex);
-        URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
-        if (firstStep)
-        {
-            initialDistance = db.fieldN().fieldsDistance(U,URef);
-            Info << "Performing calculation for initial distance " << initialDistance << endl;
-        }
-        deltaU == U - URef;
-        
         #include "convoluteDeviation.H"
 
         URefEvolved == db.referenceS().exportVolVectorEvolvedField(URefStateListIndex,nearestRefState);
@@ -121,6 +92,34 @@ int main(int argc, char *argv[])
 
         URef.write();
         deltaU.write();
+
+        U.write();
+        URefEvolved.write();
+        deltaUEvolved.write();
+
+        if (compareToExactSolution)
+        {
+            UExactSolution.reset
+            (
+                new volVectorField
+                    (
+                        IOobject
+                        (
+                            exactSolutionFieldName,
+                            runTime.timeName(),
+                            mesh,
+                            IOobject::MUST_READ,
+                            IOobject::NO_WRITE
+                        ),
+                        mesh
+                    )
+            );
+
+            scalar distance1 = db.fieldN().fieldsDistance(UExactSolution,URefEvolved);
+            scalar distance2 = db.fieldN().fieldsDistance(UExactSolution,U);
+
+            distanceFile << runTime.timeName() << "\t" << initialDistance << "\t" << distance1 << "\t" << distance2 << endl;
+        }
 
         firstStep = false;
 
