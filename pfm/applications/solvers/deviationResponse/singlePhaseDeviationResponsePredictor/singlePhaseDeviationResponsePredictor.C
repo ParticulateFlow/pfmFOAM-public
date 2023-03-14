@@ -64,25 +64,33 @@ int main(int argc, char *argv[])
         distanceFile << "# time\tinitial distance\terror of evolved ref solution\terror of complete prediction" << endl;
     }
 
-    bool firstStep = true;
-    label nearestRefState = db.findNearestRefState(U,URefStateListIndex);
-    URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
-    deltaU == U - URef;
-    URef.write();
-    deltaU.write();
-    scalar initialDistance = db.fieldN().fieldsDistance(U,URef);
-    Info << "Performing calculation for initial distance " << initialDistance << endl;
+    label nearestRefState = -1;
+    scalar initialDistance = -1;
+    label prevTimeIndex = runTime.timeIndex();
+    label presentTimeIndex = -1;
+    scalar prevTime = runTime.value();
+    scalar presentTime = -1.0;
 
     while (runTime.loop())
     {
         Info << "Time = " << runTime.timeName() << nl << endl;
+        presentTimeIndex = runTime.timeIndex();
+        presentTime = runTime.value();
 
-        if (!firstStep)
+        nearestRefState = db.findNearestRefState(U,URefStateListIndex);
+        URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
+        deltaU == U - URef;
+        initialDistance = db.fieldN().fieldsDistance(U,URef);
+
+        if (runTime.writeTime())
         {
-            nearestRefState = db.findNearestRefState(U,URefStateListIndex);
-            URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
-            deltaU == U - URef;
+            runTime.setTime(prevTimeIndex,prevTime);
+            URef.write();
+            deltaU.write();
+            runTime.setTime(presentTimeIndex,presentTime);
         }
+        prevTimeIndex = presentTimeIndex;
+        prevTime = presentTime;
 
         #include "convoluteDeviation.H"
 
@@ -90,12 +98,10 @@ int main(int argc, char *argv[])
         U = URefEvolved + deltaUEvolved;
         U.correctBoundaryConditions(); 
 
-        URef.write();
-        deltaU.write();
-
-        U.write();
-        URefEvolved.write();
-        deltaUEvolved.write();
+   //     U.write();
+   //     URefEvolved.write();
+   //     deltaUEvolved.write();
+        runTime.write();
 
         if (compareToExactSolution)
         {
@@ -120,8 +126,6 @@ int main(int argc, char *argv[])
 
             distanceFile << runTime.timeName() << "\t" << initialDistance << "\t" << distance1 << "\t" << distance2 << endl;
         }
-
-        firstStep = false;
 
         Info << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"

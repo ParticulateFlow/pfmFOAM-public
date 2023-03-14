@@ -21,7 +21,7 @@ volVectorField U
         runTime.timeName(),
         mesh,
         IOobject::MUST_READ,
-        IOobject::NO_WRITE
+        IOobject::AUTO_WRITE
     ),
     mesh
 );
@@ -47,7 +47,7 @@ volVectorField deltaUEvolved
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::AUTO_WRITE
     ),
     U
 );
@@ -73,7 +73,7 @@ volVectorField URefEvolved
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::AUTO_WRITE
     ),
     U
 );
