@@ -1,0 +1,3 @@
+computeResponseFunctionsDifference.C
+
+EXE = $(FOAM_APPBIN)/computeResponseFunctionsDifference
