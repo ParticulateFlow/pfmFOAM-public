@@ -98,9 +98,6 @@ int main(int argc, char *argv[])
         U = URefEvolved + deltaUEvolved;
         U.correctBoundaryConditions(); 
 
-   //     U.write();
-   //     URefEvolved.write();
-   //     deltaUEvolved.write();
         runTime.write();
 
         if (compareToExactSolution)

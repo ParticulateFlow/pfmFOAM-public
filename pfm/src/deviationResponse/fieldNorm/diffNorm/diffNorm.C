@@ -80,6 +80,11 @@ scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorFie
     return fvc::domainIntegrate(magSqr(diffField)).value();
 }
 
+scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorField &field2)
+{
+    volTensorField diffField(field1-field2);
+    return fvc::domainIntegrate(magSqr(diffField)).value();
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

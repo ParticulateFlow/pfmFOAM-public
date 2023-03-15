@@ -32,6 +32,7 @@ Description
 #include "fvCFD.H"
 #include "OFstream.H"
 #include "dataBase.H"
+#include "fieldNorm.H"
 #include "responseFunctions.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,12 +44,14 @@ int main(int argc, char *argv[])
     #include "createFields.H"
 
  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
     dataBase db(mesh);
     db.responseF().readIntegratedResponseFunctions();
     db.init();
+    OFstream distanceFile("integratedXuuDistances");
+    distanceFile << "# refState distance" << endl;
 
     label numRefStates = db.numRefStates();
+    scalar domainVol = gSum(mesh.V());
 
     for (int refState = 0; refState < numRefStates; refState++)
     {
@@ -65,10 +68,6 @@ int main(int argc, char *argv[])
             forAll(X_uu, sender)
             {
                 X_uu_integrated[cellI] += X_uu[sender] * mesh.V()[senderCells[sender]];
-    //            if (cellI == 4240)
-    //            {
-    //                Info << "volume contribution from sender " << sender << " = cell " << senderCells[sender] << " with volume = " << mesh.V()[senderCells[sender]] << " = " << X_uu[sender] << endl;
-    //            }
             }
 
             labelList &senderBoundaryFaces = db.responseF().senderBoundaryFaceIDs(refState,cellI);
@@ -83,14 +82,11 @@ int main(int argc, char *argv[])
                 patchID = patchOwningFace[senderBoundaryFaces[sender]];
                 faceID = faceIDperPatch[senderBoundaryFaces[sender]];
                 X_uu_integrated[cellI] += X_uu_boundary[sender] * mesh.magSf().boundaryField()[patchID][faceID];
-    //            if (cellI == 4240)
-    //            {
-    //                Info << "boundary contribution from sender face" << sender << " with area " << mesh.magSf().boundaryField()[patchID][faceID] << " = " << X_uu_boundary[sender]  << endl;
-    //                Info << "\n faceID = " << faceID << ", patchID = " << patchID << endl;
-    //            }
             }
         }
-        
+
+        scalar distance = Foam::sqrt(db.fieldN().fieldsDistance(X_uu_integrated,X_uu_integrated_target)/domainVol);
+        distanceFile << refState << " " << distance << endl;
         X_uu_integrated.write();
         X_uu_integrated_target.write();
     }

@@ -96,7 +96,7 @@ public:
     //- Construct from mesh and a list of particles
     dataBase
     (
-            const fvMesh& mesh
+            const fvMesh& mesh, word dbName = "dataBase"
     );
 
 

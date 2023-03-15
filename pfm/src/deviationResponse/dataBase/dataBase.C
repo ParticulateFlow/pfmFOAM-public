@@ -33,14 +33,14 @@ namespace Foam
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 dataBase::dataBase
 (
-    const fvMesh& mesh
+    const fvMesh& mesh, word dbName
 )
 :
     regIOobject
     (
         IOobject
         (
-            "dataBase",
+            dbName,
             mesh.time().timeName(),
             mesh,
             IOobject::NO_READ,
@@ -53,7 +53,7 @@ dataBase::dataBase
     (
         IOobject
         (
-            "dataBaseProperties",
+            dbName+"Properties",
             mesh_.time().constant(),
             mesh_,
             IOobject::MUST_READ,

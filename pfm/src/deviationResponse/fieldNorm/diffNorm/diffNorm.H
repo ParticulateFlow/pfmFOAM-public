@@ -76,6 +76,8 @@ public:
     scalar fieldsDistance(const volScalarField &, const volScalarField &);
 
     scalar fieldsDistance(const volVectorField &, const volVectorField &);
+
+    scalar fieldsDistance(const volTensorField &, const volTensorField &);
 };
 
 

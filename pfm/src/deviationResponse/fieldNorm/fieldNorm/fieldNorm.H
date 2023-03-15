@@ -93,6 +93,8 @@ public:
     virtual scalar fieldsDistance(const volScalarField &, const volScalarField &) = 0;
 
     virtual scalar fieldsDistance(const volVectorField &, const volVectorField &) = 0;
+
+    virtual scalar fieldsDistance(const volTensorField &, const volTensorField &) = 0;
 };
 
 
