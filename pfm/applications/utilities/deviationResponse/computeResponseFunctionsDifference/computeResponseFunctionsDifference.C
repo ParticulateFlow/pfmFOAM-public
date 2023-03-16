@@ -62,24 +62,40 @@ int main(int argc, char *argv[])
 
     for (int refState = 0; refState < numRefStates1; refState++)
     {
+        word fieldName = "deltaX_uu_integrated_"+name(refState);
+        volScalarField deltaX_uu_integrated
+        (
+            IOobject
+            (
+                fieldName,
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh,
+            dimensionedScalar("zero",dimensionSet(0,0,0,0,0,0,0),0)
+        );
+
         scalar distance = 0.0;
-        forAll(deltaX_uu, cellI)
+        forAll(deltaX_uu_integrated, cellI)
         {
+            deltaX_uu == dimensionedTensor("zero",dimensionSet(0,0,-3,0,0,0,0),tensor::zero);
+
             labelList &senderCells1 = db1.responseF().senderCellIDs(refState,cellI);
             tensorList &X_uu1 = db1.responseF().Xuu_internal(refState,cellI);
 
             labelList &senderCells2 = db2.responseF().senderCellIDs(refState,cellI);
             tensorList &X_uu2 = db2.responseF().Xuu_internal(refState,cellI);
 
-            deltaX_uu[cellI] == tensor::zero;
             forAll(X_uu1, sender)
             {
-                deltaX_uu[senderCells1[sender]] += X_uu1[sender] * mesh.V()[senderCells1[sender]];
+                deltaX_uu[senderCells1[sender]] += X_uu1[sender];
             }
 
             forAll(X_uu2, sender)
             {
-                deltaX_uu[senderCells2[sender]] -= X_uu2[sender] * mesh.V()[senderCells2[sender]];
+                deltaX_uu[senderCells2[sender]] -= X_uu2[sender];
             }
 
             labelList &senderBoundaryFaces1 = db1.responseF().senderBoundaryFaceIDs(refState,cellI);
@@ -98,26 +114,28 @@ int main(int argc, char *argv[])
             {
                 patchID = patchOwningFace1[senderBoundaryFaces1[sender]];
                 faceID = faceIDperPatch1[senderBoundaryFaces1[sender]];
-                deltaX_uu.boundaryFieldRef()[patchID][faceID] += X_uu_boundary1[sender] * mesh.magSf().boundaryField()[patchID][faceID];
+                deltaX_uu.boundaryFieldRef()[patchID][faceID] += X_uu_boundary1[sender];
             }
 
             forAll(X_uu_boundary2, sender)
             {
                 patchID = patchOwningFace2[senderBoundaryFaces2[sender]];
                 faceID = faceIDperPatch2[senderBoundaryFaces2[sender]];
-                deltaX_uu.boundaryFieldRef()[patchID][faceID] -= X_uu_boundary2[sender] * mesh.magSf().boundaryField()[patchID][faceID];
+                deltaX_uu.boundaryFieldRef()[patchID][faceID] -= X_uu_boundary2[sender]; // * mesh.magSf().boundaryField()[patchID][faceID];
             }
 
             scalar distanceLocal = 0.0;
             forAll(deltaX_uu,cellJ)
             {
-                distanceLocal += magSqr(deltaX_uu[cellJ]) * mesh.V()[cellJ];
+                distanceLocal += Foam::sqrt(magSqr(deltaX_uu[cellJ])) * mesh.V()[cellJ];
             }
             // sum up magsqr
             distance += distanceLocal * mesh.V()[cellI];
+            deltaX_uu_integrated[cellI] = distanceLocal;
         }
-        distance = Foam::sqrt(distance/domainVol);
+        distance = distance/domainVol;
         distanceFile << refState << " " << distance << endl;
+        deltaX_uu_integrated.write();
     }
 
     Info<< "End\n" << endl;
