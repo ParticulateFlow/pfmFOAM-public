@@ -49,6 +49,8 @@ protected:
 
     word fieldName_;
 
+    scalar domainVolume_;
+
 
 public:
 

@@ -44,6 +44,11 @@ int main(int argc, char *argv[])
     #include "createFields.H"
 
  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    if (!Pstream::master())
+    {
+        FatalError <<"current implementation for serial runs only\n" << abort(FatalError);
+    }
+
     dataBase db(mesh);
     db.responseF().readIntegratedResponseFunctions();
     db.init();
@@ -51,7 +56,6 @@ int main(int argc, char *argv[])
     distanceFile << "# refState distance" << endl;
 
     label numRefStates = db.numRefStates();
-    scalar domainVol = gSum(mesh.V());
 
     for (int refState = 0; refState < numRefStates; refState++)
     {
@@ -85,7 +89,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        scalar distance = Foam::sqrt(db.fieldN().fieldsDistance(X_uu_integrated,X_uu_integrated_target)/domainVol);
+        scalar distance = db.fieldN().fieldsDistance(X_uu_integrated,X_uu_integrated_target);
         distanceFile << refState << " " << distance << endl;
         X_uu_integrated.write();
         X_uu_integrated_target.write();

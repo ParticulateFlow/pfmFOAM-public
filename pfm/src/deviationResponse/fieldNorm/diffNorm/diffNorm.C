@@ -57,8 +57,10 @@ diffNorm::diffNorm
     fieldNorm(dict, base),
     propsDict_(dict.subDict(type + "Props")),
     verbose_(propsDict_.lookupOrDefault<bool>("verbose", false)),
-    fieldName_(propsDict_.lookup("fieldName"))
+    fieldName_(propsDict_.lookup("fieldName")),
+    domainVolume_(0.0)
 {
+    domainVolume_ = gSum(dataBase_.mesh().V());
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -71,19 +73,52 @@ diffNorm::~diffNorm()
 scalar diffNorm::fieldsDistance(const volScalarField &field1, const volScalarField &field2)
 {
     volScalarField diffField(field1-field2);
-    return fvc::domainIntegrate(sqr(diffField)).value();
+    scalar integrand = 0.0;
+    scalar sum = 0.0;
+    forAll(diffField,cellI)
+    {
+        integrand = sqr(diffField[cellI]);
+        if (integrand > VSMALL)
+        {
+            sum += Foam::sqrt(integrand) * dataBase_.mesh().V()[cellI];
+        }
+    }
+    reduce(sum, sumOp<scalar>());
+    return sum/domainVolume_;
 }
 
 scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorField &field2)
 {
     volVectorField diffField(field1-field2);
-    return fvc::domainIntegrate(magSqr(diffField)).value();
+    scalar integrand = 0.0;
+    scalar sum = 0.0;
+    forAll(diffField,cellI)
+    {
+        integrand = magSqr(diffField[cellI]);
+        if (integrand > VSMALL)
+        {
+            sum += Foam::sqrt(integrand) * dataBase_.mesh().V()[cellI];
+        }
+    }
+    reduce(sum, sumOp<scalar>());
+    return sum/domainVolume_;
 }
 
 scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorField &field2)
 {
     volTensorField diffField(field1-field2);
-    return fvc::domainIntegrate(magSqr(diffField)).value();
+    scalar integrand = 0.0;
+    scalar sum = 0.0;
+    forAll(diffField,cellI)
+    {
+        integrand = magSqr(diffField[cellI]);
+        if (integrand > VSMALL)
+        {
+            sum += Foam::sqrt(integrand) * dataBase_.mesh().V()[cellI];
+        }
+    }
+    reduce(sum, sumOp<scalar>());
+    return sum/domainVolume_;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
