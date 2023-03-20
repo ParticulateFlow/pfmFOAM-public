@@ -91,14 +91,19 @@ int main(int argc, char *argv[])
             labelList &senderCells2 = db2.responseF().senderCellIDs(refState,cellI);
             tensorList &X_uu2 = db2.responseF().Xuu_internal(refState,cellI);
 
+            scalar norm1 = 0.0;
+            scalar norm2 = 0.0;
+
             forAll(X_uu1, sender)
             {
                 deltaX_uu[senderCells1[sender]] += X_uu1[sender];
+                norm1 += Foam::sqrt(magSqr(X_uu1[sender])) * mesh.V()[senderCells1[sender]];
             }
 
             forAll(X_uu2, sender)
             {
                 deltaX_uu[senderCells2[sender]] -= X_uu2[sender];
+                norm2 += Foam::sqrt(magSqr(X_uu2[sender])) * mesh.V()[senderCells2[sender]];
             }
 
             labelList &senderBoundaryFaces1 = db1.responseF().senderBoundaryFaceIDs(refState,cellI);
@@ -118,6 +123,7 @@ int main(int argc, char *argv[])
                 patchID = patchOwningFace1[senderBoundaryFaces1[sender]];
                 faceID = faceIDperPatch1[senderBoundaryFaces1[sender]];
                 deltaX_uu.boundaryFieldRef()[patchID][faceID] += X_uu_boundary1[sender];
+                norm1 += Foam::sqrt(magSqr(X_uu_boundary1[sender])) * mesh.magSf().boundaryField()[patchID][faceID];
             }
 
             forAll(X_uu_boundary2, sender)
@@ -125,6 +131,7 @@ int main(int argc, char *argv[])
                 patchID = patchOwningFace2[senderBoundaryFaces2[sender]];
                 faceID = faceIDperPatch2[senderBoundaryFaces2[sender]];
                 deltaX_uu.boundaryFieldRef()[patchID][faceID] -= X_uu_boundary2[sender];
+                norm2 += Foam::sqrt(magSqr(X_uu_boundary2[sender])) * mesh.magSf().boundaryField()[patchID][faceID];
             }
 
             scalar distanceLocal = 0.0;
@@ -148,8 +155,7 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-
-            deltaX_uu_integrated[cellI] = distanceLocal;
+            deltaX_uu_integrated[cellI] = distanceLocal / (Foam::sqrt(norm1) * Foam::sqrt(norm2));
         }
         scalar distance = fvc::domainIntegrate(deltaX_uu_integrated).value()/domainVol;
         distanceFile << refState << " " << distance << endl;
