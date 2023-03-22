@@ -191,11 +191,11 @@ else if (selectedMode == "integrated")
 }
 else FatalError << "no known mode specified\n" << abort(FatalError);
 
-word timeSeriesName(tsProperties.lookupOrDefault<word>("timeSeries", "timeSeries"));
+fileName timeSeriesName(tsProperties.lookupOrDefault<fileName>("timeSeries", "timeSeries"));
 word UtsName(tsProperties.lookupOrDefault<word>("U_ts", "U"));
 scalar tstart(tsProperties.lookupOrDefault<scalar>("tstart", 0.0));
 scalar tolerance(tsProperties.lookupOrDefault<scalar>("tolerance", 1e-9));
-Foam::Time tsTime(fileName(timeSeriesName), "", "../system", "../constant", false);
+Foam::Time tsTime(timeSeriesName, "", "../system", "../constant", false);
 instantList timeDirs(tsTime.times());
 if (timeDirs.size() == 0)
 {
