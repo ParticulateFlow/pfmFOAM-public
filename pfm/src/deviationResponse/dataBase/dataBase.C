@@ -60,7 +60,7 @@ dataBase::dataBase
             IOobject::NO_WRITE
         )
     ),
-    dataBaseNames_(dataBaseProperties_.lookupOrDefault<wordList>("dataBases", wordList(1,"dataBase"))),
+    dataBaseNames_(dataBaseProperties_.lookupOrDefault<fileNameList>("dataBases", fileNameList(1,"dataBase"))),
     numDataBases_(dataBaseNames_.size()),
     numRefStates_(0),
     predictionTimeStep_(-1.0),
