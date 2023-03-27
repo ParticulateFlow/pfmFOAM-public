@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         {
             volScalarField magU(mag(U));
             scalar normalization = fvc::domainIntegrate(magU).value();
-            initialDistance = db.fieldN().fieldsDistance(U,URef,1.0/normalization);
+            initialDistance = db.fieldN().fieldsDistance(U,URef,normalization);
         }
 
         if (runTime.writeTime())
@@ -126,8 +126,8 @@ int main(int argc, char *argv[])
             volScalarField magUExact(mag(UExactSolution()));
             scalar normalization = fvc::domainIntegrate(magUExact).value();
 
-            scalar distance1 = db.fieldN().fieldsDistance(UExactSolution(),URefEvolved,1.0/normalization);
-            scalar distance2 = db.fieldN().fieldsDistance(UExactSolution(),U,1.0/normalization);
+            scalar distance1 = db.fieldN().fieldsDistance(UExactSolution(),URefEvolved,normalization);
+            scalar distance2 = db.fieldN().fieldsDistance(UExactSolution(),U,normalization);
 
             distanceFile << runTime.timeName() << "\t" << initialDistance << "\t" << distance1 << "\t" << distance2 << endl;
         }
