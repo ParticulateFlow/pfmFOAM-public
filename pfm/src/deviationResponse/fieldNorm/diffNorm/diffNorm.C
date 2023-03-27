@@ -70,7 +70,7 @@ diffNorm::~diffNorm()
 
 // * * * * * * * * * * * * * protected Member Functions  * * * * * * * * * * * * //
 
-scalar diffNorm::fieldsDistance(const volScalarField &field1, const volScalarField &field2)
+scalar diffNorm::fieldsDistance(const volScalarField &field1, const volScalarField &field2, double normalization)
 {
     volScalarField diffField(field1-field2);
     scalar integrand = 0.0;
@@ -84,10 +84,12 @@ scalar diffNorm::fieldsDistance(const volScalarField &field1, const volScalarFie
         }
     }
     reduce(sum, sumOp<scalar>());
-    return sum/domainVolume_;
+    // if no normalization value is provided, normalize with domain volume
+    if (normalization < 0.0) return sum/domainVolume_;
+    else return sum / normalization;
 }
 
-scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorField &field2)
+scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorField &field2, double normalization)
 {
     volVectorField diffField(field1-field2);
     scalar integrand = 0.0;
@@ -101,10 +103,12 @@ scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorFie
         }
     }
     reduce(sum, sumOp<scalar>());
-    return sum/domainVolume_;
+    // if no normalization value is provided, normalize with domain volume
+    if (normalization < 0.0) return sum/domainVolume_;
+    else return sum / normalization;
 }
 
-scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorField &field2)
+scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorField &field2, double normalization)
 {
     volTensorField diffField(field1-field2);
     scalar integrand = 0.0;
@@ -118,7 +122,9 @@ scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorFie
         }
     }
     reduce(sum, sumOp<scalar>());
-    return sum/domainVolume_;
+    // if no normalization value is provided, normalize with domain volume
+    if (normalization < 0.0) return sum/domainVolume_;
+    else return sum / normalization;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -90,11 +90,11 @@ public:
 
     // Member functions
 
-    virtual scalar fieldsDistance(const volScalarField &, const volScalarField &) = 0;
+    virtual scalar fieldsDistance(const volScalarField &, const volScalarField &, double normalization = -1.0) = 0;
 
-    virtual scalar fieldsDistance(const volVectorField &, const volVectorField &) = 0;
+    virtual scalar fieldsDistance(const volVectorField &, const volVectorField &, double normalization = -1.0) = 0;
 
-    virtual scalar fieldsDistance(const volTensorField &, const volTensorField &) = 0;
+    virtual scalar fieldsDistance(const volTensorField &, const volTensorField &, double normalization = -1.0) = 0;
 };
 
 

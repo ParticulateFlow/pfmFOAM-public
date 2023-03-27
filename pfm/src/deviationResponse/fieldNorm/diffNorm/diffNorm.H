@@ -75,11 +75,11 @@ public:
 
     // Member Functions
 
-    scalar fieldsDistance(const volScalarField &, const volScalarField &);
+    scalar fieldsDistance(const volScalarField &, const volScalarField &, double normalization);
 
-    scalar fieldsDistance(const volVectorField &, const volVectorField &);
+    scalar fieldsDistance(const volVectorField &, const volVectorField &, double normalization);
 
-    scalar fieldsDistance(const volTensorField &, const volTensorField &);
+    scalar fieldsDistance(const volTensorField &, const volTensorField &, double normalization);
 };
 
 

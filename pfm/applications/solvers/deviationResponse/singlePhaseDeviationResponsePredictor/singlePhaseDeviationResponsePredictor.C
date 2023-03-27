@@ -80,7 +80,12 @@ int main(int argc, char *argv[])
         nearestRefState = db.findNearestRefState(U,URefStateListIndex);
         URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
         deltaU == U - URef;
-        initialDistance = db.fieldN().fieldsDistance(U,URef);
+        if (compareToExactSolution)
+        {
+            volScalarField magU(mag(U));
+            scalar normalization = fvc::domainIntegrate(magU).value();
+            initialDistance = db.fieldN().fieldsDistance(U,URef,1.0/normalization);
+        }
 
         if (runTime.writeTime())
         {
@@ -118,8 +123,11 @@ int main(int argc, char *argv[])
                     )
             );
 
-            scalar distance1 = db.fieldN().fieldsDistance(UExactSolution,URefEvolved);
-            scalar distance2 = db.fieldN().fieldsDistance(UExactSolution,U);
+            volScalarField magUExact(mag(UExactSolution()));
+            scalar normalization = fvc::domainIntegrate(magUExact).value();
+
+            scalar distance1 = db.fieldN().fieldsDistance(UExactSolution(),URefEvolved,1.0/normalization);
+            scalar distance2 = db.fieldN().fieldsDistance(UExactSolution(),U,1.0/normalization);
 
             distanceFile << runTime.timeName() << "\t" << initialDistance << "\t" << distance1 << "\t" << distance2 << endl;
         }
