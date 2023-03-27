@@ -84,19 +84,19 @@ generalReferenceStates::~generalReferenceStates()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-label generalReferenceStates::readReferenceStates(wordList dataBases)
+label generalReferenceStates::readReferenceStates(fileNameList dataBases)
 {
     int refStates = 0;
     scalarList predictionSteps(dataBases.size());
     forAll(dataBases,i)
     {
-        word dbName = dataBases[i];
+        fileName dbName = dataBases[i];
         Info << "\nReading reference states of database " << dbName << endl;
 
         IFstream psFile(dbName+"/predictionStep");
         psFile >> predictionSteps[i];
 
-        Foam::Time dbTime(fileName(dbName), "", "../system", "../constant", false);
+        Foam::Time dbTime(dbName, "", "../system", "../constant", false);
         instantList timeDirs(dbTime.times());
         if (timeDirs.size() == 0)
         {

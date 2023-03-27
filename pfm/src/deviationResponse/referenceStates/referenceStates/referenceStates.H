@@ -115,7 +115,7 @@ public:
 
     // Member Functions
 
-    virtual label readReferenceStates(wordList dataBases) = 0;
+    virtual label readReferenceStates(fileNameList dataBases) = 0;
 
     label findRefStateListIndex(word fieldType, word fieldName);
 

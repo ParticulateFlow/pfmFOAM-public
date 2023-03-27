@@ -66,7 +66,7 @@ protected:
 
     IOdictionary dataBaseProperties_;
 
-    wordList dataBaseNames_;
+    fileNameList dataBaseNames_;
 
     label numDataBases_;
 

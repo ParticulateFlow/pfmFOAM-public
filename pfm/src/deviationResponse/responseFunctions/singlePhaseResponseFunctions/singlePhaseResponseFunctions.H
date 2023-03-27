@@ -82,7 +82,7 @@ public:
 
     // Member Functions
 
-    label readResponseFunctions(wordList dataBases);
+    label readResponseFunctions(fileNameList dataBases);
 
     tensorList &Xuu_boundary(label refState, label receiverID);
 

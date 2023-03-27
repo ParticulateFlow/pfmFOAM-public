@@ -71,15 +71,15 @@ singlePhaseResponseFunctions::~singlePhaseResponseFunctions()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-label singlePhaseResponseFunctions::readResponseFunctions(wordList dataBases)
+label singlePhaseResponseFunctions::readResponseFunctions(fileNameList dataBases)
 {
     int refStates = 0;
     forAll(dataBases,i)
     {
-        word dbName = dataBases[i];
+        fileName dbName = dataBases[i];
         Info << "\nReading response functions of database " << dbName << endl;
 
-        Foam::Time dbTime(fileName(dbName), "", "../system", "../constant", false);
+        Foam::Time dbTime(dbName, "", "../system", "../constant", false);
         instantList timeDirs(dbTime.times());
         if (timeDirs.size() == 0)
         {

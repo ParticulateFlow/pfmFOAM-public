@@ -78,7 +78,7 @@ public:
 
     // Member Functions
 
-    label readReferenceStates(wordList dataBases);
+    label readReferenceStates(fileNameList dataBases);
 
     const volScalarField& exportVolScalarField(label, label);
 
