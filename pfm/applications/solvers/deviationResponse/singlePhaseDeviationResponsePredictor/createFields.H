@@ -1,4 +1,4 @@
-/*
+
 Info<< "Reading field p\n" << endl;
 volScalarField p
 (
@@ -7,12 +7,13 @@ volScalarField p
         "p",
         runTime.timeName(),
         mesh,
-        IOobject::MUST_READ,
+        IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    mesh
+    mesh,
+    dimensionedScalar("zero", dimensionSet(0,2,-2,0,0,0,0), 0.0)
 );
-*/
+
 
 Info<< "Reading field U\n" << endl;
 volVectorField U
@@ -80,6 +81,20 @@ volVectorField URefEvolved
     U
 );
 
+volScalarField divU
+(
+    IOobject
+    (
+        "divU",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    fvc::div(U)
+);
+divU.write();
+
 IOdictionary dbProperties
 (
     IOobject
@@ -98,5 +113,14 @@ word exactSolutionFieldName(dbProperties.lookupOrDefault<word>("exactSolutionFie
 bool compareToExactSolution = false;
 if (exactSolutionFieldName != "none") compareToExactSolution = true;
 autoPtr<volVectorField> UExactSolution(NULL);
+bool correctP(dbProperties.lookupOrDefault<bool>("correctP",false));
 
+if (correctP && !p.headerOk())
+{
+    FatalError << "Provide pressure field to apply pressure correction." << abort(FatalError);
+}
+
+label pRefCell = 0;
+scalar pRefValue = 0.0;
+    
 #include "createFvOptions.H"

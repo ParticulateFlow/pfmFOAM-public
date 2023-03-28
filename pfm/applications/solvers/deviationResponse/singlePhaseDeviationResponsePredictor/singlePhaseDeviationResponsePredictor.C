@@ -101,7 +101,12 @@ int main(int argc, char *argv[])
 
         URefEvolved == db.referenceS().exportVolVectorEvolvedField(URefStateListIndex,nearestRefState);
         U = URefEvolved + deltaUEvolved;
-        U.correctBoundaryConditions(); 
+        U.correctBoundaryConditions();
+        if (correctP)
+        {
+            #include "correctP.H"
+        }
+        divU = fvc::div(U);
 
         runTime.write();
 
