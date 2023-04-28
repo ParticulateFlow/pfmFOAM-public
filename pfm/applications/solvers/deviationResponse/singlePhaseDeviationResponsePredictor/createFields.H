@@ -95,6 +95,34 @@ volScalarField divU
 );
 divU.write();
 
+volVectorField convectiveTermLinear
+(
+    IOobject
+    (
+        "convectiveTermLinear",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedVector("zero",dimensionSet(0,1,-2,0,0,0,0), vector::zero)
+);
+
+volVectorField convectiveTermQuadratic
+(
+    IOobject
+    (
+        "convectiveTermQuadratic",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedVector("zero",dimensionSet(0,1,-2,0,0,0,0), vector::zero)
+);
+
 IOdictionary dbProperties
 (
     IOobject
@@ -119,6 +147,8 @@ if (correctP && !p.headerOk())
 {
     FatalError << "Provide pressure field to apply pressure correction." << abort(FatalError);
 }
+
+scalar minXuu(dbProperties.lookupOrDefault<scalar>("minXuu",1e-5));
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;
