@@ -118,6 +118,12 @@ void dataBase::init()
     {
         numRefStates = referenceStates_->readReferenceStates(dataBaseNames_);
     }
+
+    // in case only reference states are to be read, stop here
+    if (dataBaseProperties_.lookup("responseFunctions") == "noResponseFunctions")
+    {
+        return;
+    }
     
     // construct face addressing
     wordList patches;
