@@ -23,15 +23,20 @@ RHS = gXuu.component(tensor::XX)*gUts.component(tensor::XX)
     + gUts.component(tensor::ZZ)*gXuu.component(tensor::ZZ);
 
 dimensionedScalar rdt("zero",dimensionSet(0,0,-1,0,0),1.0/deltaT.value());
-// is the second term on the right-hand side necessary? shouldn't make a difference for response to initial state (div free per definition), but for response to time-derivative
-tmp<fvScalarMatrix> tXpuEqn
-(
-    fvm::laplacian(X_pu) == - RHS //+ rdt*fvc::div(X_uu)
-);
-fvScalarMatrix XpuEqn = tXpuEqn.ref();
 
-XpuEqn.setReference(pRefCell, pRefValue);
-XpuEqn.solve();
+// Non-orthogonal pressure corrector loop
+while (piso.correctNonOrthogonal())
+{
+    // is the second term on the right-hand side necessary? shouldn't make a difference for response to initial state (div free per definition), but for response to time-derivative
+    tmp<fvScalarMatrix> tXpuEqn
+    (
+        fvm::laplacian(X_pu) == - RHS //+ rdt*fvc::div(X_uu)
+    );
+    fvScalarMatrix XpuEqn = tXpuEqn.ref();
+
+    XpuEqn.setReference(pRefCell, pRefValue);
+    XpuEqn.solve();
+}
 
 //X_uu = trDiagXuu() & (XuuEqn.H() - fvc::grad(X_pu));
 
