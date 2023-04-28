@@ -11,8 +11,6 @@ fvVectorMatrix XuuEqn
     fvOptions(X_uu)
 );
 
-// Laplacian term causes loss of intensity - too much?
-
 XuuEqn.relax();
 
 solve(XuuEqn);
