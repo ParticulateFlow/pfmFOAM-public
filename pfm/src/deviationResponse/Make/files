@@ -5,6 +5,7 @@ referenceStates/generalReferenceStates/generalReferenceStates.C
 responseFunctions/responseFunctions/responseFunctions.C
 responseFunctions/responseFunctions/newResponseFunctions.C
 responseFunctions/singlePhaseResponseFunctions/singlePhaseResponseFunctions.C
+responseFunctions/noResponseFunctions/noResponseFunctions.C
 fieldNorm/fieldNorm/fieldNorm.C
 fieldNorm/fieldNorm/newFieldNorm.C
 fieldNorm/diffNorm/diffNorm.C
