@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     runTime.setDeltaT(predictionTimeStep);
 
     OFstream distanceFile("distances");
+    OFstream refStatesFile("refStates");
     if (compareToExactSolution)
     {
         distanceFile << "# time\tinitial distance\terror of evolved ref solution\terror of complete prediction" << endl;
@@ -78,8 +79,14 @@ int main(int argc, char *argv[])
         presentTime = runTime.value();
 
         nearestRefState = db.findNearestRefState(U,URefStateListIndex);
+        refStatesFile << nearestRefState << " ";
         URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
         deltaU == U - URef;
+
+    //    TODO: write the following terms using surface fields
+    //    convectiveTermLinear = fvc::div(deltaU,deltaU);
+    //    convectiveTermQuadratic = fvc::div(deltaU,URef) + fvc::div(URef,deltaU);
+
         if (compareToExactSolution)
         {
             volScalarField magU(mag(U));
@@ -92,6 +99,8 @@ int main(int argc, char *argv[])
             runTime.setTime(prevTimeIndex,prevTime);
             URef.write();
             deltaU.write();
+            convectiveTermLinear.write();
+            convectiveTermQuadratic.write();
             runTime.setTime(presentTimeIndex,presentTime);
         }
         prevTimeIndex = presentTimeIndex;
