@@ -78,20 +78,20 @@ int main(int argc, char *argv[])
         presentTimeIndex = runTime.timeIndex();
         presentTime = runTime.value();
 
-        nearestRefState = db.findNearestRefState(U,URefStateListIndex);
+        nearestRefState = db.findNearestRefState(U,URefStateListIndex,initialDistance);
         refStatesFile << nearestRefState << " ";
         URef == db.referenceS().exportVolVectorField(URefStateListIndex,nearestRefState);
         deltaU == U - URef;
 
     //    TODO: write the following terms using surface fields
-    //    convectiveTermLinear = fvc::div(deltaU,deltaU);
-    //    convectiveTermQuadratic = fvc::div(deltaU,URef) + fvc::div(URef,deltaU);
+    //    convectiveTermLinear = fvc::div(deltaU,URef) + fvc::div(URef,deltaU);
+          convectiveTermQuadratic = fvc::div(linearInterpolate(deltaU) & mesh.Sf(),deltaU);
+
 
         if (compareToExactSolution)
         {
             volScalarField magU(mag(U));
             scalar normalization = fvc::domainIntegrate(magU).value();
-            initialDistance = db.fieldN().fieldsDistance(U,URef,normalization);
         }
 
         if (runTime.writeTime())

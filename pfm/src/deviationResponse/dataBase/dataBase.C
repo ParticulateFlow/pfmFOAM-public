@@ -218,7 +218,7 @@ label dataBase::numRefStates()
 }
 
 // fieldListIndex for target field has to be found at solver level via findRefStateListIndex()
-
+/*
 label dataBase::findNearestRefState(const volScalarField &field, label fieldListIndex)
 {
     scalarList distances(numRefStates_);
@@ -242,18 +242,19 @@ label dataBase::findNearestRefState(const volScalarField &field, label fieldList
 
     return minIndex;
 }
+*/
 
-label dataBase::findNearestRefState(const volVectorField &field, label fieldListIndex)
+label dataBase::findNearestRefState(const volVectorField &field, label fieldListIndex, scalar &minDist)
 {
     scalarList distances(numRefStates_);
 
     forAll(distances,stateIndex)
     {
         const volVectorField& stateI(referenceS().exportVolVectorField(fieldListIndex,stateIndex));
-        distances[stateIndex] = fieldN().fieldsDistance(stateI,field);
+        distances[stateIndex] = fieldN().fieldsDistanceConvectiveTerm(stateI,field);
     }
     
-    scalar minDist = distances[0];
+    minDist = distances[0];
     label minIndex = 0;
     forAll(distances,stateIndex)
     {

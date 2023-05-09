@@ -126,6 +126,27 @@ scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorFie
     if (normalization < 0.0) return sum/domainVolume_;
     else return sum / normalization;
 }
+
+scalar diffNorm::fieldsDistanceConvectiveTerm(const volVectorField &field1, const volVectorField &field2, double normalization)
+{
+    volVectorField diffField(field1-field2);
+    surfaceScalarField diffFieldSurface(linearInterpolate(diffField) & dataBase_.mesh().Sf());
+    volVectorField convectiveTermError(fvc::div(diffFieldSurface,diffField,"convectiveTermError"));
+    scalar integrand = 0.0;
+    scalar sum = 0.0;
+    forAll(diffField,cellI)
+    {
+        integrand = magSqr(convectiveTermError[cellI]);
+        if (integrand > VSMALL)
+        {
+            sum += Foam::sqrt(integrand) * dataBase_.mesh().V()[cellI];
+        }
+    }
+    reduce(sum, sumOp<scalar>());
+    // if no normalization value is provided, normalize with domain volume
+    if (normalization < 0.0) return sum/domainVolume_;
+    else return sum / normalization;
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

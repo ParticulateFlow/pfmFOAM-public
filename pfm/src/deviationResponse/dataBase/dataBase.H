@@ -121,9 +121,9 @@ public:
 
     label numRefStates();
     
-    label findNearestRefState(const volScalarField &field, label fieldListIndex);
+    // label findNearestRefState(const volScalarField &field, label fieldListIndex);
     
-    label findNearestRefState(const volVectorField &field, label fieldListIndex);
+    label findNearestRefState(const volVectorField &field, label fieldListIndex, scalar &minDist);
 
     labelList& faceIDperPatch();
 

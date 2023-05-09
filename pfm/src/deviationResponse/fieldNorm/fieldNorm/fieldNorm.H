@@ -95,6 +95,8 @@ public:
     virtual scalar fieldsDistance(const volVectorField &, const volVectorField &, double normalization = -1.0) = 0;
 
     virtual scalar fieldsDistance(const volTensorField &, const volTensorField &, double normalization = -1.0) = 0;
+
+    virtual scalar fieldsDistanceConvectiveTerm(const volVectorField &, const volVectorField &, double normalization = -1.0) = 0;
 };
 
 

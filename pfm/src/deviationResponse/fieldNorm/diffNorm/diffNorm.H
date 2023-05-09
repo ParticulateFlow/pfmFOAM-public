@@ -80,6 +80,8 @@ public:
     scalar fieldsDistance(const volVectorField &, const volVectorField &, double normalization);
 
     scalar fieldsDistance(const volTensorField &, const volTensorField &, double normalization);
+
+    scalar fieldsDistanceConvectiveTerm(const volVectorField &, const volVectorField &, double normalization);
 };
 
 
