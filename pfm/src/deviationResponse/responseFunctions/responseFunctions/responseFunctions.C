@@ -54,8 +54,9 @@ responseFunctions::responseFunctions
 :
     dataBase_(base),
     dataBaseProperties_(dict),
-    verbose_(dict.lookupOrDefault<Switch>("verbose", false)),
+    verbose_(dict.lookupOrDefault<bool>("verbose", false)),
     readIntegratedResponseFunctions_(false),
+    responseFunctionFormatASCII_(dict.lookupOrDefault<bool>("responseFunctionFormatASCII", false)),
     senderBoundaryFaceIDs_(100000),
     senderCellIDs_(100000)
 {

@@ -108,21 +108,45 @@ label singlePhaseResponseFunctions::readResponseFunctions(fileNameList dataBases
             // 3((11 12 13 14 15 16 17 18 19) (21 22 23 24 25 26 27 28 29) (31 32 33 34 35 36 37 38 39))
             // )
             List<tensorList> X_internal;
-            IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal");
-            IS_internal >> X_internal;
+            if (responseFunctionFormatASCII_)
+            {
+                IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal.txt");
+                IS_internal >> X_internal;
+            }
+            else
+            {
+                IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal", IOstream::BINARY);
+                IS_internal >> X_internal;
+            }
             Xuu_internal_[refStates] = X_internal;
 
             List<tensorList> X_boundary;
-            IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary");
-            IS_boundary >> X_boundary;
+            if (responseFunctionFormatASCII_)
+            {
+                IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary.txt");
+                IS_boundary >> X_boundary;
+            }
+            else
+            {
+                IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary", IOstream::BINARY);
+                IS_boundary >> X_boundary;
+            }
             Xuu_boundary_[refStates] = X_boundary;
 
             if (readIntegratedResponseFunctions_)
             {
-                tensorList responsefunction;
-                IFstream IS(dbName+"/"+dbTime.timeName()+"/X_uu_integrated");
-                IS >> responsefunction;
-                Xuu_integrated_[refStates] = responsefunction;
+                tensorList X_integrated;
+                if (responseFunctionFormatASCII_)
+                {
+                    IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/X_uu_integrated.txt");
+                    IS_integrated >> X_integrated;
+                }
+                else
+                {
+                    IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/X_uu_integrated", IOstream::BINARY);
+                    IS_integrated >> X_integrated;
+                }
+                Xuu_integrated_[refStates] = X_integrated;
             }
 
             refStates++;

@@ -63,6 +63,8 @@ protected:
 
     bool readIntegratedResponseFunctions_;
 
+    bool responseFunctionFormatASCII_;
+
     List<List<labelList>> senderBoundaryFaceIDs_;
 
     List<List<labelList>> senderCellIDs_;
