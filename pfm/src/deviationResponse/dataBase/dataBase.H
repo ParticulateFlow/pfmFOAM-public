@@ -8,7 +8,7 @@
     Contributing authors:
     Thomas Lichtenegger
     Copyright (C) 2015- Johannes Kepler University, Linz
--------------------------------------------------------------------------------    
+-------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
@@ -24,8 +24,8 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-    
-    
+
+
 Class
     Foam::deviationResponse::dataBase
 
@@ -120,9 +120,9 @@ public:
     label localFromGlobalBoundaryFaceID(label bFaceI);
 
     label numRefStates();
-    
+
     // label findNearestRefState(const volScalarField &field, label fieldListIndex);
-    
+
     label findNearestRefState(const volVectorField &field, label fieldListIndex, scalar &minDist);
 
     labelList& faceIDperPatch();
