@@ -49,8 +49,6 @@ int main(int argc, char *argv[])
     #include "createControl.H"
     #include "createFields.H"
 
-
-
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     dataBase db(mesh);
     db.init();
@@ -68,15 +66,16 @@ int main(int argc, char *argv[])
     label nearestRefState = -1;
     scalar initialDistance = -1;
     label prevTimeIndex = runTime.timeIndex();
-    label presentTimeIndex = -1;
-    scalar prevTime = runTime.value();
-    scalar presentTime = -1.0;
+    label presentTimeIndex = runTime.timeIndex();
+    instant prevTimeInstant(runTime.value(),runTime.timeName());
+    instant presentTimeInstant(runTime.value(),runTime.timeName());
 
     while (runTime.loop())
     {
         Info << "Time = " << runTime.timeName() << nl << endl;
         presentTimeIndex = runTime.timeIndex();
-        presentTime = runTime.value();
+        presentTimeInstant.value() = runTime.value();
+        presentTimeInstant.name() = runTime.timeName();
 
         nearestRefState = db.findNearestRefState(U,URefStateListIndex,initialDistance);
         refStatesFile << nearestRefState << " ";
@@ -87,7 +86,6 @@ int main(int argc, char *argv[])
     //    convectiveTermLinear = fvc::div(deltaU,URef) + fvc::div(URef,deltaU);
           convectiveTermQuadratic = fvc::div(linearInterpolate(deltaU) & mesh.Sf(),deltaU);
 
-
         if (compareToExactSolution)
         {
             volScalarField magU(mag(U));
@@ -96,15 +94,16 @@ int main(int argc, char *argv[])
 
         if (runTime.writeTime())
         {
-            runTime.setTime(prevTimeIndex,prevTime);
+            runTime.setTime(prevTimeInstant,prevTimeIndex);
             URef.write();
             deltaU.write();
             convectiveTermLinear.write();
             convectiveTermQuadratic.write();
-            runTime.setTime(presentTimeIndex,presentTime);
+            runTime.setTime(presentTimeInstant,presentTimeIndex);
         }
         prevTimeIndex = presentTimeIndex;
-        prevTime = presentTime;
+        prevTimeInstant.value() = runTime.value();
+        prevTimeInstant.name() = runTime.timeName();
 
         #include "convoluteDeviation.H"
 
