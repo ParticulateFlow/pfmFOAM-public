@@ -61,9 +61,11 @@ int main(int argc, char *argv[])
     {
         runTime.setTime(refState,refState);
 
+        scalar X_uu_integrated_target_sum = 0.0;
         forAll(X_uu_integrated, cellI)
         {
             X_uu_integrated_target[cellI] = db.responseF().Xuu_integrated(refState,cellI);
+            X_uu_integrated_target_sum += Foam::sqrt(magSqr(X_uu_integrated_target[cellI]))* mesh.V()[cellI];
 
             labelList &senderCells = db.responseF().senderCellIDs(refState,cellI);
             tensorList &X_uu = db.responseF().Xuu_internal(refState,cellI);
@@ -117,7 +119,9 @@ int main(int argc, char *argv[])
             }
         }
 
-        scalar distance = db.fieldN().fieldsDistance(X_uu_integrated,X_uu_integrated_target);
+        reduce(X_uu_integrated_target_sum, sumOp<scalar>());
+        scalar distance = db.fieldN().fieldsDistance(X_uu_integrated,X_uu_integrated_target,1.0);
+        distance /= X_uu_integrated_target_sum;
         distanceFile << refState << " " << distance << endl;
         X_uu_integrated.write();
         X_uu_integrated_target.write();
