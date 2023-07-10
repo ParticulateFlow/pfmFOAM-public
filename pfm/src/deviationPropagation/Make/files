@@ -1,0 +1,14 @@
+dataBase/dataBase.C
+referenceStates/referenceStates/referenceStates.C
+referenceStates/referenceStates/newReferenceStates.C
+referenceStates/generalReferenceStates/generalReferenceStates.C
+deviationPropagators/deviationPropagators/deviationPropagators.C
+deviationPropagators/deviationPropagators/newDeviationPropagators.C
+deviationPropagators/singlePhaseDeviationPropagators/singlePhaseDeviationPropagators.C
+deviationPropagators/noDeviationPropagators/noDeviationPropagators.C
+fieldNorm/fieldNorm/fieldNorm.C
+fieldNorm/fieldNorm/newFieldNorm.C
+fieldNorm/diffNorm/diffNorm.C
+
+LIB = $(FOAM_USER_LIBBIN)/libdeviationpropagation
+
