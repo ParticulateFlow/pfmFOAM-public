@@ -73,9 +73,6 @@ class SchneiderbauerEtAl
         //- alpha_QS
         dimensionedScalar aQSk_;
     
-        //- alpha_int
-        dimensionedScalar aInt_;
-    
         //-spring stiffness
         dimensionedScalar k_;
     

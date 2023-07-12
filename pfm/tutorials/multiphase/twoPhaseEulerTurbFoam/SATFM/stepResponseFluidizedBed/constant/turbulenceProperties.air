@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties.air;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  RAS;
+
+RAS
+{
+    RASModel SATFMcontinuous;
+
+    turbulence      on;
+    printCoeffs     on;
+
+    SATFMcontinuousCoeffs
+    {
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  // equilibrium assumption: production of k == dissipation
+        equilibriumH            off;
+        dynamicAdjustment       on;  // dynamic adjustment of model coefficient and correlation coefficients
+        anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
+
+        alphaMax                0.6;
+        residualAlpha           1e-3; // minimum dispersed phase volume fraction
+
+        xiPhiG                  0.5; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
+        Cmu                     0.5; // smagorinsky constant for turbulent viscosity
+        Ceps                    0.1; // constant for mixing length model of turbulent dissipation rate
+        Cp                      1.0;
+        Sigma                   2.0; // turbulent schmidt number
+        CphiG                   0.0;
+
+        maxK                    5.0; // Limits Reynolds stresses
+
+        filter                  ParmentierTest; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          6.0;
+        }
+    }
+}
+
+
+// ************************************************************************* //

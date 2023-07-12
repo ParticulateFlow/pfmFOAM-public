@@ -31,6 +31,7 @@ heatTransferModels/heatTransferModel/heatTransferModel.C
 heatTransferModels/heatTransferModel/newHeatTransferModel.C
 heatTransferModels/RanzMarshall/RanzMarshall.C
 heatTransferModels/sphericalHeatTransfer/sphericalHeatTransfer.C
+heatTransferModels/Gunn/Gunn.C
 
 virtualMassModels/virtualMassModel/virtualMassModel.C
 virtualMassModels/virtualMassModel/newVirtualMassModel.C
@@ -65,6 +66,8 @@ wallDependentModel/wallDependentModel.C
 /* additional drag models */
 dragModels/WenYuC/WenYuC.C
 dragModels/Beetstra/Beetstra.C
+dragModels/Tang/Tang.C
+dragModels/Tenneti/Tenneti.C
 
 
 /* virtual mass force appearing due to filtering --> unresolved part of pressure gradient */
@@ -79,6 +82,11 @@ interPhaseForceModels/noInterPhaseForce/noInterPhaseForce.C
 interPhaseForceModels/deWildeSATFM/deWildeIPhSATFM.C
 interPhaseForceModels/deWildeADM/deWildeIPhADM.C
 
+/* filtered drag force modeled by drift temperature */
+driftTemperatureModels/driftTemperatureModel/driftTemperatureModel.C
+driftTemperatureModels/driftTemperatureModel/newDriftTemperatureModel.C
+driftTemperatureModels/noDriftTemperature/noDriftTemperature.C
+driftTemperatureModels/driftTemperatureSATFM/driftTemperatureSATFM.C
 
 /* filtered drag force modeled by drift velocity */
 driftVelocityModels/driftVelocityModel/driftVelocityModel.C

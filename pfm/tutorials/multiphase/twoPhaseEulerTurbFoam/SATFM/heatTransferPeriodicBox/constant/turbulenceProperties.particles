@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties.particles;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  RAS;
+
+RAS
+{
+    RASModel SATFMdispersed;
+
+    turbulence      on;
+    printCoeffs     on;
+
+
+    SATFMdispersedCoeffs
+    {
+        equilibriumK            off;  // equilibrium assumption: production of k == dissipation
+        equilibriumPhiP2        off;  //
+        equilibriumH            off;
+        dynamicAdjustment       on;  // dynamic adjustment of model coefficient and correlation coefficients
+        anIsoTropicNut          on;  // anisotropic treatment of shear component of Reynolds-stress tensor
+
+        alphaMax                0.65;   // maximum dispersed phase volume fraction
+        alphaMaxTurb            0.58;
+        limitAlphaP2Mean        0.4;
+        alphaMinFriction        0.6; // friction stresses are solely computed for alpha > alphaMinFriction
+        residualAlpha           1e-3;  // minimum dispersed phase volume fraction for dispersed phase Reynolds stress
+
+        xiPhiS                  0.10; // correlation coefficient between dispersed phase volume fraction and continuous phase velocity
+        xiGS                    0.90; // correlation coefficient between dispersed phase velocity and continuous phase velocity
+        Cmu                     0.2;
+
+        Ceps                    0.4; // constant for mixing length model of turbulent dissipation rate
+        Cp                      0.0;
+        Sigma                   1.0; // turbulent schmidt number
+        CphiS                   0.0; // turbulent schmidt number
+
+        maxK                    5.0; // Limits Reynolds stresses
+
+        filter                  ParmentierTest; // test filter for dynamic adjustment of model constants
+        laplaceAnIso2ndCoeffs
+        {
+            widthCoeff          6.0;
+        }
+
+        frictionalStressModel  SchneiderbauerEtAl; // frictional model (e.g. SchneiderbauerEtAl)
+
+        SchneiderbauerEtAlCoeffs
+        {
+            L                   0.008;
+            alpha               1.6;
+
+            b                   0.2;
+            muSt                0.38;
+            muC                 0.64;
+            I0                  0.279;
+            aQSk                0.089;
+            aInt                0.1;
+            k                   1e4;
+            alphaDeltaMin       0.01;
+            Rc                  0; //Rolling Friction
+        }
+
+        SchaefferCoeffs
+        {
+            phi                 28;
+        }
+    }
+
+
+
+}
+
+// ************************************************************************* //

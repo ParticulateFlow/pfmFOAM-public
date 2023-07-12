@@ -48,11 +48,12 @@ namespace heatTransferModels
 
 Foam::heatTransferModels::sphericalHeatTransfer::sphericalHeatTransfer
 (
-    const dictionary& dict,
-    const phasePair& pair
+        const dictionary& dict,
+        const phasePair& pair,
+        const bool registerObject
 )
 :
-    heatTransferModel(dict, pair)
+    heatTransferModel(dict, pair, registerObject)
 {}
 
 
