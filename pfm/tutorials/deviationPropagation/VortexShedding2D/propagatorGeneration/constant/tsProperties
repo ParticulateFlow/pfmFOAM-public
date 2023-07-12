@@ -18,7 +18,7 @@ FoamFile
 
 tstart ${tstart};
 
-timeSeries "../referenceDataGeneration/data_referenceTimeSeries";
+timeSeries "../referenceData/data_referenceTimeSeries";
 
 minSourceElement 0;
 

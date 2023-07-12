@@ -1,5 +1,5 @@
 #!/bin/bash
-cd referenceDataGeneration
+cd referenceData
 cp -r orig.0 0
 blockMesh > blockMesh.log 2>&1
 pisoFoam > pisoFoam.log 2>&1

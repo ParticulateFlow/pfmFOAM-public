@@ -1,5 +1,5 @@
 #!/bin/bash
-cd validationDataGeneration
+cd validationData
 cd uin_120
 cp -r orig.0 0
 cp system/controlDict_init system/controlDict
