@@ -15,7 +15,7 @@ dataBaseName = 'dataBase'
 def formatIntegratedResponseFunctions(path,components):
     num_cmpts = len(components)
     num_cmpts2 = num_cmpts * num_cmpts
-    field = 'X_uu_'
+    field = 'K_uu_'
     mode = 'integrated'
     filenameX = path+field+'bySenders_'+mode
     senders = []

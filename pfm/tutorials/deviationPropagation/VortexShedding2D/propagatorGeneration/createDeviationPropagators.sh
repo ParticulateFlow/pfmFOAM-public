@@ -1,5 +1,5 @@
 IFS=$' ' read -a tlist < listOfReferenceStates
-timeSeries=../referenceDataGeneration/data_referenceTimeSeries
+timeSeries=../referenceData/data_referenceTimeSeries
 mkdir dataBase
 
 for t in "${tlist[@]}"
@@ -16,5 +16,5 @@ do
    cp $timeSeries/$t/U dataBase/$t/
    cp $timeSeries/${tend}/U dataBase/$t/UEvolved
    mv targetCells_* dataBase/$t/
-   mv X_uu_* dataBase/$t/
+   mv K_uu_* dataBase/$t/
 done

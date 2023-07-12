@@ -16,7 +16,7 @@ def orderResponseFunctionsByTargetCells(path,mode,components):
     num_cmpts = len(components)
     num_cmpts2 = num_cmpts * num_cmpts
     filenameC = path+'targetCells_'+mode
-    field = 'X_uu_'
+    field = 'K_uu_'
     filenameX = path+field+'bySenders_'+mode
     senders = []
     targets = []
