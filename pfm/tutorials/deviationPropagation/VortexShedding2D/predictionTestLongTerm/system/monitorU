@@ -1,0 +1,54 @@
+    monitorU
+    {
+        // Load the library containing the 'coded' functionObject
+        libs ("libutilityFunctionObjects.so");
+
+        type coded;
+
+        // Name of on-the-fly generated functionObject
+        name monitorU;
+
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+
+        codeExecute
+        #{
+            label nevery = 1;
+            static label counter = 0;
+
+            label timeInd = mesh().time().timeIndex();
+            if (timeInd % nevery > 0) return 0;
+
+            scalar t = mesh().time().timeOutputValue();
+            const volVectorField& U = mesh().lookupObject<volVectorField>("U");
+            vector Utot = vector::zero;
+            scalar U2tot = 0.0;
+
+            forAll(U,cellI)
+            {
+                Utot += U[cellI]*mesh().V()[cellI];
+                U2tot += U[cellI]&U[cellI]*mesh().V()[cellI];
+            }
+
+            reduce(Utot, sumOp<vector>());
+            reduce(U2tot, sumOp<scalar>());
+
+            if(Pstream::master())
+            {
+                std::ofstream fs;
+                fs.open ("postProcessing/globalValuesU", std::fstream::app);
+                fs.precision(5);
+                if (counter == 0)
+                {
+                    fs << "# time\tU\tU2\n";
+                    fs << "#---------------------------------------------------------------------------------------------------------------------------------------------------------\n";
+                }
+                fs << t << "\t\t" << Utot.x() << "\t\t" << Utot.y() << "\t\t" << Utot.z() << "\t\t" << U2tot << "\n";
+                fs.close();
+            }
+            counter++;
+        #};
+    }
