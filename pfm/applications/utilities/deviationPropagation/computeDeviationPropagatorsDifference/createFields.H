@@ -1,8 +1,8 @@
-volTensorField deltaX_uu
+volTensorField deltaK_uu
 (
     IOobject
     (
-        "deltaX_uu",
+        "deltaK_uu",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,

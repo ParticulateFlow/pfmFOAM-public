@@ -1,8 +1,8 @@
-volTensorField X_uu_integrated
+volTensorField K_uu_integrated
 (
     IOobject
     (
-        "X_uu_integrated",
+        "K_uu_integrated",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
@@ -12,11 +12,11 @@ volTensorField X_uu_integrated
     dimensionedTensor("zero",dimensionSet(0,0,0,0,0,0,0),tensor::zero)
 );
 
-volTensorField X_uu_integrated_target
+volTensorField K_uu_integrated_target
 (
     IOobject
     (
-        "X_uu_integrated_target",
+        "K_uu_integrated_target",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
@@ -38,4 +38,4 @@ IOdictionary dbProperties
     )
 );
 
-scalar minXuu(dbProperties.lookupOrDefault<scalar>("minXuu",1e-5));
+scalar minKuu(dbProperties.lookupOrDefault<scalar>("minKuu",1e-5));

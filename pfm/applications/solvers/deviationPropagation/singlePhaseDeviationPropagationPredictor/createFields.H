@@ -148,7 +148,7 @@ if (correctP && !p.headerOk())
     FatalError << "Provide pressure field to apply pressure correction." << abort(FatalError);
 }
 
-scalar minXuu(dbProperties.lookupOrDefault<scalar>("minXuu",1e-5));
+scalar minKuu(dbProperties.lookupOrDefault<scalar>("minKuu",1e-5));
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;

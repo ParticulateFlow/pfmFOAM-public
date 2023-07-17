@@ -55,11 +55,11 @@ protected:
 
     dictionary propsDict_;
 
-    List<List<tensorList>> Xuu_boundary_;
+    List<List<tensorList>> Kuu_boundary_;
 
-    List<List<tensorList>> Xuu_internal_;
+    List<List<tensorList>> Kuu_internal_;
 
-    List<tensorList> Xuu_integrated_;
+    List<tensorList> Kuu_integrated_;
 
 public:
 
@@ -84,11 +84,11 @@ public:
 
     label readDeviationPropagators(fileNameList dataBases);
 
-    tensorList &Xuu_boundary(label refState, label receiverID);
+    tensorList &Kuu_boundary(label refState, label receiverID);
 
-    tensorList &Xuu_internal(label refState, label receiverID);
+    tensorList &Kuu_internal(label refState, label receiverID);
 
-    tensor Xuu_integrated(label refState, label cellI);
+    tensor Kuu_integrated(label refState, label cellI);
 
 private:
 

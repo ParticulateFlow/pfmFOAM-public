@@ -55,9 +55,9 @@ singlePhaseDeviationPropagators::singlePhaseDeviationPropagators
 :
     deviationPropagators(dict,base),
     propsDict_(dict.subDict(typeName + "Props")),
-    Xuu_boundary_(100000),
-    Xuu_internal_(100000),
-    Xuu_integrated_(100000)
+    Kuu_boundary_(100000),
+    Kuu_internal_(100000),
+    Kuu_integrated_(100000)
 {
 }
 
@@ -107,79 +107,79 @@ label singlePhaseDeviationPropagators::readDeviationPropagators(fileNameList dat
             // 2((1 2 3 4 5 6 7 8 9) (-1 -2 -3 -4 -5 -6 -7 -8 -9))
             // 3((11 12 13 14 15 16 17 18 19) (21 22 23 24 25 26 27 28 29) (31 32 33 34 35 36 37 38 39))
             // )
-            List<tensorList> X_internal;
+            List<tensorList> K_internal;
             if (deviationPropagatorFormatASCII_)
             {
-                IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal.txt");
-                IS_internal >> X_internal;
+                IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/K_uu_internal.txt");
+                IS_internal >> K_internal;
             }
             else
             {
-                IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal", IOstream::BINARY);
-                IS_internal >> X_internal;
+                IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/K_uu_internal", IOstream::BINARY);
+                IS_internal >> K_internal;
             }
-            Xuu_internal_[refStates] = X_internal;
+            Kuu_internal_[refStates] = K_internal;
 
-            List<tensorList> X_boundary;
+            List<tensorList> K_boundary;
             if (deviationPropagatorFormatASCII_)
             {
-                IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary.txt");
-                IS_boundary >> X_boundary;
+                IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/K_uu_boundary.txt");
+                IS_boundary >> K_boundary;
             }
             else
             {
-                IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary", IOstream::BINARY);
-                IS_boundary >> X_boundary;
+                IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/K_uu_boundary", IOstream::BINARY);
+                IS_boundary >> K_boundary;
             }
-            Xuu_boundary_[refStates] = X_boundary;
+            Kuu_boundary_[refStates] = K_boundary;
 
             if (readIntegratedDeviationPropagators_)
             {
-                tensorList X_integrated;
+                tensorList K_integrated;
                 if (deviationPropagatorFormatASCII_)
                 {
-                    IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/X_uu_integrated.txt");
-                    IS_integrated >> X_integrated;
+                    IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/K_uu_integrated.txt");
+                    IS_integrated >> K_integrated;
                 }
                 else
                 {
-                    IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/X_uu_integrated", IOstream::BINARY);
-                    IS_integrated >> X_integrated;
+                    IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/K_uu_integrated", IOstream::BINARY);
+                    IS_integrated >> K_integrated;
                 }
-                Xuu_integrated_[refStates] = X_integrated;
+                Kuu_integrated_[refStates] = K_integrated;
             }
 
             refStates++;
         }
         Info << "Reading deviation propagators of database " << dbName <<" done\n" << endl;
     }
-    Xuu_internal_.resize(refStates);
-    Xuu_boundary_.resize(refStates);
+    Kuu_internal_.resize(refStates);
+    Kuu_boundary_.resize(refStates);
     if (readIntegratedDeviationPropagators_)
     {
-        Xuu_integrated_.resize(refStates);
+        Kuu_integrated_.resize(refStates);
     }
     else
     {
-        Xuu_integrated_.resize(0);
+        Kuu_integrated_.resize(0);
     }
 
     return refStates;
 }
 
-tensorList& singlePhaseDeviationPropagators::Xuu_boundary(label refState, label receiverID)
+tensorList& singlePhaseDeviationPropagators::Kuu_boundary(label refState, label receiverID)
 {
-    return Xuu_boundary_[refState][receiverID];
+    return Kuu_boundary_[refState][receiverID];
 }
 
-tensorList& singlePhaseDeviationPropagators::Xuu_internal(label refState, label receiverID)
+tensorList& singlePhaseDeviationPropagators::Kuu_internal(label refState, label receiverID)
 {
-    return Xuu_internal_[refState][receiverID];
+    return Kuu_internal_[refState][receiverID];
 }
 
-tensor singlePhaseDeviationPropagators::Xuu_integrated(label refState, label cellI)
+tensor singlePhaseDeviationPropagators::Kuu_integrated(label refState, label cellI)
 {
-    return Xuu_integrated_[refState][cellI];
+    return Kuu_integrated_[refState][cellI];
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

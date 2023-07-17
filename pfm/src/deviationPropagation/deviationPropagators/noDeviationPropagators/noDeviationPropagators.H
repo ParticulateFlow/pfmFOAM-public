@@ -77,11 +77,11 @@ public:
 
     label readDeviationPropagators(fileNameList dataBases) {}
 
-    tensorList &Xuu_boundary(label refState, label receiverID) {}
+    tensorList &Kuu_boundary(label refState, label receiverID) {}
 
-    tensorList &Xuu_internal(label refState, label receiverID) {}
+    tensorList &Kuu_internal(label refState, label receiverID) {}
 
-    tensor Xuu_integrated(label refState, label cellI) {}
+    tensor Kuu_integrated(label refState, label cellI) {}
 
 private:
 

@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
     {
         for (label cellI = cellIMin; cellI <= cellIMax; cellI++)
         {
-            word fieldName = "X_uu_"+name(cellI)+"_"+name(refState);
-            volTensorField X_uu_field
+            word fieldName = "K_uu_"+name(cellI)+"_"+name(refState);
+            volTensorField K_uu_field
             (
                 IOobject
                 (
@@ -89,27 +89,27 @@ int main(int argc, char *argv[])
             );
 
             labelList &senderCells = db.exportDeviationPropagators().senderCellIDs(refState,cellI);
-            tensorList &X_uu = db.exportDeviationPropagators().Xuu_internal(refState,cellI);
-            forAll(X_uu, sender)
+            tensorList &K_uu = db.exportDeviationPropagators().Kuu_internal(refState,cellI);
+            forAll(K_uu, sender)
             {
-                X_uu_field[senderCells[sender]] = X_uu[sender];
+                K_uu_field[senderCells[sender]] = K_uu[sender];
             }
 
             labelList &senderBoundaryFaces = db.exportDeviationPropagators().senderBoundaryFaceIDs(refState,cellI);
-            tensorList &X_uu_boundary = db.exportDeviationPropagators().Xuu_boundary(refState,cellI);
+            tensorList &K_uu_boundary = db.exportDeviationPropagators().Kuu_boundary(refState,cellI);
             labelList &faceIDperPatch = db.faceIDperPatch();
             labelList &patchOwningFace = db.patchOwningFace();
 
             label patchID;
             label faceID;
-            forAll(X_uu_boundary, sender)
+            forAll(K_uu_boundary, sender)
             {
                 patchID = patchOwningFace[senderBoundaryFaces[sender]];
                 faceID = faceIDperPatch[senderBoundaryFaces[sender]];
-                X_uu_field.boundaryFieldRef()[patchID][faceID] = X_uu_boundary[sender];
+                K_uu_field.boundaryFieldRef()[patchID][faceID] = K_uu_boundary[sender];
             }
 
-            X_uu_field.write();
+            K_uu_field.write();
         }
     }
 

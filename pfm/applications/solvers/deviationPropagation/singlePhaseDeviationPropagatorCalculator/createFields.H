@@ -1,9 +1,9 @@
-Info<< "Reading field X_pu\n" << endl;
-volScalarField X_pu
+Info<< "Reading field K_pu\n" << endl;
+volScalarField K_pu
 (
     IOobject
     (
-        "X_pu",
+        "K_pu",
         runTime.timeName(),
         mesh,
         IOobject::MUST_READ,
@@ -12,75 +12,18 @@ volScalarField X_pu
     mesh
 );
 
-Info<< "Reading field X_uu\n" << endl;
-volVectorField X_uu
+Info<< "Reading field K_uu\n" << endl;
+volVectorField K_uu
 (
     IOobject
     (
-        "X_uu",
+        "K_uu",
         runTime.timeName(),
         mesh,
         IOobject::MUST_READ,
         IOobject::AUTO_WRITE
     ),
     mesh
-);
-
-// testing
-volVectorField X_uu1
-(
-    IOobject
-    (
-        "X_uu1",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    mesh,
-    dimensionedVector("zero", dimensionSet(0,-3,0,0,0,0,0), vector::zero)
-);
-
-volVectorField X_uu2
-(
-    IOobject
-    (
-        "X_uu2",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    mesh,
-    dimensionedVector("zero", dimensionSet(0,-3,0,0,0,0,0), vector::zero)
-);
-
-volScalarField X_pu1
-(
-    IOobject
-    (
-        "X_pu1",
-        runTime.timeName(),
-        mesh,
-        IOobject::MUST_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedScalar("zero", dimensionSet(0,-2,-1,0,0,0,0), 0.0)
-);
-
-volScalarField X_pu2
-(
-    IOobject
-    (
-        "X_pu2",
-        runTime.timeName(),
-        mesh,
-        IOobject::MUST_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedScalar("zero", dimensionSet(0,-2,-1,0,0,0,0), 0.0)
 );
 
 volScalarField Receiver
@@ -96,34 +39,18 @@ volScalarField Receiver
     mesh,
     dimensionedScalar("zero", dimensionSet(0,0,0,0,0,0,0), 0.0)
 );
-// testing done
 
-
-volVectorField divX_uu
+surfaceScalarField phiK
 (
     IOobject
     (
-        "divX_uu",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    mesh,
-    dimensionedVector("zero", dimensionSet(0,-4,0,0,0,0,0), vector::zero)
-);
-
-surfaceScalarField phiX
-(
-    IOobject
-    (
-        "phiX",
+        "phiK",
         runTime.timeName(),
         mesh,
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    fvc::flux(X_uu)
+    fvc::flux(K_uu)
 );
 
 volScalarField RHS
@@ -152,7 +79,6 @@ IOdictionary tsProperties
     )
 );
 
-label nXuuCorr(tsProperties.lookupOrDefault<label>("nXuuCorr",1));
 label minSourceElement(tsProperties.lookupOrDefault<label>("minSourceElement",0));
 label maxSourceElement(tsProperties.lookupOrDefault<label>("maxSourceElement",1e9));
 wordList patches(tsProperties.lookupOrDefault<wordList>("patches",wordList(0)));
@@ -162,17 +88,17 @@ label numCmpt = components.size();
 OFstream OS_settings("patches");
 OS_settings << patches << endl;
 
-PtrList<volVectorField> X_uu_allCmpt(numCmpt);
+PtrList<volVectorField> K_uu_allCmpt(numCmpt);
 for (int i = 0; i < numCmpt; i++)
 {
-    X_uu_allCmpt.set
+    K_uu_allCmpt.set
     (
         i,
-        new volVectorField(X_uu)
+        new volVectorField(K_uu)
     );
 }
 
-scalar minXuu(tsProperties.lookupOrDefault<scalar>("minXuu",1e-5));
+scalar minKuu(tsProperties.lookupOrDefault<scalar>("minKuu",1e-5));
 
 
 enum Modes {internal, boundary, integrated};
@@ -186,8 +112,8 @@ else if (selectedMode == "integrated")
     // instead of looping over all origin cells, do calculation just once
     minSourceElement = 0;
     maxSourceElement = 1;
-    // keep all cells regardless of norm(Xuu)
-    minXuu = -1.0;
+    // keep all cells regardless of norm(Kuu)
+    minKuu = -1.0;
 }
 else FatalError << "no known mode specified\n" << abort(FatalError);
 
@@ -269,8 +195,8 @@ surfaceScalarField phi_ts
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;
-setRefCell(X_pu, piso.dict(), pRefCell, pRefValue);
-mesh.setFluxRequired(X_pu.name());
+setRefCell(K_pu, piso.dict(), pRefCell, pRefValue);
+mesh.setFluxRequired(K_pu.name());
 
 
 singlePhaseTransportModel laminarTransport(U_ts, phi_ts);

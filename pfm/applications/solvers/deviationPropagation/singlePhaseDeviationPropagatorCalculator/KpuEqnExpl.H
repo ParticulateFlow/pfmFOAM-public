@@ -22,14 +22,19 @@ RHS = gKuu.component(tensor::XX)*gUts.component(tensor::XX)
     + gUts.component(tensor::ZZ)*gKuu.component(tensor::ZZ);
 
 dimensionedScalar rdt("zero",dimensionSet(0,0,-1,0,0),1.0/deltaT.value());
-tmp<fvScalarMatrix> tKpuEqn
-(
-    fvm::laplacian(K_pu) == - RHS
-);
-fvScalarMatrix KpuEqn = tKpuEqn.ref();
 
-KpuEqn.setReference(pRefCell, pRefValue);
-KpuEqn.solve();
+// Non-orthogonal pressure corrector loop
+while (piso.correctNonOrthogonal())
+{
+    tmp<fvScalarMatrix> tKpuEqn
+    (
+        fvm::laplacian(K_pu) == - RHS
+    );
+    fvScalarMatrix KpuEqn = tKpuEqn.ref();
+
+    KpuEqn.setReference(pRefCell, pRefValue);
+    KpuEqn.solve();
+}
 
 K_uu -= 1.0/rdt*fvc::grad(K_pu);
 K_uu.correctBoundaryConditions();

@@ -14,8 +14,8 @@ if (mode == internal)
     for (int i = 0; i < patches.size(); i++)
     {
         label patchID = boundaryMesh.findPatchID(patches[i]);
-        const volVectorField::Boundary& Xbf = X_uu.boundaryField();
-        if (isA<fixedGradientFvPatchVectorField>(Xbf[patchID]))
+        const volVectorField::Boundary& Kbf = K_uu.boundaryField();
+        if (isA<fixedGradientFvPatchVectorField>(Kbf[patchID]))
         {
             forAll(boundaryMesh[patchID],faceI)
             {

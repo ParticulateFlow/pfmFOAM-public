@@ -88,23 +88,23 @@ int main(int argc, char *argv[])
 
             Info << "Reading at t = " << dbTime.timeName() << endl;
 
-            List<tensorList> X_internal;
-            IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal.txt");
-            IS_internal >> X_internal;
-            OFstream OS_internal(dbName+"/"+dbTime.timeName()+"/X_uu_internal", IOstream::BINARY);
-            OS_internal << X_internal;
+            List<tensorList> K_internal;
+            IFstream IS_internal(dbName+"/"+dbTime.timeName()+"/K_uu_internal.txt");
+            IS_internal >> K_internal;
+            OFstream OS_internal(dbName+"/"+dbTime.timeName()+"/K_uu_internal", IOstream::BINARY);
+            OS_internal << K_internal;
 
-            List<tensorList> X_boundary;
-            IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary.txt");
-            IS_boundary >> X_boundary;
-            OFstream OS_boundary(dbName+"/"+dbTime.timeName()+"/X_uu_boundary", IOstream::BINARY);
-            OS_boundary << X_boundary;
+            List<tensorList> K_boundary;
+            IFstream IS_boundary(dbName+"/"+dbTime.timeName()+"/K_uu_boundary.txt");
+            IS_boundary >> K_boundary;
+            OFstream OS_boundary(dbName+"/"+dbTime.timeName()+"/K_uu_boundary", IOstream::BINARY);
+            OS_boundary << K_boundary;
 
-            tensorList X_integrated;
-            IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/X_uu_integrated.txt");
-            IS_integrated >> X_integrated;
-            OFstream OS_integrated(dbName+"/"+dbTime.timeName()+"/X_uu_integrated", IOstream::BINARY);
-            OS_integrated << X_integrated;
+            tensorList K_integrated;
+            IFstream IS_integrated(dbName+"/"+dbTime.timeName()+"/K_uu_integrated.txt");
+            IS_integrated >> K_integrated;
+            OFstream OS_integrated(dbName+"/"+dbTime.timeName()+"/K_uu_integrated", IOstream::BINARY);
+            OS_integrated << K_integrated;
         }
         Info << "Conversion of deviation propagators of database " << dbName <<" done\n" << endl;
     }

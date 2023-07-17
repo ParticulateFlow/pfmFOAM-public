@@ -127,11 +127,11 @@ public:
 
     labelList &senderBoundaryFaceIDs(label refState, label receiverID); // returns *global* boundary face IDs sending to cell with *local* receiver ID
 
-    virtual tensorList &Xuu_boundary(label refState, label receiverID) = 0;
+    virtual tensorList &Kuu_boundary(label refState, label receiverID) = 0;
 
-    virtual tensorList &Xuu_internal(label refState, label receiverID) = 0;
+    virtual tensorList &Kuu_internal(label refState, label receiverID) = 0;
 
-    virtual tensor Xuu_integrated(label refState, label cellI) = 0;
+    virtual tensor Kuu_integrated(label refState, label cellI) = 0;
 };
 
 

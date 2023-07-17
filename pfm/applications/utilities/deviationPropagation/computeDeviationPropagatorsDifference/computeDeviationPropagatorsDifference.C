@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     dataBase db2(mesh,"dataBase2");
     db1.init();
     db2.init();
-    OFstream distanceFile("XuuDistances");
+    OFstream distanceFile("KuuDistances");
     distanceFile << "# refState distance" << endl;
 
     label numRefStates1 = db1.numRefStates();
@@ -66,8 +66,8 @@ int main(int argc, char *argv[])
 
     for (int refState = 0; refState < numRefStates1; refState++)
     {
-        word fieldName = "deltaX_uu_integrated_"+name(refState);
-        volScalarField deltaX_uu_integrated
+        word fieldName = "deltaK_uu_integrated_"+name(refState);
+        volScalarField deltaK_uu_integrated
         (
             IOobject
             (
@@ -81,64 +81,64 @@ int main(int argc, char *argv[])
             dimensionedScalar("zero",dimensionSet(0,0,0,0,0,0,0),0)
         );
 
-        forAll(deltaX_uu_integrated, cellI)
+        forAll(deltaK_uu_integrated, cellI)
         {
-            deltaX_uu == dimensionedTensor("zero",dimensionSet(0,0,-3,0,0,0,0),tensor::zero);
+            deltaK_uu == dimensionedTensor("zero",dimensionSet(0,0,-3,0,0,0,0),tensor::zero);
 
             labelList &senderCells1 = db1.exportDeviationPropagators().senderCellIDs(refState,cellI);
-            tensorList &X_uu1 = db1.exportDeviationPropagators().Xuu_internal(refState,cellI);
+            tensorList &K_uu1 = db1.exportDeviationPropagators().Kuu_internal(refState,cellI);
 
             labelList &senderCells2 = db2.exportDeviationPropagators().senderCellIDs(refState,cellI);
-            tensorList &X_uu2 = db2.exportDeviationPropagators().Xuu_internal(refState,cellI);
+            tensorList &K_uu2 = db2.exportDeviationPropagators().Kuu_internal(refState,cellI);
 
             scalar norm1 = 0.0;
             scalar norm2 = 0.0;
 
-            forAll(X_uu1, sender)
+            forAll(K_uu1, sender)
             {
-                deltaX_uu[senderCells1[sender]] += X_uu1[sender];
-                norm1 += Foam::sqrt(magSqr(X_uu1[sender])) * mesh.V()[senderCells1[sender]];
+                deltaK_uu[senderCells1[sender]] += K_uu1[sender];
+                norm1 += Foam::sqrt(magSqr(K_uu1[sender])) * mesh.V()[senderCells1[sender]];
             }
 
-            forAll(X_uu2, sender)
+            forAll(K_uu2, sender)
             {
-                deltaX_uu[senderCells2[sender]] -= X_uu2[sender];
-                norm2 += Foam::sqrt(magSqr(X_uu2[sender])) * mesh.V()[senderCells2[sender]];
+                deltaK_uu[senderCells2[sender]] -= K_uu2[sender];
+                norm2 += Foam::sqrt(magSqr(K_uu2[sender])) * mesh.V()[senderCells2[sender]];
             }
 
             labelList &senderBoundaryFaces1 = db1.exportDeviationPropagators().senderBoundaryFaceIDs(refState,cellI);
-            tensorList &X_uu_boundary1 = db1.exportDeviationPropagators().Xuu_boundary(refState,cellI);
+            tensorList &K_uu_boundary1 = db1.exportDeviationPropagators().Kuu_boundary(refState,cellI);
             labelList &faceIDperPatch1 = db1.faceIDperPatch();
             labelList &patchOwningFace1 = db1.patchOwningFace();
 
             labelList &senderBoundaryFaces2 = db2.exportDeviationPropagators().senderBoundaryFaceIDs(refState,cellI);
-            tensorList &X_uu_boundary2 = db2.exportDeviationPropagators().Xuu_boundary(refState,cellI);
+            tensorList &K_uu_boundary2 = db2.exportDeviationPropagators().Kuu_boundary(refState,cellI);
             labelList &faceIDperPatch2 = db2.faceIDperPatch();
             labelList &patchOwningFace2 = db2.patchOwningFace();
 
             label patchID;
             label faceID;
-            forAll(X_uu_boundary1, sender)
+            forAll(K_uu_boundary1, sender)
             {
                 patchID = patchOwningFace1[senderBoundaryFaces1[sender]];
                 faceID = faceIDperPatch1[senderBoundaryFaces1[sender]];
-                deltaX_uu.boundaryFieldRef()[patchID][faceID] += X_uu_boundary1[sender];
-                norm1 += Foam::sqrt(magSqr(X_uu_boundary1[sender])) * mesh.magSf().boundaryField()[patchID][faceID];
+                deltaK_uu.boundaryFieldRef()[patchID][faceID] += K_uu_boundary1[sender];
+                norm1 += Foam::sqrt(magSqr(K_uu_boundary1[sender])) * mesh.magSf().boundaryField()[patchID][faceID];
             }
 
-            forAll(X_uu_boundary2, sender)
+            forAll(K_uu_boundary2, sender)
             {
                 patchID = patchOwningFace2[senderBoundaryFaces2[sender]];
                 faceID = faceIDperPatch2[senderBoundaryFaces2[sender]];
-                deltaX_uu.boundaryFieldRef()[patchID][faceID] -= X_uu_boundary2[sender];
-                norm2 += Foam::sqrt(magSqr(X_uu_boundary2[sender])) * mesh.magSf().boundaryField()[patchID][faceID];
+                deltaK_uu.boundaryFieldRef()[patchID][faceID] -= K_uu_boundary2[sender];
+                norm2 += Foam::sqrt(magSqr(K_uu_boundary2[sender])) * mesh.magSf().boundaryField()[patchID][faceID];
             }
 
             scalar distanceLocal = 0.0;
             scalar value = 0.0;
-            forAll(deltaX_uu,cellJ)
+            forAll(deltaK_uu,cellJ)
             {
-                value = magSqr(deltaX_uu[cellJ]);
+                value = magSqr(deltaK_uu[cellJ]);
                 if (value >= VSMALL)
                 {
                     distanceLocal += Foam::sqrt(value) * mesh.V()[cellJ];
@@ -148,18 +148,18 @@ int main(int argc, char *argv[])
             {
                 forAll (mesh.boundary()[patchJ],faceJ) 
                 {
-                    value = magSqr(deltaX_uu.boundaryField()[patchJ][faceJ]);
+                    value = magSqr(deltaK_uu.boundaryField()[patchJ][faceJ]);
                     if (value >= VSMALL)
                     {
                         distanceLocal += Foam::sqrt(value) * mesh.magSf().boundaryField()[patchJ][faceJ];
                     }
                 }
             }
-            deltaX_uu_integrated[cellI] = distanceLocal / (Foam::sqrt(norm1) * Foam::sqrt(norm2));
+            deltaK_uu_integrated[cellI] = distanceLocal / (Foam::sqrt(norm1) * Foam::sqrt(norm2));
         }
-        scalar distance = fvc::domainIntegrate(deltaX_uu_integrated).value()/domainVol;
+        scalar distance = fvc::domainIntegrate(deltaK_uu_integrated).value()/domainVol;
         distanceFile << refState << " " << distance << endl;
-        deltaX_uu_integrated.write();
+        deltaK_uu_integrated.write();
     }
 
     Info<< "End\n" << endl;
