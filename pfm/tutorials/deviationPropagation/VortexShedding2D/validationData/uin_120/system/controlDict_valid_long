@@ -86,4 +86,33 @@ functions
             }
         );
     }
+
+    cuttingPlane
+    {
+        type            surfaces;
+        libs            ("libsampling.so");
+        writeControl    runTime;
+        writeInterval   100;
+
+
+        surfaceFormat   vtk;
+        fields          (UMean);
+
+        interpolationScheme cellPoint;
+
+        surfaces
+        (
+            zNormal
+            {
+                type            cuttingPlane;
+                planeType       pointAndNormal;
+                pointAndNormalDict
+                {
+                    point   (0 0 0);
+                    normal  (0 0 1);
+                }
+                interpolate     true;
+            }
+        );
+    }
 };

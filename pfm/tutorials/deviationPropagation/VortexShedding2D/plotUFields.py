@@ -12,7 +12,7 @@ from os import path
 import re
 
 def loadVTK(filename,dim1,dim2,dimData):
-    if not os.path.exists(filename): return npone
+    if not os.path.exists(filename): return None
     reader = vtk.vtkPolyDataReader()
     reader.SetFileName(filename)
     reader.ReadAllScalarsOn()
@@ -76,8 +76,8 @@ P.subplots_adjust(left=0.16, right=0.98, top=0.90, bottom=0.23)
 #################
 # validation data
 #################
-x, y, tri, ux = loadVTK('validationData/uin_120/postProcessing/cuttingPlane/281/UMean_zNormal.vtk',0,1,0)
-x, y, tri, uy = loadVTK('validationData/uin_120/postProcessing/cuttingPlane/281/UMean_zNormal.vtk',0,1,1)
+x, y, tri, ux = loadVTK('validationData/uin_120/data_uin_120/postProcessing/cuttingPlane/281/UMean_zNormal.vtk',0,1,0)
+x, y, tri, uy = loadVTK('validationData/uin_120/data_uin_120/postProcessing/cuttingPlane/281/UMean_zNormal.vtk',0,1,1)
 uabs = np.sqrt(np.square(ux)+np.square(uy))
 
 llevels = np.linspace(0,1.5, 10)
@@ -97,6 +97,8 @@ P.savefig('figures/UMeanExact.pdf', dpi=1000)
 x, y, tri, ux = loadVTK('predictionTestLongTerm/postProcessing/cuttingPlane/100/UMean_zNormal.vtk',0,1,0)
 x, y, tri, uy = loadVTK('predictionTestLongTerm/postProcessing/cuttingPlane/100/UMean_zNormal.vtk',0,1,1)
 uabs = np.sqrt(np.square(ux)+np.square(uy))
+
+cnt = P.tricontourf(x, y, tri, uabs, clevels, cmap=P.cm.coolwarm, extend="max",extendfrac=0.01)
 
 P.savefig('figures/UMeanDeviationPropagation.png', dpi=1000)
 P.savefig('figures/UMeanDeviationPropagation.pdf', dpi=1000)

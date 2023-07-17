@@ -20,67 +20,10 @@ solvers
     {
         solver          PCG;
         preconditioner  DIC;
-        tolerance       1e-3; //1e-07;
+        tolerance       1e-3;
         relTol          0;
     }
 
-/*
-    p
-    {
-        solver           GAMG;
-        tolerance        1e-6;
-        relTol           0;
-        smoother         GaussSeidel;
-        nPreSweeps       0;
-        nPostSweeps      2;
-        cacheAgglomeration on;
-        agglomerator     faceAreaPair;
-        nCellsInCoarsestLevel 100;
-        mergeLevels      1;
-    }
-*/
-
-    pFinal
-    {
-        solver          PCG;
-        preconditioner  DIC;
-        tolerance       1e-3; //1e-06;
-        relTol          0;
-    }
-
-    U
-    {
-        solver          PBiCG;
-        preconditioner  DILU;
-        tolerance       1e-08;
-        relTol          0;
-    }
-
- 
-    X_uu
-    {
-        solver          PBiCG;
-        preconditioner  DILU;
-        tolerance       1e-08;
-        relTol          0;
-    }
- /*   
-    X_pu
-    {
-        solver          PCG;
-        preconditioner  DIC;
-        tolerance       1e-5; //1e-07;
-        relTol          0;
-    }
-
-    X_puFinal
-    {
-        solver          PCG;
-        preconditioner  DIC;
-        tolerance       1e-5; // 1e-07;
-        relTol          0;
-    }
-*/
 }
 
 PISO

@@ -27,7 +27,6 @@ do
   solutions_exist=true
   for ((i=1; i<=$nsteps; i++))
   do
-    echo $i
 #   t2=$(awk '{print $1+$2}' <<<"${t2} ${dt}")
     t2=$(echo "$t2+$dt" | bc)
     t2=$(echo "$t2" | sed 's/^\./0./')
@@ -35,7 +34,7 @@ do
     t2=$(echo "$t2" | sed 's/\.$//')
     if [ -d "$path/$t2" ];
     then
-      echo ""
+      :
     else
       solutions_exist=false
     fi
@@ -45,11 +44,13 @@ do
   then
     rm -r 0
     mkdir 0
-    echo "copying from $path/$t1 to 0"
+    echo ""
+    echo "multistep prediction starting from $t1"
+    echo "    copying from $path/$t1 to 0"
     cp $path/$t1/U 0/
     # get p file to correct solution if necessary
     cp $path/$t1/p 0/
-    rm distances
+    rm distances 2> /dev/null
     t2=${t1}
     t3=0
     for ((i=1; i<=$nsteps; i++))
@@ -66,9 +67,9 @@ do
       t3=$(echo "$t3" | sed 's/0$//')
       t3=$(echo "$t3" | sed 's/\.$//')
 
-      cd $t3 && rm *
+      cd $t3; rm -r uniform 2> /dev/null; rm * 2> /dev/null
       cd ..
-      echo "copying from $path/$t2 to $t3"
+      echo "    copying from $path/$t2 to $t3"
       cp $path/$t2/U $t3/UExactSolution
     done
 

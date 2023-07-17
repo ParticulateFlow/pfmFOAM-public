@@ -10,10 +10,8 @@ mkdir data_uin_120
 cp system/controlDict_valid_multistep system/controlDict
 pisoFoam > pisoFoam_valid_multistep.log 2>&1
 
-mv 18[2-9] data_uin_120/
-mv 19* data_uin_120/
-mv 2* data_uin_120/
-cp -r 181 data_uin_120/
+mv [1-2]* data_uin_120/
+cp -r data_uin_120/181 .
 
 cp system/controlDict_valid_long system/controlDict
 pisoFoam > pisoFoam_valid_long.log 2>&1

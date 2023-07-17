@@ -22,7 +22,7 @@ def readDataFile(filename,col,split_at=r'\s+',ignore='#',ignoreleadinglines=0):
             row = re.split(split_at,line.lstrip().rstrip())
             data_.append(float(row[col]))
 
-    data = N.array(data_)
+    data = np.array(data_)
     return data
 
 rc('font',**{'family':'serif','serif':['Times'],'size':5})
@@ -32,7 +32,7 @@ rc('text', usetex=True)
 nsteps = 20
 
 
-err_pred_list_uin120 = readDataFile('predictionTestMultiSteps/distancesList',3)
+err_pred_list_uin120 = readDataFile('predictionTestMultiStep/distancesList',3)
 err_pred_uin120 = np.zeros(nsteps)
 std_pred_uin120 = np.zeros(nsteps)
 
@@ -47,7 +47,7 @@ times = np.arange(1,21,1)
 fig = plt.figure()
 
 plt.xlim([0,20])
-plt.ylim([0,0.075])
+plt.ylim([0,0.05])
 
 ax1 = fig.add_subplot(111)
 
@@ -57,7 +57,7 @@ ax1.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax1.yaxis.set_minor_locator(AutoMinorLocator(2))
 
 plt.xticks(np.arange(0, 20.001, 5.0))
-plt.yticks(np.arange(0, 0.075001, 0.025))
+plt.yticks(np.arange(0, 0.05001, 0.025))
 
 ax1.errorbar(times,err_pred_uin120, yerr=std_pred_uin120, c='r',label=r'$\displaystyle u_{\textrm{in}} = 1.2$',fmt='s',markersize=1.0,elinewidth=0.5)
 
