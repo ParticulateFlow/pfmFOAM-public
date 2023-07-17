@@ -67,6 +67,10 @@ do
       t3=$(echo "$t3" | sed 's/0$//')
       t3=$(echo "$t3" | sed 's/\.$//')
 
+      if [ -z "$t3" ]
+      then
+        exit
+      fi
       cd $t3; rm -r uniform 2> /dev/null; rm * 2> /dev/null
       cd ..
       echo "    copying from $path/$t2 to $t3"
