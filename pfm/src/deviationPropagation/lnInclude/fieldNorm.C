@@ -1,1 +1,0 @@
-../fieldNorm/fieldNorm/fieldNorm.C

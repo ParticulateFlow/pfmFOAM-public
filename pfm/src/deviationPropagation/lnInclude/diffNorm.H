@@ -1,1 +1,0 @@
-../fieldNorm/diffNorm/diffNorm.H
