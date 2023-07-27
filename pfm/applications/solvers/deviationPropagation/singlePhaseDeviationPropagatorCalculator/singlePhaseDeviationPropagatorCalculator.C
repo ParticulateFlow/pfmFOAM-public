@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
     #include "createControl.H"
     #include "createFields.H"
     #include "createElementList.H"
-    #include "initContinuityErrs.H"
 
  //   turbulence->validate();
 
