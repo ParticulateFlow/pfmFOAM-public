@@ -3,9 +3,10 @@
 Requirements: successfully compiled pfmFOAM; python3 installation
 
 1. Generation of reference data: execute generateReferenceData.sh;
-   the resulting time series is moved to referenceDataGeneration/data_referenceTimeSeries
+   the resulting time series is moved to referenceData/data_referenceTimeSeries
 2. Generation of validation data (uniform inlet velocity 1.2 m/s):
-   execute generateValidationData.sh; validation data is moved to validationDataGeneration/data_uin_120
+   execute generateValidationData.sh;
+   validation data is moved to validationData/data_uin_120
 3. Generation of propagators: execute generatePropagator.sh;
    for each time in propagatorGeneration/listOfReferenceStates, the corresponding propagator is computed;
    this can take several days - to speed up the process, several copies
