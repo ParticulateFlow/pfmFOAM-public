@@ -51,15 +51,16 @@ IOdictionary tsProperties
     )
 );
 
-fileName timeSeriesName(tsProperties.lookupOrDefault<fileName>("timeSeries", "timeSeries"));
-word UtsName(tsProperties.lookupOrDefault<word>("U_ts", "U"));
-labelList refStates(tsProperties.lookupOrDefault<labelList>("refStates", labelList(0)));
-scalar tstart(tsProperties.lookupOrDefault<scalar>("tstart",0.0));
-scalar tstep(tsProperties.lookupOrDefault<scalar>("tstep",1.0));
-scalar tref = tstart+tstep*refStates[0];
-scalar tolerance(tsProperties.lookupOrDefault<scalar>("tolerance", 1e-9));
-label resetRefStateEvery(tsProperties.lookupOrDefault<label>("resetRefStateEvery",1));
+fileName    timeSeriesName      (tsProperties.lookupOrDefault<fileName>("timeSeries", "timeSeries"));
+word        UtsName             (tsProperties.lookupOrDefault<word>("U_ts", "U"));
+labelList   refStates           (tsProperties.lookupOrDefault<labelList>("refStates", labelList(0)));
+scalar      tstart              (tsProperties.lookupOrDefault<scalar>("tstart",0.0));
+scalar      tstep               (tsProperties.lookupOrDefault<scalar>("tstep",1.0));
+scalar      tref = tstart + tstep * refStates[0];
+scalar      tolerance           (tsProperties.lookupOrDefault<scalar>("tolerance", 1e-9));
+label       resetRefStateEvery  (tsProperties.lookupOrDefault<label>("resetRefStateEvery",1));
 (void)resetRefStateEvery;
+
 Foam::Time tsTime(timeSeriesName, "", "../system", "../constant", false);
 instantList timeDirs(tsTime.times());
 if (timeDirs.size() == 0)
