@@ -75,8 +75,7 @@ for (label i = 1; i < timeDirs.size() - 1; i++)
     }
 }
 
-double dTimeStepRatio = deltaTts/runTime.deltaTValue() + 0.5;
-label timeStepRatio = (int)dTimeStepRatio;
+label timeStepRatio(deltaTts/runTime.deltaTValue() + 0.5);
 
 if (Foam::mag(deltaTts/runTime.deltaTValue() - timeStepRatio) > tolerance)
 {
