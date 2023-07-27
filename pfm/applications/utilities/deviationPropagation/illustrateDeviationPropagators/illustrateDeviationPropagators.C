@@ -67,8 +67,6 @@ int main(int argc, char *argv[])
     dataBase db(mesh);
     db.init();
 
-    label numRefStates = db.numRefStates();
-
     for (label refState = refStateMin; refState <= refStateMax; refState++)
     {
         for (label cellI = cellIMin; cellI <= cellIMax; cellI++)
