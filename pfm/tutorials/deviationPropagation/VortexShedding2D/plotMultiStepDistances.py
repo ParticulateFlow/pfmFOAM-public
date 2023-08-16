@@ -6,7 +6,7 @@ import re
 from matplotlib import rc
 from matplotlib.ticker import AutoMinorLocator
 
-import os.path
+import os
 from os import path
 
 def readDataFile(filename,col,split_at=r'\s+',ignore='#',ignoreleadinglines=0):
@@ -27,6 +27,9 @@ def readDataFile(filename,col,split_at=r'\s+',ignore='#',ignoreleadinglines=0):
 
 rc('font',**{'family':'serif','serif':['Times'],'size':5})
 rc('text', usetex=True)
+
+if not os.path.exists("figures"):
+     os.makedirs("figures")
 
 # number of steps in each sample
 nsteps = 20

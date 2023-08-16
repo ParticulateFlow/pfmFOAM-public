@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
-import os
 import numpy as np
 import vtk
 import matplotlib.pyplot as P
 from matplotlib.ticker import StrMethodFormatter
 from matplotlib import rc
 from matplotlib import rcParams
-import os.path
+import os
 from os import path
 import re
 
@@ -56,6 +55,9 @@ def loadVTK(filename,dim1,dim2,dimData):
 rc('font',**{'family':'serif','serif':['Times'],'size':7})
 rc('text', usetex=True)
 rcParams['text.latex.preamble'] = [r'\usepackage{bm}']
+
+if not os.path.exists("figures"):
+     os.makedirs("figures")
 
 P.clf()
 P.figure(figsize=(2.65,1.86),dpi=1000)
