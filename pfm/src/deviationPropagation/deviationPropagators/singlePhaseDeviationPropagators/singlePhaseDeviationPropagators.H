@@ -82,7 +82,7 @@ public:
 
     // Member Functions
 
-    label readDeviationPropagators(fileNameList dataBases);
+    void readDeviationPropagators(fileNameList dataBases);
 
     tensorList &Kuu_boundary(label refState, label receiverID);
 

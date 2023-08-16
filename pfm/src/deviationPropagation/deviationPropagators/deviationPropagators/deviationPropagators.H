@@ -119,7 +119,7 @@ public:
 
     label readSenderIDs(fileNameList dataBases);
 
-    virtual label readDeviationPropagators(fileNameList dataBases) = 0;
+    virtual void readDeviationPropagators(fileNameList dataBases) = 0;
 
     void readIntegratedDeviationPropagators() {readIntegratedDeviationPropagators_ = true;}
 

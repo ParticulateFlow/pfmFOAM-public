@@ -53,6 +53,7 @@ class noDeviationPropagators:
 {
 protected:
 
+    tensorList emptyTensorList_;
 
 public:
 
@@ -75,13 +76,13 @@ public:
 
     // Member Functions
 
-    label readDeviationPropagators(fileNameList dataBases) {}
+    void readDeviationPropagators(fileNameList dataBases) {}
 
-    tensorList &Kuu_boundary(label refState, label receiverID) {}
+    tensorList &Kuu_boundary(label refState, label receiverID) {return emptyTensorList_;}
 
-    tensorList &Kuu_internal(label refState, label receiverID) {}
+    tensorList &Kuu_internal(label refState, label receiverID) {return emptyTensorList_;}
 
-    tensor Kuu_integrated(label refState, label cellI) {}
+    tensor Kuu_integrated(label refState, label cellI) {return tensor::zero;}
 
 private:
 

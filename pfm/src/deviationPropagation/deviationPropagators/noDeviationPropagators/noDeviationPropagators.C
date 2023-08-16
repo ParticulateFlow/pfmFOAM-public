@@ -53,7 +53,8 @@ noDeviationPropagators::noDeviationPropagators
     dataBase& base
 )
 :
-    deviationPropagators(dict,base)
+    deviationPropagators(dict,base),
+    emptyTensorList_(0)
 {
 }
 

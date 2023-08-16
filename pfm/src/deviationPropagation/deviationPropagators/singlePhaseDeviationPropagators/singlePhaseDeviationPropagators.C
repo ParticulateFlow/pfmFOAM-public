@@ -71,7 +71,7 @@ singlePhaseDeviationPropagators::~singlePhaseDeviationPropagators()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-label singlePhaseDeviationPropagators::readDeviationPropagators(fileNameList dataBases)
+void singlePhaseDeviationPropagators::readDeviationPropagators(fileNameList dataBases)
 {
     int refStates = 0;
     forAll(dataBases,i)
@@ -163,8 +163,6 @@ label singlePhaseDeviationPropagators::readDeviationPropagators(fileNameList dat
     {
         Kuu_integrated_.resize(0);
     }
-
-    return refStates;
 }
 
 tensorList& singlePhaseDeviationPropagators::Kuu_boundary(label refState, label receiverID)
