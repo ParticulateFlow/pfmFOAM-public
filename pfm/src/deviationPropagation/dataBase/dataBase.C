@@ -120,11 +120,12 @@ void dataBase::init()
     }
 
     // in case only reference states are to be read, stop here
-    if (dataBaseProperties_.lookup("deviationPropagators") == "noDeviationPropagators")
+    word deviationPropagatorsType(dataBaseProperties_.lookup("deviationPropagators"));
+    if (deviationPropagatorsType == std::string("noDeviationPropagators"))
     {
         return;
     }
-    
+
     // construct face addressing
     wordList patches;
     IFstream IS("patches");
@@ -165,26 +166,22 @@ void dataBase::init()
 
 fieldNorm& dataBase::fieldN()
 {
-    if (fieldNorm_.valid())
+    if (!fieldNorm_.valid())
     {
-        return fieldNorm_();
+        FatalError << "no field norm set\n" << abort(FatalError);
     }
-    else
-    {
-        FatalError << "no field norm set\n" << abort(FatalError);        
-    }
+
+    return fieldNorm_();
 }
 
 referenceStates& dataBase::exportReferenceStates()
 {
-    if (referenceStates_.valid())
+    if (!referenceStates_.valid())
     {
-        return referenceStates_();
+        FatalError << "no reference state type set\n" << abort(FatalError);
     }
-    else
-    {
-        FatalError << "no reference state type set\n" << abort(FatalError); 
-    }
+
+    return referenceStates_();
 }
 
 deviationPropagators& dataBase::exportDeviationPropagators()
