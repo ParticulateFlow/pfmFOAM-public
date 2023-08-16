@@ -93,6 +93,7 @@ label referenceStates::findRefStateListIndex(word fieldType, word fieldName)
     }
 
     FatalError << "could not find field with name " << fieldName << " \n" << abort(FatalError);
+    return -1;
 }
 
 // * * * * * * * * * * * * * private Member Functions  * * * * * * * * * * * * //
