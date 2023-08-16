@@ -83,12 +83,6 @@ int main(int argc, char *argv[])
 
         convectiveTermQuadratic = fvc::div(linearInterpolate(deltaU) & mesh.Sf(),deltaU);
 
-        if (compareToExactSolution)
-        {
-            volScalarField magU(mag(U));
-            scalar normalization = fvc::domainIntegrate(magU).value();
-        }
-
         if (runTime.writeTime())
         {
             runTime.setTime(prevTimeInstant,prevTimeIndex);
