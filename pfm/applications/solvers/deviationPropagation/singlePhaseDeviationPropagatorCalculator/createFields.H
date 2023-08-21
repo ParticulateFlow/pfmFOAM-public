@@ -103,7 +103,7 @@ scalar minKuu(tsProperties.lookupOrDefault<scalar>("minKuu",1e-5));
 
 enum Modes {internal, boundary, integrated};
 word selectedMode(tsProperties.lookup("mode"));
-Modes mode;
+Modes mode = internal;
 if (selectedMode == "internal") mode = internal;
 else if (selectedMode == "boundary") mode = boundary;
 else if (selectedMode == "integrated")
