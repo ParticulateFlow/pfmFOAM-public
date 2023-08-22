@@ -1,0 +1,43 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  6                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dataBaseProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+dataBases ("../propagatorGeneration/dataBase");
+
+fieldNorm diffNorm;
+
+referenceStates generalReferenceStates;
+
+deviationPropagators singlePhaseDeviationPropagators;
+
+exactSolutionFieldName "UExactSolution";
+
+generalReferenceStatesProps
+{
+    verbose true;
+    volVectorRefStates ("U");
+}
+
+singlePhaseDeviationPropagatorsProps
+{}
+
+diffNormProps
+{
+    fieldName "U";
+}
+
+minKuu 1e-4;
+
+correctP true;
+// ************************************************************************* //
