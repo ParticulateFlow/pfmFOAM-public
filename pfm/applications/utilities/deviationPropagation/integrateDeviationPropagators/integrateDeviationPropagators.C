@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     }
 
     dataBase db(mesh);
-    db.exportDeviationPropagators().readIntegratedDeviationPropagators();
+    db.exportDeviationPropagators().activateReadingIntegratedDeviationPropagators();
     db.init();
     OFstream distanceFile("integratedKuuDistances");
     distanceFile << "# refState distance" << endl;

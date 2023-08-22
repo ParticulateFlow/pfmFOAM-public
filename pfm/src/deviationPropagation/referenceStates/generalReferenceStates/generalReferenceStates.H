@@ -90,8 +90,6 @@ public:
 
 private:
 
-    label maxNumRefStates_;
-
     List<PtrList<volScalarField>> volScalarRefStateList_;
 
     List<PtrList<volVectorField>> volVectorRefStateList_;

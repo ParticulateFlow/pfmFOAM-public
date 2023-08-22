@@ -57,8 +57,8 @@ deviationPropagators::deviationPropagators
     verbose_(dict.lookupOrDefault<bool>("verbose", false)),
     readIntegratedDeviationPropagators_(false),
     deviationPropagatorFormatASCII_(dict.lookupOrDefault<bool>("deviationPropagatorFormatASCII", false)),
-    senderBoundaryFaceIDs_(100000),
-    senderCellIDs_(100000)
+    senderBoundaryFaceIDs_(),
+    senderCellIDs_()
 {
 }
 
@@ -72,6 +72,33 @@ deviationPropagators::~deviationPropagators()
 label deviationPropagators::readSenderIDs(fileNameList dataBases)
 {
     int refStates = 0;
+
+    // first get the number of reference states to set size of lists
+    forAll(dataBases,i)
+    {
+        fileName dbName = dataBases[i];
+        Foam::Time dbTime(dbName, "", "../system", "../constant", false);
+        instantList timeDirs(dbTime.times());
+
+        for (instantList::iterator it=timeDirs.begin(); it != timeDirs.end(); ++it)
+        {
+            // set time
+            dbTime.setTime(*it, it->value());
+
+            // skip constant
+            if (dbTime.timeName() == "constant")
+            {
+                continue;
+            }
+            refStates++;
+        }
+    }
+
+    senderBoundaryFaceIDs_.setSize(refStates);
+    senderCellIDs_.setSize(refStates);
+
+    // now read lists
+    refStates = 0;
     forAll(dataBases,i)
     {
         fileName dbName = dataBases[i];
@@ -118,8 +145,6 @@ label deviationPropagators::readSenderIDs(fileNameList dataBases)
         }
         Info << "Reading sender IDs of database " << dbName <<" done\n" << endl;
     }
-    senderBoundaryFaceIDs_.resize(refStates);
-    senderCellIDs_.resize(refStates);
 
     return refStates;
 }

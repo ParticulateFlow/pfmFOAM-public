@@ -55,9 +55,9 @@ singlePhaseDeviationPropagators::singlePhaseDeviationPropagators
 :
     deviationPropagators(dict,base),
     propsDict_(dict.subDict(typeName + "Props")),
-    Kuu_boundary_(100000),
-    Kuu_internal_(100000),
-    Kuu_integrated_(100000)
+    Kuu_boundary_(),
+    Kuu_internal_(),
+    Kuu_integrated_()
 {
 }
 
@@ -73,6 +73,14 @@ singlePhaseDeviationPropagators::~singlePhaseDeviationPropagators()
 
 void singlePhaseDeviationPropagators::readDeviationPropagators(fileNameList dataBases)
 {
+    label numRefStates = dataBase_.numRefStates();
+    Kuu_boundary_.setSize(numRefStates);
+    Kuu_internal_.setSize(numRefStates);
+    if (readIntegratedDeviationPropagators_)
+    {
+        Kuu_integrated_.setSize(numRefStates);
+    }
+
     int refStates = 0;
     forAll(dataBases,i)
     {
@@ -152,16 +160,6 @@ void singlePhaseDeviationPropagators::readDeviationPropagators(fileNameList data
             refStates++;
         }
         Info << "Reading deviation propagators of database " << dbName <<" done\n" << endl;
-    }
-    Kuu_internal_.resize(refStates);
-    Kuu_boundary_.resize(refStates);
-    if (readIntegratedDeviationPropagators_)
-    {
-        Kuu_integrated_.resize(refStates);
-    }
-    else
-    {
-        Kuu_integrated_.resize(0);
     }
 }
 

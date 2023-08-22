@@ -121,7 +121,7 @@ public:
 
     virtual void readDeviationPropagators(fileNameList dataBases) = 0;
 
-    void readIntegratedDeviationPropagators() {readIntegratedDeviationPropagators_ = true;}
+    void activateReadingIntegratedDeviationPropagators() {readIntegratedDeviationPropagators_ = true;}
 
     labelList &senderCellIDs(label refState, label receiverID); // returns *global* cell IDs sending to cell with *local* receiver ID
 

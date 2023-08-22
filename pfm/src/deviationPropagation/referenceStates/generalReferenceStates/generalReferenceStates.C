@@ -55,23 +55,11 @@ generalReferenceStates::generalReferenceStates
 :
     referenceStates(dict,base,typeName),
     verbose_(propsDict_.lookupOrDefault<bool>("verbose", false)),
-    maxNumRefStates_(propsDict_.lookupOrDefault<label>("maxNumRefStates", 1000)),
     volScalarRefStateList_(volScalarRefStateNames_.size()),
     volVectorRefStateList_(volVectorRefStateNames_.size()),
     volScalarEvolvedRefStateList_(volScalarRefStateNames_.size()),
     volVectorEvolvedRefStateList_(volVectorRefStateNames_.size())
 {
-    forAll(volScalarRefStateNames_,i)
-    {
-        volScalarRefStateList_[i].setSize(maxNumRefStates_);
-        volScalarEvolvedRefStateList_[i].setSize(maxNumRefStates_);
-    }
-
-    forAll(volVectorRefStateNames_,i)
-    {
-        volVectorRefStateList_[i].setSize(maxNumRefStates_);
-        volVectorEvolvedRefStateList_[i].setSize(maxNumRefStates_);
-    }
 }
 
 
@@ -87,6 +75,44 @@ generalReferenceStates::~generalReferenceStates()
 label generalReferenceStates::readReferenceStates(fileNameList dataBases)
 {
     int refStates = 0;
+
+    // first get the number of reference states to set size of lists
+    forAll(dataBases,i)
+    {
+        fileName dbName = dataBases[i];
+        Foam::Time dbTime(dbName, "", "../system", "../constant", false);
+        instantList timeDirs(dbTime.times());
+
+        for (instantList::iterator it=timeDirs.begin(); it != timeDirs.end(); ++it)
+        {
+            // set time
+            dbTime.setTime(*it, it->value());
+
+            // skip constant
+            if (dbTime.timeName() == "constant")
+            {
+                continue;
+            }
+            refStates++;
+        }
+    }
+
+    forAll(volScalarRefStateNames_,i)
+    {
+        volScalarRefStateList_[i].setSize(refStates);
+        volScalarEvolvedRefStateList_[i].setSize(refStates);
+    }
+
+    forAll(volVectorRefStateNames_,i)
+    {
+        volVectorRefStateList_[i].setSize(refStates);
+        volVectorEvolvedRefStateList_[i].setSize(refStates);
+    }
+
+
+    // now read lists of reference states
+    refStates = 0;
+
     scalarList predictionSteps(dataBases.size());
     forAll(dataBases,i)
     {
@@ -117,11 +143,6 @@ label generalReferenceStates::readReferenceStates(fileNameList dataBases)
             if (verbose_)
             {
                 Info << "Reading at t = " << dbTime.timeName() << endl;
-            }
-
-            if (refStates >= maxNumRefStates_)
-            {
-                FatalError << "database contents exceeds maximum number of reference states\n" << abort(FatalError);
             }
 
             forAll(volScalarRefStateNames_,j)
@@ -217,18 +238,6 @@ label generalReferenceStates::readReferenceStates(fileNameList dataBases)
     else
     {
         FatalError << "different prediction step sizes detected\n" << abort(FatalError);
-    }
-
-    forAll(volScalarRefStateNames_,i)
-    {
-        volScalarRefStateList_[i].resize(refStates);
-        volScalarEvolvedRefStateList_[i].resize(refStates);
-    }
-
-    forAll(volVectorRefStateNames_,i)
-    {
-        volVectorRefStateList_[i].resize(refStates);
-        volVectorEvolvedRefStateList_[i].resize(refStates);
     }
 
     return refStates;

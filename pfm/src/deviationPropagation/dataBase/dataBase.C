@@ -120,8 +120,7 @@ void dataBase::init()
     }
 
     // in case only reference states are to be read, stop here
-    word deviationPropagatorsType(dataBaseProperties_.lookup("deviationPropagators"));
-    if (deviationPropagatorsType == std::string("noDeviationPropagators"))
+    if (dataBaseProperties_.lookupType<word>("deviationPropagators") == "noDeviationPropagators")
     {
         return;
     }
@@ -223,7 +222,7 @@ label dataBase::findNearestRefState(const volVectorField &field, label fieldList
         const volVectorField& stateI(exportReferenceStates().exportVolVectorField(fieldListIndex,stateIndex));
         distances[stateIndex] = fieldN().fieldsDistanceConvectiveTerm(stateI,field);
     }
-    
+
     minDist = distances[0];
     label minIndex = 0;
     forAll(distances,stateIndex)

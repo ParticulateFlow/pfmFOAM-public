@@ -86,8 +86,9 @@ scalar diffNorm::fieldsDistance(const volScalarField &field1, const volScalarFie
     }
     reduce(sum, sumOp<scalar>());
     // if no normalization value is provided, normalize with domain volume
-    if (normalization < 0.0) return sum/domainVolume_;
-    else return sum / normalization;
+    if (normalization < -0.5) return sum/domainVolume_;
+    else if (fabs(normalization) < VSMALL) FatalError << "attempted normalization with 0 or very small value\n" << abort(FatalError);
+    return sum / normalization;
 }
 
 scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorField &field2, double normalization)
@@ -105,8 +106,9 @@ scalar diffNorm::fieldsDistance(const volVectorField &field1, const volVectorFie
     }
     reduce(sum, sumOp<scalar>());
     // if no normalization value is provided, normalize with domain volume
-    if (normalization < 0.0) return sum/domainVolume_;
-    else return sum / normalization;
+    if (normalization < -0.5) return sum/domainVolume_;
+    else if (fabs(normalization) < VSMALL) FatalError << "attempted normalization with 0 or very small value\n" << abort(FatalError);
+    return sum / normalization;
 }
 
 scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorField &field2, double normalization)
@@ -124,8 +126,9 @@ scalar diffNorm::fieldsDistance(const volTensorField &field1, const volTensorFie
     }
     reduce(sum, sumOp<scalar>());
     // if no normalization value is provided, normalize with domain volume
-    if (normalization < 0.0) return sum/domainVolume_;
-    else return sum / normalization;
+    if (normalization < -0.5) return sum/domainVolume_;
+    else if (fabs(normalization) < VSMALL) FatalError << "attempted normalization with 0 or very small value\n" << abort(FatalError);
+    return sum / normalization;
 }
 
 scalar diffNorm::fieldsDistanceConvectiveTerm(const volVectorField &field1, const volVectorField &field2, double normalization)
@@ -145,8 +148,9 @@ scalar diffNorm::fieldsDistanceConvectiveTerm(const volVectorField &field1, cons
     }
     reduce(sum, sumOp<scalar>());
     // if no normalization value is provided, normalize with domain volume
-    if (normalization < 0.0) return sum/domainVolume_;
-    else return sum / normalization;
+    if (normalization < -0.5) return sum/domainVolume_;
+    else if (fabs(normalization) < VSMALL) FatalError << "attempted normalization with 0 or very small value\n" << abort(FatalError);
+    return sum / normalization;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
