@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  6                                     |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -26,12 +26,12 @@ gradSchemes
     default         Gauss linear;
     //grad(p)         Gauss linear;
 
-    //default 	     leastSquares;
+    //default         leastSquares;
 
-    //default 	     cellMDLimited leastSquares 0.5;
-    //default 	     cellMDLimited Gauss linear 1;
+    //default         cellMDLimited leastSquares 0.5;
+    //default         cellMDLimited Gauss linear 1;
 
-    grad(U) 	     cellMDLimited Gauss linear 1;
+    grad(U)         cellMDLimited Gauss linear 1;
 }
 
 divSchemes
@@ -48,7 +48,7 @@ divSchemes
 }
 
 laplacianSchemes
-{   
+{
      default         Gauss linear limited 1;
 }
 

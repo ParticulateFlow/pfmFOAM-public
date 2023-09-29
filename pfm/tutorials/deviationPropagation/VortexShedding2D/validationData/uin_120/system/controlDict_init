@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  6                                     |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -52,61 +52,61 @@ functions
 {
     forces_object
     {
-	type forces;
-	functionObjectLibs ("libforces.so");
+        type forces;
+        functionObjectLibs ("libforces.so");
 
         enabled         false;
 
-	//writeControl outputTime;
-	writeControl   timeStep;
-	writeInterval  1;
+        //writeControl outputTime;
+        writeControl   timeStep;
+        writeInterval  1;
 
-	//// Patches to sample
-	//patches ("body1" "body2" "body3");
-	patches ("cylinder");
+        //// Patches to sample
+        //patches ("body1" "body2" "body3");
+        patches ("cylinder");
 
-	//// Name of fields
-	pName p;
-	Uname U;
+        //// Name of fields
+        pName p;
+        Uname U;
 
-	//// Density
-	rho rhoInf;
-	rhoInf 1.;
+        //// Density
+        rho rhoInf;
+        rhoInf 1.;
 
-	//// Centre of rotation
-	CofR (0 0 0);
+        //// Centre of rotation
+        CofR (0 0 0);
     }
 
     forceCoeffs_object
     {
-	// rhoInf - reference density
-	// CofR - Centre of rotation
-	// dragDir - Direction of drag coefficient
-	// liftDir - Direction of lift coefficient
-	// pitchAxis - Pitching moment axis
-	// magUinf - free stream velocity magnitude
-	// lRef - reference length
-	// Aref - reference area
-	type forceCoeffs;
-	functionObjectLibs ("libforces.so");
-	//patches ("body1" "body2" "body3");
-	patches (cylinder);
+        // rhoInf - reference density
+        // CofR - Centre of rotation
+        // dragDir - Direction of drag coefficient
+        // liftDir - Direction of lift coefficient
+        // pitchAxis - Pitching moment axis
+        // magUinf - free stream velocity magnitude
+        // lRef - reference length
+        // Aref - reference area
+        type forceCoeffs;
+        functionObjectLibs ("libforces.so");
+        //patches ("body1" "body2" "body3");
+        patches (cylinder);
 
-	pName p;
-	Uname U;
-	rho rhoInf;
-	rhoInf 1.0;
+        pName p;
+        Uname U;
+        rho rhoInf;
+        rhoInf 1.0;
 
-	//// Dump to file
-	log true;
+        //// Dump to file
+        log true;
 
-	CofR (0.0 0 0);
-	liftDir (0 1 0);
-	dragDir (1 0 0);
-	pitchAxis (0 0 1);
-	magUInf 1.0;
-	lRef 1;           // reference lenght for moments!!!
-	Aref 2.0;         // reference area 1 for 2d
+        CofR (0.0 0 0);
+        liftDir (0 1 0);
+        dragDir (1 0 0);
+        pitchAxis (0 0 1);
+        magUInf 1.0;
+        lRef 1;           // reference lenght for moments!!!
+        Aref 2.0;         // reference area 1 for 2d
 
         writeControl   timeStep;
         writeInterval  1;

@@ -1,16 +1,16 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \    /   O peration     | Version:  2.1.x                                 |
-|   \  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-	version		2.0;
-	format		ascii;
-	class		dictionary;
-	object		probesDict;
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      probesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -28,7 +28,7 @@ writeInterval  1;
 // Locations to be probed.
 probeLocations
 (
-	(0.5 2.25 0.0)
+    (0.5 2.25 0.0)
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
