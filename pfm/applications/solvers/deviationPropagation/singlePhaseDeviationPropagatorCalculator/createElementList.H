@@ -35,7 +35,7 @@ else
     }
     faceIDperPatch.resize(locCellsOrFaces);
     patchOwningFace.resize(locCellsOrFaces);
-    
+
     label fc = 0;
     for (int i = 0; i < patches.size(); i++)
     {
@@ -62,7 +62,7 @@ for (int element = 0; element < locCellsOrFaces; element++)
 
 labelList numElementsLoc(Pstream::nProcs(),0);
 numElementsLoc[Pstream::myProcNo()] = elementsLoc.size();
-    
+
 Pstream::gatherList(numElementsLoc);
 Pstream::scatterList(numElementsLoc);
 

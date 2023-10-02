@@ -132,7 +132,7 @@ protected:
 
     // Protected Member Functions
 
-  
+
         //- Output file header information
         virtual void writeFileHeader(const label i);
 

@@ -152,5 +152,5 @@ scalar minKuu(dbProperties.lookupOrDefault<scalar>("minKuu",1e-5));
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;
-    
+
 #include "createFvOptions.H"

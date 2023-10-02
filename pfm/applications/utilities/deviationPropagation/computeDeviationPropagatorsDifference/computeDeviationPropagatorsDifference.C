@@ -144,9 +144,9 @@ int main(int argc, char *argv[])
                     distanceLocal += Foam::sqrt(value) * mesh.V()[cellJ];
                 }
             }
-            forAll(mesh.boundary(), patchJ) 
+            forAll(mesh.boundary(), patchJ)
             {
-                forAll (mesh.boundary()[patchJ],faceJ) 
+                forAll (mesh.boundary()[patchJ],faceJ)
                 {
                     value = magSqr(deltaK_uu.boundaryField()[patchJ][faceJ]);
                     if (value >= VSMALL)
