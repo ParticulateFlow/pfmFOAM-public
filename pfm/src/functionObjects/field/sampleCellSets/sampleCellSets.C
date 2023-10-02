@@ -154,14 +154,14 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
         labelList cellsInSet = cellSets_[cellset].toc();
         if (nx * ny * nz != cellsInSet.size())
         {
-            FatalError << "consistency check for box-shape of cell sets failed for set " << cellSetNames_[cellset] << 
+            FatalError << "consistency check for box-shape of cell sets failed for set " << cellSetNames_[cellset] <<
                 ": nx = " << nx << ", ny = " << ny << ", nz = " << nz << ", number of cells = " << cellsInSet.size() << abort(FatalError);
         }
         if (cellset < numCellSets_-1)
         {
             if (nx != boxExtentsN_[cellset+1][0] || ny != boxExtentsN_[cellset+1][1] || nz != boxExtentsN_[cellset+1][2])
             {
-                FatalError << "consistency check for congruence of cell sets failed for sets " << cellSetNames_[cellset] << 
+                FatalError << "consistency check for congruence of cell sets failed for sets " << cellSetNames_[cellset] <<
                     " and " << cellSetNames_[cellset+1] << abort(FatalError);
             }
         }
@@ -181,7 +181,7 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
         word fieldname = distDataScalarFieldNames_[fieldI];
         for (label cell=0; cell<numCells; cell++)
         {
-            sampleFileHeader << fieldname << "_" << cell; 
+            sampleFileHeader << fieldname << "_" << cell;
             if (distDataVectorFieldNames_.size() > 0 || cell < numCells-1)
             {
                 sampleFileHeader << ", ";
@@ -193,13 +193,13 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
         word fieldname = distDataVectorFieldNames_[fieldI];
         for (label cell=0; cell<numCells; cell++)
         {
-            sampleFileHeader << fieldname << "X_" << cell << ", "; 
+            sampleFileHeader << fieldname << "X_" << cell << ", ";
         }
 
         fieldname = distDataVectorFieldNames_[fieldI];
         for (label cell=0; cell<numCells; cell++)
         {
-            sampleFileHeader << fieldname << "Y_" << cell << ", "; 
+            sampleFileHeader << fieldname << "Y_" << cell << ", ";
         }
 
         fieldname = distDataVectorFieldNames_[fieldI];
@@ -211,7 +211,7 @@ Foam::functionObjects::sampleCellSets::sampleCellSets
                 sampleFileHeader << ", ";
             }
         }
-    }  
+    }
 }
 
 
@@ -228,7 +228,7 @@ bool Foam::functionObjects::sampleCellSets::read(const dictionary& dict)
     dict.lookup("distDataScalarFields") >> distDataScalarFieldNames_;
 
     dict.lookup("distDataVectorFields") >> distDataVectorFieldNames_;
-    
+
     dict.lookup("cellSets") >> cellSetNames_;
 
     numCellSets_ = cellSetNames_.size();
@@ -351,7 +351,7 @@ bool Foam::functionObjects::sampleCellSets::execute()
         {
             for (label row=0; row<dataInCellSet.m(); row++)
             {
-                sampleFileCSV << dataInCellSet(row,col); 
+                sampleFileCSV << dataInCellSet(row,col);
                 if (col < dataInCellSet.n()-1 || row < dataInCellSet.m()-1)
                 {
                     sampleFileCSV << ", ";

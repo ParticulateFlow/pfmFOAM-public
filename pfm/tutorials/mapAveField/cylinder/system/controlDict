@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -52,8 +52,8 @@ functions
     {
         type            forceCoeffs;
         libs ( "libforces.so" );
-        writeControl   timeStep;
-        writeInterval  10;
+        writeControl    timeStep;
+        writeInterval   10;
 
         patches
         (
@@ -61,9 +61,9 @@ functions
         );
 
         log         true;
-	p p;
-	U U;
-	rho rhoInf;
+        p p;
+        U U;
+        rho rhoInf;
         rhoInf      1;
         CofR        (0 0 0);
         liftDir     (0 1 0);
@@ -78,13 +78,13 @@ functions
     {
         type            mapAveField;
         libs            ("libfieldFunctionObjects.so"
-			 "mapAveField.so");
-        
-	writeControl    writeTime;
+                         "mapAveField.so");
+
+        writeControl    writeTime;
         restartOnOutput true;
         //if a newField is calculated
-        //addNewField	true;
-        addNewField	false;
+        //addNewField   true;
+        addNewField     false;
 
         fields
         (

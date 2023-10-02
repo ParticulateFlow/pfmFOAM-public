@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  4.x                                   |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -14,11 +14,11 @@ FoamFile
     object      interpolationProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-//mappingMethod	consistent;
-mappingMethod	cuttingMesh;	
+//mappingMethod   consistent;
+mappingMethod   cuttingMesh;
 
-interpolationMethod	cellVolumeWeight;
-mapSurfaceFields	false;
+interpolationMethod     cellVolumeWeight;
+mapSurfaceFields        false;
 
 
 // ************************************************************************* //

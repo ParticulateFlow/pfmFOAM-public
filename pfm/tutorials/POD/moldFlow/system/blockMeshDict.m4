@@ -32,80 +32,72 @@ m4_define(y2NumberOfCells, 30)
 m4_define(zNumberOfCells, 35)
 
 
-/*---------------------------------------------------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.4.1                                 |
-|   \\  /    A nd           | Web:      http://www.openfoam.org               |
-|    \\/     M anipulation  |                                                 |
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-
 FoamFile
 {
     version         2.0;
     format          ascii;
-
-    root            "";
-    case            "";
-    instance        "";
-    local           "";
-
     class           dictionary;
     object          blockMeshDict;
 }
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 convertToMeters 0.001;
 
 vertices
 (
-	
-	(0 0 0)						vlabel(V0)
-	(X 0 0)						vlabel(V1)
-	(0 calc(Y-H) 0)					vlabel(V2)
-	(X calc(Y-H) 0)					vlabel(V3)
-	(0 calc(Y-J) 0)					vlabel(V4)
-	(X calc(Y-J) 0)					vlabel(V5)
-	(0 Y 0)						vlabel(V6)
-	(X Y 0)						vlabel(V7)
 
-	(0 0 Z)						vlabel(V8)
-	(X 0 Z)						vlabel(V9)
-	(0 calc(Y-H) Z)					vlabel(V10)
-	(X calc(Y-H) Z)					vlabel(V11)
-	(0 calc(Y-J) Z)					vlabel(V12)
-	(X calc(Y-J) Z)					vlabel(V13)
-	(0 Y Z)						vlabel(V14)
-	(X Y Z)						vlabel(V15)
+    (0 0 0)                                             vlabel(V0)
+    (X 0 0)                                             vlabel(V1)
+    (0 calc(Y-H) 0)                                     vlabel(V2)
+    (X calc(Y-H) 0)                                     vlabel(V3)
+    (0 calc(Y-J) 0)                                     vlabel(V4)
+    (X calc(Y-J) 0)                                     vlabel(V5)
+    (0 Y 0)                                             vlabel(V6)
+    (X Y 0)                                             vlabel(V7)
+
+    (0 0 Z)                                             vlabel(V8)
+    (X 0 Z)                                             vlabel(V9)
+    (0 calc(Y-H) Z)                                     vlabel(V10)
+    (X calc(Y-H) Z)                                     vlabel(V11)
+    (0 calc(Y-J) Z)                                     vlabel(V12)
+    (X calc(Y-J) Z)                                     vlabel(V13)
+    (0 Y Z)                                             vlabel(V14)
+    (X Y Z)                                             vlabel(V15)
 );
 
 // Defining blocks:
 blocks
 (
-	hex (0 1 3 2 8 9 11 10) (xNumberOfCells y0NumberOfCells zNumberOfCells) simpleGrading (
-												( 
-													(0.8 0.8 4)
-													(0.2 0.2 0.25)
-												) 
-												0.25 1)
-	hex (2 3 5 4 10 11 13 12) (xNumberOfCells y1NumberOfCells zNumberOfCells) simpleGrading (
-												( 
-													(0.8 0.8 4)
-													(0.2 0.2 0.25)
-												)
-												1 1)
-	hex (4 5 7 6 12 13 15 14) (xNumberOfCells y2NumberOfCells zNumberOfCells) simpleGrading (
-												( 
-													(0.8 0.8 4)
-													(0.2 0.2 0.25)
-												)
-												( 
-													(0.5 0.5 2.5)
-													(0.5 0.5 0.4)
-												) 
-												1
-												)
+    hex (0 1 3 2 8 9 11 10) (xNumberOfCells y0NumberOfCells zNumberOfCells) simpleGrading   (
+                                                                                                (
+                                                                                                    (0.8 0.8 4)
+                                                                                                    (0.2 0.2 0.25)
+                                                                                                )
+                                                                                            0.25 1)
+    hex (2 3 5 4 10 11 13 12) (xNumberOfCells y1NumberOfCells zNumberOfCells) simpleGrading (
+                                                                                                (
+                                                                                                    (0.8 0.8 4)
+                                                                                                    (0.2 0.2 0.25)
+                                                                                                )
+                                                                                            1 1)
+    hex (4 5 7 6 12 13 15 14) (xNumberOfCells y2NumberOfCells zNumberOfCells) simpleGrading (
+                                                                                                (
+                                                                                                    (0.8 0.8 4)
+                                                                                                    (0.2 0.2 0.25)
+                                                                                                )
+                                                                                                (
+                                                                                                    (0.5 0.5 2.5)
+                                                                                                    (0.5 0.5 0.4)
+                                                                                                )
+                                                                                                1
+                                                                                            )
 );
 
 edges
@@ -116,18 +108,17 @@ edges
 boundary
 (
 
-
     frontAndBack
     {
         type wall;
         faces
         (
-		(V0 V1 V3 V2)
-		(V2 V3 V5 V4)
-		(V4 V5 V7 V6)
-		(V8 V9 V11 V10)
-		(V10 V11 V13 V12)
-		(V12 V13 V15 V14)
+            (V0 V1 V3 V2)
+            (V2 V3 V5 V4)
+            (V4 V5 V7 V6)
+            (V8 V9 V11 V10)
+            (V10 V11 V13 V12)
+            (V12 V13 V15 V14)
         );
     }
 
@@ -136,9 +127,9 @@ boundary
         type wall;
         faces
         (
-		(V0 V8 V10 V2)
-		(V2 V10 V12 V4)
-		(V4 V12 V14 V6)
+            (V0 V8 V10 V2)
+            (V2 V10 V12 V4)
+            (V4 V12 V14 V6)
         );
     }
 
@@ -147,9 +138,9 @@ boundary
         type wall;
         faces
         (
-		(V1 V9 V11 V3)
-		(V3 V11 V13 V5)
-		(V5 V13 V15 V7)
+            (V1 V9 V11 V3)
+            (V3 V11 V13 V5)
+            (V5 V13 V15 V7)
         );
     }
 
@@ -158,7 +149,7 @@ boundary
         type wall;
         faces
         (
-		(V6 V7 V15 V14)
+            (V6 V7 V15 V14)
         );
     }
 
@@ -167,13 +158,13 @@ boundary
         type patch;
         faces
         (
-		(V0 V1 V9 V8)
+            (V0 V1 V9 V8)
         );
     }
 
 );
 
-mergePatchPairs 
+mergePatchPairs
 (
 );
 
