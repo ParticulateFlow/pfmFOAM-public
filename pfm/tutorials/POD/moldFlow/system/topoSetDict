@@ -1,26 +1,17 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  4.x                                   |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-
 FoamFile
 {
     version         2.0;
     format          ascii;
-
-    root            "";
-    case            "";
-    instance        "";
-    local           "";
-
     class           dictionary;
     object          topoSetDict;
-}    
-
-
+}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 actions
@@ -30,12 +21,12 @@ actions
         name    leftWallFaces;
         type    faceSet;
         action  new;
-    	source	patchToFace;
-    	sourceInfo
-    	{
-        	name "leftWall";      // Name of patch or patch group,
-                            // (regular expressions allowed)
-    	}
+        source  patchToFace;
+        sourceInfo
+        {
+            name "leftWall";    // Name of patch or patch group,
+                                // (regular expressions allowed)
+        }
    }
 
    {
@@ -45,8 +36,8 @@ actions
         source	faceToCell;
         sourceInfo
         {
-                set	leftWallFaces;
-		option	any;
+            set     leftWallFaces;
+            option  any;
         }
    }
 
@@ -56,23 +47,22 @@ actions
         action  subset;
         source  cylinderToCell;
         sourceInfo
-	{
-		p1       (0.0 0.31 0.035); // start point on cylinder axis
-		p2       (0.01 0.31 0.035);   // end point on cylinder axis
-		radius   0.0095;
+        {
+            p1       (0.0 0.31 0.035);  // start point on cylinder axis
+            p2       (0.01 0.31 0.035); // end point on cylinder axis
+            radius   0.0095;
         }
-
    }
 
    {
         name    inletFaceSet;
         type    faceSet;
         action  new;
-        source	cellToFace;
+        source  cellToFace;
         sourceInfo
         {
-		set     leftWallCells;
-		option  all;
+            set     leftWallCells;
+            option  all;
         }
    }
 
@@ -83,7 +73,7 @@ actions
         source  boxToFace;
         sourceInfo
         {
- 		box	(0.0 0.3 0.02) (0.0001 0.32 0.05); 
+            box     (0.0 0.3 0.02) (0.0001 0.32 0.05);
         }
    }
 
@@ -96,7 +86,6 @@ actions
         {
             faceSet inletFaceSet;
         }
-
    }
 );
 
