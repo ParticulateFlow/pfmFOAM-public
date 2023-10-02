@@ -34,48 +34,40 @@ m4_define(rGrading, 1.0)
 //m4_define(rGrading, 0.5)
 
 
-/*---------------------------------------------------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.4.1                                 |
-|   \\  /    A nd           | Web:      http://www.openfoam.org               |
-|    \\/     M anipulation  |                                                 |
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-
 FoamFile
 {
     version         2.0;
     format          ascii;
-
-    root            "";
-    case            "";
-    instance        "";
-    local           "";
-
     class           dictionary;
     object          blockMeshDict;
 }
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 convertToMeters 1;
 
 vertices
 (
-	(x1 -y z1)				vlabel(V0)
-	(x2 -y z1)				vlabel(V1)
-	(x2 y z1)				vlabel(V2)
-	(x1 y z1)				vlabel(V3)
-	(x1 -y z2)				vlabel(V4)
-	(x2 -y z2)				vlabel(V5)
-	(x2 y z2)				vlabel(V6)
-	(x1 y z2)				vlabel(V7)
+    (x1 -y z1)                          vlabel(V0)
+    (x2 -y z1)                          vlabel(V1)
+    (x2 y z1)                           vlabel(V2)
+    (x1 y z1)                           vlabel(V3)
+    (x1 -y z2)                          vlabel(V4)
+    (x2 -y z2)                          vlabel(V5)
+    (x2 y z2)                           vlabel(V6)
+    (x1 y z2)                           vlabel(V7)
 );
 
 // Defining blocks:
 blocks
 (
-	hex (0 1 2 3 4 5 6 7) (xNumberOfCells yNumberOfCells zNumberOfCells) simpleGrading (1 1 1)
+    hex (0 1 2 3 4 5 6 7) (xNumberOfCells yNumberOfCells zNumberOfCells) simpleGrading (1 1 1)
 );
 
 edges
@@ -90,7 +82,7 @@ boundary
         type patch;
         faces
         (
-        	(V0 V4 V7 V3)
+            (V0 V4 V7 V3)
         );
     }
     outlet
@@ -98,7 +90,7 @@ boundary
         type patch;
         faces
         (
-        	(V1 V5 V6 V2)
+            (V1 V5 V6 V2)
         );
     }
 
@@ -107,8 +99,8 @@ boundary
         type wall;
         faces
         (
-		(V0 V1 V5 V4)
-		(V3 V2 V6 V7)
+            (V0 V1 V5 V4)
+            (V3 V2 V6 V7)
         );
     }
 
@@ -116,10 +108,10 @@ boundary
     front
     {
         type empty;
-	//neighbourPatch  back;
+        //neighbourPatch  back;
         faces
         (
-		(V0 V1 V2 V3)
+            (V0 V1 V2 V3)
         );
     }
 
@@ -127,16 +119,16 @@ boundary
     back
     {
         type empty;
-	//neighbourPatch  front;
+        //neighbourPatch  front;
         faces
         (
-		(V4 V5 V6 V7)
+            (V4 V5 V6 V7)
         );
     }
 
 );
 
-mergePatchPairs 
+mergePatchPairs
 (
 );
 
