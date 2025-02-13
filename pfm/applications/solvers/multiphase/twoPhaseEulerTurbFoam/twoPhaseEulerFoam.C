@@ -165,23 +165,30 @@ int main(int argc, char *argv[])
         }
 
         ///////////---------------POST_PROCESS-----------//////////////////////////
+        dimensionedScalar volume = fvc::domainIntegrate(unity);
         Info<< "particle_ENSTROPHY: "
-            << fvc::domainIntegrate( 0.5*magSqr(fvc::curl(U1))).value()
+            << (
+                    fvc::domainIntegrate( 0.5*magSqr(fvc::curl(U1)))
+                   /volume
+                ).value()
             << endl;
 
         Info<< "air_ENSTROPHY: "
-            << fvc::domainIntegrate(0.5*magSqr(fvc::curl(U2))).value()
+            << (
+                   fvc::domainIntegrate( 0.5*magSqr(fvc::curl(U2)))
+                  /volume
+               ).value()
             << endl;
         if (periodicBox) {
             Info<< "slip_velocity: "
-                << - ((
-                        fvc::domainIntegrate(alpha2*(U2&gN)).value()
-                       /fvc::domainIntegrate(alpha2*mag(gN)).value()
+                <<  mag((
+                        fvc::domainIntegrate(alpha2*(U2&gN))
+                       /fvc::domainIntegrate(alpha2*mag(gN))
                      )
                    - (
-                        fvc::domainIntegrate(alpha1*(U1&gN)).value()
-                       /fvc::domainIntegrate(alpha1*mag(gN)).value()
-                     ))
+                        fvc::domainIntegrate(alpha1*(U1&gN))
+                       /fvc::domainIntegrate(alpha1*mag(gN))
+                     )).value()
                 << endl;
         }
 
@@ -197,21 +204,42 @@ int main(int argc, char *argv[])
             << fvc::domainIntegrate(alpha2*rho2).value()
               /fvc::domainIntegrate(alpha2).value()
             << endl;
+        
+        dimensionedVector alpha1U1 = fvc::domainIntegrate(alpha1*(U1))/fvc::domainIntegrate(alpha1);
+        dimensionedVector alpha2U2 = fvc::domainIntegrate(alpha2*(U2))/fvc::domainIntegrate(alpha2);
+        dimensionedScalar alpha1M  = fvc::domainIntegrate(alpha1)/volume;
+        dimensionedScalar alpha2M  = scalar(1.0) - alpha1M;
+        
         Info<< "TKE gas: "
-            << fvc::domainIntegrate(alpha2*(U2&U2)).value()
-              /fvc::domainIntegrate(alpha2).value()
+            << 0.5
+              *(
+                  fvc::domainIntegrate(alpha2*(U2&U2)).value()
+                 /fvc::domainIntegrate(alpha2).value()
+               )
+             - 0.5
+              *(
+                  alpha2U2.value()
+                 &alpha2U2.value()
+               )
             << endl;
 
         Info<< "TKE solid: "
-            << fvc::domainIntegrate(alpha1*(U1&U1)).value()
-              /fvc::domainIntegrate(alpha1).value()
+            << 0.5
+              *(
+                  fvc::domainIntegrate(alpha1*(U1&U1)).value()
+                 /fvc::domainIntegrate(alpha1).value()
+               )
+             - 0.5
+              *(
+                  alpha1U1.value()
+                 &alpha1U1.value()
+               )
             << endl;
 
         Info<< "PhiP2: "
             << fvc::domainIntegrate(alpha1*alpha1).value()
               /fvc::domainIntegrate(unity).value()
-             - fvc::domainIntegrate(alpha1).value()*fvc::domainIntegrate(alpha1).value()
-              /(fvc::domainIntegrate(unity).value()*fvc::domainIntegrate(unity).value())
+             - alpha1M.value()*alpha1M.value()
             << endl;
 
         #include "write.H"
